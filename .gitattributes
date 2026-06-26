@@ -7,4 +7,4 @@
 *.jpg binary
 *.pdf binary
 *.zip binary
-*.ndjson -text
+*.ndjson -text -eol
