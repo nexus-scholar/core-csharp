@@ -35,7 +35,8 @@ public sealed class GovernanceTests
         var store = new InMemoryProvenanceStore();
         store.Append(researchEvent);
 
-        Assert.ThrowsExactly<DomainRuleException>(() => store.Append(researchEvent));
+        var error = Assert.ThrowsExactly<ProvenanceRuleException>(() => store.Append(researchEvent));
+        Assert.AreEqual(ProvenanceErrorCodes.DuplicateEventId, error.Category);
     }
 
     [TestMethod]

@@ -1,0 +1,28 @@
+{
+  "fixtureId": "provenance-invalid-projection-as-canonical",
+  "sourceKind": "local-gate-5-contract",
+  "sourceCommit": "pending-gate-5-implementation-commit",
+  "generatorCommand": "hand-authored local Gate 5 provenance fixture",
+  "generatorVersion": "gate-5-v1",
+  "sourceRefs": [
+    "docs/adr/0008-provenance-ledger.md",
+    "docs/adr/0002-digest-boundaries.md",
+    "docs/gates/GATE-05.md"
+  ],
+  "inputDigest": "sha256:cc584628ed2211a6e5b8b46649006ee88f0fe9cbe9f917fb931be9399a8058db",
+  "outputDigest": "sha256:f6c3a0e5964c6a76f128d05d89625ac54b7d0b4f04aa2ce7cd7950f4cecf60af",
+  "comparisonRules": [
+    "local-csharp-contract-only",
+    "no-php-compatibility-claim",
+    "no-blueprint-conformance-claim"
+  ],
+  "case": {
+    "negative": true,
+    "recordType": "provenance-event-rejection",
+    "errorCategory": "projection-not-canonical",
+    "nonClaims": [
+      "no-php-compatibility-claim",
+      "no-blueprint-conformance-claim"
+    ]
+  }
+}

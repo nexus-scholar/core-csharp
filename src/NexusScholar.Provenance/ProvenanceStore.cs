@@ -1,3 +1,4 @@
+using System.Linq;
 using NexusScholar.Kernel;
 
 namespace NexusScholar.Provenance;
@@ -18,11 +19,16 @@ public sealed class InMemoryProvenanceStore : IProvenanceStore
         ArgumentNullException.ThrowIfNull(researchEvent);
         if (_events.Any(existing => existing.Id == researchEvent.Id))
         {
-            throw new DomainRuleException($"Research event '{researchEvent.Id}' already exists.");
+            throw new ProvenanceRuleException(
+                ProvenanceErrorCodes.DuplicateEventId,
+                $"Research event '{researchEvent.Id}' already exists.");
         }
 
-        _events.Add(researchEvent);
+        _events.Add(researchEvent.CloneForStore());
     }
 
-    public IReadOnlyList<ResearchEvent> ReadAll() => _events.ToArray();
+    public IReadOnlyList<ResearchEvent> ReadAll()
+    {
+        return _events.Select(eventRecord => eventRecord.CloneForStore()).ToArray();
+    }
 }

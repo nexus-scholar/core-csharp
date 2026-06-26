@@ -1,0 +1,28 @@
+{
+  "fixtureId": "provenance-ledger-duplicate-reject",
+  "sourceKind": "local-gate-5-contract",
+  "sourceCommit": "pending-gate-5-implementation-commit",
+  "generatorCommand": "hand-authored local Gate 5 provenance fixture",
+  "generatorVersion": "gate-5-v1",
+  "sourceRefs": [
+    "docs/adr/0008-provenance-ledger.md",
+    "docs/adr/0002-digest-boundaries.md",
+    "docs/gates/GATE-05.md"
+  ],
+  "inputDigest": "sha256:b7d6ad21fb13f1fb01bcb381a56c72d8a495ac0e16b75551be7af37e9ef3a3c3",
+  "outputDigest": "sha256:9462ccb852ee3d75a59e6a7c5f5d198b74ebe9ef89247e5bfa1e7b16b720c41c",
+  "comparisonRules": [
+    "local-csharp-contract-only",
+    "no-php-compatibility-claim",
+    "no-blueprint-conformance-claim"
+  ],
+  "case": {
+    "negative": true,
+    "recordType": "provenance-ledger-rejection",
+    "errorCategory": "duplicate-event-id",
+    "nonClaims": [
+      "no-php-compatibility-claim",
+      "no-blueprint-conformance-claim"
+    ]
+  }
+}

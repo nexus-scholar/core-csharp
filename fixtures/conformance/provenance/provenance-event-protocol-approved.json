@@ -1,0 +1,40 @@
+{
+  "fixtureId": "provenance-event-protocol-approved",
+  "sourceKind": "local-gate-5-contract",
+  "sourceCommit": "pending-gate-5-implementation-commit",
+  "generatorCommand": "hand-authored local Gate 5 provenance fixture",
+  "generatorVersion": "gate-5-v1",
+  "sourceRefs": [
+    "docs/adr/0008-provenance-ledger.md",
+    "docs/adr/0002-digest-boundaries.md",
+    "docs/gates/GATE-05.md"
+  ],
+  "inputDigest": "sha256:13a591220589adaa21fdf10384a79544b87dcb4f4bf95c5045d9b8b8b868e733",
+  "outputDigest": "sha256:649d0be26a81f37f52380139b62098d83434e5f661e0ab4be64bed75a5870d47",
+  "comparisonRules": [
+    "local-csharp-contract-only",
+    "no-php-compatibility-claim",
+    "no-blueprint-conformance-claim"
+  ],
+  "case": {
+    "negative": false,
+    "recordType": "provenance-event",
+    "schemaId": "nexus.provenance-event",
+    "schemaVersion": "1.0.0",
+    "digestScope": "provenance-event",
+    "event": {
+      "event_id": "00000000-0000-0000-0000-000000000501",
+      "event_digest": "sha256:649d0be26a81f37f52380139b62098d83434e5f661e0ab4be64bed75a5870d47",
+      "activity_id": "protocol-approved",
+      "subject_kind": "protocol-version",
+      "subject_id": "protocol-version-1",
+      "actor_id": "researcher-1"
+    },
+    "nonClaims": [
+      "no-php-compatibility-claim",
+      "no-blueprint-conformance-claim",
+      "no-persistence-claim",
+      "no-api-claim"
+    ]
+  }
+}

@@ -111,6 +111,37 @@ public sealed class DependencyRulesTests
     }
 
     [TestMethod]
+    public void Provenance_project_depends_only_on_kernel_inside_nexus_domain()
+    {
+        var provenanceAssembly = typeof(ResearchEvent).Assembly;
+        var kernelAssemblyName = typeof(IClock).Assembly.GetName().Name;
+        var disallowed = provenanceAssembly.GetReferencedAssemblies()
+            .Select(reference => reference.Name ?? string.Empty)
+            .Where(name => name.StartsWith("NexusScholar.", StringComparison.Ordinal))
+            .Where(name => !string.Equals(name, kernelAssemblyName, StringComparison.Ordinal))
+            .ToArray();
+
+        Assert.AreEqual(
+            0,
+            disallowed.Length,
+            $"NexusScholar.Provenance must depend inward only on Kernel. Found: {string.Join(", ", disallowed)}");
+    }
+
+    [TestMethod]
+    public void Provenance_event_digest_scope_is_kernel_level()
+    {
+        var record = ResearchEventFactory.Create(
+            new SequenceIdGenerator(),
+            new FixedClock(),
+            new ProvenanceActivity("protocol-approved", "Protocol approved", false, false, false),
+            new ProvenanceEntityRef("protocol-version", "protocol-version-1"),
+            new ProvenanceAgent("researcher-1", "human"));
+
+        Assert.AreEqual(DigestScope.ProvenanceEvent, record.ToDigestEnvelope().Scope);
+        Assert.AreEqual(record.ToDigestEnvelope().ComputeDigest(), record.EventDigest);
+    }
+
+    [TestMethod]
     public void Protocol_digest_records_use_kernel_digest_scopes()
     {
         var policy = ApprovalPolicy.ExplicitCustomSingleResearcher();

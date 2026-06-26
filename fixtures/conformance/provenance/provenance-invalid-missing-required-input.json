@@ -1,0 +1,28 @@
+{
+  "fixtureId": "provenance-invalid-missing-required-input",
+  "sourceKind": "local-gate-5-contract",
+  "sourceCommit": "pending-gate-5-implementation-commit",
+  "generatorCommand": "hand-authored local Gate 5 provenance fixture",
+  "generatorVersion": "gate-5-v1",
+  "sourceRefs": [
+    "docs/adr/0008-provenance-ledger.md",
+    "docs/adr/0002-digest-boundaries.md",
+    "docs/gates/GATE-05.md"
+  ],
+  "inputDigest": "sha256:6d8f046458c2efb7f5ddd130f46a1d613a699fd95c265417c4f4c6ef63f9314a",
+  "outputDigest": "sha256:7c112cd39bbdb352f93e23e40b83135bb9333bc979b669ebf38e1dcce376f322",
+  "comparisonRules": [
+    "local-csharp-contract-only",
+    "no-php-compatibility-claim",
+    "no-blueprint-conformance-claim"
+  ],
+  "case": {
+    "negative": true,
+    "recordType": "provenance-event-rejection",
+    "errorCategory": "missing-required-input",
+    "nonClaims": [
+      "no-php-compatibility-claim",
+      "no-blueprint-conformance-claim"
+    ]
+  }
+}

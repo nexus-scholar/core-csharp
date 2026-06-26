@@ -1,0 +1,28 @@
+{
+  "fixtureId": "provenance-invalid-missing-actor",
+  "sourceKind": "local-gate-5-contract",
+  "sourceCommit": "pending-gate-5-implementation-commit",
+  "generatorCommand": "hand-authored local Gate 5 provenance fixture",
+  "generatorVersion": "gate-5-v1",
+  "sourceRefs": [
+    "docs/adr/0008-provenance-ledger.md",
+    "docs/adr/0002-digest-boundaries.md",
+    "docs/gates/GATE-05.md"
+  ],
+  "inputDigest": "sha256:791296599b3ea3825e3ca1dfc720a1f767875f063b84adf4c798ddf21f0fb2e0",
+  "outputDigest": "sha256:b93f53852233db66c71ba6cacff34a66f01e7cac2f385336bad138a57c2a3be6",
+  "comparisonRules": [
+    "local-csharp-contract-only",
+    "no-php-compatibility-claim",
+    "no-blueprint-conformance-claim"
+  ],
+  "case": {
+    "negative": true,
+    "recordType": "provenance-event-rejection",
+    "errorCategory": "missing-actor",
+    "nonClaims": [
+      "no-php-compatibility-claim",
+      "no-blueprint-conformance-claim"
+    ]
+  }
+}

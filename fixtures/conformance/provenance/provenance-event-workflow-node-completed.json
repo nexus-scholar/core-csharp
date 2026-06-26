@@ -1,0 +1,40 @@
+{
+  "fixtureId": "provenance-event-workflow-node-completed",
+  "sourceKind": "local-gate-5-contract",
+  "sourceCommit": "pending-gate-5-implementation-commit",
+  "generatorCommand": "hand-authored local Gate 5 provenance fixture",
+  "generatorVersion": "gate-5-v1",
+  "sourceRefs": [
+    "docs/adr/0008-provenance-ledger.md",
+    "docs/adr/0002-digest-boundaries.md",
+    "docs/gates/GATE-05.md"
+  ],
+  "inputDigest": "sha256:f4c80f2b25888c20a5cc0256cbeab0dc42495085dac3ac370690a684aa2e10bd",
+  "outputDigest": "sha256:86bf957439ea5b603afd81d6c72aeaf0b65260583596cc6cef6bc9759fcaa227",
+  "comparisonRules": [
+    "local-csharp-contract-only",
+    "no-php-compatibility-claim",
+    "no-blueprint-conformance-claim"
+  ],
+  "case": {
+    "negative": false,
+    "recordType": "provenance-event",
+    "schemaId": "nexus.provenance-event",
+    "schemaVersion": "1.0.0",
+    "digestScope": "provenance-event",
+    "event": {
+      "event_id": "00000000-0000-0000-0000-000000000502",
+      "event_digest": "sha256:86bf957439ea5b603afd81d6c72aeaf0b65260583596cc6cef6bc9759fcaa227",
+      "activity_id": "workflow-node-completed",
+      "subject_kind": "workflow-node",
+      "subject_id": "workflow-1:node-search",
+      "actor_id": "automation-1"
+    },
+    "nonClaims": [
+      "no-php-compatibility-claim",
+      "no-blueprint-conformance-claim",
+      "no-workflow-execution-claim",
+      "no-persistence-claim"
+    ]
+  }
+}
