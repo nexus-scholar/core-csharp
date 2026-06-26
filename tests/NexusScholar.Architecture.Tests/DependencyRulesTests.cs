@@ -35,6 +35,7 @@ public sealed class DependencyRulesTests
         {
             typeof(IClock).Assembly,
             typeof(ContentDigest).Assembly,
+            typeof(ArtifactDescriptor).Assembly,
             typeof(ProtocolDraft).Assembly,
             typeof(WorkflowDefinition).Assembly,
             typeof(ResearchEvent).Assembly,
@@ -54,6 +55,40 @@ public sealed class DependencyRulesTests
                 0,
                 forbidden.Length,
                 $"{assembly.GetName().Name} has forbidden references: {string.Join(", ", forbidden)}");
+        }
+    }
+
+    [TestMethod]
+    public void Digest_primitives_are_kernel_level_not_artifact_level()
+    {
+        var kernelAssembly = typeof(IClock).Assembly;
+        var artifactsAssembly = typeof(ArtifactDescriptor).Assembly;
+
+        Assert.AreSame(kernelAssembly, typeof(ContentDigest).Assembly);
+        Assert.AreSame(kernelAssembly, typeof(DigestAlgorithm).Assembly);
+        Assert.AreSame(kernelAssembly, typeof(DigestScope).Assembly);
+        Assert.AreSame(kernelAssembly, typeof(DigestEnvelope).Assembly);
+        Assert.AreNotSame(artifactsAssembly, typeof(ContentDigest).Assembly);
+    }
+
+    [TestMethod]
+    public void Digest_consumers_do_not_depend_on_artifacts_for_digest_vocabulary()
+    {
+        var artifactAssemblyName = typeof(ArtifactDescriptor).Assembly.GetName().Name;
+        var digestConsumerAssemblies = new[]
+        {
+            typeof(ProtocolDraft).Assembly,
+            typeof(ResearchEvent).Assembly,
+            typeof(ReviewBundleManifest).Assembly,
+            typeof(AiTaskPolicy).Assembly
+        };
+
+        foreach (var assembly in digestConsumerAssemblies)
+        {
+            var referencesArtifacts = assembly.GetReferencedAssemblies()
+                .Any(reference => string.Equals(reference.Name, artifactAssemblyName, StringComparison.Ordinal));
+
+            Assert.IsFalse(referencesArtifacts, $"{assembly.GetName().Name} must not depend on NexusScholar.Artifacts for digest vocabulary.");
         }
     }
 }

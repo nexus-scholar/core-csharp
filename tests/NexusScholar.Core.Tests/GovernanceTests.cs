@@ -1,6 +1,5 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NexusScholar.AI;
-using NexusScholar.Artifacts;
 using NexusScholar.Bundles;
 using NexusScholar.Kernel;
 using NexusScholar.Provenance;

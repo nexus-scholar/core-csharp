@@ -1,4 +1,3 @@
-using NexusScholar.Artifacts;
 using NexusScholar.Kernel;
 
 namespace NexusScholar.AI;

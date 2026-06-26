@@ -1,7 +1,6 @@
 using System.Text;
 using System.Text.Json;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using NexusScholar.Artifacts;
 using NexusScholar.Kernel;
 
 namespace NexusScholar.Conformance.Tests;

@@ -18,11 +18,12 @@ Status: accepted for deterministic-kernel behavior on 2026-06-26, with hosted Wi
 ## Files Changed
 
 - [src/NexusScholar.Kernel/DigestTypes.cs](/C:/Users/mouadh/Documents/AI%20in%20research/core-csharp/src/NexusScholar.Kernel/DigestTypes.cs:1)
+- [src/NexusScholar.Kernel/ContentDigest.cs](/C:/Users/mouadh/Documents/AI%20in%20research/core-csharp/src/NexusScholar.Kernel/ContentDigest.cs:1)
+- [src/NexusScholar.Kernel/DigestEnvelope.cs](/C:/Users/mouadh/Documents/AI%20in%20research/core-csharp/src/NexusScholar.Kernel/DigestEnvelope.cs:1)
 - [src/NexusScholar.Kernel/CanonicalTimestamp.cs](/C:/Users/mouadh/Documents/AI%20in%20research/core-csharp/src/NexusScholar.Kernel/CanonicalTimestamp.cs:1)
 - [src/NexusScholar.Kernel/CanonicalJson.cs](/C:/Users/mouadh/Documents/AI%20in%20research/core-csharp/src/NexusScholar.Kernel/CanonicalJson.cs:1)
 - [src/NexusScholar.Kernel/NdjsonCanonicalizer.cs](/C:/Users/mouadh/Documents/AI%20in%20research/core-csharp/src/NexusScholar.Kernel/NdjsonCanonicalizer.cs:1)
 - [src/NexusScholar.Artifacts/Artifacts.cs](/C:/Users/mouadh/Documents/AI%20in%20research/core-csharp/src/NexusScholar.Artifacts/Artifacts.cs:1)
-- [src/NexusScholar.Artifacts/DigestEnvelope.cs](/C:/Users/mouadh/Documents/AI%20in%20research/core-csharp/src/NexusScholar.Artifacts/DigestEnvelope.cs:1)
 - [tests/NexusScholar.Core.Tests/DeterministicKernelTests.cs](/C:/Users/mouadh/Documents/AI%20in%20research/core-csharp/tests/NexusScholar.Core.Tests/DeterministicKernelTests.cs:1)
 - [tests/NexusScholar.Conformance.Tests/NexusScholar.Conformance.Tests.csproj](/C:/Users/mouadh/Documents/AI%20in%20research/core-csharp/tests/NexusScholar.Conformance.Tests/NexusScholar.Conformance.Tests.csproj:1)
 - [tests/NexusScholar.Conformance.Tests/KernelFixtureTests.cs](/C:/Users/mouadh/Documents/AI%20in%20research/core-csharp/tests/NexusScholar.Conformance.Tests/KernelFixtureTests.cs:1)
@@ -126,7 +127,7 @@ Follow-up fix:
 
 ## Reviewer Input Used
 
-- `dotnet_architect`: confirmed the need for an explicit canonical JSON tree, typed digest scopes, no clock use during serialization, and no hidden protocol or bundle semantics in Gate 2. One remaining design risk stays open: `ContentDigest` is still physically located in `NexusScholar.Artifacts`.
+- `dotnet_architect`: confirmed the need for an explicit canonical JSON tree, typed digest scopes, no clock use during serialization, and no hidden protocol or bundle semantics in Gate 2. The follow-up cleanup moved `ContentDigest` and `DigestEnvelope` fully inward to `NexusScholar.Kernel`.
 - `test_engineer`: requested explicit proof of property ordering, nested arrays and objects, null-vs-omission separation, timestamp format, NFC normalization, non-NFC validation-mode rejection, non-finite number rejection, raw byte hashing, digest-prefix validation, NDJSON CRLF handling, and repeated-run stability. The added test suite covers those items.
 - `scientific_invariant_reviewer`: flagged three integrity risks during review. All were addressed in this patch:
   - the canonical digest fixture now binds its own `envelope.content` instead of rebuilding content in code;
@@ -135,7 +136,6 @@ Follow-up fix:
 
 ## Remaining Gate 2 Risks
 
-- `ContentDigest` remains in `NexusScholar.Artifacts`, so the module placement is still thinner than the ideal inward kernel contract.
 - `src/NexusScholar.Protocol` still uses provisional digest material and is not upgraded by this gate.
 - `src/NexusScholar.Bundles` still verifies only a thin scaffold and is not elevated to bundle authority here.
 - Hosted GitHub Actions evidence exists for commit `81fcc16e0249e63c1607cb0c26e4e780e6a6fe41`; both Ubuntu and Windows jobs passed restore, build, test, and format.

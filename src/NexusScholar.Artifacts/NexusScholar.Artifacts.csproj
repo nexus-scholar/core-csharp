@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Description>Immutable artifact identity and content digests.</Description>
+    <Description>Immutable artifact identity and metadata.</Description>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../NexusScholar.Kernel/NexusScholar.Kernel.csproj" />

@@ -1,7 +1,6 @@
 using System.Text.Json;
-using NexusScholar.Kernel;
 
-namespace NexusScholar.Artifacts;
+namespace NexusScholar.Kernel;
 
 public sealed class DigestEnvelope
 {

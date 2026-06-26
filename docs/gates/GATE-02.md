@@ -1,6 +1,6 @@
 # Gate 2: Deterministic Kernel
 
-Status: implemented and verified for local deterministic-kernel scope only. No blueprint, protocol, bundle, provenance, or PHP compatibility claim is implied by this document.
+Status: accepted for local deterministic-kernel scope only. No blueprint, protocol, bundle, provenance, or PHP compatibility claim is implied by this document.
 
 ## Goal
 
@@ -20,7 +20,7 @@ Implement deterministic kernel primitives for canonical serialization, digests, 
 2. `ContentDigest` now validates and renders canonical `sha256:<64 lowercase hex>` strings and rejects missing prefixes, uppercase hex, and wrong lengths.
 3. Raw byte SHA-256 hashing is available and covered by a fixed known vector.
 4. Canonical JSON serialization now uses an explicit value tree, deterministic object-property ordering, array-order preservation, UTC timestamp formatting, NFC normalization, and omission-vs-null preservation.
-5. `DigestEnvelope` provides a typed JSON digest input shape with required canonicalization profile, digest algorithm, scope, schema id, schema version, and authoritative content.
+5. `DigestEnvelope` provides a kernel-level typed JSON digest input shape with required canonicalization profile, digest algorithm, scope, schema id, schema version, and authoritative content.
 6. NDJSON LF-only canonicalization exists with explicit CRLF normalization opt-in and byte-level LF, CRLF, and BOM fixture coverage.
 7. Fixed positive and negative conformance fixtures with metadata exist under [fixtures/conformance/kernel](/C:/Users/mouadh/Documents/AI%20in%20research/core-csharp/fixtures/conformance/kernel).
 8. Verification evidence is recorded in [GATE-02-EVIDENCE.md](/C:/Users/mouadh/Documents/AI%20in%20research/core-csharp/docs/gates/GATE-02-EVIDENCE.md:1).
@@ -37,10 +37,9 @@ Implement deterministic kernel primitives for canonical serialization, digests, 
 
 ## Remaining Risks
 
-- `ContentDigest` remains physically hosted in `NexusScholar.Artifacts` because this gate did not edit the broader module graph outside the allowed write set. The deterministic behavior is implemented, but full inward relocation to `NexusScholar.Kernel` remains a follow-up design cleanup.
 - Current protocol digest remains provisional scaffold behavior in `src/NexusScholar.Protocol` and is not replaced by this gate.
 - Current bundle manifest and verifier remain thinner than any future bundle authority.
-- No fresh GitHub Actions matrix run is captured in this document for Gate 2 specifically; repository CI remains the Gate 1 workflow until a later gate records cross-platform Gate 2 evidence explicitly.
+- Hosted Windows/Linux CI evidence is recorded in [GATE-02-EVIDENCE.md](/C:/Users/mouadh/Documents/AI%20in%20research/core-csharp/docs/gates/GATE-02-EVIDENCE.md:1).
 - Downstream conflicts remain open:
   - `CF-001` protocol contract
   - `CF-002` bundle contract

@@ -1,6 +1,5 @@
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using NexusScholar.Artifacts;
 using NexusScholar.Kernel;
 
 namespace NexusScholar.Core.Tests;

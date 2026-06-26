@@ -1,4 +1,4 @@
-using NexusScholar.Artifacts;
+using NexusScholar.Kernel;
 
 namespace NexusScholar.Bundles;
 

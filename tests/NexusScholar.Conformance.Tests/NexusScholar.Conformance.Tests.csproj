@@ -13,6 +13,5 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="../../src/NexusScholar.Kernel/NexusScholar.Kernel.csproj" />
-    <ProjectReference Include="../../src/NexusScholar.Artifacts/NexusScholar.Artifacts.csproj" />
   </ItemGroup>
 </Project>
