@@ -26,19 +26,57 @@ Prepare porting evidence for shared scientific identity before asserting compati
 
 - `specs/SOURCE.lock.json` pins `../core` commit `b24d0d71ec7b64003465182477e7edb7f49994f4`.
 - Shared identity behavior exists in PHP as observed identity-first domain semantics.
-- Existing shared identity conflict remains open: `CF-010` (object identity fallback).
-- This gate currently produces reconnaissance artifacts only.
-- `CF-010` remains open and is blocking any Gate 9 implementation work.
+- `ADR 0007` resolves `CF-010` for Gate 9 planning scope by rejecting runtime object identity as scientific identity and treating no-primary-id works as unresolved candidates.
+- This gate currently produces planning artifacts only.
+- Gate 9 implementation remains blocked until fixtures and comparators are generated in a later implementation branch.
 
 ## Required follow-up
 
-- Resolve `CF-010` before any Gate 9 acceptance claim.
-- Resolve comparator exceptions around `CorpusSlice::fromWorksUnsafe()` and missing-primary-id identity fallback.
-- Produce fixture-backed conformance after reconciliation of identity semantics.
+- Generate fixture-backed conformance after reconciliation of identity semantics.
+- Implement `WorkId`, `WorkIdSet`, `ScholarlyWork`, and `CorpusSlice` against `ADR 0007`.
+- Classify PHP `spl_object_hash` fallback as an intentional incompatibility in comparator output.
+- Keep Search, Deduplication, Screening, and snapshot equality outside this gate unless later ADRs resolve them.
+
+## ADR 0007 planning decisions
+
+- Work identity is based on normalized stable identifier overlap.
+- Title is not scientific identity.
+- Runtime object identity is not scientific identity.
+- No-id works may exist only as unresolved candidates.
+- No-id works do not deduplicate by title, object identity, insertion order, or runtime hash.
+- C# constructor and parser validation is stricter than PHP for blank identifiers.
+- Any unsafe construction path must be scoped to unvalidated candidates, fixture replay, raw import staging, or negative-test setup.
+
+## Required fixture consequences
+
+Positive fixture planning must cover:
+
+- all approved `WorkId` namespaces;
+- DOI and arXiv normalization;
+- primary-id precedence;
+- ID-overlap equality;
+- no-id unresolved candidate admission;
+- raw candidate preservation through an explicitly unsafe or unvalidated import path.
+
+Negative fixture planning must cover:
+
+- bad namespace;
+- missing separator;
+- empty identifier value;
+- blank identifier construction;
+- title-only false-positive identity;
+- cross-namespace same-value non-overlap;
+- runtime object identity fallback rejection;
+- no-id candidate dedupe rejection;
+- no-id candidate rejection from immutable scientific identity contexts.
 
 ## Non-Claims
 
 - no PHP compatibility claim
 - no implementation claim
 - no ported fixture claim
-- no blueprint/provenance/workflow/screening/AI claim
+- no Search behavior resolution
+- no Deduplication behavior resolution
+- no Screening behavior resolution
+- no immutable snapshot equality rule
+- no blueprint/provenance/workflow/AI claim
