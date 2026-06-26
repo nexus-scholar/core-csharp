@@ -9,7 +9,7 @@ namespace NexusScholar.Conformance.Tests;
 public sealed class ProvenanceFixtureTests
 {
     private const string FixtureSourceKind = "local-gate-5-contract";
-    private const string FixtureSourceCommit = "pending-gate-5-implementation-commit";
+    private const string FixtureSourceCommit = "54bfd066915c473906f2f167fc104bb03dd95f62";
     private static readonly IClock Clock = new FixedClock();
 
     private static readonly string[] RequiredFixtureIds =

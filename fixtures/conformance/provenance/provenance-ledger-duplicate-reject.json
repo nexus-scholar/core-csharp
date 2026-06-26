@@ -1,7 +1,7 @@
 {
   "fixtureId": "provenance-ledger-duplicate-reject",
   "sourceKind": "local-gate-5-contract",
-  "sourceCommit": "pending-gate-5-implementation-commit",
+  "sourceCommit": "54bfd066915c473906f2f167fc104bb03dd95f62",
   "generatorCommand": "hand-authored local Gate 5 provenance fixture",
   "generatorVersion": "gate-5-v1",
   "sourceRefs": [
