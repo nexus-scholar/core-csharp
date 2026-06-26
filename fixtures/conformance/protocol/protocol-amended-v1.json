@@ -1,0 +1,53 @@
+{
+  "fixtureId": "protocol-amended-v1",
+  "sourceKind": "local-gate-3-contract",
+  "sourceRefs": [
+    "docs/adr/0003-protocol-record-contract.md",
+    "docs/adr/0004-protocol-approval-semantics.md"
+  ],
+  "sourceCommit": "d925796846e9",
+  "generatorCommand": "manual local Gate 3 contract fixture",
+  "generatorVersion": "gate-3-v1",
+  "inputDigest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "outputDigest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "comparisonRules": [
+    "assert-supersession-links",
+    "assert-previous-content-digest",
+    "no-php-compatibility-claim"
+  ],
+  "case": {
+    "recordType": "protocol-amendment",
+    "amendment": {
+      "amendment_id": "00000030-0000-0000-0000-000000000000",
+      "protocol_id": "00000001-0000-0000-0000-000000000000",
+      "amends_version_id": "00000010-0000-0000-0000-000000000000",
+      "produces_version_id": "00000031-0000-0000-0000-000000000000",
+      "previous_content_digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+      "requested_by": "researcher-1",
+      "requested_at": "2026-06-25T12:00:00Z",
+      "rationale": "Scope changed after pilot.",
+      "changed_decision_keys": [
+        "scope"
+      ],
+      "invalidation_notices": [
+        {
+          "notice_id": "00000032-0000-0000-0000-000000000000",
+          "source_amendment_id": "00000030-0000-0000-0000-000000000000",
+          "affected_requirement_id": "scope",
+          "affected_artifact_digest": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+          "affected_workflow_node_id": "screening",
+          "effect": "screening output requires review",
+          "required_action": "rerun screening",
+          "created_at": "2026-06-25T12:00:00Z"
+        }
+      ],
+      "approval_policy_id": "custom-local-single-researcher",
+      "approval_ids": []
+    },
+    "supersession": {
+      "previous_version_status": "superseded",
+      "superseded_by_version_id": "00000031-0000-0000-0000-000000000000",
+      "new_version_supersedes_version_id": "00000010-0000-0000-0000-000000000000"
+    }
+  }
+}

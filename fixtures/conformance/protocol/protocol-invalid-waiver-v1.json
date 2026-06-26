@@ -1,0 +1,12 @@
+{
+  "fixtureId": "protocol-invalid-waiver-v1",
+  "sourceKind": "local-gate-3-contract",
+  "sourceRefs": ["docs/adr/0003-protocol-record-contract.md", "docs/adr/0004-protocol-approval-semantics.md"],
+  "sourceCommit": "d925796846e9",
+  "generatorCommand": "manual local Gate 3 contract fixture",
+  "generatorVersion": "gate-3-v1",
+  "inputDigest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "outputDigest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "comparisonRules": ["assert-error-category", "no-php-compatibility-claim"],
+  "case": { "negative": true, "operation": "add-waiver", "errorCategory": "invalid-waiver" }
+}

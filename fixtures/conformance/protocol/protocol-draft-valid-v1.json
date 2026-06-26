@@ -1,0 +1,79 @@
+{
+  "fixtureId": "protocol-draft-valid-v1",
+  "sourceKind": "local-gate-3-contract",
+  "sourceRefs": [
+    "docs/adr/0003-protocol-record-contract.md",
+    "docs/adr/0004-protocol-approval-semantics.md"
+  ],
+  "sourceCommit": "d925796846e9",
+  "generatorCommand": "manual local Gate 3 contract fixture",
+  "generatorVersion": "gate-3-v1",
+  "inputDigest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "outputDigest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "comparisonRules": [
+    "assert-gate-3-fields",
+    "no-php-compatibility-claim",
+    "no-blueprint-conformance-claim"
+  ],
+  "case": {
+    "recordType": "protocol-draft",
+    "protocol_id": "00000001-0000-0000-0000-000000000000",
+    "draft_id": "00000002-0000-0000-0000-000000000000",
+    "project_id": "project-1",
+    "status": "draft",
+    "template": {
+      "template_id": "template-systematic-review",
+      "template_version": "1.0.0",
+      "template_digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+    },
+    "intent": {
+      "raw_subject": "tomato disease screening",
+      "review_goal": "map the evidence for segmentation workflows",
+      "selected_review_family": "scoping-review"
+    },
+    "values": {
+      "review_family": "scoping"
+    },
+    "required_decisions": [
+      {
+        "decision_key": "review-type",
+        "title": "review-type",
+        "description": "Select review-type.",
+        "value_schema": {
+          "type": "string"
+        },
+        "required_before": "protocol-approval",
+        "approval_gate_id": "protocol-approval",
+        "source_requirement_id": "review-type",
+        "allows_unresolved": false
+      }
+    ],
+    "decisions": [
+      {
+        "decision_id": "00000003-0000-0000-0000-000000000000",
+        "decision_key": "review-type",
+        "value": "scoping-review",
+        "rationale": "Exploratory evidence map.",
+        "decided_by": "researcher-1",
+        "decided_at": "2026-06-25T12:00:00Z",
+        "source_proposal_digest": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+      }
+    ],
+    "unresolved_decisions": [
+      {
+        "unresolved_id": "00000004-0000-0000-0000-000000000000",
+        "decision_key": "quality-threshold",
+        "question": "Which quality threshold applies?",
+        "reason": "No method pack threshold selected yet.",
+        "required_before": "conduct",
+        "created_by": "researcher-1",
+        "created_at": "2026-06-25T12:00:00Z",
+        "blocks_protocol_approval": false
+      }
+    ],
+    "waivers": [],
+    "created_by": "researcher-1",
+    "created_at": "2026-06-25T12:00:00Z",
+    "updated_at": "2026-06-25T12:00:00Z"
+  }
+}

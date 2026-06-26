@@ -1,97 +1,105 @@
-# Gate 3: Protocol Lifecycle Planning
+# Gate 3: Protocol Lifecycle
 
-Status: planning decisions accepted; implementation and conformance fixtures pending. No protocol behavior implementation is included in this gate-planning pass.
+Status: implementation complete locally; hosted CI evidence pending.
 
 ## Goal
 
-Freeze the protocol contract and approval semantics needed before implementing protocol lifecycle behavior.
-
-Gate 3 must define draft, decision, approval, version, amendment, waiver, deviation, digest, and supersession rules without silently adopting unresolved blueprint defaults.
-
-The planning decisions are:
+Implement the local protocol lifecycle contract accepted in:
 
 - [ADR 0003: Protocol Record Contract](/C:/Users/mouadh/Documents/AI%20in%20research/core-csharp/docs/adr/0003-protocol-record-contract.md:1)
 - [ADR 0004: Protocol Approval Semantics](/C:/Users/mouadh/Documents/AI%20in%20research/core-csharp/docs/adr/0004-protocol-approval-semantics.md:1)
 
+Gate 3 implements protocol draft, decision, approval, version, amendment, waiver, deviation, digest, and supersession behavior without claiming PHP compatibility, blueprint conformance, bundle contract adoption, workflow compiler behavior, persistence/API schema support, provenance parity, or AI governance parity.
+
+## Implemented Scope
+
+- Protocol statuses: `draft`, `ready_for_review`, `approved`, `superseded`, `withdrawn`.
+- Draft contract fields: protocol id, draft id, project id, status, template, intent, values, required decisions, decisions, unresolved decisions, waivers, creator, timestamps, and optional base version id.
+- Required decision definitions with approval gate and source requirement identity.
+- Protocol decisions with canonical JSON values, human actor, timestamp, optional rationale, source proposal digest, and supersession link.
+- Blocking unresolved decisions that prevent approval.
+- Approved protocol versions with Kernel `DigestEnvelope` using `DigestScope.ProtocolContent`.
+- Approval records with Kernel `DigestEnvelope` using `DigestScope.ApprovalRecord`.
+- Explicit single-researcher local approval fallback.
+- Dual-independent approval with distinct actor enforcement.
+- Stale digest and automation approval rejection.
+- Protocol amendments preserving previous content digest, changed decision keys, invalidation notices, and supersession links.
+- Waivers as protocol content included before approval digest computation.
+- Deviations linked to approved versions without mutating version digests.
+- Stable protocol error categories for Gate 3 failure modes.
+
+## Fixture Pack
+
+Gate 3 fixtures live under `fixtures/conformance/protocol/`.
+
+Positive fixtures:
+
+- `protocol-draft-valid-v1.json`
+- `protocol-approved-single-v1.json`
+- `protocol-approved-dual-v1.json`
+- `protocol-amended-v1.json`
+- `protocol-waiver-valid-v1.json`
+- `protocol-deviation-valid-v1.json`
+
+Negative fixtures cover:
+
+- `missing-required-decision`
+- `blocking-unresolved-decision`
+- `duplicate-decision`
+- `post-approval-mutation`
+- `unauthorized-approval`
+- `stale-content-digest`
+- `invalid-amendment`
+- `invalid-waiver`
+- `invalid-deviation`
+- `same-actor-dual-approval`
+- `automation-cannot-approve`
+- wrong digest scope
+- non-human approval actor
+- old newline `key=value` digest material
+
+The older `fixtures/conformance/protocol-minimal.json` remains discovery-only and is not a Gate 3 authority fixture.
+
 ## Source Of Truth Inputs
 
 1. `AGENTS.md`
-2. `PLANS.md`
+2. `src/NexusScholar.Protocol/AGENTS.md`
 3. `docs/adr/0001-source-of-truth-and-porting.md`
 4. `docs/adr/0002-canonical-json-and-digests.md`
 5. `docs/adr/0003-protocol-record-contract.md`
 6. `docs/adr/0004-protocol-approval-semantics.md`
 7. `docs/port/OPEN-CONFLICTS.md`
-8. `docs/discovery/BLUEPRINT-AUDIT.md`
-9. `fixtures/conformance/protocol-minimal.json`
-10. current scaffold under `src/NexusScholar.Protocol`
+8. `fixtures/conformance/protocol-minimal.json` as discovery-only prior art
+9. current C# implementation under `src/NexusScholar.Protocol`
 
-## Conflicts With Accepted Local Gate 3 Decisions
+## Explicit Non-Claims
 
-### `CF-001`: Protocol Contract
+- no PHP compatibility claim
+- no blueprint conformance claim
+- no bundle contract adoption
+- no persistence or API schema commitment
+- no workflow compiler implementation
+- no provenance parity claim
+- no AI governance parity claim
+- no institutional role-engine implementation
 
-The current fixture and model use a thin `subject + required_decisions + decisions` shape. The blueprint protocol schema requires version identifiers, template digest, intent, unresolved items, approvals, timestamps, amendment links, and full digest fields.
+## Verification
 
-Planning decision accepted locally by `ADR 0003`. The current protocol scaffold and `protocol-minimal.json` remain non-authoritative until a fixture-backed implementation updates them. Blueprint protocol conformance remains unclaimed.
+Local evidence is recorded in [GATE-03-EVIDENCE.md](/C:/Users/mouadh/Documents/AI%20in%20research/core-csharp/docs/gates/GATE-03-EVIDENCE.md:1).
 
-### `CF-008`: Approval Semantics
+Required verification commands:
 
-Planning decision accepted locally by `ADR 0004` for protocol approval semantics. Workflow, AI, plugin, and institutional approval engines remain future work.
-
-## Dependency-Ordered Planning Tasks
-
-1. `spec-owner`: compare current protocol scaffold, existing fixture, blueprint protocol schema/example, and product laws.
-2. `governance-owner`: define protocol approval authority, actor requirements, and waiver/deviation boundaries.
-3. `architecture-owner`: define the Kernel digest envelope shape used by protocol content without adding outward dependencies.
-4. `conformance-owner`: specify positive and negative fixtures before implementation.
-5. `gate-owner`: update `OPEN-CONFLICTS.md` only after `CF-001` and `CF-008` have explicit decisions or accepted ADR coverage.
-
-## Required Fixtures And Negative Cases
-
-- protocol draft with required decisions
-- approved protocol version with `protocol-content` digest and immutable content
-- amended protocol version preserving supersession links
-- invalidation notice preserving downstream impact
-- waiver included in approved protocol digest
-- deviation linked to an approved version without mutating that version
-- single approval accepted for an explicit custom local policy
-- dual-independent approval accepted only with two distinct actors
-- rejection for missing required decision
-- rejection for blocking unresolved decision
-- rejection for duplicate decision mutation
-- rejection for post-approval mutation
-- rejection for approval without authorized human actor
-- rejection for approval with stale or mismatched digest
-- rejection for using `approval-record` digest where `protocol-content` digest is required, or the reverse
-- rejection for automation as approval authority
-- rejection of old newline `key=value` digest material as non-authoritative protocol content
-
-## Allowed Paths During Planning
-
-- `docs/gates/GATE-03.md`
-- `docs/port/OPEN-CONFLICTS.md`
-- new ADR under `docs/adr/` if needed for protocol contract or approval semantics
-- planned fixture descriptions under `docs/port/`
-
-## Excluded Until Planning Is Accepted
-
-- `src/NexusScholar.Protocol`
-- `tests/NexusScholar.Core.Tests`
-- `tests/NexusScholar.Conformance.Tests`
-- generated or changed protocol fixtures
-
-## Verification Commands For The Later Implementation Gate
-
-1. `dotnet build NexusScholar.Core.slnx -c Release`
-2. `dotnet test NexusScholar.Core.slnx -c Release --no-build`
-3. `dotnet format NexusScholar.Core.slnx --verify-no-changes --no-restore`
-4. affected architecture tests
-5. affected conformance tests
+1. `dotnet restore NexusScholar.Core.slnx`
+2. `dotnet build NexusScholar.Core.slnx -c Release --no-restore`
+3. `dotnet test NexusScholar.Core.slnx -c Release --no-build`
+4. `dotnet format NexusScholar.Core.slnx --verify-no-changes --no-restore`
+5. `scripts/verify.ps1`
 
 ## Exit Checklist
 
-- `CF-001` has an accepted local protocol contract decision in `ADR 0003`; implementation and conformance fixtures remain pending.
-- `CF-008` has an accepted approval semantics decision in `ADR 0004`; implementation and conformance fixtures remain pending.
-- The protocol digest input shape uses Kernel digest primitives only.
-- Required protocol fixtures and negative cases are listed before implementation.
-- No protocol implementation was changed by this planning pass.
+- `CF-001` is implemented for local Gate 3 protocol lifecycle behavior.
+- `CF-008` is implemented for local Gate 3 approval semantics.
+- Protocol digest material uses Kernel digest primitives only.
+- Approval records bind to protocol content digests but remain outside protocol-content digest material.
+- Fixtures and tests cover positive lifecycle behavior and listed negative categories.
+- Gate 3 remains bounded to protocol lifecycle only.

@@ -8,6 +8,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="../../fixtures/conformance/protocol-minimal.json" Link="fixtures/protocol-minimal.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../fixtures/conformance/protocol/*.json" Link="fixtures/protocol/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../fixtures/conformance/kernel/*.json" Link="fixtures/kernel/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../fixtures/conformance/kernel/*.ndjson" Link="fixtures/kernel/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>

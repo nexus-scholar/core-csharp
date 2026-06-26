@@ -1,0 +1,71 @@
+{
+  "fixtureId": "protocol-approved-single-v1",
+  "sourceKind": "local-gate-3-contract",
+  "sourceRefs": [
+    "docs/adr/0003-protocol-record-contract.md",
+    "docs/adr/0004-protocol-approval-semantics.md"
+  ],
+  "sourceCommit": "d925796846e9",
+  "generatorCommand": "manual local Gate 3 contract fixture",
+  "generatorVersion": "gate-3-v1",
+  "inputDigest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "outputDigest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "comparisonRules": [
+    "assert-gate-3-fields",
+    "assert-digest-scopes",
+    "no-php-compatibility-claim",
+    "no-blueprint-conformance-claim"
+  ],
+  "case": {
+    "recordType": "protocol-approved",
+    "protocol_version": {
+      "version_id": "00000010-0000-0000-0000-000000000000",
+      "protocol_id": "00000001-0000-0000-0000-000000000000",
+      "project_id": "project-1",
+      "version_number": 1,
+      "status": "approved",
+      "content_digest": {
+        "scope": "protocol-content",
+        "value": "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+      },
+      "approval_policy_id": "custom-local-single-researcher",
+      "approval_ids": [
+        "00000011-0000-0000-0000-000000000000"
+      ],
+      "approved_at": "2026-06-25T12:00:00Z",
+      "digest_material_excludes": [
+        "approval_records",
+        "detached_signatures",
+        "bundle_checksums",
+        "persistence_metadata",
+        "ui_state",
+        "generated_summaries",
+        "caches",
+        "embeddings",
+        "wiki_projections",
+        "machine_local_file_paths"
+      ],
+      "approval_records": [
+        {
+          "approval_id": "00000011-0000-0000-0000-000000000000",
+          "target_type": "protocol-version",
+          "target_id": "00000010-0000-0000-0000-000000000000",
+          "protocol_id": "00000001-0000-0000-0000-000000000000",
+          "protocol_version_id": "00000010-0000-0000-0000-000000000000",
+          "protocol_version_number": 1,
+          "content_digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+          "policy_id": "custom-local-single-researcher",
+          "policy_version": "1.0.0",
+          "policy_mode": "single_researcher",
+          "decision": "approved",
+          "approved_by": "researcher-1",
+          "approved_at": "2026-06-25T12:00:00Z",
+          "approval_record_digest": {
+            "scope": "approval-record",
+            "value": "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+          }
+        }
+      ]
+    }
+  }
+}

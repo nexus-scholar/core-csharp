@@ -1,0 +1,35 @@
+{
+  "fixtureId": "protocol-deviation-valid-v1",
+  "sourceKind": "local-gate-3-contract",
+  "sourceRefs": [
+    "docs/adr/0003-protocol-record-contract.md",
+    "docs/adr/0004-protocol-approval-semantics.md"
+  ],
+  "sourceCommit": "d925796846e9",
+  "generatorCommand": "manual local Gate 3 contract fixture",
+  "generatorVersion": "gate-3-v1",
+  "inputDigest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "outputDigest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "comparisonRules": [
+    "assert-deviation-does-not-mutate-version-digest",
+    "no-php-compatibility-claim"
+  ],
+  "case": {
+    "recordType": "protocol-deviation",
+    "linked_protocol_version_id": "00000010-0000-0000-0000-000000000000",
+    "version_content_digest_before": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+    "version_content_digest_after": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+    "deviation": {
+      "deviation_id": "00000050-0000-0000-0000-000000000000",
+      "protocol_version_id": "00000010-0000-0000-0000-000000000000",
+      "planned_requirement_id": "scope",
+      "actual_conduct_summary": "One data source was unavailable during conduct.",
+      "rationale": "Repository outage.",
+      "classification": "protocol_deviation",
+      "recorded_by": "researcher-1",
+      "recorded_at": "2026-06-25T12:00:00Z",
+      "effect": "disclose limitation",
+      "disclosure_mapping": "limitations.data-source"
+    }
+  }
+}

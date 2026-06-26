@@ -1,0 +1,64 @@
+{
+  "fixtureId": "protocol-approved-dual-v1",
+  "sourceKind": "local-gate-3-contract",
+  "sourceRefs": [
+    "docs/adr/0003-protocol-record-contract.md",
+    "docs/adr/0004-protocol-approval-semantics.md"
+  ],
+  "sourceCommit": "d925796846e9",
+  "generatorCommand": "manual local Gate 3 contract fixture",
+  "generatorVersion": "gate-3-v1",
+  "inputDigest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "outputDigest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "comparisonRules": [
+    "assert-distinct-human-actors",
+    "assert-digest-scopes",
+    "no-php-compatibility-claim",
+    "no-blueprint-conformance-claim"
+  ],
+  "case": {
+    "recordType": "protocol-approved",
+    "protocol_version": {
+      "version_id": "00000020-0000-0000-0000-000000000000",
+      "protocol_id": "00000001-0000-0000-0000-000000000000",
+      "project_id": "project-1",
+      "version_number": 1,
+      "status": "approved",
+      "content_digest": {
+        "scope": "protocol-content",
+        "value": "sha256:3333333333333333333333333333333333333333333333333333333333333333"
+      },
+      "approval_policy_id": "dual-independent",
+      "approval_ids": [
+        "00000021-0000-0000-0000-000000000000",
+        "00000022-0000-0000-0000-000000000000"
+      ],
+      "approved_at": "2026-06-25T12:00:00Z",
+      "digest_material_excludes": [
+        "approval_records",
+        "generated_summaries",
+        "machine_local_file_paths"
+      ],
+      "approval_records": [
+        {
+          "approval_id": "00000021-0000-0000-0000-000000000000",
+          "approved_by": "researcher-1",
+          "decision": "approved",
+          "approval_record_digest": {
+            "scope": "approval-record",
+            "value": "sha256:4444444444444444444444444444444444444444444444444444444444444444"
+          }
+        },
+        {
+          "approval_id": "00000022-0000-0000-0000-000000000000",
+          "approved_by": "reviewer-2",
+          "decision": "approved",
+          "approval_record_digest": {
+            "scope": "approval-record",
+            "value": "sha256:5555555555555555555555555555555555555555555555555555555555555555"
+          }
+        }
+      ]
+    }
+  }
+}
