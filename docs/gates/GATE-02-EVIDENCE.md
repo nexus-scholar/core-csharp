@@ -1,6 +1,6 @@
 # Gate 2 Evidence
 
-Status: verified for local deterministic-kernel scope on 2026-06-26.
+Status: accepted for deterministic-kernel behavior on 2026-06-26, with hosted Windows/Linux CI evidence.
 
 ## Behavior Implemented
 
@@ -40,6 +40,7 @@ Status: verified for local deterministic-kernel scope on 2026-06-26.
 - [fixtures/conformance/kernel/kernel-ndjson-lf.ndjson](/C:/Users/mouadh/Documents/AI%20in%20research/core-csharp/fixtures/conformance/kernel/kernel-ndjson-lf.ndjson:1)
 - [fixtures/conformance/kernel/kernel-ndjson-crlf.ndjson](/C:/Users/mouadh/Documents/AI%20in%20research/core-csharp/fixtures/conformance/kernel/kernel-ndjson-crlf.ndjson:1)
 - [fixtures/conformance/kernel/kernel-ndjson-bom.ndjson](/C:/Users/mouadh/Documents/AI%20in%20research/core-csharp/fixtures/conformance/kernel/kernel-ndjson-bom.ndjson:1)
+- [.gitattributes](/C:/Users/mouadh/Documents/AI%20in%20research/core-csharp/.gitattributes:1)
 - [docs/gates/GATE-02.md](/C:/Users/mouadh/Documents/AI%20in%20research/core-csharp/docs/gates/GATE-02.md:1)
 
 ## Fixture IDs
@@ -76,8 +77,8 @@ Build succeeded.
 ### `dotnet test NexusScholar.Core.slnx -c Release --no-build`
 
 ```text
-Passed! NexusScholar.Conformance.Tests.dll - Failed: 0, Passed: 4, Skipped: 0, Total: 4
-Passed! NexusScholar.Architecture.Tests.dll - Failed: 0, Passed: 3, Skipped: 0, Total: 3
+Passed! NexusScholar.Conformance.Tests.dll - Failed: 0, Passed: 7, Skipped: 0, Total: 7
+Passed! NexusScholar.Architecture.Tests.dll - Failed: 0, Passed: 4, Skipped: 0, Total: 4
 Passed! NexusScholar.Core.Tests.dll - Failed: 0, Passed: 28, Skipped: 0, Total: 28
 ```
 
@@ -93,10 +94,35 @@ Exit code 0. No formatting changes required.
 Build succeeded.
 0 Warning(s)
 0 Error(s)
-Passed! NexusScholar.Architecture.Tests.dll - Failed: 0, Passed: 3, Skipped: 0, Total: 3
+Passed! NexusScholar.Architecture.Tests.dll - Failed: 0, Passed: 4, Skipped: 0, Total: 4
 Passed! NexusScholar.Core.Tests.dll - Failed: 0, Passed: 28, Skipped: 0, Total: 28
 Passed! NexusScholar.Conformance.Tests.dll - Failed: 0, Passed: 7, Skipped: 0, Total: 7
 ```
+
+## Hosted CI Evidence
+
+Hosted CI run: https://github.com/nexus-scholar/core-csharp/actions/runs/28243469130
+
+Commit: `81fcc16e0249e63c1607cb0c26e4e780e6a6fe41`
+
+Hosted matrix:
+
+- `verify (ubuntu-latest)`: success
+- `verify (windows-latest)`: success
+
+Steps passed on both:
+
+- checkout
+- setup .NET
+- restore
+- build
+- test
+- format
+
+Follow-up fix:
+
+- The CRLF NDJSON negative fixture was originally normalized to LF in the Git index.
+- Commit `81fcc16` cleared inherited `eol` for `*.ndjson` and preserved CRLF fixture bytes.
 
 ## Reviewer Input Used
 
@@ -112,7 +138,7 @@ Passed! NexusScholar.Conformance.Tests.dll - Failed: 0, Passed: 7, Skipped: 0, T
 - `ContentDigest` remains in `NexusScholar.Artifacts`, so the module placement is still thinner than the ideal inward kernel contract.
 - `src/NexusScholar.Protocol` still uses provisional digest material and is not upgraded by this gate.
 - `src/NexusScholar.Bundles` still verifies only a thin scaffold and is not elevated to bundle authority here.
-- No fresh GitHub Actions matrix run was captured in this turn for Gate 2 specifically. Local verification passed, but cross-platform CI evidence still depends on a later workflow run.
+- Hosted GitHub Actions evidence exists for commit `81fcc16e0249e63c1607cb0c26e4e780e6a6fe41`; both Ubuntu and Windows jobs passed restore, build, test, and format.
 - Open conflicts intentionally remain open: `CF-001`, `CF-002`, `CF-004`, `CF-005`, `CF-006`, `CF-008`, and `CF-014`.
 
 ## CF-009 Status
