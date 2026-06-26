@@ -1,6 +1,6 @@
 # Gate 3: Protocol Lifecycle Planning
 
-Status: planning only. No protocol behavior implementation is authorized until `CF-001` and `CF-008` are frozen.
+Status: planning decisions accepted; implementation and conformance fixtures pending. No protocol behavior implementation is included in this gate-planning pass.
 
 ## Goal
 
@@ -8,28 +8,35 @@ Freeze the protocol contract and approval semantics needed before implementing p
 
 Gate 3 must define draft, decision, approval, version, amendment, waiver, deviation, digest, and supersession rules without silently adopting unresolved blueprint defaults.
 
+The planning decisions are:
+
+- [ADR 0003: Protocol Record Contract](/C:/Users/mouadh/Documents/AI%20in%20research/core-csharp/docs/adr/0003-protocol-record-contract.md:1)
+- [ADR 0004: Protocol Approval Semantics](/C:/Users/mouadh/Documents/AI%20in%20research/core-csharp/docs/adr/0004-protocol-approval-semantics.md:1)
+
 ## Source Of Truth Inputs
 
 1. `AGENTS.md`
 2. `PLANS.md`
 3. `docs/adr/0001-source-of-truth-and-porting.md`
 4. `docs/adr/0002-canonical-json-and-digests.md`
-5. `docs/port/OPEN-CONFLICTS.md`
-6. `docs/discovery/BLUEPRINT-AUDIT.md`
-7. `fixtures/conformance/protocol-minimal.json`
-8. current scaffold under `src/NexusScholar.Protocol`
+5. `docs/adr/0003-protocol-record-contract.md`
+6. `docs/adr/0004-protocol-approval-semantics.md`
+7. `docs/port/OPEN-CONFLICTS.md`
+8. `docs/discovery/BLUEPRINT-AUDIT.md`
+9. `fixtures/conformance/protocol-minimal.json`
+10. current scaffold under `src/NexusScholar.Protocol`
 
-## Blocking Conflicts To Resolve First
+## Conflicts With Accepted Local Gate 3 Decisions
 
 ### `CF-001`: Protocol Contract
 
 The current fixture and model use a thin `subject + required_decisions + decisions` shape. The blueprint protocol schema requires version identifiers, template digest, intent, unresolved items, approvals, timestamps, amendment links, and full digest fields.
 
-Before implementation, Gate 3 must choose the local protocol record shape and define which fields are required for draft records, approved versions, and amendments.
+Planning decision accepted locally by `ADR 0003`. The current protocol scaffold and `protocol-minimal.json` remain non-authoritative until a fixture-backed implementation updates them. Blueprint protocol conformance remains unclaimed.
 
 ### `CF-008`: Approval Semantics
 
-Approval semantics are not frozen. Gate 3 must decide the minimum enforceable approval model for protocol approval, including actor identity, timestamp, content digest, role or authority requirement, and whether dual-independent approval is required, optional, or method-pack-specific.
+Planning decision accepted locally by `ADR 0004` for protocol approval semantics. Workflow, AI, plugin, and institutional approval engines remain future work.
 
 ## Dependency-Ordered Planning Tasks
 
@@ -42,14 +49,22 @@ Approval semantics are not frozen. Gate 3 must decide the minimum enforceable ap
 ## Required Fixtures And Negative Cases
 
 - protocol draft with required decisions
-- approved protocol version with actor, timestamp, digest, and immutable content
+- approved protocol version with `protocol-content` digest and immutable content
 - amended protocol version preserving supersession links
+- invalidation notice preserving downstream impact
+- waiver included in approved protocol digest
+- deviation linked to an approved version without mutating that version
+- single approval accepted for an explicit custom local policy
+- dual-independent approval accepted only with two distinct actors
 - rejection for missing required decision
+- rejection for blocking unresolved decision
 - rejection for duplicate decision mutation
 - rejection for post-approval mutation
-- rejection for approval without authorized actor
+- rejection for approval without authorized human actor
 - rejection for approval with stale or mismatched digest
-- explicit fixture for single-approval versus dual-independent approval once `CF-008` is frozen
+- rejection for using `approval-record` digest where `protocol-content` digest is required, or the reverse
+- rejection for automation as approval authority
+- rejection of old newline `key=value` digest material as non-authoritative protocol content
 
 ## Allowed Paths During Planning
 
@@ -75,8 +90,8 @@ Approval semantics are not frozen. Gate 3 must decide the minimum enforceable ap
 
 ## Exit Checklist
 
-- `CF-001` has an accepted local protocol contract decision.
-- `CF-008` has an accepted approval semantics decision.
+- `CF-001` has an accepted local protocol contract decision in `ADR 0003`; implementation and conformance fixtures remain pending.
+- `CF-008` has an accepted approval semantics decision in `ADR 0004`; implementation and conformance fixtures remain pending.
 - The protocol digest input shape uses Kernel digest primitives only.
 - Required protocol fixtures and negative cases are listed before implementation.
-- No protocol implementation starts until the planning decisions are recorded.
+- No protocol implementation was changed by this planning pass.
