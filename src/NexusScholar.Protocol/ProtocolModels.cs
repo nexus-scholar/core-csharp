@@ -52,6 +52,10 @@ public static class ProtocolErrorCodes
     public const string InvalidDeviation = "invalid-deviation";
     public const string SameActorDualApproval = "same-actor-dual-approval";
     public const string AutomationCannotApprove = "automation-cannot-approve";
+    public const string MissingApprovalActor = "missing-approval-actor";
+    public const string NonHumanApprovalActor = "non-human-approval-actor";
+    public const string ApprovalTargetMismatch = "approval-target-mismatch";
+    public const string InsufficientApprovalPolicy = "insufficient-approval-policy";
 }
 
 public sealed class ProtocolRuleException : DomainRuleException
@@ -116,7 +120,8 @@ public sealed record RequiredDecisionDefinition(
     string RequiredBefore,
     string ApprovalGateId,
     string SourceRequirementId,
-    bool AllowsUnresolved)
+    bool AllowsUnresolved,
+    bool AllowsWaiver = true)
 {
     public CanonicalJsonObject ToCanonicalJson()
     {
@@ -275,25 +280,86 @@ public sealed record ApprovalPolicy(
     }
 }
 
-public sealed record ProtocolApproval(
-    string ApprovalId,
-    string TargetType,
-    string TargetId,
-    string ProtocolId,
-    string ProtocolVersionId,
-    int ProtocolVersionNumber,
-    ContentDigest ContentDigest,
-    string PolicyId,
-    string PolicyVersion,
-    string PolicyMode,
-    ProtocolApprovalDecision Decision,
-    ActorId ApprovedBy,
-    DateTimeOffset ApprovedAt,
-    string? Role,
-    string? Rationale,
-    string? SupersedesApprovalId,
-    ContentDigest ApprovalRecordDigest)
+public sealed class ProtocolApproval
 {
+    private const string ProtocolVersionTargetType = "protocol-version";
+
+    internal ProtocolApproval(
+        string approvalId,
+        string targetType,
+        string targetId,
+        string protocolId,
+        string protocolVersionId,
+        int protocolVersionNumber,
+        ContentDigest contentDigest,
+        string policyId,
+        string policyVersion,
+        string policyMode,
+        ProtocolApprovalDecision decision,
+        ActorId approvedBy,
+        DateTimeOffset approvedAt,
+        string? role,
+        string? rationale,
+        string? supersedesApprovalId,
+        bool approvedByIsHuman,
+        ContentDigest approvalRecordDigest)
+    {
+        ApprovalId = Guard.NotBlank(approvalId, nameof(approvalId));
+        TargetType = Guard.NotBlank(targetType, nameof(targetType));
+        TargetId = Guard.NotBlank(targetId, nameof(targetId));
+        ProtocolId = Guard.NotBlank(protocolId, nameof(protocolId));
+        ProtocolVersionId = Guard.NotBlank(protocolVersionId, nameof(protocolVersionId));
+        ProtocolVersionNumber = protocolVersionNumber;
+        ContentDigest = contentDigest;
+        PolicyId = Guard.NotBlank(policyId, nameof(policyId));
+        PolicyVersion = Guard.NotBlank(policyVersion, nameof(policyVersion));
+        PolicyMode = Guard.NotBlank(policyMode, nameof(policyMode));
+        Decision = decision;
+        ApprovedBy = approvedBy;
+        ApprovedAt = approvedAt;
+        Role = role;
+        Rationale = rationale;
+        SupersedesApprovalId = supersedesApprovalId;
+        ApprovedByIsHuman = approvedByIsHuman;
+        ApprovalRecordDigest = approvalRecordDigest;
+    }
+
+    public string ApprovalId { get; }
+
+    public string TargetType { get; }
+
+    public string TargetId { get; }
+
+    public string ProtocolId { get; }
+
+    public string ProtocolVersionId { get; }
+
+    public int ProtocolVersionNumber { get; }
+
+    public ContentDigest ContentDigest { get; }
+
+    public string PolicyId { get; }
+
+    public string PolicyVersion { get; }
+
+    public string PolicyMode { get; }
+
+    public ProtocolApprovalDecision Decision { get; }
+
+    public ActorId ApprovedBy { get; }
+
+    public DateTimeOffset ApprovedAt { get; }
+
+    public string? Role { get; }
+
+    public string? Rationale { get; }
+
+    public string? SupersedesApprovalId { get; }
+
+    public bool ApprovedByIsHuman { get; }
+
+    public ContentDigest ApprovalRecordDigest { get; private set; }
+
     public static ProtocolApproval Create(
         IIdGenerator ids,
         ProtocolVersion version,
@@ -311,7 +377,15 @@ public sealed record ProtocolApproval(
         ArgumentNullException.ThrowIfNull(policy);
         ArgumentNullException.ThrowIfNull(clock);
 
-        EnsureHumanApprovalActor(actor, policy);
+        EnsureApprovalActor(actor);
+        EnsureApprovalPolicy(policy);
+
+        if (version.Status != ProtocolStatus.ReadyForReview)
+        {
+            throw new ProtocolRuleException(
+                ProtocolErrorCodes.StaleContentDigest,
+                "Protocol approvals can only be created for versions in review.");
+        }
 
         if (expectedContentDigest != version.ContentDigest)
         {
@@ -322,7 +396,7 @@ public sealed record ProtocolApproval(
 
         var approval = new ProtocolApproval(
             NewId(ids),
-            "protocol-version",
+            ProtocolVersionTargetType,
             version.Id,
             version.ProtocolId,
             version.Id,
@@ -337,9 +411,33 @@ public sealed record ProtocolApproval(
             role,
             rationale,
             supersedesApprovalId,
+            actor.IsHuman,
             default);
 
-        return approval with { ApprovalRecordDigest = approval.ComputeApprovalRecordDigest() };
+        approval.ApprovalRecordDigest = approval.ComputeApprovalRecordDigest();
+        return approval;
+    }
+
+    public bool HasValidApprovalRecordDigest() => ApprovalRecordDigest == ComputeApprovalRecordDigest();
+
+    public bool IsApprovedByHuman() => ApprovedByIsHuman;
+
+    public bool IsApprovedForTarget(ProtocolVersion version, ApprovalPolicy policy)
+    {
+        return Decision == ProtocolApprovalDecision.Approved && IsBoundToTarget(version, policy);
+    }
+
+    public bool IsBoundToTarget(ProtocolVersion version, ApprovalPolicy policy)
+    {
+        return string.Equals(TargetType, ProtocolVersionTargetType, StringComparison.Ordinal) &&
+            string.Equals(TargetId, version.Id, StringComparison.Ordinal) &&
+            ProtocolVersionNumber == version.VersionNumber &&
+            string.Equals(ProtocolId, version.ProtocolId, StringComparison.Ordinal) &&
+            string.Equals(ProtocolVersionId, version.Id, StringComparison.Ordinal) &&
+            ContentDigest == version.ContentDigest &&
+            string.Equals(PolicyId, policy.PolicyId, StringComparison.Ordinal) &&
+            string.Equals(PolicyVersion, policy.PolicyVersion, StringComparison.Ordinal) &&
+            string.Equals(PolicyMode, policy.ModeWireValue, StringComparison.Ordinal);
     }
 
     public CanonicalJsonObject ToCanonicalJson(bool includeDigest)
@@ -348,6 +446,7 @@ public sealed record ProtocolApproval(
             .Add("approval_id", Guard.NotBlank(ApprovalId, nameof(ApprovalId)))
             .AddTimestamp("approved_at", ApprovedAt)
             .Add("approved_by", ApprovedBy.ToString())
+            .Add("approved_by_is_human", ApprovedByIsHuman)
             .Add("content_digest", ContentDigest.ToString())
             .Add("decision", DecisionWireValue)
             .Add("policy_id", Guard.NotBlank(PolicyId, nameof(PolicyId)))
@@ -402,20 +501,23 @@ public sealed record ProtocolApproval(
 
     private ContentDigest ComputeApprovalRecordDigest() => ToApprovalRecordDigestEnvelope().ComputeDigest();
 
-    private static void EnsureHumanApprovalActor(ProtocolActor actor, ApprovalPolicy policy)
+    private static void EnsureApprovalActor(ProtocolActor actor)
     {
         if (actor.Id.Value.Length == 0)
         {
-            throw new ProtocolRuleException(ProtocolErrorCodes.UnauthorizedApproval, "Approval actor is required.");
+            throw new ProtocolRuleException(ProtocolErrorCodes.MissingApprovalActor, "Approval actor is required.");
         }
 
         if (!actor.IsHuman)
         {
             throw new ProtocolRuleException(
-                ProtocolErrorCodes.AutomationCannotApprove,
+                ProtocolErrorCodes.NonHumanApprovalActor,
                 "Automation cannot approve protocol content.");
         }
+    }
 
+    private static void EnsureApprovalPolicy(ApprovalPolicy policy)
+    {
         if (policy.AllowsAutomation)
         {
             throw new ProtocolRuleException(
@@ -447,7 +549,8 @@ public sealed record ProtocolVersion
         DateTimeOffset? approvedAt,
         string? supersedesVersionId = null,
         string? supersededByVersionId = null,
-        string? amendmentId = null)
+        string? amendmentId = null,
+        IEnumerable<UnresolvedDecision>? unresolvedDecisions = null)
     {
         Id = Guard.NotBlank(id, nameof(id));
         ProtocolId = Guard.NotBlank(protocolId, nameof(protocolId));
@@ -457,9 +560,54 @@ public sealed record ProtocolVersion
         Template = template ?? throw new ArgumentNullException(nameof(template));
         Intent = intent ?? throw new ArgumentNullException(nameof(intent));
         Values = ((CanonicalJsonObject)CanonicalJsonValue.DeepClone(values ?? throw new ArgumentNullException(nameof(values)))).Freeze();
-        RequiredDecisions = (requiredDecisions ?? throw new ArgumentNullException(nameof(requiredDecisions))).ToArray();
-        Decisions = (decisions ?? throw new ArgumentNullException(nameof(decisions))).ToArray();
-        Waivers = (waivers ?? throw new ArgumentNullException(nameof(waivers))).ToArray();
+        RequiredDecisions = (requiredDecisions ?? throw new ArgumentNullException(nameof(requiredDecisions)))
+            .Select(clone => new RequiredDecisionDefinition(
+                Guard.NotBlank(clone.DecisionKey, nameof(clone.DecisionKey)),
+                clone.Title ?? string.Empty,
+                clone.Description ?? string.Empty,
+                (CanonicalJsonValue)CanonicalJsonValue.DeepClone(clone.ValueSchema ?? throw new ArgumentNullException(nameof(clone.ValueSchema))),
+                Guard.NotBlank(clone.RequiredBefore, nameof(clone.RequiredBefore)),
+                Guard.NotBlank(clone.ApprovalGateId, nameof(clone.ApprovalGateId)),
+                Guard.NotBlank(clone.SourceRequirementId, nameof(clone.SourceRequirementId)),
+                clone.AllowsUnresolved,
+                clone.AllowsWaiver))
+            .ToArray();
+        Decisions = (decisions ?? throw new ArgumentNullException(nameof(decisions)))
+            .Select(decision => new ProtocolDecision(
+                Guard.NotBlank(decision.DecisionId, nameof(decision.DecisionId)),
+                Guard.NotBlank(decision.DecisionKey, nameof(decision.DecisionKey)),
+                (CanonicalJsonValue)CanonicalJsonValue.DeepClone(decision.Value ?? throw new ArgumentNullException(nameof(decision.Value))),
+                decision.Rationale,
+                decision.DecidedBy,
+                decision.DecidedAt,
+                decision.SourceProposalDigest,
+                decision.SupersedesDecisionId))
+            .ToArray();
+        Waivers = (waivers ?? throw new ArgumentNullException(nameof(waivers)))
+            .Select(waiver => new ProtocolWaiver(
+                Guard.NotBlank(waiver.WaiverId, nameof(waiver.WaiverId)),
+                Guard.NotBlank(waiver.AffectedRequirementId, nameof(waiver.AffectedRequirementId)),
+                waiver.Condition,
+                waiver.ExpiresAt,
+                Guard.NotBlank(waiver.Rationale, nameof(waiver.Rationale)),
+                Guard.NotBlank(waiver.ConsequenceWarning, nameof(waiver.ConsequenceWarning)),
+                Guard.NotBlank(waiver.DisclosureMapping, nameof(waiver.DisclosureMapping)),
+                waiver.RequestedBy,
+                waiver.RequestedAt,
+                Guard.NotBlank(waiver.ApprovalPolicyId, nameof(waiver.ApprovalPolicyId)),
+                (waiver.ApprovalIds ?? Array.Empty<string>()).Select(id => Guard.NotBlank(id, nameof(waiver.ApprovalIds))).ToArray()))
+            .ToArray();
+        UnresolvedDecisions = (unresolvedDecisions ?? Array.Empty<UnresolvedDecision>())
+            .Select(unresolved => new UnresolvedDecision(
+                Guard.NotBlank(unresolved.UnresolvedId, nameof(unresolved)),
+                Guard.NotBlank(unresolved.DecisionKey, nameof(unresolved.DecisionKey)),
+                Guard.NotBlank(unresolved.Question, nameof(unresolved.Question)),
+                Guard.NotBlank(unresolved.Reason, nameof(unresolved.Reason)),
+                Guard.NotBlank(unresolved.RequiredBefore, nameof(unresolved.RequiredBefore)),
+                unresolved.CreatedBy,
+                unresolved.CreatedAt,
+                unresolved.BlocksProtocolApproval))
+            .ToArray();
         ContentDigest = contentDigest;
         ApprovalPolicyId = Guard.NotBlank(approvalPolicyId, nameof(approvalPolicyId));
         ApprovalIds = (approvalIds ?? Array.Empty<string>()).Select(id => Guard.NotBlank(id, nameof(approvalIds))).ToArray();
@@ -467,6 +615,37 @@ public sealed record ProtocolVersion
         SupersedesVersionId = supersedesVersionId;
         SupersededByVersionId = supersededByVersionId;
         AmendmentId = amendmentId;
+
+        if (status == ProtocolStatus.Approved && (!approvedAt.HasValue || ApprovalIds.Count == 0))
+        {
+            throw new ProtocolRuleException(
+                ProtocolErrorCodes.StaleContentDigest,
+                "Approved protocol versions require an approval timestamp and at least one approval reference.");
+        }
+
+        if (status != ProtocolStatus.Approved && status != ProtocolStatus.Superseded)
+        {
+            if (approvedAt.HasValue)
+            {
+                throw new ProtocolRuleException(
+                    ProtocolErrorCodes.StaleContentDigest,
+                    "Only approved or superseded protocol versions can carry an approval timestamp.");
+            }
+
+            if (ApprovalIds.Count > 0)
+            {
+                throw new ProtocolRuleException(
+                    ProtocolErrorCodes.StaleContentDigest,
+                    "Only approved or superseded protocol versions can carry approval identifiers.");
+            }
+        }
+
+        if (status == ProtocolStatus.Superseded && !approvedAt.HasValue)
+        {
+            throw new ProtocolRuleException(
+                ProtocolErrorCodes.StaleContentDigest,
+                "Superseded protocol versions require a source approval timestamp.");
+        }
     }
 
     public string Id { get; }
@@ -490,6 +669,8 @@ public sealed record ProtocolVersion
     public IReadOnlyList<ProtocolDecision> Decisions { get; }
 
     public IReadOnlyList<ProtocolWaiver> Waivers { get; }
+
+    public IReadOnlyList<UnresolvedDecision> UnresolvedDecisions { get; }
 
     public ContentDigest ContentDigest { get; }
 
@@ -532,7 +713,8 @@ public sealed record ProtocolVersion
             approvedAt,
             SupersedesVersionId,
             SupersededByVersionId,
-            AmendmentId);
+            AmendmentId,
+            UnresolvedDecisions);
     }
 
     public ProtocolVersion SupersededBy(string successorVersionId)
@@ -555,7 +737,8 @@ public sealed record ProtocolVersion
             ApprovedAt,
             SupersedesVersionId,
             Guard.NotBlank(successorVersionId, nameof(successorVersionId)),
-            AmendmentId);
+            AmendmentId,
+            UnresolvedDecisions);
     }
 
     public void AddWaiver(ProtocolWaiver _)
@@ -582,6 +765,7 @@ public sealed record ProtocolVersion
                 RequiredDecisions,
                 Decisions,
                 Waivers,
+                UnresolvedDecisions,
                 SupersedesVersionId,
                 AmendmentId));
     }
@@ -641,6 +825,14 @@ public sealed record ProtocolDeviation(
     string Effect,
     string DisclosureMapping)
 {
+    private static readonly string[] AllowedClassifications = new[]
+    {
+        "approved_amendment_required",
+        "protocol_deviation",
+        "operational_variance_no_scientific_effect",
+        "unresolved_inconsistency"
+    };
+
     public static ProtocolDeviation Record(
         IIdGenerator ids,
         ProtocolVersion version,
@@ -657,11 +849,25 @@ public sealed record ProtocolDeviation(
         ArgumentNullException.ThrowIfNull(version);
         ArgumentNullException.ThrowIfNull(clock);
 
+        if (version.Status != ProtocolStatus.Approved)
+        {
+            throw new ProtocolRuleException(
+                ProtocolErrorCodes.InvalidDeviation,
+                "Deviation records must link to an approved protocol version.");
+        }
+
         if (!recordedBy.IsHuman)
         {
             throw new ProtocolRuleException(
                 ProtocolErrorCodes.InvalidDeviation,
                 "Protocol deviations must identify a human recorder.");
+        }
+
+        if (classification is null || !AllowedClassifications.Contains(classification, StringComparer.Ordinal))
+        {
+            throw new ProtocolRuleException(
+                ProtocolErrorCodes.InvalidDeviation,
+                $"Invalid protocol deviation classification '{classification}'.");
         }
 
         return new ProtocolDeviation(
@@ -731,8 +937,16 @@ public sealed record ProtocolAmendment(
     {
         ArgumentNullException.ThrowIfNull(ids);
         ArgumentNullException.ThrowIfNull(previousVersion);
+        ArgumentNullException.ThrowIfNull(requestedBy);
         ArgumentNullException.ThrowIfNull(clock);
         ArgumentNullException.ThrowIfNull(policy);
+
+        if (previousVersion.Status != ProtocolStatus.Approved)
+        {
+            throw new ProtocolRuleException(
+                ProtocolErrorCodes.InvalidAmendment,
+                "A protocol amendment requires a previously approved version.");
+        }
 
         var changedKeys = (changedDecisionKeys ?? throw new ArgumentNullException(nameof(changedDecisionKeys)))
             .Select(key => Guard.NotBlank(key, nameof(changedDecisionKeys)))
@@ -746,17 +960,48 @@ public sealed record ProtocolAmendment(
                 "A protocol amendment requires a human requester and changed decision keys.");
         }
 
+        var normalizedProducesVersionId = Guard.NotBlank(producesVersionId, nameof(producesVersionId));
+        if (string.Equals(normalizedProducesVersionId, previousVersion.Id, StringComparison.Ordinal))
+        {
+            throw new ProtocolRuleException(
+                ProtocolErrorCodes.InvalidAmendment,
+                "An amendment cannot produce a version with the same id as the version it replaces.");
+        }
+
+        var notices = (invalidationNotices ?? Array.Empty<ProtocolInvalidationNotice>()).ToArray();
+        var amendmentId = ids.NewId().ToString("D");
+
+        foreach (var notice in notices)
+        {
+            if (!changedKeys.Contains(notice.AffectedRequirementId, StringComparer.Ordinal))
+            {
+                throw new ProtocolRuleException(
+                    ProtocolErrorCodes.InvalidAmendment,
+                    "Invalidation notices must attach to changed requirements.");
+            }
+        }
+
         return new ProtocolAmendment(
-            ids.NewId().ToString("D"),
+            amendmentId,
             previousVersion.ProtocolId,
             previousVersion.Id,
-            Guard.NotBlank(producesVersionId, nameof(producesVersionId)),
+            normalizedProducesVersionId,
             previousVersion.ContentDigest,
             requestedBy.Id,
             clock.UtcNow,
             Guard.NotBlank(rationale, nameof(rationale)),
             changedKeys,
-            (invalidationNotices ?? Array.Empty<ProtocolInvalidationNotice>()).ToArray(),
+            notices
+                .Select(notice => new ProtocolInvalidationNotice(
+                    Guard.NotBlank(notice.NoticeId, nameof(notice.NoticeId)),
+                    amendmentId,
+                    Guard.NotBlank(notice.AffectedRequirementId, nameof(notice.AffectedRequirementId)),
+                    notice.AffectedArtifactDigest,
+                    Guard.NotBlank(notice.AffectedWorkflowNodeId, nameof(notice.AffectedWorkflowNodeId)),
+                    Guard.NotBlank(notice.Effect, nameof(notice.Effect)),
+                    Guard.NotBlank(notice.RequiredAction, nameof(notice.RequiredAction)),
+                    notice.CreatedAt))
+                .ToArray(),
             invalidationPlanDigest,
             policy.PolicyId,
             Array.Empty<string>());
@@ -785,6 +1030,7 @@ internal static class ProtocolDigestMaterial
         IEnumerable<RequiredDecisionDefinition> requiredDecisions,
         IEnumerable<ProtocolDecision> decisions,
         IEnumerable<ProtocolWaiver> waivers,
+        IEnumerable<UnresolvedDecision> unresolvedDecisions,
         string? supersedesVersionId,
         string? amendmentId)
     {
@@ -812,6 +1058,12 @@ internal static class ProtocolDigestMaterial
                     .OrderBy(waiver => waiver.AffectedRequirementId, StringComparer.Ordinal)
                     .ThenBy(waiver => waiver.WaiverId, StringComparer.Ordinal)
                     .Select(waiver => waiver.ToCanonicalJson())
+                    .ToArray()))
+            .Add("unresolved_decisions", CanonicalJsonValue.Array(
+                unresolvedDecisions
+                    .OrderBy(unresolved => unresolved.DecisionKey, StringComparer.Ordinal)
+                    .ThenBy(unresolved => unresolved.UnresolvedId, StringComparer.Ordinal)
+                    .Select(unresolved => unresolved.ToCanonicalJson())
                     .ToArray()));
 
         if (supersedesVersionId is not null)

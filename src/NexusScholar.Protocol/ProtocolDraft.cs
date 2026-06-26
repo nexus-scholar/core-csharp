@@ -8,6 +8,7 @@ public sealed class ProtocolDraft
     private readonly Dictionary<string, UnresolvedDecision> _unresolvedDecisions = new(StringComparer.Ordinal);
     private readonly List<ProtocolWaiver> _waivers = new();
     private readonly RequiredDecisionDefinition[] _requiredDecisions;
+    private const string ProtocolVersionTargetType = "protocol-version";
 
     private ProtocolDraft(
         string protocolId,
@@ -139,6 +140,7 @@ public sealed class ProtocolDraft
         ArgumentNullException.ThrowIfNull(ids);
         ArgumentNullException.ThrowIfNull(value);
         ArgumentNullException.ThrowIfNull(clock);
+        EnsureDecisionActor(actor);
 
         decisionKey = Guard.NotBlank(decisionKey, nameof(decisionKey));
 
@@ -191,13 +193,21 @@ public sealed class ProtocolDraft
         EnsureDraft();
         ArgumentNullException.ThrowIfNull(ids);
         ArgumentNullException.ThrowIfNull(clock);
+        EnsureDecisionActor(createdBy);
+
+        if (!_requiredDecisions.Any(required => string.Equals(required.DecisionKey, decisionKey, StringComparison.Ordinal)))
+        {
+            throw new ProtocolRuleException(
+                ProtocolErrorCodes.UnauthorizedApproval,
+                "Unresolved decision key is not declared in required decisions.");
+        }
 
         var unresolved = new UnresolvedDecision(
             NewId(ids),
             Guard.NotBlank(decisionKey, nameof(decisionKey)),
-            question,
-            reason,
-            requiredBefore,
+            Guard.NotBlank(question, nameof(question)),
+            Guard.NotBlank(reason, nameof(reason)),
+            Guard.NotBlank(requiredBefore, nameof(requiredBefore)),
             createdBy.Id,
             clock.UtcNow,
             blocksProtocolApproval);
@@ -229,6 +239,30 @@ public sealed class ProtocolDraft
             throw new ProtocolRuleException(ProtocolErrorCodes.InvalidWaiver, "Protocol waivers must be requested by a human actor.");
         }
 
+        var targetExists = _requiredDecisions.Any(required =>
+            string.Equals(required.DecisionKey, affectedRequirementId, StringComparison.Ordinal) ||
+            string.Equals(required.SourceRequirementId, affectedRequirementId, StringComparison.Ordinal));
+
+        if (!targetExists)
+        {
+            throw new ProtocolRuleException(
+                ProtocolErrorCodes.InvalidWaiver,
+                "Waiver requirement was not declared in the protocol draft.");
+        }
+
+        var targetRequirement = _requiredDecisions.Single(required =>
+            string.Equals(required.DecisionKey, affectedRequirementId, StringComparison.Ordinal) ||
+            string.Equals(required.SourceRequirementId, affectedRequirementId, StringComparison.Ordinal));
+
+        if (!targetRequirement.AllowsWaiver)
+        {
+            throw new ProtocolRuleException(
+                ProtocolErrorCodes.InvalidWaiver,
+                "Waiver was requested for a requirement that cannot be waived.");
+        }
+
+        var normalizedApprovalIds = (approvalIds ?? Array.Empty<string>()).Select(id => Guard.NotBlank(id, nameof(approvalIds))).ToArray();
+
         var waiver = new ProtocolWaiver(
             NewId(ids),
             affectedRequirementId,
@@ -240,7 +274,7 @@ public sealed class ProtocolDraft
             requestedBy.Id,
             clock.UtcNow,
             policy.PolicyId,
-            (approvalIds ?? Array.Empty<string>()).ToArray());
+            normalizedApprovalIds);
         _waivers.Add(waiver);
         UpdatedAt = clock.UtcNow;
         return waiver;
@@ -257,6 +291,14 @@ public sealed class ProtocolDraft
         EnsureDraft();
         ArgumentNullException.ThrowIfNull(ids);
         ArgumentNullException.ThrowIfNull(policy);
+
+        if (policy.AllowsAutomation)
+        {
+            throw new ProtocolRuleException(
+                ProtocolErrorCodes.UnauthorizedApproval,
+                "Protocol approval policies must not allow automation authority.");
+        }
+
         EnsureNoMissingRequiredDecisions();
         EnsureNoBlockingUnresolvedDecisions();
 
@@ -272,6 +314,7 @@ public sealed class ProtocolDraft
             _requiredDecisions,
             _decisions.Values,
             _waivers,
+            _unresolvedDecisions.Values,
             supersedesVersionId,
             amendmentId);
         var digest = new DigestEnvelope(
@@ -285,7 +328,7 @@ public sealed class ProtocolDraft
             ProtocolId,
             ProjectId,
             versionNumber,
-            ProtocolStatus.Approved,
+            ProtocolStatus.ReadyForReview,
             Template,
             Intent,
             Values,
@@ -297,7 +340,9 @@ public sealed class ProtocolDraft
             Array.Empty<string>(),
             null,
             supersedesVersionId,
-            amendmentId: amendmentId);
+            null,
+            amendmentId,
+            _unresolvedDecisions.Values);
     }
 
     public ProtocolVersion ApproveCandidate(
@@ -312,12 +357,10 @@ public sealed class ProtocolDraft
         ArgumentNullException.ThrowIfNull(approvals);
         ArgumentNullException.ThrowIfNull(clock);
 
-        var approved = approvals
-            .Where(approval => approval.Decision == ProtocolApprovalDecision.Approved)
-            .ToArray();
+        var approvalsToEvaluate = (approvals ?? throw new ArgumentNullException(nameof(approvals))).ToArray();
 
         EnsureCandidateStillMatchesDraft(candidate);
-        ValidateApprovalPolicy(candidate, policy, approved);
+        var approved = ValidateApprovalPolicy(candidate, policy, approvalsToEvaluate);
         Status = ProtocolStatus.Approved;
         UpdatedAt = clock.UtcNow;
         return candidate.WithApprovals(approved, clock.UtcNow);
@@ -369,11 +412,29 @@ public sealed class ProtocolDraft
         }
     }
 
-    private static void ValidateApprovalPolicy(
+    private static ProtocolApproval[] ValidateApprovalPolicy(
         ProtocolVersion candidate,
         ApprovalPolicy policy,
         IReadOnlyList<ProtocolApproval> approvals)
     {
+        var validatedApprovals = approvals
+            .Select(approval => ValidateApprovalRecord(candidate, policy, approval))
+            .ToArray();
+
+        var supersededApprovalIds = validatedApprovals
+            .Where(approval => !string.IsNullOrWhiteSpace(approval.SupersedesApprovalId))
+            .Select(approval => approval.SupersedesApprovalId!)
+            .ToHashSet(StringComparer.Ordinal);
+
+        var matching = validatedApprovals
+            .Where(approval =>
+                approval.Decision == ProtocolApprovalDecision.Approved &&
+                string.IsNullOrWhiteSpace(approval.SupersedesApprovalId) &&
+                !supersededApprovalIds.Contains(approval.ApprovalId))
+            .GroupBy(approval => approval.ApprovalId)
+            .Select(group => group.First())
+            .ToArray();
+
         if (policy.AllowsAutomation)
         {
             throw new ProtocolRuleException(
@@ -381,18 +442,39 @@ public sealed class ProtocolDraft
                 "Protocol approval policies must not allow automation authority.");
         }
 
-        var matching = approvals
-            .Where(approval =>
-                string.Equals(approval.ProtocolVersionId, candidate.Id, StringComparison.Ordinal) &&
-                approval.ContentDigest == candidate.ContentDigest &&
-                string.Equals(approval.PolicyId, policy.PolicyId, StringComparison.Ordinal))
-            .ToArray();
-
-        if (matching.Length < policy.MinimumApprovals)
+        if (candidate.Status != ProtocolStatus.ReadyForReview)
         {
             throw new ProtocolRuleException(
-                ProtocolErrorCodes.UnauthorizedApproval,
-                "Insufficient approvals for the selected protocol approval policy.");
+                ProtocolErrorCodes.StaleContentDigest,
+                "Protocol can only be approved from a review candidate.");
+        }
+
+        switch (policy.Mode)
+        {
+            case ApprovalPolicyMode.DualIndependent:
+                if (matching.Length < policy.MinimumApprovals)
+                {
+                    throw new ProtocolRuleException(
+                        ProtocolErrorCodes.InsufficientApprovalPolicy,
+                        "Dual-independent approval policy did not receive enough approvals.");
+                }
+                break;
+            default:
+                if (matching.Length < policy.MinimumApprovals)
+                {
+                    throw new ProtocolRuleException(
+                        ProtocolErrorCodes.InsufficientApprovalPolicy,
+                        "Insufficient approvals for the selected protocol approval policy.");
+                }
+                break;
+        }
+
+        if (policy.Mode == ApprovalPolicyMode.DualIndependent &&
+            matching.Select(approval => approval.ApprovedBy).Distinct().Count() != matching.Length)
+        {
+            throw new ProtocolRuleException(
+                ProtocolErrorCodes.SameActorDualApproval,
+                "Dual-independent protocol approval requires distinct actors.");
         }
 
         if (policy.RequiresDistinctActors &&
@@ -400,7 +482,80 @@ public sealed class ProtocolDraft
         {
             throw new ProtocolRuleException(
                 ProtocolErrorCodes.SameActorDualApproval,
-                "Dual-independent protocol approval requires distinct actors.");
+                "Protocol approval requires distinct actors.");
+        }
+
+        foreach (var requiredRole in policy.RequiredRoles.Where(role => role.Length > 0).Distinct(StringComparer.Ordinal))
+        {
+            if (!matching.Any(approval => string.Equals(approval.Role, requiredRole, StringComparison.Ordinal)))
+            {
+                throw new ProtocolRuleException(
+                    ProtocolErrorCodes.InsufficientApprovalPolicy,
+                    $"Approval policy requires role '{requiredRole}' that was not provided.");
+            }
+        }
+
+        if (matching.Length > 0 &&
+            matching.Any(approval => !string.Equals(approval.TargetType, ProtocolVersionTargetType, StringComparison.Ordinal)))
+        {
+            throw new ProtocolRuleException(
+                ProtocolErrorCodes.ApprovalTargetMismatch,
+                "Approval target type does not match the protocol-version aggregate.");
+        }
+
+        return matching;
+    }
+
+    private static ProtocolApproval ValidateApprovalRecord(
+        ProtocolVersion candidate,
+        ApprovalPolicy policy,
+        ProtocolApproval approval)
+    {
+        if (!approval.HasValidApprovalRecordDigest())
+        {
+            throw new ProtocolRuleException(
+                ProtocolErrorCodes.ApprovalTargetMismatch,
+                "Approval record digest is invalid.");
+        }
+
+        if (approval.ApprovedBy.Value.Length == 0)
+        {
+            throw new ProtocolRuleException(
+                ProtocolErrorCodes.MissingApprovalActor,
+                "Approval actor is required.");
+        }
+
+        if (!approval.IsApprovedByHuman())
+        {
+            throw new ProtocolRuleException(
+                ProtocolErrorCodes.NonHumanApprovalActor,
+                "Approval actor must be a human.");
+        }
+
+        if (!approval.IsBoundToTarget(candidate, policy))
+        {
+            throw new ProtocolRuleException(
+                ProtocolErrorCodes.ApprovalTargetMismatch,
+                "Approval target did not match candidate version, policy, or protocol content.");
+        }
+
+        return approval;
+    }
+
+    private static void EnsureDecisionActor(ProtocolActor actor)
+    {
+        if (actor.Id.Value.Length == 0)
+        {
+            throw new ProtocolRuleException(
+                ProtocolErrorCodes.MissingApprovalActor,
+                "Protocol decision actor is required.");
+        }
+
+        if (!actor.IsHuman)
+        {
+            throw new ProtocolRuleException(
+                ProtocolErrorCodes.NonHumanApprovalActor,
+                "Protocol decisions cannot be recorded by automated actors.");
         }
     }
 
@@ -429,6 +584,7 @@ public sealed class ProtocolDraft
                 _requiredDecisions,
                 _decisions.Values,
                 _waivers,
+                _unresolvedDecisions.Values,
                 candidate.SupersedesVersionId,
                 candidate.AmendmentId)).ComputeDigest();
 

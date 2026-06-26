@@ -1,3 +1,4 @@
+using System.Reflection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NexusScholar.Kernel;
 using NexusScholar.Protocol;
@@ -52,15 +53,39 @@ public sealed class ProtocolTests
     }
 
     [TestMethod]
+    public void Automation_cannot_record_protocol_decisions()
+    {
+        var ids = NewIds();
+        var draft = CreateDraft(ids);
+
+        var error = Assert.ThrowsExactly<ProtocolRuleException>(() =>
+            draft.RecordDecision(
+                ids,
+                "review-type",
+                CanonicalJsonValue.From("scoping-review"),
+                Automation,
+                Clock));
+        Assert.AreEqual(ProtocolErrorCodes.NonHumanApprovalActor, error.Category);
+    }
+
+    [TestMethod]
     public void Blocking_unresolved_decision_prevents_approval()
     {
         var ids = NewIds();
-        var draft = CreateCompleteDraft(ids);
+        var draft = CreateCompleteDraft(
+            ids,
+            new[]
+            {
+                RequiredDecision("review-type", allowsUnresolved: true),
+                RequiredDecision("scope")
+            });
+        Assert.IsTrue(draft.RequiredDecisions.Select(req => req.DecisionKey).Contains("review-type"));
+        var unresolvedDecisionKey = draft.RequiredDecisions[0].DecisionKey;
         draft.AddUnresolvedDecision(
             ids,
-            "quality-threshold",
+            unresolvedDecisionKey,
             "What minimum score is acceptable?",
-            "Template requires a threshold before conduct.",
+            "Template requires this decision to remain open while planning.",
             "protocol-approval",
             Researcher,
             Clock,
@@ -142,6 +167,149 @@ public sealed class ProtocolTests
     }
 
     [TestMethod]
+    public void Approval_policy_roles_are_enforced()
+    {
+        var ids = NewIds();
+        var policy = new ApprovalPolicy(
+            "strict-local-review",
+            "1.0.0",
+            ApprovalPolicyMode.Methodologist,
+            new[] { "methodologist" },
+            1,
+            true,
+            false,
+            CustomRuleId: null);
+        var draft = CreateCompleteDraft(ids);
+        var candidate = draft.CreateApprovalCandidate(ids, policy);
+        var approval = ProtocolApproval.Create(ids, candidate, policy, Researcher, Clock, candidate.ContentDigest);
+
+        var missingRoleError = Assert.ThrowsExactly<ProtocolRuleException>(() =>
+            draft.ApproveCandidate(candidate, policy, new[] { approval }, Clock));
+        Assert.AreEqual(ProtocolErrorCodes.InsufficientApprovalPolicy, missingRoleError.Category);
+
+        var withRole = ProtocolApproval.Create(ids, candidate, policy, Researcher, Clock, candidate.ContentDigest, role: "methodologist");
+        var version = draft.ApproveCandidate(candidate, policy, new[] { withRole }, Clock);
+
+        Assert.AreEqual(ProtocolStatus.Approved, version.Status);
+    }
+
+    [TestMethod]
+    public void Withdrawn_approval_does_not_satisfy_dual_policy()
+    {
+        var ids = NewIds();
+        var policy = ApprovalPolicy.DualIndependent();
+        var draft = CreateCompleteDraft(ids);
+        var candidate = draft.CreateApprovalCandidate(ids, policy);
+        var first = ProtocolApproval.Create(ids, candidate, policy, Researcher, Clock, candidate.ContentDigest);
+        var withdrawn = ProtocolApproval.Create(
+            ids,
+            candidate,
+            policy,
+            Researcher,
+            Clock,
+            candidate.ContentDigest,
+            ProtocolApprovalDecision.Withdrawn,
+            supersedesApprovalId: first.ApprovalId);
+
+        var error = Assert.ThrowsExactly<ProtocolRuleException>(() =>
+            draft.ApproveCandidate(candidate, policy, new[] { first, withdrawn }, Clock));
+        Assert.AreEqual(ProtocolErrorCodes.InsufficientApprovalPolicy, error.Category);
+    }
+
+    [TestMethod]
+    public void Forged_approval_record_digest_is_rejected()
+    {
+        var ids = NewIds();
+        var policy = ApprovalPolicy.ExplicitCustomSingleResearcher();
+        var draft = CreateCompleteDraft(ids);
+        var candidate = draft.CreateApprovalCandidate(ids, policy);
+        var approval = ProtocolApproval.Create(ids, candidate, policy, Researcher, Clock, candidate.ContentDigest);
+        var forged = CloneApproval(approval, approvalRecordDigest: ContentDigest.Sha256Utf8("forged"));
+
+        var error = Assert.ThrowsExactly<ProtocolRuleException>(() =>
+            draft.ApproveCandidate(candidate, policy, new[] { forged }, Clock));
+        Assert.AreEqual(ProtocolErrorCodes.ApprovalTargetMismatch, error.Category);
+    }
+
+    [TestMethod]
+    public void Wrong_approval_policy_version_or_mode_is_rejected()
+    {
+        var ids = NewIds();
+        var policy = ApprovalPolicy.ExplicitCustomSingleResearcher();
+        var draft = CreateCompleteDraft(ids);
+        var candidate = draft.CreateApprovalCandidate(ids, policy);
+        var approval = ProtocolApproval.Create(ids, candidate, policy, Researcher, Clock, candidate.ContentDigest);
+        var wrongPolicy = new ApprovalPolicy(
+            policy.PolicyId,
+            "2.0.0",
+            policy.Mode,
+            policy.RequiredRoles,
+            policy.MinimumApprovals,
+            policy.RequiresDistinctActors,
+            policy.AllowsAutomation,
+            policy.MethodPackId,
+            policy.CustomRuleId);
+
+        var errorVersion = Assert.ThrowsExactly<ProtocolRuleException>(() =>
+            draft.ApproveCandidate(candidate, wrongPolicy, new[] { approval }, Clock));
+        Assert.AreEqual(ProtocolErrorCodes.ApprovalTargetMismatch, errorVersion.Category);
+
+        var wrongMode = new ApprovalPolicy(
+            policy.PolicyId,
+            policy.PolicyVersion,
+            ApprovalPolicyMode.CustomRoleExpression,
+            new[] { "methodologist" },
+            policy.MinimumApprovals,
+            true,
+            policy.AllowsAutomation,
+            policy.MethodPackId,
+            policy.CustomRuleId);
+
+        var errorMode = Assert.ThrowsExactly<ProtocolRuleException>(() =>
+            draft.ApproveCandidate(candidate, wrongMode, new[] { approval }, Clock));
+        Assert.AreEqual(ProtocolErrorCodes.ApprovalTargetMismatch, errorMode.Category);
+    }
+
+    [TestMethod]
+    public void Wrong_approval_target_is_rejected()
+    {
+        var ids = NewIds();
+        var policy = ApprovalPolicy.ExplicitCustomSingleResearcher();
+        var draft = CreateCompleteDraft(ids);
+        var candidate = draft.CreateApprovalCandidate(ids, policy);
+        var baseApproval = ProtocolApproval.Create(ids, candidate, policy, Researcher, Clock, candidate.ContentDigest);
+
+        var wrongTargetType = CloneApproval(baseApproval, targetType: "protocol-review");
+        var wrongTargetId = CloneApproval(baseApproval, targetId: FixedId(900));
+        var wrongProtocol = CloneApproval(baseApproval, protocolId: "protocol-other");
+
+        var targetTypeError = Assert.ThrowsExactly<ProtocolRuleException>(() =>
+            draft.ApproveCandidate(candidate, policy, new[] { wrongTargetType }, Clock));
+        Assert.AreEqual(ProtocolErrorCodes.ApprovalTargetMismatch, targetTypeError.Category);
+
+        var targetIdError = Assert.ThrowsExactly<ProtocolRuleException>(() =>
+            draft.ApproveCandidate(candidate, policy, new[] { wrongTargetId }, Clock));
+        Assert.AreEqual(ProtocolErrorCodes.ApprovalTargetMismatch, targetIdError.Category);
+
+        var protocolError = Assert.ThrowsExactly<ProtocolRuleException>(() =>
+            draft.ApproveCandidate(candidate, policy, new[] { wrongProtocol }, Clock));
+        Assert.AreEqual(ProtocolErrorCodes.ApprovalTargetMismatch, protocolError.Category);
+    }
+
+    [TestMethod]
+    public void Superseded_version_cannot_be_approved()
+    {
+        var ids = NewIds();
+        var draft = CreateCompleteDraft(ids);
+        var approved = draft.Approve(Researcher.Id, Clock, ids);
+        var supersededCandidate = approved.SupersededBy(FixedId(900));
+
+        var error = Assert.ThrowsExactly<ProtocolRuleException>(() =>
+            draft.ApproveCandidate(supersededCandidate, ApprovalPolicy.ExplicitCustomSingleResearcher(), new[] { ProtocolApproval.Create(ids, supersededCandidate, ApprovalPolicy.ExplicitCustomSingleResearcher(), Researcher, Clock, supersededCandidate.ContentDigest) }, Clock));
+        Assert.AreEqual(ProtocolErrorCodes.StaleContentDigest, error.Category);
+    }
+
+    [TestMethod]
     public void Stale_digest_approval_is_rejected()
     {
         var ids = NewIds();
@@ -159,20 +327,20 @@ public sealed class ProtocolTests
     {
         var ids = NewIds();
         var policy = ApprovalPolicy.ExplicitCustomSingleResearcher();
-        var draft = CreateCompleteDraft(ids);
+        var draft = CreateCompleteDraft(
+            ids,
+            new[] { RequiredDecision("review-type", allowsUnresolved: true), RequiredDecision("scope") });
         var candidate = draft.CreateApprovalCandidate(ids, policy);
         var approval = ProtocolApproval.Create(ids, candidate, policy, Researcher, Clock, candidate.ContentDigest);
-        draft.AddWaiver(
+        draft.AddUnresolvedDecision(
             ids,
-            "scope",
-            null,
-            null,
-            "Pilot review has a narrow evidence source.",
-            "Report scope limitation.",
-            "limitations.scope",
+            "review-type",
+            "What minimum score is acceptable?",
+            "Protocol requires this decision to remain open while planning.",
+            "protocol-approval",
             Researcher,
             Clock,
-            policy);
+            blocksProtocolApproval: false);
 
         var error = Assert.ThrowsExactly<ProtocolRuleException>(() =>
             draft.ApproveCandidate(candidate, policy, new[] { approval }, Clock));
@@ -188,7 +356,7 @@ public sealed class ProtocolTests
 
         var error = Assert.ThrowsExactly<ProtocolRuleException>(() =>
             ProtocolApproval.Create(ids, candidate, policy, Automation, Clock, candidate.ContentDigest));
-        Assert.AreEqual(ProtocolErrorCodes.AutomationCannotApprove, error.Category);
+        Assert.AreEqual(ProtocolErrorCodes.NonHumanApprovalActor, error.Category);
     }
 
     [TestMethod]
@@ -227,7 +395,7 @@ public sealed class ProtocolTests
             firstIds,
             policy,
             versionId: FixedId(200));
-        var withWaiverDraft = CreateCompleteDraft(secondIds);
+        var withWaiverDraft = CreateCompleteDraftWithWaiver(secondIds);
         withWaiverDraft.AddWaiver(
             secondIds,
             "scope",
@@ -251,12 +419,13 @@ public sealed class ProtocolTests
     public void Deviation_links_to_approved_version_without_mutating_digest()
     {
         var ids = NewIds();
-        var candidate = CreateCompleteDraft(ids).CreateApprovalCandidate(ids, ApprovalPolicy.ExplicitCustomSingleResearcher());
-        var before = candidate.ContentDigest;
+        var draft = CreateCompleteDraft(ids);
+        var approved = draft.Approve(Researcher.Id, Clock, ids);
+        var before = approved.ContentDigest;
 
         var deviation = ProtocolDeviation.Record(
             ids,
-            candidate,
+            approved,
             "scope",
             "One data source was unavailable during conduct.",
             "Repository outage.",
@@ -266,8 +435,148 @@ public sealed class ProtocolTests
             "disclose limitation",
             "limitations.data-source");
 
-        Assert.AreEqual(candidate.Id, deviation.ProtocolVersionId);
-        Assert.AreEqual(before, candidate.ContentDigest);
+        Assert.AreEqual(approved.Id, deviation.ProtocolVersionId);
+        Assert.AreEqual(before, approved.ContentDigest);
+    }
+
+    [TestMethod]
+    public void Non_blocking_unresolved_decisions_can_satisfy_requirements_and_are_preserved()
+    {
+        var ids = NewIds();
+        var policy = ApprovalPolicy.ExplicitCustomSingleResearcher();
+        var draft = CreateCompleteDraft(
+            ids,
+            new[]
+            {
+                RequiredDecision("review-type"),
+                RequiredDecision("scope"),
+                RequiredDecision("quality-threshold", allowsUnresolved: true)
+            });
+
+        draft.AddUnresolvedDecision(
+            ids,
+            "quality-threshold",
+            "What threshold is acceptable?",
+            "Preliminary run may set threshold later.",
+            "protocol-approval",
+            Researcher,
+            Clock,
+            blocksProtocolApproval: false);
+        var candidate = draft.CreateApprovalCandidate(ids, policy);
+        var approval = ProtocolApproval.Create(ids, candidate, policy, Researcher, Clock, candidate.ContentDigest);
+        var version = draft.ApproveCandidate(candidate, policy, new[] { approval }, Clock);
+
+        Assert.AreEqual(1, version.UnresolvedDecisions.Count);
+        Assert.AreEqual("quality-threshold", version.UnresolvedDecisions[0].DecisionKey);
+    }
+
+    [TestMethod]
+    public void Non_waivable_requirement_rejects_waiver()
+    {
+        var ids = NewIds();
+        var draft = CreateDraft(
+            ids,
+            new[]
+            {
+                RequiredDecision("review-type"),
+                RequiredDecision("scope", allowsWaiver: false),
+                RequiredDecision("quality-threshold", allowsWaiver: false),
+            });
+
+        var error = Assert.ThrowsExactly<ProtocolRuleException>(() =>
+            draft.AddWaiver(
+                ids,
+                "quality-threshold",
+                null,
+                null,
+                "Pilot review had partial evidence.",
+                "Report limitation.",
+                "limitations.scope",
+                Researcher,
+                Clock,
+                ApprovalPolicy.ExplicitCustomSingleResearcher()));
+
+        Assert.AreEqual(ProtocolErrorCodes.InvalidWaiver, error.Category);
+    }
+
+    [TestMethod]
+    public void Approval_candidate_starts_in_ready_state_without_approval_metadata()
+    {
+        var ids = NewIds();
+        var draft = CreateCompleteDraft(ids);
+        var candidate = draft.CreateApprovalCandidate(ids, ApprovalPolicy.ExplicitCustomSingleResearcher(), versionId: FixedId(501));
+
+        Assert.AreEqual(ProtocolStatus.ReadyForReview, candidate.Status);
+        Assert.AreEqual(ProtocolStatus.Draft, draft.Status);
+        Assert.AreEqual(0, candidate.ApprovalIds.Count);
+        Assert.IsNull(candidate.ApprovedAt);
+    }
+
+    [TestMethod]
+    public void Invalid_deviation_classification_is_rejected()
+    {
+        var ids = NewIds();
+        var candidate = CreateCompleteDraft(ids).CreateApprovalCandidate(ids, ApprovalPolicy.ExplicitCustomSingleResearcher());
+        var error = Assert.ThrowsExactly<ProtocolRuleException>(() =>
+            _ = ProtocolDeviation.Record(
+                ids,
+                candidate,
+                "scope",
+                "Observed broader scope.",
+                "Rationale text.",
+                "unsupported-classification",
+                Researcher,
+                Clock,
+                "disclose limitation",
+                "limitations.data"));
+        Assert.AreEqual(ProtocolErrorCodes.InvalidDeviation, error.Category);
+    }
+
+    [TestMethod]
+    public void Amendment_requires_approved_prior_version()
+    {
+        var ids = NewIds();
+        var policy = ApprovalPolicy.ExplicitCustomSingleResearcher();
+        var draft = CreateCompleteDraft(ids);
+        var candidate = draft.CreateApprovalCandidate(ids, policy, versionId: FixedId(300));
+
+        var preApprovalError = Assert.ThrowsExactly<ProtocolRuleException>(() =>
+            ProtocolAmendment.Create(
+                ids,
+                candidate,
+                FixedId(301),
+                Researcher,
+                Clock,
+                "Scope changed after pilot.",
+                new[] { "scope" },
+                Array.Empty<ProtocolInvalidationNotice>(),
+                policy));
+        Assert.AreEqual(ProtocolErrorCodes.InvalidAmendment, preApprovalError.Category);
+
+        var approved = draft.Approve(Researcher.Id, Clock, ids);
+        var notice = new ProtocolInvalidationNotice(
+            FixedId(302),
+            approved.Id,
+            "scope",
+            ContentDigest.Sha256Utf8("artifact"),
+            "screening",
+            "screening output requires review",
+            "rerun screening",
+            Clock.UtcNow);
+        var amendment = ProtocolAmendment.Create(
+            ids,
+            approved,
+            FixedId(401),
+            Researcher,
+            Clock,
+            "Scope changed after pilot.",
+            new[] { "scope" },
+            new[] { notice },
+            policy);
+
+        Assert.AreEqual(approved.Id, amendment.AmendsVersionId);
+        Assert.AreEqual(approved.ContentDigest, amendment.PreviousContentDigest);
+        Assert.AreEqual(FixedId(401), amendment.ProducesVersionId);
     }
 
     [TestMethod]
@@ -275,7 +584,8 @@ public sealed class ProtocolTests
     {
         var ids = NewIds();
         var policy = ApprovalPolicy.ExplicitCustomSingleResearcher();
-        var previous = CreateCompleteDraft(ids).CreateApprovalCandidate(ids, policy, versionId: FixedId(300));
+        var draft = CreateCompleteDraft(ids);
+        var previous = draft.Approve(Researcher.Id, Clock, ids);
         var nextVersionId = FixedId(301);
         var notice = new ProtocolInvalidationNotice(
             FixedId(302),
@@ -307,6 +617,87 @@ public sealed class ProtocolTests
     }
 
     [TestMethod]
+    public void Amendment_rejects_invalidation_notices_for_unmodified_requirements()
+    {
+        var ids = NewIds();
+        var policy = ApprovalPolicy.ExplicitCustomSingleResearcher();
+        var draft = CreateCompleteDraft(ids);
+        var candidate = draft.CreateApprovalCandidate(ids, policy, versionId: FixedId(301));
+        var approval = ProtocolApproval.Create(ids, candidate, policy, Researcher, Clock, candidate.ContentDigest);
+        var approved = draft.ApproveCandidate(candidate, policy, new[] { approval }, Clock);
+        var notice = new ProtocolInvalidationNotice(
+            FixedId(302),
+            approved.Id,
+            "other",
+            ContentDigest.Sha256Utf8("artifact"),
+            "screening",
+            "screening output requires review",
+            "rerun screening",
+            Clock.UtcNow);
+
+        var error = Assert.ThrowsExactly<ProtocolRuleException>(() =>
+            ProtocolAmendment.Create(
+                ids,
+                approved,
+                FixedId(303),
+                Researcher,
+                Clock,
+                "Scope changed after pilot.",
+                new[] { "scope" },
+                new[] { notice },
+                policy));
+        Assert.AreEqual(ProtocolErrorCodes.InvalidAmendment, error.Category);
+    }
+
+    [TestMethod]
+    public void Approved_candidate_must_have_approval_timestamp_and_approval_ids()
+    {
+        var ids = NewIds();
+        var draft = CreateCompleteDraft(ids);
+        var candidate = draft.CreateApprovalCandidate(ids, ApprovalPolicy.ExplicitCustomSingleResearcher());
+
+        var approvalMissingTimestamp = Assert.ThrowsExactly<ProtocolRuleException>(() =>
+            new ProtocolVersion(
+                candidate.Id,
+                candidate.ProtocolId,
+                candidate.ProjectId,
+                candidate.VersionNumber,
+                ProtocolStatus.Approved,
+                candidate.Template,
+                candidate.Intent,
+                candidate.Values,
+                candidate.RequiredDecisions,
+                candidate.Decisions,
+                candidate.Waivers,
+                candidate.ContentDigest,
+                candidate.ApprovalPolicyId,
+                Array.Empty<string>(),
+                null,
+                unresolvedDecisions: candidate.UnresolvedDecisions));
+        Assert.AreEqual(ProtocolErrorCodes.StaleContentDigest, approvalMissingTimestamp.Category);
+
+        var approvalMissingIds = Assert.ThrowsExactly<ProtocolRuleException>(() =>
+            new ProtocolVersion(
+                candidate.Id,
+                candidate.ProtocolId,
+                candidate.ProjectId,
+                candidate.VersionNumber,
+                ProtocolStatus.Approved,
+                candidate.Template,
+                candidate.Intent,
+                candidate.Values,
+                candidate.RequiredDecisions,
+                candidate.Decisions,
+                candidate.Waivers,
+                candidate.ContentDigest,
+                candidate.ApprovalPolicyId,
+                Array.Empty<string>(),
+                Clock.UtcNow,
+                unresolvedDecisions: candidate.UnresolvedDecisions));
+        Assert.AreEqual(ProtocolErrorCodes.StaleContentDigest, approvalMissingIds.Category);
+    }
+
+    [TestMethod]
     public void Approval_record_digest_uses_approval_record_scope()
     {
         var ids = NewIds();
@@ -323,7 +714,29 @@ public sealed class ProtocolTests
 
     private static ProtocolDraft CreateCompleteDraft(IIdGenerator ids)
     {
-        var draft = CreateDraft(ids);
+        return CreateCompleteDraft(
+            ids,
+            new[]
+            {
+                RequiredDecision("review-type"),
+                RequiredDecision("scope")
+            });
+    }
+
+    private static ProtocolDraft CreateCompleteDraftWithWaiver(IIdGenerator ids)
+    {
+        return CreateCompleteDraft(
+            ids,
+            new[]
+            {
+                RequiredDecision("review-type"),
+                RequiredDecision("scope", allowsWaiver: true)
+            });
+    }
+
+    private static ProtocolDraft CreateCompleteDraft(IIdGenerator ids, IReadOnlyList<RequiredDecisionDefinition> requiredDecisions)
+    {
+        var draft = CreateDraft(ids, requiredDecisions);
         draft.RecordDecision(
             ids,
             "review-type",
@@ -341,7 +754,7 @@ public sealed class ProtocolTests
         return draft;
     }
 
-    private static ProtocolDraft CreateDraft(IIdGenerator ids)
+    private static ProtocolDraft CreateDraft(IIdGenerator ids, IReadOnlyList<RequiredDecisionDefinition> requiredDecisions)
     {
         return ProtocolDraft.Create(
             ids,
@@ -355,16 +768,26 @@ public sealed class ProtocolTests
                 "map the evidence for segmentation workflows",
                 "scoping-review"),
             new CanonicalJsonObject().Add("review_family", "scoping"),
-            new[]
-            {
-                RequiredDecision("review-type"),
-                RequiredDecision("scope")
-            },
+            requiredDecisions,
             Researcher,
             Clock);
     }
 
-    private static RequiredDecisionDefinition RequiredDecision(string key)
+    private static ProtocolDraft CreateDraft(IIdGenerator ids)
+    {
+        return CreateDraft(
+            ids,
+            new[]
+            {
+                RequiredDecision("review-type"),
+                RequiredDecision("scope")
+            });
+    }
+
+    private static RequiredDecisionDefinition RequiredDecision(
+        string key,
+        bool allowsUnresolved = false,
+        bool allowsWaiver = false)
     {
         return new RequiredDecisionDefinition(
             key,
@@ -374,7 +797,8 @@ public sealed class ProtocolTests
             "protocol-approval",
             "protocol-approval",
             key,
-            false);
+            allowsUnresolved,
+            allowsWaiver);
     }
 
     private static ProtocolWaiver SampleWaiver(IIdGenerator ids)
@@ -391,6 +815,69 @@ public sealed class ProtocolTests
             Clock.UtcNow,
             ApprovalPolicy.ExplicitCustomSingleResearcher().PolicyId,
             Array.Empty<string>());
+    }
+
+    private static ProtocolApproval CloneApproval(
+        ProtocolApproval approval,
+        string? targetType = null,
+        string? targetId = null,
+        string? protocolId = null,
+        string? protocolVersionId = null,
+        int? protocolVersionNumber = null,
+        ContentDigest? contentDigest = null,
+        string? policyId = null,
+        string? policyVersion = null,
+        string? policyMode = null,
+        ProtocolApprovalDecision? decision = null,
+        ContentDigest? approvalRecordDigest = null)
+    {
+        var ctor = typeof(ProtocolApproval).GetConstructor(
+            BindingFlags.Instance | BindingFlags.NonPublic,
+            null,
+            new[]
+            {
+                typeof(string),
+                typeof(string),
+                typeof(string),
+                typeof(string),
+                typeof(string),
+                typeof(int),
+                typeof(ContentDigest),
+                typeof(string),
+                typeof(string),
+                typeof(string),
+                typeof(ProtocolApprovalDecision),
+                typeof(ActorId),
+                typeof(DateTimeOffset),
+                typeof(string),
+                typeof(string),
+                typeof(string),
+                typeof(bool),
+                typeof(ContentDigest)
+            },
+            null)!;
+
+        return (ProtocolApproval)ctor.Invoke(new object?[]
+        {
+            approval.ApprovalId,
+            targetType ?? approval.TargetType,
+            targetId ?? approval.TargetId,
+            protocolId ?? approval.ProtocolId,
+            protocolVersionId ?? approval.ProtocolVersionId,
+            protocolVersionNumber ?? approval.ProtocolVersionNumber,
+            contentDigest ?? approval.ContentDigest,
+            policyId ?? approval.PolicyId,
+            policyVersion ?? approval.PolicyVersion,
+            policyMode ?? approval.PolicyMode,
+            decision ?? approval.Decision,
+            approval.ApprovedBy,
+            approval.ApprovedAt,
+            approval.Role,
+            approval.Rationale,
+            approval.SupersedesApprovalId,
+            approval.ApprovedByIsHuman,
+            approvalRecordDigest ?? approval.ApprovalRecordDigest
+        });
     }
 
     private static SequenceIdGenerator NewIds()

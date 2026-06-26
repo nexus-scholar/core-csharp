@@ -67,6 +67,32 @@ public sealed class ProtocolFixtureTests
     }
 
     [TestMethod]
+    public void Gate_3_protocol_fixtures_have_replayable_case_digests()
+    {
+        foreach (var path in ProtocolFixturePaths())
+        {
+            using var document = JsonDocument.Parse(File.ReadAllText(path));
+            var root = document.RootElement;
+            var serializedCase = JsonSerializer.Serialize(
+                root.GetProperty("case"),
+                new JsonSerializerOptions
+                {
+                    WriteIndented = false
+                });
+            var digest = ContentDigest.Sha256Utf8(serializedCase);
+
+            Assert.AreEqual(
+                root.GetProperty("inputDigest").GetString(),
+                digest.ToString(),
+                Path.GetFileName(path));
+            Assert.AreEqual(
+                root.GetProperty("outputDigest").GetString(),
+                digest.ToString(),
+                Path.GetFileName(path));
+        }
+    }
+
+    [TestMethod]
     public void Gate_3_positive_fixture_pack_is_present()
     {
         var names = ProtocolFixturePaths()

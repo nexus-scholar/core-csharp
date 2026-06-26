@@ -1,9 +1,6 @@
 # Gate 3: Protocol Lifecycle
 
-Status: implementation complete locally; hosted CI evidence verified.
-
-This file is preserved on this branch as planning carryover documentation only.
-Gate 3 is out-of-scope for this Gate 2 cleanup branch and is not part of the current Gate 2 acceptance criteria.
+Status: implementation complete locally; closeout hosted CI pending for the latest branch head.
 
 ## Goal
 
@@ -21,11 +18,13 @@ Gate 3 implements protocol draft, decision, approval, version, amendment, waiver
 - Required decision definitions with approval gate and source requirement identity.
 - Protocol decisions with canonical JSON values, human actor, timestamp, optional rationale, source proposal digest, and supersession link.
 - Blocking unresolved decisions that prevent approval.
+- Nonblocking unresolved decisions preserved in approved protocol content.
 - Approved protocol versions with Kernel `DigestEnvelope` using `DigestScope.ProtocolContent`.
 - Approval records with Kernel `DigestEnvelope` using `DigestScope.ApprovalRecord`.
+- Approval records bound to protocol id, version id, content digest, policy id, policy version, policy mode, actor, timestamp, and approval-record digest.
 - Explicit single-researcher local approval fallback.
 - Dual-independent approval with distinct actor enforcement.
-- Stale digest and automation approval rejection.
+- Stale digest, wrong target, wrong policy, non-human approval, and automation approval rejection.
 - Protocol amendments preserving previous content digest, changed decision keys, invalidation notices, and supersession links.
 - Waivers as protocol content included before approval digest computation.
 - Deviations linked to approved versions without mutating version digests.

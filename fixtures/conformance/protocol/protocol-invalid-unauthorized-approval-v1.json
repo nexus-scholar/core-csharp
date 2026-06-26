@@ -5,8 +5,8 @@
   "sourceCommit": "d925796846e9",
   "generatorCommand": "manual local Gate 3 contract fixture",
   "generatorVersion": "gate-3-v1",
-  "inputDigest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-  "outputDigest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "inputDigest": "sha256:e6803b629b85a1300d9df77ec6f0c1cda3856a18cc7f2ca6696da5d5767eaecc",
+  "outputDigest": "sha256:e6803b629b85a1300d9df77ec6f0c1cda3856a18cc7f2ca6696da5d5767eaecc",
   "comparisonRules": ["assert-error-category", "no-php-compatibility-claim"],
   "case": { "negative": true, "operation": "approve-candidate", "errorCategory": "unauthorized-approval" }
 }
