@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Text;
 using System.Text.Json;
@@ -222,13 +223,15 @@ public sealed record CanonicalJsonNumber : CanonicalJsonValue
 
 public sealed record CanonicalJsonArray : CanonicalJsonValue
 {
+    private readonly IReadOnlyList<CanonicalJsonValue> _items;
+
     public CanonicalJsonArray(IEnumerable<CanonicalJsonValue> items)
     {
         ArgumentNullException.ThrowIfNull(items);
-        Items = items.ToArray();
+        _items = new ReadOnlyCollection<CanonicalJsonValue>(items.ToArray());
     }
 
-    public IReadOnlyList<CanonicalJsonValue> Items { get; }
+    public IReadOnlyList<CanonicalJsonValue> Items => _items;
 
     public void Freeze()
     {
@@ -249,9 +252,15 @@ public sealed record CanonicalJsonArray : CanonicalJsonValue
 public sealed record CanonicalJsonObject : CanonicalJsonValue
 {
     private readonly Dictionary<string, CanonicalJsonValue> _properties = new(StringComparer.Ordinal);
+    private readonly ReadOnlyDictionary<string, CanonicalJsonValue> _publicProperties;
     private bool _isReadOnly;
 
-    public IReadOnlyDictionary<string, CanonicalJsonValue> Properties => _properties;
+    public CanonicalJsonObject()
+    {
+        _publicProperties = new ReadOnlyDictionary<string, CanonicalJsonValue>(_properties);
+    }
+
+    public IReadOnlyDictionary<string, CanonicalJsonValue> Properties => _publicProperties;
 
     public CanonicalJsonObject Add(string name, CanonicalJsonValue value)
     {

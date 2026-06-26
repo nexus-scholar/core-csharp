@@ -2,6 +2,8 @@
 
 Status: planning only. No protocol behavior implementation is authorized until `CF-001` and `CF-008` are frozen.
 
+This file is present on the Gate 2 cleanup branch as planning carryover documentation only. It is not part of Gate 2 acceptance, and it does not claim Gate 3 implementation.
+
 ## Goal
 
 Freeze the protocol contract and approval semantics needed before implementing protocol lifecycle behavior.

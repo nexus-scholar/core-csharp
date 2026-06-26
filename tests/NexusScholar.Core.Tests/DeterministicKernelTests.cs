@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NexusScholar.Kernel;
@@ -45,6 +46,39 @@ public sealed class DeterministicKernelTests
         Assert.AreEqual(
             "sha256:ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
             digest.ToString());
+    }
+
+    [TestMethod]
+    public void Canonical_json_object_properties_not_exposed_as_mutable_dictionary()
+    {
+        var value = new CanonicalJsonObject()
+            .Add("status", "known");
+
+        Assert.IsFalse(value.Properties is Dictionary<string, CanonicalJsonValue>);
+
+        var exposedProperties = (ICollection<KeyValuePair<string, CanonicalJsonValue>>)value.Properties;
+        Assert.AreEqual(1, exposedProperties.Count);
+
+        Assert.ThrowsExactly<InvalidCastException>(() => _ = (Dictionary<string, CanonicalJsonValue>)value.Properties);
+        Assert.ThrowsExactly<NotSupportedException>(() =>
+            ((ICollection<KeyValuePair<string, CanonicalJsonValue>>)value.Properties).Add(KeyValuePair.Create("status", CanonicalJsonValue.From("changed"))));
+    }
+
+    [TestMethod]
+    public void Canonical_json_array_items_not_exposed_as_mutable_array()
+    {
+        var value = CanonicalJsonValue.Array(CanonicalJsonValue.From("first"));
+
+        Assert.IsFalse(value.Items is CanonicalJsonValue[]);
+
+        Assert.ThrowsExactly<InvalidCastException>(() => _ = (CanonicalJsonValue[])value.Items);
+
+        var exposedItems = value.Items as IList<CanonicalJsonValue>;
+        Assert.IsNotNull(exposedItems);
+        Assert.AreEqual(1, exposedItems.Count);
+
+        Assert.ThrowsExactly<NotSupportedException>(() => exposedItems.Add(CanonicalJsonValue.From("second")));
+        Assert.ThrowsExactly<NotSupportedException>(() => exposedItems[0] = CanonicalJsonValue.From("first-changed"));
     }
 
     [TestMethod]
@@ -257,17 +291,28 @@ public sealed class DeterministicKernelTests
     public void Digest_envelope_freezes_canonical_content_after_construction()
     {
         var sourceContent = new CanonicalJsonObject().Add("status", "known");
+        var sourceNested = new CanonicalJsonObject().Add("nested", "value");
+        sourceContent.Add("nested", sourceNested);
         var envelope = new DigestEnvelope(
             DigestScope.CanonicalJsonRecord,
             "nexus.kernel.fixture",
             "1.0.0",
             sourceContent);
+        var expectedJson = envelope.ToCanonicalJson();
+        var expectedDigest = envelope.ComputeDigest();
 
         sourceContent.Add("later", "mutation");
+        sourceNested.Add("later", "nested-mutation");
+
+        var actualJson = envelope.ToCanonicalJson();
+        var actualDigest = envelope.ComputeDigest();
+
         Assert.ThrowsExactly<InvalidOperationException>(() => envelope.Content.Add("forbidden", "mutation"));
+        Assert.AreEqual(expectedJson, actualJson);
+        Assert.AreEqual(expectedDigest, actualDigest);
 
         Assert.AreEqual(
-            "{\"algorithm\":\"sha256\",\"canonicalizationProfile\":\"rfc8785-jcs\",\"content\":{\"status\":\"known\"},\"schema\":\"nexus.kernel.fixture\",\"schemaVersion\":\"1.0.0\",\"scope\":\"canonical-json-record\"}",
-            envelope.ToCanonicalJson());
+            "{\"algorithm\":\"sha256\",\"canonicalizationProfile\":\"rfc8785-jcs\",\"content\":{\"nested\":{\"nested\":\"value\"},\"status\":\"known\"},\"schema\":\"nexus.kernel.fixture\",\"schemaVersion\":\"1.0.0\",\"scope\":\"canonical-json-record\"}",
+            actualJson);
     }
 }
