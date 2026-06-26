@@ -1,5 +1,6 @@
 name = "conformance_auditor"
 description = "Read-only differential auditor comparing C# behavior with pinned PHP fixtures and Nexus specifications."
+model = "gpt-5.5"
 model_reasoning_effort = "high"
 sandbox_mode = "read-only"
 

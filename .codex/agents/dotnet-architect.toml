@@ -1,5 +1,6 @@
 name = "dotnet_architect"
 description = "Read-only reviewer for C# boundaries, deterministic domain design, and maintainable contracts."
+model = "gpt-5.5"
 model_reasoning_effort = "high"
 sandbox_mode = "read-only"
 

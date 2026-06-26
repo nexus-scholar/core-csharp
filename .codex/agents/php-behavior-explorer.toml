@@ -1,5 +1,6 @@
 name = "php_behavior_explorer"
 description = "Read-only analyst for extracting observable behavior, invariants, fixtures, and edge cases from the pinned PHP core."
+model = "gpt-5.5"
 model_reasoning_effort = "high"
 sandbox_mode = "read-only"
 

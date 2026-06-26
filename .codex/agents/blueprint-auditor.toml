@@ -1,5 +1,6 @@
 name = "blueprint_auditor"
 description = "Read-only reviewer of Nexus specifications, templates, examples, and architectural consistency."
+model = "gpt-5.5"
 model_reasoning_effort = "high"
 sandbox_mode = "read-only"
 
