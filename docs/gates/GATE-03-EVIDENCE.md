@@ -1,8 +1,19 @@
 # Gate 3 Evidence
 
-Status: locally verified; hosted CI evidence pending.
+Status: locally verified; hosted matrix verified for implementation commit.
 
 Branch: `cdx/gate-3-protocol-lifecycle`
+
+Implementation commit: `44855d473084b11db3d904c1e2eea0ea4df61574`
+
+Hosted CI run: `https://github.com/nexus-scholar/core-csharp/actions/runs/28247540825`
+
+Hosted matrix:
+
+```text
+verify (ubuntu-latest): success
+verify (windows-latest): success
+```
 
 ## Scope Implemented
 
