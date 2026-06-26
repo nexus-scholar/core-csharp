@@ -1,0 +1,89 @@
+{
+  "fixtureId": "workflow-compile-hybrid-ai-audit",
+  "sourceKind": "local-gate-4-contract",
+  "sourceRefs": [
+    "docs/gates/GATE-04.md",
+    "docs/adr/0005-workflow-template-contract.md",
+    "docs/adr/0006-workflow-compiler-semantics.md"
+  ],
+  "sourceCommit": "bc2e6e0353b2cc44f837750ed1dd5f570cc1c4fa",
+  "generatorCommand": "compiler-backed local Gate 4 contract fixture",
+  "generatorVersion": "gate-4-v2",
+  "inputDigest": "sha256:f4c2603e92d51e617fac0c29e0d32b613ff74bfb99cd54622cf6d0fd9bcc7671",
+  "outputDigest": "sha256:f4785352cff187bbf4c11a642f3d0ca486b6d2e648359c128fb217e274b56965",
+  "comparisonRules": [
+    "assert-gate-4-fields",
+    "assert-local-schema-closure",
+    "no-php-compatibility-claim",
+    "no-blueprint-conformance-claim",
+    "no-ai-execution-claim",
+    "no-workflow-execution-claim"
+  ],
+  "case": {
+    "recordType": "workflow-compile",
+    "negative": false,
+    "outputKind": "planned-workflow-graph",
+    "workflowId": "workflow-4b0904380c6ea4ed",
+    "workflowDigest": {
+      "scope": "canonical-json-record",
+      "schema_id": "nexus.workflow-definition",
+      "schema_version": "1.0.0",
+      "value": "sha256:f4785352cff187bbf4c11a642f3d0ca486b6d2e648359c128fb217e274b56965"
+    },
+    "template": {
+      "template_id": "template-hybrid-ai-audit",
+      "template_version": "1.0.0",
+      "template_digest": "sha256:f37c093f329aaa611c9fc865d19ee5af27d493cb012f88e6891cb4dc020189cc"
+    },
+    "protocol": {
+      "status": "approved",
+      "content_digest": "sha256:5c144fc216de18d01f1559ba3753b3b61d6275ab173fc3657eeacd2c003fdda4"
+    },
+    "schemaRefs": [
+      {
+        "schema_id": "nexus.workflow-template",
+        "schema_version": "1.0.0"
+      },
+      {
+        "schema_id": "nexus.workflow-definition",
+        "schema_version": "1.0.0"
+      }
+    ],
+    "nodes": [
+      "start",
+      "approve",
+      "execute",
+      "finish"
+    ],
+    "resolvedInputBindings": [
+      {
+        "input_id": "review-type",
+        "source_type": "protocol-decision"
+      }
+    ],
+    "capabilityRequirements": [
+      {
+        "capability_ref": "cap.ai-proposal",
+        "capability_kind": "ai-proposal-support",
+        "egress_allowed": false
+      }
+    ],
+    "digestIncludes": [
+      "workflow_id",
+      "capability_requirements",
+      "approval_requirements"
+    ],
+    "digestExcludes": [
+      "workflow_execution_records",
+      "approval_records",
+      "live_provider_responses",
+      "generated_summaries"
+    ],
+    "nonClaims": [
+      "no-php-compatibility-claim",
+      "no-blueprint-conformance-claim",
+      "no-ai-execution-claim",
+      "no-plugin-runtime"
+    ]
+  }
+}

@@ -9,10 +9,13 @@
   <ItemGroup>
     <None Include="../../fixtures/conformance/protocol-minimal.json" Link="fixtures/protocol-minimal.json" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../fixtures/conformance/protocol/*.json" Link="fixtures/protocol/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../fixtures/conformance/workflow/*.json" Link="fixtures/workflow/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../fixtures/conformance/kernel/*.json" Link="fixtures/kernel/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../fixtures/conformance/kernel/*.ndjson" Link="fixtures/kernel/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="../../src/NexusScholar.Kernel/NexusScholar.Kernel.csproj" />
+    <ProjectReference Include="../../src/NexusScholar.Protocol/NexusScholar.Protocol.csproj" />
+    <ProjectReference Include="../../src/NexusScholar.Workflow/NexusScholar.Workflow.csproj" />
   </ItemGroup>
 </Project>

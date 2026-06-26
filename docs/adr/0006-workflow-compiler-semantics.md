@@ -8,7 +8,7 @@ Date: 2026-06-26
 
 The current `NexusScholar.Workflow` scaffold compiles every protocol into one hardcoded five-node search flow. That is insufficient for Gate 4 because workflow behavior must come from approved protocol content and schema-closed workflow templates.
 
-`ADR 0003` defines approved protocol versions and immutable protocol content. `ADR 0004` defines protocol approval semantics. `ADR 0005` defines the local workflow template contract. This ADR defines local Gate 4 compiler semantics without implementing source code in this planning branch.
+`ADR 0003` defines approved protocol versions and immutable protocol content. `ADR 0004` defines protocol approval semantics. `ADR 0005` defines the local workflow template contract. This ADR defines the local Gate 4 compiler semantics implemented by `NexusScholar.Workflow`.
 
 ## Decision
 
@@ -269,6 +269,11 @@ Gate 4 implementation must expose stable workflow error categories for negative 
 - `unknown-producing-node`
 - `unknown-capability-reference`
 - `unknown-approval-role`
+- `invalid-approval-requirement`
+- `unknown-gate-policy`
+- `unknown-gate-artifact-ref`
+- `unknown-gate-decision-ref`
+- `explicit-compile-input-required`
 - `automation-approval-authority`
 - `invalid-hybrid-node`
 - `invalid-waiver`
@@ -281,9 +286,8 @@ Tests must not rely only on free-form exception messages.
 
 ### 18. Future work
 
-The following remain future work outside Gate 4 planning:
+The following remain future work outside Gate 4:
 
-- source code implementation;
 - workflow execution state;
 - provenance ledger append semantics;
 - artifact hashing and storage;
@@ -296,8 +300,8 @@ The following remain future work outside Gate 4 planning:
 
 ## Consequences
 
-- `CF-003` is resolved for Gate 4 planning by replacing the hardcoded compiler target with deterministic template-driven semantics.
-- `CF-007` is resolved for Gate 4 planning by giving `hybrid` a human-bounded meaning.
+- `CF-003` is resolved for Gate 4 local implementation by replacing the hardcoded compiler target with deterministic template-driven compilation.
+- `CF-007` is resolved for Gate 4 local implementation by giving `hybrid` a human-bounded meaning.
 - Workflow approval handoff from `ADR 0004` is explicit: protocol approvals approve protocol versions; workflow approval nodes gate conduct and cannot be satisfied by automation.
 
 ## Fixture Effect
@@ -326,6 +330,11 @@ Gate 4 fixtures must cover:
 - hybrid node without capability requirement rejection;
 - hybrid node without human review or approval rejection;
 - automation approval rejection;
+- invalid approval requirement rejection;
+- unknown gate policy rejection;
+- unknown gate artifact reference rejection;
+- unknown gate decision reference rejection;
+- explicit compile input requirement rejection;
 - waiver without waiver policy rejection;
 - expired waiver rejection;
 - waiver affected-requirement mismatch rejection;
@@ -344,7 +353,6 @@ Gate 4 fixtures must cover:
 
 ## Explicit Claims Not Made
 
-- no source code implementation
 - no blueprint conformance claim
 - no PHP compatibility claim
 - no workflow execution engine

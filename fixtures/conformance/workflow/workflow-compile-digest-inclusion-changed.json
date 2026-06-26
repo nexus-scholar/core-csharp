@@ -1,0 +1,73 @@
+{
+  "fixtureId": "workflow-compile-digest-inclusion-changed",
+  "sourceKind": "local-gate-4-contract",
+  "sourceRefs": [
+    "docs/gates/GATE-04.md",
+    "docs/adr/0005-workflow-template-contract.md",
+    "docs/adr/0006-workflow-compiler-semantics.md"
+  ],
+  "sourceCommit": "bc2e6e0353b2cc44f837750ed1dd5f570cc1c4fa",
+  "generatorCommand": "compiler-backed local Gate 4 contract fixture",
+  "generatorVersion": "gate-4-v2",
+  "inputDigest": "sha256:5900bb3eae531d703ad3a173e60785a7692a2ecb93e7cf0a57bd029f4285abee",
+  "outputDigest": "sha256:a711e32d3ccc497ceaa6215eb825c83f008d21b4beadd82850293caef211ea54",
+  "comparisonRules": [
+    "assert-gate-4-fields",
+    "assert-local-schema-closure",
+    "no-php-compatibility-claim",
+    "no-blueprint-conformance-claim",
+    "no-ai-execution-claim",
+    "no-workflow-execution-claim"
+  ],
+  "case": {
+    "recordType": "workflow-compile",
+    "negative": false,
+    "outputKind": "planned-workflow-graph",
+    "workflowId": "workflow-beab3af5bd6c8041",
+    "workflowDigest": {
+      "scope": "canonical-json-record",
+      "schema_id": "nexus.workflow-definition",
+      "schema_version": "1.0.0",
+      "value": "sha256:a711e32d3ccc497ceaa6215eb825c83f008d21b4beadd82850293caef211ea54"
+    },
+    "template": {
+      "template_id": "template-rapid-review",
+      "template_version": "1.0.0",
+      "template_digest": "sha256:15478be0234625f955e2be05b5762d0aa15fbdb611a333f0bbb0e2438d3b9d8d"
+    },
+    "protocol": {
+      "status": "approved",
+      "content_digest": "sha256:5c144fc216de18d01f1559ba3753b3b61d6275ab173fc3657eeacd2c003fdda4"
+    },
+    "schemaRefs": [
+      {
+        "schema_id": "nexus.workflow-template",
+        "schema_version": "1.0.0"
+      }
+    ],
+    "changedIncludedFields": [
+      "workflow_id",
+      "template_digest",
+      "protocol_content_digest",
+      "resolved_input_bindings",
+      "compiled_nodes",
+      "compiled_edges",
+      "approval_requirements"
+    ],
+    "expectedSameDigest": false,
+    "digestIncludes": [
+      "workflow_id",
+      "resolved_input_bindings",
+      "compiled_nodes",
+      "compiled_edges"
+    ],
+    "digestExcludes": [
+      "workflow_execution_records",
+      "approval_records"
+    ],
+    "nonClaims": [
+      "no-php-compatibility-claim",
+      "no-blueprint-conformance-claim"
+    ]
+  }
+}

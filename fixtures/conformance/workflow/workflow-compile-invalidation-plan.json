@@ -1,0 +1,79 @@
+{
+  "fixtureId": "workflow-compile-invalidation-plan",
+  "sourceKind": "local-gate-4-contract",
+  "sourceRefs": [
+    "docs/gates/GATE-04.md",
+    "docs/adr/0005-workflow-template-contract.md",
+    "docs/adr/0006-workflow-compiler-semantics.md"
+  ],
+  "sourceCommit": "bc2e6e0353b2cc44f837750ed1dd5f570cc1c4fa",
+  "generatorCommand": "compiler-backed local Gate 4 contract fixture",
+  "generatorVersion": "gate-4-v2",
+  "inputDigest": "sha256:4ebfb819821a270dc05b5d91913921e327345ff08924421ce709ee302361da58",
+  "outputDigest": "sha256:d7818d021006b3e67188b2e4a5f56222a831e96e242cf44f6716fc41a9529bd8",
+  "comparisonRules": [
+    "assert-gate-4-fields",
+    "assert-local-schema-closure",
+    "no-php-compatibility-claim",
+    "no-blueprint-conformance-claim",
+    "no-ai-execution-claim",
+    "no-workflow-execution-claim"
+  ],
+  "case": {
+    "recordType": "workflow-compile",
+    "negative": false,
+    "outputKind": "planned-workflow-graph",
+    "workflowId": "workflow-2c52edadd6491814",
+    "workflowDigest": {
+      "scope": "canonical-json-record",
+      "schema_id": "nexus.workflow-definition",
+      "schema_version": "1.0.0",
+      "value": "sha256:d7818d021006b3e67188b2e4a5f56222a831e96e242cf44f6716fc41a9529bd8"
+    },
+    "template": {
+      "template_id": "template-invalidation-plan",
+      "template_version": "1.0.0",
+      "template_digest": "sha256:c5e996a26026ea56e8e2772255da41f5ac8a3c14d446f12e7b4251202d479d36"
+    },
+    "protocol": {
+      "status": "approved",
+      "amendment_id": "00000001-0000-0000-0000-000000000000",
+      "content_digest": "sha256:64bb12894a08ba051940096a9d25ecdf9295b31ba2c425cdeeb03e6f5f756579"
+    },
+    "schemaRefs": [
+      {
+        "schema_id": "nexus.workflow-template",
+        "schema_version": "1.0.0"
+      }
+    ],
+    "invalidationPlan": [
+      {
+        "notice_id": "notice-1",
+        "amendment_id": "00000001-0000-0000-0000-000000000000",
+        "affected_node_id": "approve-search",
+        "required_action": "rerun"
+      }
+    ],
+    "nodes": [
+      "start",
+      "approve-search",
+      "execute",
+      "finish"
+    ],
+    "digestIncludes": [
+      "amendment_id",
+      "invalidation_notice_digest",
+      "invalidation_plan"
+    ],
+    "digestExcludes": [
+      "workflow_execution_records",
+      "approval_records",
+      "artifact_bytes"
+    ],
+    "nonClaims": [
+      "no-php-compatibility-claim",
+      "no-blueprint-conformance-claim",
+      "no-provenance-ledger-implementation"
+    ]
+  }
+}

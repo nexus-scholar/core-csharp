@@ -6,7 +6,7 @@ Date: 2026-06-26
 
 ## Context
 
-Gate 4 needs a local workflow template contract before `NexusScholar.Workflow` can move beyond its current hardcoded scaffold. Gate 0 found drift between blueprint markdown, JSON schemas, contract sketches, and templates. In particular, templates reference missing schema ids, produced artifacts are not always declared, and `hybrid` nodes are ambiguous.
+Gate 4 needs a local workflow template contract so `NexusScholar.Workflow` can move beyond its prior hardcoded scaffold. Gate 0 found drift between blueprint markdown, JSON schemas, contract sketches, and templates. In particular, templates reference missing schema ids, produced artifacts are not always declared, and `hybrid` nodes are ambiguous.
 
 The blueprint remains a discovery input. This ADR defines the local Gate 4 template contract without claiming blueprint conformance, PHP compatibility, persistence schema support, plugin execution, AI execution, or bundle export compatibility.
 
@@ -219,18 +219,17 @@ Gate 4 closes `CF-006` locally by requiring schema closure for any template comp
 ## Consequences
 
 - `CF-006` is resolved for Gate 4 local scope by rejecting missing schema references instead of silently adopting incomplete blueprint templates.
-- Gate 4 can plan deterministic workflow compilation against a closed local template contract.
+- Gate 4 can implement deterministic workflow compilation against a closed local template contract.
 - Template conformance remains local. Blueprint conformance and PHP compatibility remain non-claims.
 
 ## Fixture Effect
 
 Gate 4 workflow fixtures must include template identity, template digest, schema refs, required inputs, nodes, edges, gates, produced artifact declarations, capability requirements, waiver policy references, and invalidation policy references.
 
-Negative fixture cases must include missing schema id, missing schema version, undeclared produced artifact, artifact declaration with unknown producing node, missing required input, scientific conduct input supplied only by compile parameter, approval requirement that allows automation, waiver without waiver policy, expired waiver, waiver affected-requirement mismatch, waiver missing approval binding, and unknown capability reference.
+Negative fixture cases must include missing schema id, missing schema version, undeclared produced artifact, artifact declaration with unknown producing node, missing required input, scientific conduct input supplied only by compile parameter, approval requirement that allows automation, invalid approval requirement, unknown gate policy, unknown gate artifact reference, unknown gate decision reference, explicit compile input requirement, waiver without waiver policy, expired waiver, waiver affected-requirement mismatch, waiver missing approval binding, and unknown capability reference.
 
 ## Explicit Claims Not Made
 
-- no source code implementation
 - no blueprint conformance claim
 - no PHP compatibility claim
 - no plugin runtime implementation
