@@ -1,6 +1,6 @@
 # Gate 5 Evidence: Provenance Ledger
 
-Status: local verification passed; hosted CI pending branch push.
+Status: local verification passed; hosted CI passed on branch dispatch.
 
 ## Scope
 
@@ -54,7 +54,11 @@ Still out of scope:
 
 ## Hosted CI
 
-Pending branch push and hosted run capture.
+- `gate-01` workflow dispatch on `cdx/gate-5-provenance`: passed.
+- Run: `https://github.com/nexus-scholar/core-csharp/actions/runs/28271812104`
+- Matrix:
+  - `verify (ubuntu-latest)`: passed.
+  - `verify (windows-latest)`: passed.
 
 ## Explicit Claims Not Made
 
