@@ -1,6 +1,6 @@
 # Gate 3: Protocol Lifecycle
 
-Status: implementation complete locally; closeout hosted CI pending for the latest branch head.
+Status: accepted for local Gate 3 protocol lifecycle behavior with hosted Windows/Linux CI evidence.
 
 ## Goal
 

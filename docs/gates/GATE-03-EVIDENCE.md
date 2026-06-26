@@ -1,18 +1,18 @@
 # Gate 3 Evidence
 
-Status: locally verified for closeout fixes; hosted matrix pending for the latest branch head.
+Status: accepted for local Gate 3 protocol lifecycle behavior; hosted matrix verified.
 
 Branch: `cdx/gate-3-protocol-lifecycle`
 
 Implementation commit: `8e3d5c456d98120a43e931236f7da059481e5a12`
 
-Hosted CI run: pending closeout run
+Hosted CI run: `https://github.com/nexus-scholar/core-csharp/actions/runs/28253855625`
 
 Hosted matrix:
 
 ```text
-verify (ubuntu-latest): pending
-verify (windows-latest): pending
+verify (ubuntu-latest): success
+verify (windows-latest): success
 ```
 
 ## Scope Implemented
