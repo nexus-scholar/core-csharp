@@ -1,28 +1,31 @@
 # Codex Branch Board
 
-Source: post-merge branch probes run from local `main` after the manual GitHub merge of `cdx/two-model-codex-workflow`.
+Source: post-merge branch probes from local `main` after Gate 4 merge.
 
 ## Main Baseline
 
-- Current `main` commit: `467d5f2` (`Merge pull request #1 from nexus-scholar/cdx/two-model-codex-workflow`).
-- Gate 0 through Gate 3 are merged into `main`.
-- `cdx/two-model-codex-workflow` is merged into `main`.
+- Current `main` commit: `f3266dfacd3c2d0042c87a11be7b294ac423ff03` (`Merge Gate 4 workflow compiler`).
+- Gate 0 through Gate 4 are merged into `main`.
+- Gate 4 hosted CI is green: `https://github.com/nexus-scholar/core-csharp/actions/runs/28270846959`.
+- `cdx/gate-4-workflow` and `cdx/gate-4-workflow-planning` are included in the merge baseline.
 
 ## Branch Classes
 
-- merged: `main`, `cdx/two-model-codex-workflow`, `cdx/main-gate2-merge`, `cdx/gate-3-protocol-lifecycle`, `cdx/gate-3-planning-decisions`, `cdx/gate-2-digest-kernel-cleanup`, `cdx/run-gate-zero-discovery`, `cdx/run-gate-0-discovery`
-- cleanup: `cdx/two-model-codex-workflow`, `cdx/main-gate2-merge`, `cdx/gate-3-protocol-lifecycle`, `cdx/gate-3-planning-decisions`, `cdx/gate-2-digest-kernel-cleanup`, `cdx/run-gate-zero-discovery`
+- merged: `main`, `cdx/gate-4-workflow`, `cdx/gate-4-workflow-planning`, `cdx/two-model-codex-workflow`, `cdx/main-gate2-merge`, `cdx/gate-3-protocol-lifecycle`, `cdx/gate-3-planning-decisions`, `cdx/gate-2-digest-kernel-cleanup`, `cdx/shared-identity-adr-0007`, `cdx/run-gate-zero-discovery`, `cdx/run-gate-0-discovery`
+- cleanup: `cdx/two-model-codex-workflow`, `cdx/main-gate2-merge`, `cdx/gate-4-workflow`, `cdx/gate-4-workflow-planning`, `cdx/gate-3-protocol-lifecycle`, `cdx/gate-3-planning-decisions`, `cdx/gate-2-digest-kernel-cleanup`, `cdx/run-gate-zero-discovery`
 - active: `main`
-- blocked: Gate 4 implementation branch work until `CF-003`, `CF-006`, and `CF-007` are resolved
+- blocked: none recorded
 - stale: `cdx/run-gate-0-discovery`, `cdx/main-gate2-merge`
 - review: none identified by current git state
 
-Cleanup candidates above are confirmed by `git branch --merged main`. Remote merge state also confirms `origin/cdx/two-model-codex-workflow` is merged into `origin/main`.
+Cleanup candidates above are confirmed by `git branch --merged main`. Remote merge state also confirms `origin/cdx/gate-4-workflow` and `origin/cdx/gate-4-workflow-planning` are merged into `origin/main`.
 
 ## Safe Cleanup Candidates
 
 - `cdx/two-model-codex-workflow`
 - `cdx/main-gate2-merge`
+- `cdx/gate-4-workflow`
+- `cdx/gate-4-workflow-planning`
 - `cdx/gate-3-protocol-lifecycle`
 - `cdx/gate-3-planning-decisions`
 - `cdx/gate-2-digest-kernel-cleanup`
@@ -33,14 +36,12 @@ Cleanup candidates above are confirmed by `git branch --merged main`. Remote mer
 - `main`
 - `cdx/run-gate-0-discovery`
 
-`cdx/run-gate-0-discovery` is stale, but it is not listed as a preferred cleanup candidate in this board refresh because it remains the root local bootstrap lane and may still be useful for audit recovery.
-
 ## Next Work
 
-- Gate 4 is the next planning work.
-- Gate 4 implementation is blocked until `CF-003`, `CF-006`, and `CF-007` are resolved.
-- PHP Shared identity reconnaissance is allowed only as docs-only parallel work.
+- Next main branch target is `cdx/gate-5-provenance`.
+- Optional parallel branch: `cdx/gate-9-shared-identity` for docs and shared-identity fixture/conflict support.
+- PHP Shared identity reconnaissance remains docs-only parallel work.
 
 ## Unresolved Ambiguity
 
-- Local `main` still has no configured upstream tracking branch, so plain `git pull` failed and refresh required `git pull origin main`.
+- No unresolved cleanup ambiguity after Gate 4 merge evidence capture; `cdx/run-gate-0-discovery` is still retained for historical reference.
