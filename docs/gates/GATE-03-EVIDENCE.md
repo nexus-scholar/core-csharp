@@ -4,7 +4,7 @@ Status: locally verified for closeout fixes; hosted matrix pending for the lates
 
 Branch: `cdx/gate-3-protocol-lifecycle`
 
-Implementation commit: `c1cab62decfc88231ff34b0a2dbc7b55dc659bc6`
+Implementation commit: `8e3d5c456d98120a43e931236f7da059481e5a12`
 
 Hosted CI run: pending closeout run
 
