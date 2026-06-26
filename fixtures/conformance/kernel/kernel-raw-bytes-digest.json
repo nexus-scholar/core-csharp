@@ -1,0 +1,18 @@
+{
+  "fixtureId": "kernel-raw-bytes-digest-v1",
+  "sourceKind": "local-adr",
+  "sourceRefs": [
+    "docs/adr/0002-canonical-json-and-digests.md",
+    "docs/port/GOLDEN-FIXTURE-PLAN.md"
+  ],
+  "sourceCommit": "8e1e252446b62ddd1825c4a535f0e2dc2fc9bbdc",
+  "generatorCommand": "dotnet test NexusScholar.Core.slnx -c Release --filter FullyQualifiedName~KernelFixtureTests",
+  "generatorVersion": "gate2-local-v1",
+  "comparisonRules": [
+    "raw-byte-sha256",
+    "sha256-lowercase-rendering"
+  ],
+  "inputHex": "00ff1020414243",
+  "inputDigest": "sha256:403fed1cebc030cf47db02658830e8139ea3091a0bc6d6832f08ba46a71cda95",
+  "outputDigest": "sha256:403fed1cebc030cf47db02658830e8139ea3091a0bc6d6832f08ba46a71cda95"
+}

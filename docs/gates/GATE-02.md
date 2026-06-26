@@ -1,10 +1,10 @@
 # Gate 2: Deterministic Kernel
 
-Status: entry checklist only. No Gate 2 implementation is implied by this document.
+Status: implemented and verified for local deterministic-kernel scope only. No blueprint, protocol, bundle, provenance, or PHP compatibility claim is implied by this document.
 
 ## Goal
 
-Implement deterministic kernel primitives for identifiers, clocks, canonical serialization, digests, and related error handling without claiming protocol, bundle, blueprint, or PHP compatibility.
+Implement deterministic kernel primitives for canonical serialization, digests, timestamps, normalization, and related validation without claiming protocol, bundle, blueprint, or PHP compatibility.
 
 ## Entry Checklist
 
@@ -14,22 +14,16 @@ Implement deterministic kernel primitives for identifiers, clocks, canonical ser
 - Fixture plan still governs Gate 2 fixture work: [GOLDEN-FIXTURE-PLAN.md](/C:/Users/mouadh/Documents/AI%20in%20research/core-csharp/docs/port/GOLDEN-FIXTURE-PLAN.md:1)
 - Gate 2 scope is limited to kernel determinism and digest rules only
 
-## Required Gate 2 Work Before Exit
+## Gate 2 Scope Implemented
 
-1. Implement canonical JSON serialization for the approved local profile `rfc8785-jcs`.
-2. Implement digest validation and rendering for `sha256:<64 lowercase hex>`.
-3. Replace ad hoc digest material with typed digest scopes.
-4. Preserve omitted-vs-null semantics instead of silently collapsing them.
-5. Add fixed test vectors for:
-   - property ordering
-   - arrays
-   - timestamps
-   - Unicode NFC normalization
-   - unsupported numbers
-   - raw byte hashing
-   - NDJSON LF handling
-6. Add deterministic conformance fixtures with generator metadata for kernel digest behavior.
-7. Prove stable output on both Windows and Linux.
+1. `DigestAlgorithm` and `DigestScope` value objects exist for the approved local Gate 2 digest vocabulary.
+2. `ContentDigest` now validates and renders canonical `sha256:<64 lowercase hex>` strings and rejects missing prefixes, uppercase hex, and wrong lengths.
+3. Raw byte SHA-256 hashing is available and covered by a fixed known vector.
+4. Canonical JSON serialization now uses an explicit value tree, deterministic object-property ordering, array-order preservation, UTC timestamp formatting, NFC normalization, and omission-vs-null preservation.
+5. `DigestEnvelope` provides a typed JSON digest input shape with required canonicalization profile, digest algorithm, scope, schema id, schema version, and authoritative content.
+6. NDJSON LF-only canonicalization exists with explicit CRLF normalization opt-in and byte-level LF, CRLF, and BOM fixture coverage.
+7. Fixed positive and negative conformance fixtures with metadata exist under [fixtures/conformance/kernel](/C:/Users/mouadh/Documents/AI%20in%20research/core-csharp/fixtures/conformance/kernel).
+8. Verification evidence is recorded in [GATE-02-EVIDENCE.md](/C:/Users/mouadh/Documents/AI%20in%20research/core-csharp/docs/gates/GATE-02-EVIDENCE.md:1).
 
 ## Gate 2 Non-Goals
 
@@ -41,12 +35,12 @@ Implement deterministic kernel primitives for identifiers, clocks, canonical ser
 - provenance parity
 - AI governance parity beyond kernel prerequisites
 
-## Risks Still Blocking Gate 2 Exit
+## Remaining Risks
 
-- No canonical JSON implementation exists yet.
-- No Gate 2 canonical digest fixtures exist yet.
-- Current protocol digest remains provisional scaffold behavior.
+- `ContentDigest` remains physically hosted in `NexusScholar.Artifacts` because this gate did not edit the broader module graph outside the allowed write set. The deterministic behavior is implemented, but full inward relocation to `NexusScholar.Kernel` remains a follow-up design cleanup.
+- Current protocol digest remains provisional scaffold behavior in `src/NexusScholar.Protocol` and is not replaced by this gate.
 - Current bundle manifest and verifier remain thinner than any future bundle authority.
+- No fresh GitHub Actions matrix run is captured in this document for Gate 2 specifically; repository CI remains the Gate 1 workflow until a later gate records cross-platform Gate 2 evidence explicitly.
 - Downstream conflicts remain open:
   - `CF-001` protocol contract
   - `CF-002` bundle contract
@@ -58,4 +52,4 @@ Implement deterministic kernel primitives for identifiers, clocks, canonical ser
 
 ## Exit Standard
 
-Gate 2 may exit only when deterministic kernel behavior is implemented, fixture-backed, and verified cross-platform without claiming any higher-level compatibility than this gate explicitly covers.
+Gate 2 exits for the local deterministic-kernel scope when the behavior above is implemented, fixture-backed, and verified without claiming any higher-level compatibility than this gate explicitly covers.

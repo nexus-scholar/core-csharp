@@ -1,0 +1,13 @@
+{
+  "fixtureId": "kernel-invalid-digest-uppercase-v1",
+  "sourceKind": "local-adr",
+  "sourceRefs": [
+    "docs/adr/0002-canonical-json-and-digests.md",
+    "docs/port/GOLDEN-FIXTURE-PLAN.md"
+  ],
+  "sourceCommit": "8e1e252446b62ddd1825c4a535f0e2dc2fc9bbdc",
+  "generatorCommand": "dotnet test NexusScholar.Core.slnx -c Release --filter FullyQualifiedName~KernelFixtureTests",
+  "generatorVersion": "gate2-local-v1",
+  "digest": "sha256:BA7816BF8F01CFEA414140DE5DAE2223B00361A396177A9CB410FF61F20015AD",
+  "expectedErrorContains": "lowercase"
+}

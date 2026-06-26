@@ -1,0 +1,19 @@
+{
+  "fixtureId": "kernel-ndjson-lf-v1",
+  "sourceKind": "local-adr",
+  "sourceRefs": [
+    "docs/adr/0002-canonical-json-and-digests.md",
+    "docs/port/GOLDEN-FIXTURE-PLAN.md"
+  ],
+  "sourceCommit": "8e1e252446b62ddd1825c4a535f0e2dc2fc9bbdc",
+  "generatorCommand": "dotnet test NexusScholar.Core.slnx -c Release --filter FullyQualifiedName~KernelFixtureTests",
+  "generatorVersion": "gate2-local-v1",
+  "comparisonRules": [
+    "lf-only-ndjson",
+    "record-order-semantic"
+  ],
+  "path": "kernel-ndjson-lf.ndjson",
+  "normalizedNdjson": "{\"id\":1}\n{\"id\":2}\n",
+  "inputDigest": "sha256:c63f6dd68b68601e7315ea40d28bc34e55379e4fa65f82b1d32228429aeafcde",
+  "outputDigest": "sha256:c63f6dd68b68601e7315ea40d28bc34e55379e4fa65f82b1d32228429aeafcde"
+}
