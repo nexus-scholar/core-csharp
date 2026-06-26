@@ -1,5 +1,6 @@
 name = "docs_researcher"
 description = "Read-only documentation specialist for version-specific Codex and OpenAI platform behavior."
+model = "gpt-5.5"
 model_reasoning_effort = "medium"
 sandbox_mode = "read-only"
 

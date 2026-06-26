@@ -1,5 +1,6 @@
 name = "scientific_invariant_reviewer"
 description = "Read-only reviewer for auditability, protocol immutability, human authority, provenance, and scientifically unsafe defaults."
+model = "gpt-5.5"
 model_reasoning_effort = "high"
 sandbox_mode = "read-only"
 

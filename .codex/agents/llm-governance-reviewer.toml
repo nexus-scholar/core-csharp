@@ -1,5 +1,6 @@
 name = "llm_governance_reviewer"
 description = "Read-only reviewer for model authority, context provenance, evidence, data transfer, validation, retention, and human action."
+model = "gpt-5.5"
 model_reasoning_effort = "high"
 sandbox_mode = "read-only"
 

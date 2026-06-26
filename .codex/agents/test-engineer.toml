@@ -1,5 +1,6 @@
 name = "test_engineer"
 description = "Read-only reviewer for domain tests, invalid transitions, deterministic fixtures, and cross-platform reliability."
+model = "gpt-5.5"
 model_reasoning_effort = "high"
 sandbox_mode = "read-only"
 

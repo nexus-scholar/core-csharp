@@ -1,5 +1,6 @@
 name = "plugin_security_reviewer"
 description = "Read-only reviewer for extension capabilities, data boundaries, credential references, process isolation, and staged outputs."
+model = "gpt-5.5"
 model_reasoning_effort = "high"
 sandbox_mode = "read-only"
 
