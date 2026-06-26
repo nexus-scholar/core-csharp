@@ -1,0 +1,93 @@
+{
+  "fixtureId": "workflow-compile-authorized-waiver",
+  "sourceKind": "local-gate-4-contract",
+  "sourceRefs": [
+    "docs/gates/GATE-04.md",
+    "docs/adr/0005-workflow-template-contract.md",
+    "docs/adr/0006-workflow-compiler-semantics.md"
+  ],
+  "sourceCommit": "8e447641fe8b",
+  "generatorCommand": "manual local Gate 4 contract fixture",
+  "generatorVersion": "gate-4-v1",
+  "inputDigest": "sha256:1333333333333333333333333333333333333333333333333333333333333333",
+  "outputDigest": "sha256:2333333333333333333333333333333333333333333333333333333333333333",
+  "comparisonRules": [
+    "assert-gate-4-fields",
+    "assert-local-schema-closure",
+    "no-php-compatibility-claim",
+    "no-blueprint-conformance-claim",
+    "no-ai-execution-claim",
+    "no-workflow-execution-claim"
+  ],
+  "case": {
+    "recordType": "workflow-compile",
+    "negative": false,
+    "outputKind": "planned-workflow-graph",
+    "workflowId": "workflow-3333333333333333",
+    "workflowDigest": {
+      "scope": "canonical-json-record",
+      "schema_id": "nexus.workflow-definition",
+      "schema_version": "1.0.0"
+    },
+    "template": {
+      "template_id": "rapid-review-waiver",
+      "template_version": "1.0.0",
+      "template_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaac"
+    },
+    "protocol": {
+      "status": "approved",
+      "content_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbd",
+      "waivers": [
+        {
+          "waiver_id": "waiver-1",
+          "affected_requirement_id": "search-breadth",
+          "approval_ids": [
+            "approval-1"
+          ]
+        }
+      ]
+    },
+    "schemaRefs": [
+      {
+        "schema_id": "nexus.workflow-template",
+        "schema_version": "1.0.0"
+      }
+    ],
+    "waiverPolicies": [
+      {
+        "waiver_policy_id": "limited-search-waiver",
+        "waivable_requirement_refs": [
+          "search-breadth"
+        ],
+        "approval_requirement_ref": "methodologist-approval"
+      }
+    ],
+    "nodes": [
+      "plan-search",
+      "disclose-waiver",
+      "approve-search"
+    ],
+    "resolvedInputBindings": [
+      {
+        "input_id": "search-breadth",
+        "source_type": "protocol-waiver",
+        "waiver_id": "waiver-1"
+      }
+    ],
+    "digestIncludes": [
+      "resolved_input_bindings",
+      "waiver_id",
+      "template_digest"
+    ],
+    "digestExcludes": [
+      "workflow_execution_records",
+      "approval_records",
+      "provenance_events"
+    ],
+    "nonClaims": [
+      "no-php-compatibility-claim",
+      "no-blueprint-conformance-claim",
+      "no-workflow-execution-engine"
+    ]
+  }
+}

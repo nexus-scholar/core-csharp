@@ -1,0 +1,77 @@
+{
+  "fixtureId": "workflow-compile-invalidation-plan",
+  "sourceKind": "local-gate-4-contract",
+  "sourceRefs": [
+    "docs/gates/GATE-04.md",
+    "docs/adr/0005-workflow-template-contract.md",
+    "docs/adr/0006-workflow-compiler-semantics.md"
+  ],
+  "sourceCommit": "8e447641fe8b",
+  "generatorCommand": "manual local Gate 4 contract fixture",
+  "generatorVersion": "gate-4-v1",
+  "inputDigest": "sha256:1444444444444444444444444444444444444444444444444444444444444444",
+  "outputDigest": "sha256:2444444444444444444444444444444444444444444444444444444444444444",
+  "comparisonRules": [
+    "assert-gate-4-fields",
+    "assert-local-schema-closure",
+    "no-php-compatibility-claim",
+    "no-blueprint-conformance-claim",
+    "no-ai-execution-claim",
+    "no-workflow-execution-claim"
+  ],
+  "case": {
+    "recordType": "workflow-compile",
+    "negative": false,
+    "outputKind": "planned-workflow-graph",
+    "workflowId": "workflow-4444444444444444",
+    "workflowDigest": {
+      "scope": "canonical-json-record",
+      "schema_id": "nexus.workflow-definition",
+      "schema_version": "1.0.0"
+    },
+    "template": {
+      "template_id": "rapid-review-invalidation",
+      "template_version": "1.0.0",
+      "template_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaad"
+    },
+    "protocol": {
+      "status": "approved",
+      "amendment_id": "amendment-1",
+      "content_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbe"
+    },
+    "schemaRefs": [
+      {
+        "schema_id": "nexus.workflow-template",
+        "schema_version": "1.0.0"
+      }
+    ],
+    "invalidationPlan": [
+      {
+        "notice_id": "notice-1",
+        "amendment_id": "amendment-1",
+        "affected_node_id": "approve-search",
+        "required_action": "rerun"
+      }
+    ],
+    "nodes": [
+      "plan-search",
+      "approve-search",
+      "rerun-affected-artifact"
+    ],
+    "digestIncludes": [
+      "amendment_id",
+      "invalidation_notice_digest",
+      "invalidation_plan"
+    ],
+    "digestExcludes": [
+      "workflow_execution_records",
+      "approval_records",
+      "artifact_bytes"
+    ],
+    "nonClaims": [
+      "no-php-compatibility-claim",
+      "no-blueprint-conformance-claim",
+      "no-provenance-ledger-implementation"
+    ]
+  }
+}

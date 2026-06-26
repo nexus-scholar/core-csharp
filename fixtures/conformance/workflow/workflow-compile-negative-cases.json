@@ -1,0 +1,174 @@
+{
+  "fixtureId": "workflow-compile-negative-cases",
+  "sourceKind": "local-gate-4-contract",
+  "sourceRefs": [
+    "docs/gates/GATE-04.md",
+    "docs/adr/0005-workflow-template-contract.md",
+    "docs/adr/0006-workflow-compiler-semantics.md"
+  ],
+  "sourceCommit": "8e447641fe8b",
+  "generatorCommand": "manual local Gate 4 contract fixture",
+  "generatorVersion": "gate-4-v1",
+  "inputDigest": "sha256:1888888888888888888888888888888888888888888888888888888888888888",
+  "outputDigest": "sha256:2888888888888888888888888888888888888888888888888888888888888888",
+  "comparisonRules": [
+    "assert-gate-4-error-categories",
+    "assert-local-schema-closure",
+    "no-php-compatibility-claim",
+    "no-blueprint-conformance-claim",
+    "no-ai-execution-claim",
+    "no-workflow-execution-claim"
+  ],
+  "case": {
+    "recordType": "workflow-negative-pack",
+    "negative": true,
+    "cases": [
+      {
+        "name": "duplicate node id",
+        "errorCategory": "duplicate-node-id"
+      },
+      {
+        "name": "unknown edge endpoint",
+        "errorCategory": "unknown-edge-endpoint"
+      },
+      {
+        "name": "unknown node requirement",
+        "errorCategory": "unknown-node-requirement"
+      },
+      {
+        "name": "self edge",
+        "errorCategory": "self-edge"
+      },
+      {
+        "name": "dependency cycle",
+        "errorCategory": "dependency-cycle"
+      },
+      {
+        "name": "waivable node without waiver policy",
+        "errorCategory": "waivable-node-without-waiver-policy"
+      },
+      {
+        "name": "unknown approval role",
+        "errorCategory": "unknown-approval-role"
+      },
+      {
+        "name": "missing schema id",
+        "errorCategory": "missing-schema-id"
+      },
+      {
+        "name": "unknown schema id",
+        "errorCategory": "unknown-schema-id"
+      },
+      {
+        "name": "missing schema version",
+        "errorCategory": "missing-schema-version"
+      },
+      {
+        "name": "undeclared produced artifact",
+        "errorCategory": "undeclared-produced-artifact"
+      },
+      {
+        "name": "unknown producing node",
+        "errorCategory": "unknown-producing-node"
+      },
+      {
+        "name": "unknown capability reference",
+        "errorCategory": "unknown-capability-reference"
+      },
+      {
+        "name": "missing required input",
+        "errorCategory": "missing-required-input"
+      },
+      {
+        "name": "scientific conduct from compile parameter",
+        "errorCategory": "conduct-input-from-compile-parameter"
+      },
+      {
+        "name": "draft protocol used as workflow authority",
+        "errorCategory": "invalid-protocol-status"
+      },
+      {
+        "name": "ready-for-review protocol used as workflow authority",
+        "errorCategory": "invalid-protocol-status"
+      },
+      {
+        "name": "withdrawn protocol used as workflow authority",
+        "errorCategory": "invalid-protocol-status"
+      },
+      {
+        "name": "superseded protocol rejected in normal compile mode",
+        "errorCategory": "invalid-protocol-status"
+      },
+      {
+        "name": "stale protocol digest",
+        "errorCategory": "stale-protocol-digest"
+      },
+      {
+        "name": "stale template digest",
+        "errorCategory": "stale-template-digest"
+      },
+      {
+        "name": "workflow id mismatch",
+        "errorCategory": "workflow-id-mismatch"
+      },
+      {
+        "name": "approval authority allows automation",
+        "errorCategory": "automation-approval-authority"
+      },
+      {
+        "name": "hybrid node without capability requirement",
+        "errorCategory": "invalid-hybrid-node"
+      },
+      {
+        "name": "hybrid node without human review or approval",
+        "errorCategory": "invalid-hybrid-node"
+      },
+      {
+        "name": "missing waiver disclosure mapping",
+        "errorCategory": "missing-waiver-disclosure-mapping"
+      },
+      {
+        "name": "missing waiver consequence warning",
+        "errorCategory": "missing-waiver-consequence-warning"
+      },
+      {
+        "name": "expired waiver",
+        "errorCategory": "expired-waiver"
+      },
+      {
+        "name": "waiver affected requirement mismatch",
+        "errorCategory": "waiver-affected-requirement-mismatch"
+      },
+      {
+        "name": "waiver missing approval binding",
+        "errorCategory": "waiver-missing-approval-binding"
+      },
+      {
+        "name": "unauthorized waiver",
+        "errorCategory": "unauthorized-waiver"
+      },
+      {
+        "name": "missing invalidation notice source",
+        "errorCategory": "missing-invalidation-source"
+      },
+      {
+        "name": "stale invalidation notice digest",
+        "errorCategory": "stale-invalidation-notice"
+      },
+      {
+        "name": "affected artifact mismatch",
+        "errorCategory": "affected-artifact-mismatch"
+      },
+      {
+        "name": "affected node not present",
+        "errorCategory": "affected-node-not-found"
+      }
+    ],
+    "nonClaims": [
+      "no-php-compatibility-claim",
+      "no-blueprint-conformance-claim",
+      "no-workflow-execution-engine",
+      "no-ai-execution-claim"
+    ]
+  }
+}

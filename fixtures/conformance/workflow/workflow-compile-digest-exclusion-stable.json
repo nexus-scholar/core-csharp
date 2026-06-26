@@ -1,0 +1,65 @@
+{
+  "fixtureId": "workflow-compile-digest-exclusion-stable",
+  "sourceKind": "local-gate-4-contract",
+  "sourceRefs": [
+    "docs/gates/GATE-04.md",
+    "docs/adr/0005-workflow-template-contract.md",
+    "docs/adr/0006-workflow-compiler-semantics.md"
+  ],
+  "sourceCommit": "8e447641fe8b",
+  "generatorCommand": "manual local Gate 4 contract fixture",
+  "generatorVersion": "gate-4-v1",
+  "inputDigest": "sha256:1666666666666666666666666666666666666666666666666666666666666666",
+  "outputDigest": "sha256:2666666666666666666666666666666666666666666666666666666666666666",
+  "comparisonRules": [
+    "assert-gate-4-fields",
+    "assert-local-schema-closure",
+    "no-php-compatibility-claim",
+    "no-blueprint-conformance-claim",
+    "no-ai-execution-claim",
+    "no-workflow-execution-claim"
+  ],
+  "case": {
+    "recordType": "workflow-compile",
+    "negative": false,
+    "outputKind": "planned-workflow-graph",
+    "workflowId": "workflow-6666666666666666",
+    "workflowDigest": {
+      "scope": "canonical-json-record",
+      "schema_id": "nexus.workflow-definition",
+      "schema_version": "1.0.0"
+    },
+    "schemaRefs": [
+      {
+        "schema_id": "nexus.workflow-template",
+        "schema_version": "1.0.0"
+      }
+    ],
+    "changedOnlyExcludedFields": [
+      "workflow_execution_records",
+      "approval_records",
+      "provenance_events",
+      "artifact_storage_paths",
+      "generated_summaries",
+      "machine_local_file_paths"
+    ],
+    "expectedSameDigest": true,
+    "digestIncludes": [
+      "workflow_id",
+      "template_digest",
+      "protocol_content_digest"
+    ],
+    "digestExcludes": [
+      "workflow_execution_records",
+      "approval_records",
+      "provenance_events",
+      "artifact_storage_paths",
+      "generated_summaries",
+      "machine_local_file_paths"
+    ],
+    "nonClaims": [
+      "no-php-compatibility-claim",
+      "no-blueprint-conformance-claim"
+    ]
+  }
+}

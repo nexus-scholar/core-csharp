@@ -1,0 +1,88 @@
+{
+  "fixtureId": "workflow-compile-hybrid-ai-audit",
+  "sourceKind": "local-gate-4-contract",
+  "sourceRefs": [
+    "docs/gates/GATE-04.md",
+    "docs/adr/0005-workflow-template-contract.md",
+    "docs/adr/0006-workflow-compiler-semantics.md"
+  ],
+  "sourceCommit": "8e447641fe8b",
+  "generatorCommand": "manual local Gate 4 contract fixture",
+  "generatorVersion": "gate-4-v1",
+  "inputDigest": "sha256:1222222222222222222222222222222222222222222222222222222222222222",
+  "outputDigest": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+  "comparisonRules": [
+    "assert-gate-4-fields",
+    "assert-local-schema-closure",
+    "no-php-compatibility-claim",
+    "no-blueprint-conformance-claim",
+    "no-ai-execution-claim",
+    "no-workflow-execution-claim"
+  ],
+  "case": {
+    "recordType": "workflow-compile",
+    "negative": false,
+    "outputKind": "planned-workflow-graph",
+    "workflowId": "workflow-2222222222222222",
+    "workflowDigest": {
+      "scope": "canonical-json-record",
+      "schema_id": "nexus.workflow-definition",
+      "schema_version": "1.0.0"
+    },
+    "template": {
+      "template_id": "hybrid-ai-audit",
+      "template_version": "1.0.0",
+      "template_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaab"
+    },
+    "protocol": {
+      "status": "approved",
+      "content_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbc"
+    },
+    "schemaRefs": [
+      {
+        "schema_id": "nexus.workflow-template",
+        "schema_version": "1.0.0"
+      },
+      {
+        "schema_id": "nexus.workflow-definition",
+        "schema_version": "1.0.0"
+      }
+    ],
+    "nodes": [
+      "prepare-context",
+      "ai-proposal-check",
+      "human-review-gate",
+      "approve-conduct"
+    ],
+    "resolvedInputBindings": [
+      {
+        "input_id": "ai-audit-scope",
+        "source_type": "protocol-decision"
+      }
+    ],
+    "capabilityRequirements": [
+      {
+        "capability_ref": "cap.ai-proposal",
+        "capability_kind": "ai-proposal-support",
+        "egress_allowed": false
+      }
+    ],
+    "digestIncludes": [
+      "workflow_id",
+      "capability_requirements",
+      "approval_requirements"
+    ],
+    "digestExcludes": [
+      "workflow_execution_records",
+      "approval_records",
+      "live_provider_responses",
+      "generated_summaries"
+    ],
+    "nonClaims": [
+      "no-php-compatibility-claim",
+      "no-blueprint-conformance-claim",
+      "no-ai-execution-claim",
+      "no-plugin-runtime"
+    ]
+  }
+}
