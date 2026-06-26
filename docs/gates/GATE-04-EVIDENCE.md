@@ -1,6 +1,6 @@
 # Gate 4 Evidence: Workflow Compiler
 
-Status: local implementation evidence recorded. Hosted CI evidence pending for final pushed commit.
+Status: local implementation evidence recorded. Hosted CI evidence recorded for Gate 4 closeout implementation.
 
 ## Scope
 
@@ -81,6 +81,26 @@ Latest local result before evidence closeout:
 CLI smoke:
 
 - `sample`: exit 0, compiled `workflow-d709be487644bbbf` with 5 nodes.
+
+## Hosted CI
+
+Closeout implementation run:
+
+- Commit: `9976e5e`
+- Workflow run: `https://github.com/nexus-scholar/core-csharp/actions/runs/28270612209`
+- `verify (ubuntu-latest)`: success
+- `verify (windows-latest)`: success
+
+Steps passed on both:
+
+- checkout
+- setup .NET
+- restore
+- build
+- test
+- format
+
+Note: this hosted run validates the implementation and fixture closeout commit. This evidence section was recorded afterward as a docs-only update.
 
 ## Explicit Claims Not Made
 
