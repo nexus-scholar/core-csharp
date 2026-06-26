@@ -1,0 +1,40 @@
+name: gate-01
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Restore
+        run: dotnet restore NexusScholar.Core.slnx
+
+      - name: Build
+        run: dotnet build NexusScholar.Core.slnx -c Release --no-restore
+
+      - name: Test
+        run: dotnet test NexusScholar.Core.slnx -c Release --no-build
+
+      - name: Format
+        run: dotnet format NexusScholar.Core.slnx --verify-no-changes --no-restore

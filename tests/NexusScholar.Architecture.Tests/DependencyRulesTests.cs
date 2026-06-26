@@ -18,8 +18,14 @@ public sealed class DependencyRulesTests
         "Microsoft.EntityFrameworkCore",
         "Microsoft.AspNetCore",
         "Avalonia",
-        "Amazon.S3",
-        "OpenAI"
+        "Amazon.",
+        "AWSSDK.",
+        "Azure.",
+        "Google.",
+        "OpenAI",
+        "Anthropic",
+        "Microsoft.SemanticKernel",
+        "System.Net.Http"
     };
 
     [TestMethod]

@@ -1,16 +1,17 @@
-area,source,status,csharp_target,fixture_strategy,next_gate
-protocol,blueprint,new-kernel,NexusScholar.Protocol,protocol lifecycle fixtures,3
-workflow,blueprint,new-kernel,NexusScholar.Workflow,template compile snapshots,4
-artifacts,blueprint,new-kernel,NexusScholar.Artifacts,hash and manifest fixtures,5
-provenance,blueprint,new-kernel,NexusScholar.Provenance,event lineage fixtures,5
-bundles,blueprint,new-kernel,NexusScholar.Bundles,round-trip and tamper fixtures,6
-plugins,blueprint,new-kernel,NexusScholar.Extensibility,capability policy fixtures,10
-ai-governance,blueprint,new-kernel,NexusScholar.AI,authority and approval fixtures,11
-scholarly-work,php-reference,pending,NexusScholar.Search,normalized work golden JSON,9
-search,php-reference,pending,NexusScholar.Search,provider fixture differential tests,9
-deduplication,php-reference,pending,NexusScholar.Corpus,cluster and representative fixtures,9
-corpus-lock,php-reference,pending,NexusScholar.Corpus,snapshot membership fixtures,9
-screening,php-reference,pending,NexusScholar.Screening,decision vote and adjudication fixtures,9
-citation-network,php-reference,pending,NexusScholar.Network,graph edge and metric fixtures,9
-full-text,php-reference,pending,NexusScholar.Dissemination,resolution audit fixtures,9
-exports,php-reference,pending,NexusScholar.Reporting,bibliography and graph snapshots,9
+area,source_kind,source_refs,status,csharp_target,fixture_strategy,next_gate,owner,notes
+kernel,blueprint,"blueprint README module map; workflow and bundle specs",planned,NexusScholar.Kernel,"fixed clock, fixed id, canonical digest fixtures",2,architecture-owner,"current scaffold exists but digest rules still depend on CF-009"
+protocol,blueprint,"review-protocol schema; protocol example; AGENTS product laws",blocked,NexusScholar.Protocol,"draft, approved, amended, and negative transition fixtures",3,"spec-owner+architecture-owner","blocked by CF-001"
+workflow,blueprint,"workflow template spec; workflow schema; WorkflowContracts.cs",blocked,NexusScholar.Workflow,"template compile snapshots plus invalidation and waiver negatives",4,workflow-owner,"blocked by CF-003, CF-005, and CF-007"
+artifacts,blueprint,"workflow artifact rules; bundle spec",planned,NexusScholar.Artifacts,"hash, path, and required metadata fixtures",5,architecture-owner,"depends on canonicalization decision CF-009"
+provenance,blueprint,"bundle ledger rules; AGENTS domain rules; product laws",blocked,NexusScholar.Provenance,"append-only ledger and digest-chain fixtures",5,governance-owner,"blocked by CF-004"
+bundles,blueprint,"bundle spec; bundle manifest schema; bundle example",blocked,NexusScholar.Bundles,"manifest, tamper, import safety, and round-trip fixtures",6,spec-owner,"blocked by CF-002 and CF-009"
+extensibility,blueprint,"plugin manifest schema; PluginContracts.cs; workflow capability rules",blocked,NexusScholar.Extensibility,"manifest validation and permission grant fixtures",10,plugin-owner,"blocked by CF-005 and CF-006"
+ai-governance,blueprint,"ai task policy schema and example; AiContracts.cs; AGENTS product laws",blocked,NexusScholar.AI,"approval, evidence, egress, and evaluation fixtures",11,governance-owner,"blocked by CF-004 and CF-005"
+shared-identity,php-reference,"PHP Shared module and unit tests",planned,NexusScholar.Corpus,"normalized identifier and merge fixtures",9,porting-owner,"start of PHP behavior lane"
+search,php-reference,"PHP Search module, unit tests, feature tests, search plans, and VCR cassettes",planned,NexusScholar.Search,"stub-provider trace and YAML plan fixtures",9,porting-owner,"depends on shared identity"
+deduplication,php-reference,"PHP Deduplication module and tests",planned,NexusScholar.Corpus,"transitive cluster, evidence, and representative election fixtures",9,porting-owner,"depends on search trace corpus shape"
+corpus-lock-snapshot,php-reference,"CorpusLockPolicy, lock handlers, snapshot repository tests",planned,NexusScholar.Corpus,"lock, unlock, immutable snapshot membership fixtures",9,porting-owner,"depends on conflict resolution for CF-014"
+screening,php-reference,"PHP Screening module and tests",planned,NexusScholar.Screening,"single run, council conflict, adjudication, and comparison fixtures",9,porting-owner,"requires locked corpus behavior"
+citation-network,php-reference,"PHP CitationNetwork module and tests",planned,NexusScholar.Network,"edge, metric, shortest-path, and snowball fixtures",9,porting-owner,"after screening and corpus stabilization"
+full-text,php-reference,"PHP Dissemination full-text handlers and tests",planned,NexusScholar.Dissemination,"retrieval success, failure, and audit fixtures",9,porting-owner,"after corpus and citation behavior stabilize"
+exports,php-reference,"PHP Dissemination export handlers and tests",planned,NexusScholar.Reporting,"bibliography and graph snapshot fixtures",9,porting-owner,"after full-text and citation outputs stabilize"
