@@ -76,6 +76,10 @@
         "errorCategory": "unknown-capability-reference"
       },
       {
+        "name": "unknown compile parameter",
+        "errorCategory": "unknown-compile-parameter"
+      },
+      {
         "name": "missing required input",
         "errorCategory": "missing-required-input"
       },

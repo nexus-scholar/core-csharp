@@ -61,11 +61,19 @@ public static class WorkflowErrorCodes
     public const string AutomationApprovalAuthority = "automation-approval-authority";
     public const string InvalidHybridNode = "invalid-hybrid-node";
     public const string InvalidWaiver = "invalid-waiver";
+    public const string WaivableNodeWithoutWaiverPolicy = "waivable-node-without-waiver-policy";
+    public const string MissingWaiverDisclosureMapping = "missing-waiver-disclosure-mapping";
+    public const string MissingWaiverConsequenceWarning = "missing-waiver-consequence-warning";
+    public const string ExpiredWaiver = "expired-waiver";
+    public const string WaiverAffectedRequirementMismatch = "waiver-affected-requirement-mismatch";
+    public const string WaiverMissingApprovalBinding = "waiver-missing-approval-binding";
+    public const string UnauthorizedWaiver = "unauthorized-waiver";
     public const string MissingInvalidationSource = "missing-invalidation-source";
     public const string StaleInvalidationNotice = "stale-invalidation-notice";
     public const string AffectedArtifactMismatch = "affected-artifact-mismatch";
     public const string AffectedNodeNotFound = "affected-node-not-found";
     public const string WorkflowIdMismatch = "workflow-id-mismatch";
+    public const string UnknownCompileParameter = "unknown-compile-parameter";
 }
 
 public sealed class WorkflowRuleException : DomainRuleException
@@ -246,6 +254,8 @@ public sealed record WorkflowInvalidationPlanEntry(
     string AmendmentId,
     string ProducesVersionId,
     ContentDigest PreviousContentDigest,
+    ContentDigest AmendmentSourceDigest,
+    ContentDigest InvalidationNoticeDigest,
     string AffectedRequirementId,
     ContentDigest AffectedArtifactDigest,
     string AffectedNodeId,
@@ -321,9 +331,6 @@ public sealed class WorkflowCompiler
 
         var template = input.Template;
         var protocol = input.ProtocolVersion;
-        var knownSchemaRefs = new HashSet<(string SchemaId, string SchemaVersion)>(
-            input.KnownSchemaRefs.Select(s => (s.SchemaId, s.Version)),
-            new SchemaRefComparer());
         var nodes = template.Nodes.Select(normalizeNode).ToArray();
 
         var nodeIds = new HashSet<string>(nodes.Select(node => node.NodeId), StringComparer.Ordinal);
@@ -727,6 +734,33 @@ public sealed class WorkflowCompiler
 
         foreach (var node in template.Nodes)
         {
+            if (!string.IsNullOrWhiteSpace(node.ApprovalRequirementRef) &&
+                !template.ApprovalRequirements.Any(requirement =>
+                    string.Equals(requirement.ApprovalRequirementId, node.ApprovalRequirementRef, StringComparison.Ordinal)))
+            {
+                throw new WorkflowRuleException(
+                    WorkflowErrorCodes.UnknownNodeRequirement,
+                    $"Node '{node.NodeId}' references unknown approval requirement '{node.ApprovalRequirementRef}'.");
+            }
+
+            if (!string.IsNullOrWhiteSpace(node.WaiverPolicyRef) &&
+                !template.WaiverPolicies.Any(policy =>
+                    string.Equals(policy.WaiverPolicyId, node.WaiverPolicyRef, StringComparison.Ordinal)))
+            {
+                throw new WorkflowRuleException(
+                    WorkflowErrorCodes.WaivableNodeWithoutWaiverPolicy,
+                    $"Node '{node.NodeId}' references unknown waiver policy '{node.WaiverPolicyRef}'.");
+            }
+
+            if (!string.IsNullOrWhiteSpace(node.InvalidationPolicyRef) &&
+                !template.InvalidationPolicies.Any(policy =>
+                    string.Equals(policy.InvalidationPolicyId, node.InvalidationPolicyRef, StringComparison.Ordinal)))
+            {
+                throw new WorkflowRuleException(
+                    WorkflowErrorCodes.MissingInvalidationSource,
+                    $"Node '{node.NodeId}' references unknown invalidation policy '{node.InvalidationPolicyRef}'.");
+            }
+
             foreach (var requirementRef in node.Requires)
             {
                 if (!validRequirements.Contains(requirementRef))
@@ -765,12 +799,18 @@ public sealed class WorkflowCompiler
 
         foreach (var waiverPolicy in template.WaiverPolicies)
         {
-            if (string.IsNullOrWhiteSpace(waiverPolicy.DisclosureMapping) ||
-                string.IsNullOrWhiteSpace(waiverPolicy.ConsequenceWarning))
+            if (string.IsNullOrWhiteSpace(waiverPolicy.DisclosureMapping))
             {
                 throw new WorkflowRuleException(
-                    WorkflowErrorCodes.InvalidWaiver,
-                    $"Waiver policy '{waiverPolicy.WaiverPolicyId}' has missing disclosure or consequence metadata.");
+                    WorkflowErrorCodes.MissingWaiverDisclosureMapping,
+                    $"Waiver policy '{waiverPolicy.WaiverPolicyId}' is missing disclosure mapping.");
+            }
+
+            if (string.IsNullOrWhiteSpace(waiverPolicy.ConsequenceWarning))
+            {
+                throw new WorkflowRuleException(
+                    WorkflowErrorCodes.MissingWaiverConsequenceWarning,
+                    $"Waiver policy '{waiverPolicy.WaiverPolicyId}' is missing consequence warning.");
             }
         }
     }
@@ -780,6 +820,20 @@ public sealed class WorkflowCompiler
         WorkflowTemplate template,
         IReadOnlyDictionary<string, CanonicalJsonValue> compileParameters)
     {
+        compileParameters ??= new Dictionary<string, CanonicalJsonValue>(StringComparer.Ordinal);
+
+        var declaredInputs = template.RequiredInputs
+            .Select(input => input.InputId)
+            .ToHashSet(StringComparer.Ordinal);
+        var unknownCompileParameter = compileParameters.Keys
+            .FirstOrDefault(key => !declaredInputs.Contains(key));
+        if (unknownCompileParameter is not null)
+        {
+            throw new WorkflowRuleException(
+                WorkflowErrorCodes.UnknownCompileParameter,
+                $"Compile parameter '{unknownCompileParameter}' is not declared by the workflow template.");
+        }
+
         var byDecision = protocol.Decisions
             .GroupBy(decision => decision.DecisionKey, StringComparer.Ordinal)
             .ToDictionary(group => group.Key, group => group.First().Value, StringComparer.Ordinal);
@@ -788,12 +842,12 @@ public sealed class WorkflowCompiler
             .GroupBy(waiver => waiver.AffectedRequirementId, StringComparer.Ordinal)
             .ToDictionary(group => group.Key, group => group.First(), StringComparer.Ordinal);
 
-        var requiredInputs = template.RequiredInputs
-            .Where(input => input.Required)
+        var inputsToResolve = template.RequiredInputs
+            .Where(input => input.Required || compileParameters.ContainsKey(input.InputId))
             .OrderBy(input => input.InputId, StringComparer.Ordinal);
 
         var bindings = new List<WorkflowResolvedInputBinding>();
-        foreach (var input in requiredInputs)
+        foreach (var input in inputsToResolve)
         {
             switch (input.InputKind)
             {
@@ -825,7 +879,7 @@ public sealed class WorkflowCompiler
 
                     if (waivers.TryGetValue(input.InputId, out var waiver))
                     {
-                        ValidateProtocolWaiver(input, waiver);
+                        ValidateProtocolWaiver(protocol, input, waiver);
                         bindings.Add(
                             new WorkflowResolvedInputBinding(
                                 input.InputId,
@@ -905,31 +959,37 @@ public sealed class WorkflowCompiler
             if (waiverPolicy is null)
             {
                 throw new WorkflowRuleException(
-                    WorkflowErrorCodes.InvalidWaiver,
+                    WorkflowErrorCodes.WaivableNodeWithoutWaiverPolicy,
                     $"Protocol waiver '{waiver.WaiverId}' affects a requirement without a template waiver policy.");
             }
 
             if (string.IsNullOrWhiteSpace(waiverPolicy.DisclosureMapping) ||
-                string.IsNullOrWhiteSpace(waiverPolicy.ConsequenceWarning) ||
-                string.IsNullOrWhiteSpace(waiver.DisclosureMapping) ||
+                string.IsNullOrWhiteSpace(waiver.DisclosureMapping))
+            {
+                throw new WorkflowRuleException(
+                    WorkflowErrorCodes.MissingWaiverDisclosureMapping,
+                    $"Protocol waiver '{waiver.WaiverId}' is missing disclosure mapping.");
+            }
+
+            if (string.IsNullOrWhiteSpace(waiverPolicy.ConsequenceWarning) ||
                 string.IsNullOrWhiteSpace(waiver.ConsequenceWarning))
             {
                 throw new WorkflowRuleException(
-                    WorkflowErrorCodes.InvalidWaiver,
-                    $"Protocol waiver '{waiver.WaiverId}' is missing disclosure or consequence metadata.");
+                    WorkflowErrorCodes.MissingWaiverConsequenceWarning,
+                    $"Protocol waiver '{waiver.WaiverId}' is missing consequence warning.");
             }
 
             if (waiver.ExpiresAt.HasValue && protocol.ApprovedAt.HasValue && waiver.ExpiresAt.Value <= protocol.ApprovedAt.Value)
             {
                 throw new WorkflowRuleException(
-                    WorkflowErrorCodes.InvalidWaiver,
+                    WorkflowErrorCodes.ExpiredWaiver,
                     $"Protocol waiver '{waiver.WaiverId}' expired before workflow compilation authority.");
             }
 
             if (waiver.ApprovalIds.Count == 0)
             {
                 throw new WorkflowRuleException(
-                    WorkflowErrorCodes.InvalidWaiver,
+                    WorkflowErrorCodes.WaiverMissingApprovalBinding,
                     $"Protocol waiver '{waiver.WaiverId}' is missing approval binding.");
             }
 
@@ -937,32 +997,32 @@ public sealed class WorkflowCompiler
                 string.Equals(requirement.ApprovalRequirementId, waiverPolicy.ApprovalRequirementRef, StringComparison.Ordinal)))
             {
                 throw new WorkflowRuleException(
-                    WorkflowErrorCodes.InvalidWaiver,
+                    WorkflowErrorCodes.UnauthorizedWaiver,
                     $"Waiver policy '{waiverPolicy.WaiverPolicyId}' references an unknown approval requirement.");
             }
         }
     }
 
-    private static void ValidateProtocolWaiver(WorkflowTemplateInput input, ProtocolWaiver waiver)
+    private static void ValidateProtocolWaiver(ProtocolVersion protocol, WorkflowTemplateInput input, ProtocolWaiver waiver)
     {
-        if (waiver.ExpiresAt.HasValue)
+        if (waiver.ExpiresAt.HasValue && protocol.ApprovedAt.HasValue && waiver.ExpiresAt.Value <= protocol.ApprovedAt.Value)
         {
-            throw new WorkflowRuleException(WorkflowErrorCodes.InvalidWaiver, "Expired waiver cannot authorize conduct.");
+            throw new WorkflowRuleException(WorkflowErrorCodes.ExpiredWaiver, "Expired waiver cannot authorize conduct.");
         }
 
         if (waiver.ApprovalIds.Count == 0)
         {
-            throw new WorkflowRuleException(WorkflowErrorCodes.InvalidWaiver, "Waiver authorization binding is missing.");
+            throw new WorkflowRuleException(WorkflowErrorCodes.WaiverMissingApprovalBinding, "Waiver authorization binding is missing.");
         }
 
         if (string.IsNullOrWhiteSpace(input.SourceProtocolDecisionKey))
         {
-            throw new WorkflowRuleException(WorkflowErrorCodes.InvalidWaiver, "Waiver must correspond to a protocol decision.");
+            throw new WorkflowRuleException(WorkflowErrorCodes.UnauthorizedWaiver, "Waiver must correspond to a protocol decision.");
         }
 
         if (!string.Equals(waiver.AffectedRequirementId, input.SourceProtocolDecisionKey, StringComparison.Ordinal))
         {
-            throw new WorkflowRuleException(WorkflowErrorCodes.InvalidWaiver, "Waiver affect requirement mismatch.");
+            throw new WorkflowRuleException(WorkflowErrorCodes.WaiverAffectedRequirementMismatch, "Waiver affected requirement mismatch.");
         }
     }
 
@@ -1049,10 +1109,7 @@ public sealed class WorkflowCompiler
                     "Invalidation notice belongs to a different amendment.");
             }
 
-            if (!notice.AffectedWorkflowNodeId.All(char.IsLetterOrDigit))
-            {
-                throw new WorkflowRuleException(WorkflowErrorCodes.InvalidWaiver, "Invalid invalidation notice shape.");
-            }
+            _ = Guard.NotBlank(notice.AffectedWorkflowNodeId, nameof(notice.AffectedWorkflowNodeId));
 
             var policy = policies.Values.FirstOrDefault(item =>
                 item.AffectedRequirementRefs.Contains(notice.AffectedRequirementId, StringComparer.Ordinal));
@@ -1093,6 +1150,8 @@ public sealed class WorkflowCompiler
                     amendment.AmendmentId,
                     amendment.ProducesVersionId,
                     amendment.PreviousContentDigest,
+                    ComputeAmendmentSourceDigest(amendment),
+                    ContentDigest.Sha256CanonicalJson(notice.ToCanonicalJson()),
                     notice.AffectedRequirementId,
                     notice.AffectedArtifactDigest,
                     notice.AffectedWorkflowNodeId,
@@ -1135,6 +1194,43 @@ public sealed class WorkflowCompiler
             .Add("schema_id", artifact.SchemaId)
             .Add("schema_version", artifact.SchemaVersion)
             .Add("produced_by_node_id", artifact.ProducedByNodeId);
+
+        return ContentDigest.Sha256CanonicalJson(canonical);
+    }
+
+    private static ContentDigest ComputeAmendmentSourceDigest(ProtocolAmendment amendment)
+    {
+        var canonical = new CanonicalJsonObject()
+            .Add("amendment_id", amendment.AmendmentId)
+            .Add("protocol_id", amendment.ProtocolId)
+            .Add("amends_version_id", amendment.AmendsVersionId)
+            .Add("produces_version_id", amendment.ProducesVersionId)
+            .Add("previous_content_digest", amendment.PreviousContentDigest.ToString())
+            .Add("requested_by", amendment.RequestedBy.ToString())
+            .AddTimestamp("requested_at", amendment.RequestedAt)
+            .Add("rationale", amendment.Rationale)
+            .Add("changed_decision_keys", CanonicalJsonValue.Array(
+                amendment.ChangedDecisionKeys
+                    .OrderBy(key => key, StringComparer.Ordinal)
+                    .Select(CanonicalJsonValue.From)
+                    .ToArray()))
+            .Add("invalidation_notice_digests", CanonicalJsonValue.Array(
+                amendment.InvalidationNotices
+                    .OrderBy(notice => notice.NoticeId, StringComparer.Ordinal)
+                    .Select(notice => ContentDigest.Sha256CanonicalJson(notice.ToCanonicalJson()).ToString())
+                    .Select(CanonicalJsonValue.From)
+                    .ToArray()))
+            .Add("approval_policy_id", amendment.ApprovalPolicyId)
+            .Add("approval_ids", CanonicalJsonValue.Array(
+                amendment.ApprovalIds
+                    .OrderBy(id => id, StringComparer.Ordinal)
+                    .Select(CanonicalJsonValue.From)
+                    .ToArray()));
+
+        if (amendment.InvalidationPlanDigest is not null)
+        {
+            canonical.Add("invalidation_plan_digest", amendment.InvalidationPlanDigest.Value.ToString());
+        }
 
         return ContentDigest.Sha256CanonicalJson(canonical);
     }
@@ -1265,7 +1361,6 @@ public sealed class WorkflowCompiler
                 .Select(input => input.ToCanonicalJson())
                 .ToArray()))
             .Add("nodes", CanonicalJsonValue.Array(nodes
-                .OrderBy(node => node.NodeId, StringComparer.Ordinal)
                 .Select(node => node.ToCanonicalJson())
                 .ToArray()))
             .Add("edges", CanonicalJsonValue.Array(edges
@@ -1727,6 +1822,8 @@ internal static class WorkflowCompilationExtensions
             .Add("amendment_id", entry.AmendmentId)
             .Add("produces_version_id", entry.ProducesVersionId)
             .Add("previous_content_digest", entry.PreviousContentDigest.ToString())
+            .Add("amendment_source_digest", entry.AmendmentSourceDigest.ToString())
+            .Add("invalidation_notice_digest", entry.InvalidationNoticeDigest.ToString())
             .Add("affected_requirement_id", entry.AffectedRequirementId)
             .Add("affected_artifact_digest", entry.AffectedArtifactDigest.ToString())
             .Add("affected_node_id", entry.AffectedNodeId)

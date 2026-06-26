@@ -33,6 +33,7 @@ public sealed class WorkflowFixtureTests
         "undeclared-produced-artifact",
         "unknown-producing-node",
         "unknown-capability-reference",
+        "unknown-compile-parameter",
         "missing-required-input",
         "conduct-input-from-compile-parameter",
         "invalid-protocol-status",

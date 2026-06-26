@@ -78,6 +78,46 @@ public sealed class WorkflowCompilerTests
     }
 
     [TestMethod]
+    public void Compile_rejects_undeclared_compile_parameter()
+    {
+        var protocol = BuildApprovedProtocol();
+        var template = BuildTemplate();
+        var input = BuildInput(
+            protocol,
+            template,
+            compileParameters: new System.Collections.Generic.Dictionary<string, CanonicalJsonValue>
+            {
+                ["undeclared"] = CanonicalJsonValue.From("ignored-by-bug")
+            });
+
+        var error = Assert.ThrowsExactly<WorkflowRuleException>(
+            () => new WorkflowCompiler().Compile(input));
+        Assert.AreEqual(WorkflowErrorCodes.UnknownCompileParameter, error.Category);
+    }
+
+    [TestMethod]
+    public void Compile_records_declared_optional_execution_parameter_in_digest()
+    {
+        var protocol = BuildApprovedProtocol();
+        var template = BuildTemplate();
+        var compiler = new WorkflowCompiler();
+
+        var withoutParameter = compiler.Compile(BuildInput(protocol, template));
+        var withParameter = compiler.Compile(BuildInput(
+            protocol,
+            template,
+            compileParameters: new System.Collections.Generic.Dictionary<string, CanonicalJsonValue>
+            {
+                ["priority"] = CanonicalJsonValue.From("low")
+            }));
+
+        Assert.AreNotEqual(withoutParameter.WorkflowDigest, withParameter.WorkflowDigest);
+        var binding = withParameter.ResolvedInputBindings.Single(item => item.InputId == "priority");
+        Assert.AreEqual("execution_parameter", binding.InputKind);
+        Assert.AreEqual("compile-parameter", binding.SourceType);
+    }
+
+    [TestMethod]
     public void Compile_rejects_schema_closure_violations()
     {
         var protocol = BuildApprovedProtocol();
@@ -184,7 +224,11 @@ public sealed class WorkflowCompilerTests
         var protocol = BuildApprovedProtocol(withWaiver: true, waiverExpired: true);
         var template = BuildTemplate(withWaiverPolicy: true);
         var waiverError = Assert.ThrowsExactly<WorkflowRuleException>(() => new WorkflowCompiler().Compile(BuildInput(protocol, template)));
-        Assert.AreEqual(WorkflowErrorCodes.InvalidWaiver, waiverError.Category);
+        Assert.AreEqual(WorkflowErrorCodes.ExpiredWaiver, waiverError.Category);
+
+        var futureWaiverProtocol = BuildApprovedProtocol(withWaiver: true, waiverExpiresAt: Clock.UtcNow.AddDays(1));
+        var futureWaiver = new WorkflowCompiler().Compile(BuildInput(futureWaiverProtocol, template));
+        Assert.IsTrue(futureWaiver.WorkflowId.StartsWith("workflow-", StringComparison.Ordinal));
 
         var amendment = BuildAmendment(BuildApprovedProtocol(withDecision: true));
         var amendedProtocol = RecastProtocol(BuildApprovedProtocol(withDecision: true), ProtocolStatus.Approved, amendment.AmendmentId);
@@ -233,6 +277,27 @@ public sealed class WorkflowCompilerTests
         var mismatchInput = BuildInput(amendedProtocol, invalidationTemplate, amendment: amendment, notices: new[] { artifactMismatchNotice });
         var artifactError = Assert.ThrowsExactly<WorkflowRuleException>(() => new WorkflowCompiler().Compile(mismatchInput));
         Assert.AreEqual(WorkflowErrorCodes.AffectedArtifactMismatch, artifactError.Category);
+    }
+
+    [TestMethod]
+    public void Compile_accepts_hyphenated_invalidation_node_ids_and_records_source_digests()
+    {
+        var previous = BuildApprovedProtocol(withDecision: true);
+        var template = BuildTemplate(withInvalidationPolicy: true, hyphenatedInvalidationNode: true);
+        var amendment = BuildAmendment(previous, affectedNodeId: "approve-search");
+        var amendedProtocol = RecastProtocol(BuildApprovedProtocol(withDecision: true), ProtocolStatus.Approved, amendment.AmendmentId);
+
+        var workflow = new WorkflowCompiler().Compile(BuildInput(
+            amendedProtocol,
+            template,
+            amendment: amendment,
+            notices: amendment.InvalidationNotices));
+
+        Assert.AreEqual(1, workflow.InvalidationPlanEntries.Count);
+        var entry = workflow.InvalidationPlanEntries[0];
+        Assert.AreEqual("approve-search", entry.AffectedNodeId);
+        Assert.IsTrue(entry.AmendmentSourceDigest.ToString().StartsWith("sha256:", StringComparison.Ordinal));
+        Assert.IsTrue(entry.InvalidationNoticeDigest.ToString().StartsWith("sha256:", StringComparison.Ordinal));
     }
 
     [TestMethod]
@@ -289,8 +354,10 @@ public sealed class WorkflowCompilerTests
         bool invalidHybrid = false,
         bool withWaiverPolicy = false,
         bool withInvalidationPolicy = false,
-        bool invalidationNoticeArtifactMismatch = false)
+        bool invalidationNoticeArtifactMismatch = false,
+        bool hyphenatedInvalidationNode = false)
     {
+        var approveNodeId = hyphenatedInvalidationNode ? "approve-search" : "approve";
         var requiredInputs = new[]
         {
             new WorkflowTemplateInput(
@@ -325,7 +392,7 @@ public sealed class WorkflowCompilerTests
                 null,
                 null),
             new(
-                "approve",
+                approveNodeId,
                 WorkflowNodeKind.Approval,
                 invalidHybrid ? WorkflowNodeMode.Hybrid : WorkflowNodeMode.Human,
                 "Approve",
@@ -369,8 +436,8 @@ public sealed class WorkflowCompilerTests
 
         var edges = new System.Collections.Generic.List<WorkflowTemplateEdge>
         {
-            new("start", "approve"),
-            new("approve", "execute"),
+            new("start", approveNodeId),
+            new(approveNodeId, "execute"),
             new("execute", unknownEdgeTarget ? "missing" : "finish")
         };
 
@@ -458,7 +525,7 @@ public sealed class WorkflowCompilerTests
                     invalidationNoticeArtifactMismatch
                         ? new[] { "search-plan" }
                         : artifactDeclarations.Select(artifact => artifact.ArtifactRef).ToArray(),
-                    new[] { "approve" },
+                    new[] { approveNodeId },
                     "rerun")
             }
             : Array.Empty<WorkflowTemplateInvalidationPolicy>();
@@ -467,7 +534,7 @@ public sealed class WorkflowCompilerTests
         {
             new WorkflowTemplateGate(
                 "g1",
-                invalidHybrid ? "start" : "approve",
+                invalidHybrid ? "start" : approveNodeId,
                 "policy-review",
                 Array.Empty<string>(),
                 new[] { "review-type" },
@@ -497,7 +564,11 @@ public sealed class WorkflowCompilerTests
         };
     }
 
-    private static ProtocolVersion BuildApprovedProtocol(bool withDecision = true, bool withWaiver = false, bool waiverExpired = false)
+    private static ProtocolVersion BuildApprovedProtocol(
+        bool withDecision = true,
+        bool withWaiver = false,
+        bool waiverExpired = false,
+        DateTimeOffset? waiverExpiresAt = null)
     {
         var ids = new SequenceIdGenerator();
         var requiredDecisionKey = withDecision ? "review-type" : "other-review-type";
@@ -528,7 +599,7 @@ public sealed class WorkflowCompilerTests
                 ids,
                 "review-type",
                 null,
-                waiverExpired ? Clock.UtcNow : null,
+                waiverExpired ? Clock.UtcNow : waiverExpiresAt,
                 "Limited scope allowed.",
                 "Report the scope limitation.",
                 "review-type",
@@ -602,7 +673,7 @@ public sealed class WorkflowCompilerTests
         return recast;
     }
 
-    private static ProtocolAmendment BuildAmendment(ProtocolVersion version)
+    private static ProtocolAmendment BuildAmendment(ProtocolVersion version, string affectedNodeId = "approve")
     {
         var ids = new SequenceIdGenerator();
         var notice = new ProtocolInvalidationNotice(
@@ -617,7 +688,7 @@ public sealed class WorkflowCompilerTests
                 "start",
                 Array.Empty<string>(),
                 null)),
-            "approve",
+            affectedNodeId,
             "screening changed",
             "rerun review",
             Clock.UtcNow);
