@@ -1,6 +1,6 @@
 # Gate 2 Evidence
 
-Status: accepted for deterministic-kernel behavior on 2026-06-26, with hosted Windows/Linux CI evidence.
+Status: accepted for deterministic-kernel behavior on 2026-06-26, with hosted CI evidence run `28244968271`.
 
 ## Behavior Implemented
 
@@ -79,7 +79,7 @@ Build succeeded.
 
 ```text
 Passed! NexusScholar.Conformance.Tests.dll - Failed: 0, Passed: 7, Skipped: 0, Total: 7
-Passed! NexusScholar.Architecture.Tests.dll - Failed: 0, Passed: 4, Skipped: 0, Total: 4
+Passed! NexusScholar.Architecture.Tests.dll - Failed: 0, Passed: 6, Skipped: 0, Total: 6
 Passed! NexusScholar.Core.Tests.dll - Failed: 0, Passed: 28, Skipped: 0, Total: 28
 ```
 
@@ -95,16 +95,16 @@ Exit code 0. No formatting changes required.
 Build succeeded.
 0 Warning(s)
 0 Error(s)
-Passed! NexusScholar.Architecture.Tests.dll - Failed: 0, Passed: 4, Skipped: 0, Total: 4
+Passed! NexusScholar.Architecture.Tests.dll - Failed: 0, Passed: 6, Skipped: 0, Total: 6
 Passed! NexusScholar.Core.Tests.dll - Failed: 0, Passed: 28, Skipped: 0, Total: 28
 Passed! NexusScholar.Conformance.Tests.dll - Failed: 0, Passed: 7, Skipped: 0, Total: 7
 ```
 
 ## Hosted CI Evidence
 
-Hosted CI run: https://github.com/nexus-scholar/core-csharp/actions/runs/28243469130
+Hosted CI run: https://github.com/nexus-scholar/core-csharp/actions/runs/28244968271
 
-Commit: `81fcc16e0249e63c1607cb0c26e4e780e6a6fe41`
+Commit: `5e5dde17...`
 
 Hosted matrix:
 
@@ -122,23 +122,23 @@ Steps passed on both:
 
 Follow-up fix:
 
-- The CRLF NDJSON negative fixture was originally normalized to LF in the Git index.
-- Commit `81fcc16` cleared inherited `eol` for `*.ndjson` and preserved CRLF fixture bytes.
+- The CRLF NDJSON negative fixture is preserved after `*.ndjson` index normalization cleanup.
+- Hosted run `28244968271` (`5e5dde17...`) validated CRLF fixture behavior on both Linux and Windows.
 
 ## Reviewer Input Used
 
 - `dotnet_architect`: confirmed the need for an explicit canonical JSON tree, typed digest scopes, no clock use during serialization, and no hidden protocol or bundle semantics in Gate 2. The follow-up cleanup moved `ContentDigest` and `DigestEnvelope` fully inward to `NexusScholar.Kernel`.
 - `test_engineer`: requested explicit proof of property ordering, nested arrays and objects, null-vs-omission separation, timestamp format, NFC normalization, non-NFC validation-mode rejection, non-finite number rejection, raw byte hashing, digest-prefix validation, NDJSON CRLF handling, and repeated-run stability. The added test suite covers those items.
-- `scientific_invariant_reviewer`: flagged three integrity risks during review. All were addressed in this patch:
+- `scientific_invariant_reviewer`: flagged three integrity risks during review. New regression tests now demonstrate these are addressed:
   - the canonical digest fixture now binds its own `envelope.content` instead of rebuilding content in code;
-  - `DigestEnvelope` now deep-clones and freezes canonical content on construction;
+  - `DigestEnvelope` now deep-clones and freezes canonical content on construction, with immutable-exposure and freeze regressions;
   - decimal exponent canonicalization now lowercases and trims exponent output, with explicit decimal test coverage.
 
 ## Remaining Gate 2 Risks
 
 - `src/NexusScholar.Protocol` still uses provisional digest material and is not upgraded by this gate.
 - `src/NexusScholar.Bundles` still verifies only a thin scaffold and is not elevated to bundle authority here.
-- Hosted GitHub Actions evidence exists for commit `81fcc16e0249e63c1607cb0c26e4e780e6a6fe41`; both Ubuntu and Windows jobs passed restore, build, test, and format.
+- Hosted GitHub Actions evidence exists for commit `5e5dde17...`; both Ubuntu and Windows jobs passed restore, build, test, and format.
 - Open conflicts intentionally remain open: `CF-001`, `CF-002`, `CF-004`, `CF-005`, `CF-006`, `CF-008`, and `CF-014`.
 
 ## CF-009 Status

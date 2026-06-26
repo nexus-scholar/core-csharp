@@ -80,7 +80,8 @@ public sealed class DependencyRulesTests
             typeof(ProtocolDraft).Assembly,
             typeof(ResearchEvent).Assembly,
             typeof(ReviewBundleManifest).Assembly,
-            typeof(AiTaskPolicy).Assembly
+            typeof(AiTaskPolicy).Assembly,
+            typeof(WorkflowDefinition).Assembly
         };
 
         foreach (var assembly in digestConsumerAssemblies)

@@ -1,6 +1,9 @@
 # Gate 3: Protocol Lifecycle
 
-Status: implementation complete locally; hosted CI evidence pending.
+Status: implementation complete locally; hosted CI evidence verified.
+
+This file is preserved on this branch as planning carryover documentation only.
+Gate 3 is out-of-scope for this Gate 2 cleanup branch and is not part of the current Gate 2 acceptance criteria.
 
 ## Goal
 
@@ -26,7 +29,7 @@ Gate 3 implements protocol draft, decision, approval, version, amendment, waiver
 - Protocol amendments preserving previous content digest, changed decision keys, invalidation notices, and supersession links.
 - Waivers as protocol content included before approval digest computation.
 - Deviations linked to approved versions without mutating version digests.
-- Stable protocol error categories for Gate 3 failure modes.
+- Stable protocol error categories for Gate 3 failure modes, including missing/invalid approval actor and policy binding failures.
 
 ## Fixture Pack
 
