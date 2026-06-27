@@ -1,6 +1,6 @@
 # Gate 6 Evidence: Portable Bundle and Artifact Contract
 
-Status: local verification passed; hosted CI passed for the Gate 6 implementation commit. The final branch head still requires hosted CI before merge when this evidence file changes.
+Status: local verification passed; hosted CI passed for the Gate 6 closeout implementation commit. If this evidence file is committed after that run, the final branch head still requires a fresh hosted matrix check before merge.
 
 ## Scope
 
@@ -37,6 +37,10 @@ Still out of scope:
 - Bundle construction deterministically orders artifacts, required schemas, provenance bindings, shared-identity membership, and unresolved candidates.
 - Verification returns immutable snapshots for validity, manifest digest, verified artifacts, errors, and warnings.
 - Verification rejects duplicate logical paths, invalid paths, invalid digests, negative sizes, missing artifacts, size mismatches, checksum mismatches, unsupported required schemas, stale manifest digests, workflow/protocol mismatches, provenance digest mismatches, and destructive overwrite attempts.
+- Verification rejects protocol bindings unless the `protocol_content_digest` matches a known `protocol-content` envelope digest for the referenced protocol version id.
+- Verification rejects provenance bindings unless the `event_digest` matches a known `provenance-event` envelope digest for the referenced event id.
+- Verification rejects artifact-level provenance event digests unless they match known provenance-event envelope digests.
+- `NexusScholar.Bundles` uses field-level bundle binding records and depends only on Kernel and Shared inside the domain.
 - Import behavior is staged validation only. No persistence, filesystem writes, API, UI, or cloud sync behavior is implemented.
 
 ## Fixture IDs
@@ -71,28 +75,51 @@ local-gate-6-contract
 
 Fixtures are hand-authored local conformance fixtures, not PHP-generated goldens.
 
+Fixture metadata now uses replayable, non-placeholder digests:
+
+- `inputDigest` is recomputed by conformance tests from the canonical fixture `case` object.
+- Positive artifact fixture `outputDigest` records the expected raw-byte digest.
+- Positive bundle fixture `outputDigest` records the expected manifest digest.
+- Negative fixture `outputDigest` records the canonical expected error category result.
+
 ## Local Verification
 
 - `dotnet restore NexusScholar.Core.slnx`: passed.
 - `dotnet build NexusScholar.Core.slnx -c Release --no-restore`: passed, 0 warnings, 0 errors.
-- `dotnet test tests/NexusScholar.Core.Tests/NexusScholar.Core.Tests.csproj -c Release`: passed, 112 tests total.
+- `dotnet test tests/NexusScholar.Core.Tests/NexusScholar.Core.Tests.csproj -c Release`: passed, 114 tests total.
 - `dotnet test tests/NexusScholar.Conformance.Tests/NexusScholar.Conformance.Tests.csproj -c Release`: passed, 32 tests total.
-- `dotnet test tests/NexusScholar.Architecture.Tests/NexusScholar.Architecture.Tests.csproj -c Release`: passed, 11 tests total.
-- `dotnet test NexusScholar.Core.slnx -c Release --no-build`: passed, 155 tests total.
-  - `NexusScholar.Architecture.Tests`: 11 passed.
+- `dotnet test tests/NexusScholar.Architecture.Tests/NexusScholar.Architecture.Tests.csproj -c Release`: passed, 12 tests total.
+- `dotnet test NexusScholar.Core.slnx -c Release --no-build`: passed, 158 tests total.
+  - `NexusScholar.Architecture.Tests`: 12 passed.
   - `NexusScholar.Conformance.Tests`: 32 passed.
-  - `NexusScholar.Core.Tests`: 112 passed.
+  - `NexusScholar.Core.Tests`: 114 passed.
 - `dotnet format NexusScholar.Core.slnx --verify-no-changes --no-restore`: passed.
 - `powershell -ExecutionPolicy Bypass -File .\scripts\verify.ps1`: passed.
 
 ## Hosted CI
 
 - `gate-01` workflow dispatch on `cdx/gate-6-bundle-planning`: passed.
-- Commit: `a4cbd7b28f1543851c1a093d823b9f696304ea68`
-- Run: `https://github.com/nexus-scholar/core-csharp/actions/runs/28274623890`
+- Commit: `df81906337a8cdf51a6cd42674ca695cb2b04f36`
+- Run: `https://github.com/nexus-scholar/core-csharp/actions/runs/28275419732`
 - Matrix:
   - `verify (ubuntu-latest)`: passed.
   - `verify (windows-latest)`: passed.
+
+Hosted steps passed on both:
+
+- checkout
+- setup .NET
+- restore
+- build
+- test
+- format
+
+Closeout fixes in the recorded commit:
+
+- Scoped protocol/provenance bundle bindings now require known envelope digests rather than syntactically valid `sha256:*` strings.
+- Fixture metadata no longer uses all-zero/all-one/all-two placeholders.
+- Bundle project references to Protocol, Workflow, and Provenance were removed.
+- Regression tests cover unapproved protocol binding, unknown protocol digest, stale protocol digest, unknown provenance digest, stale provenance digest, workflow bound digest mismatch, path URI/dot cases, duplicate normalized paths, and manifest digest independence from verification/tamper reports.
 
 ## Explicit Claims Not Made
 
