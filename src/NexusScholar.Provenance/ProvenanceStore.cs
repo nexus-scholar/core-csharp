@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using System.Linq;
 using NexusScholar.Kernel;
 
@@ -29,6 +30,6 @@ public sealed class InMemoryProvenanceStore : IProvenanceStore
 
     public IReadOnlyList<ResearchEvent> ReadAll()
     {
-        return _events.Select(eventRecord => eventRecord.CloneForStore()).ToArray();
+        return new ReadOnlyCollection<ResearchEvent>(_events.Select(eventRecord => eventRecord.CloneForStore()).ToArray());
     }
 }

@@ -177,6 +177,10 @@ public sealed class ProvenanceTests
         var listed = (IList<ResearchEvent>)snapshot;
         Assert.ThrowsExactly<NotSupportedException>(() => listed.Add(readBack[0]));
 
+        Assert.IsFalse(readBack is ResearchEvent[]);
+        var readBackList = (IList<ResearchEvent>)readBack;
+        Assert.ThrowsExactly<NotSupportedException>(() => readBackList[0] = first);
+
         Assert.AreEqual(0, snapshot.Count);
         Assert.AreEqual(2, readBack.Count);
     }
@@ -206,6 +210,10 @@ public sealed class ProvenanceTests
         {
             new("artifact", "before", ContentDigest.Sha256Utf8("original"))
         };
+        var mutableOutputs = new List<ProvenanceEntityRef>
+        {
+            new("artifact", "output-before", ContentDigest.Sha256Utf8("output-original"))
+        };
 
         var record = ResearchEventFactory.Create(
             ids,
@@ -213,15 +221,32 @@ public sealed class ProvenanceTests
             new ProvenanceActivity("artifact-generated", "Artifact generated", false, false, false),
             new ProvenanceEntityRef("artifact", "artifact-1"),
             new ProvenanceAgent("automation-1", "automation"),
-            inputs: mutableInputs);
+            inputs: mutableInputs,
+            outputs: mutableOutputs);
 
         store.Append(record);
         mutableInputs.Clear();
         mutableInputs.Add(new ProvenanceEntityRef("artifact", "after", ContentDigest.Sha256Utf8("mutated")));
+        mutableOutputs.Clear();
+        mutableOutputs.Add(new ProvenanceEntityRef("artifact", "output-after", ContentDigest.Sha256Utf8("output-mutated")));
 
         var read = store.ReadAll()[0];
+        var storedDigest = read.EventDigest;
+
         Assert.AreEqual(1, read.Inputs.Count);
         Assert.AreEqual("before", read.Inputs[0].EntityId);
+        Assert.AreEqual(1, read.Outputs.Count);
+        Assert.AreEqual("output-before", read.Outputs[0].EntityId);
+        Assert.AreEqual(storedDigest, read.ToDigestEnvelope().ComputeDigest());
+        Assert.IsFalse(read.Inputs is ProvenanceEntityRef[]);
+        Assert.IsFalse(read.Outputs is ProvenanceEntityRef[]);
+
+        var exposedInputs = (IList<ProvenanceEntityRef>)read.Inputs;
+        var exposedOutputs = (IList<ProvenanceEntityRef>)read.Outputs;
+        Assert.ThrowsExactly<NotSupportedException>(() =>
+            exposedInputs[0] = new ProvenanceEntityRef("artifact", "after", ContentDigest.Sha256Utf8("mutated")));
+        Assert.ThrowsExactly<NotSupportedException>(() =>
+            exposedOutputs[0] = new ProvenanceEntityRef("artifact", "output-after", ContentDigest.Sha256Utf8("output-mutated")));
     }
 
     [TestMethod]

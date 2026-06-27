@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using System.Linq;
 using NexusScholar.Kernel;
 
@@ -192,8 +193,8 @@ public sealed class ResearchEvent
         Subject = subject ?? throw new ArgumentNullException(nameof(subject));
         ProtocolBinding = protocolBinding;
         WorkflowBinding = workflowBinding;
-        Inputs = (inputs ?? Array.Empty<ProvenanceEntityRef>()).ToArray();
-        Outputs = (outputs ?? Array.Empty<ProvenanceEntityRef>()).ToArray();
+        Inputs = Snapshot(inputs);
+        Outputs = Snapshot(outputs);
         EventDigest = eventDigest;
     }
 
@@ -265,5 +266,10 @@ public sealed class ResearchEvent
             EventDigest,
             ProtocolBinding,
             WorkflowBinding);
+    }
+
+    private static IReadOnlyList<ProvenanceEntityRef> Snapshot(IReadOnlyList<ProvenanceEntityRef>? values)
+    {
+        return new ReadOnlyCollection<ProvenanceEntityRef>((values ?? Array.Empty<ProvenanceEntityRef>()).ToArray());
     }
 }
