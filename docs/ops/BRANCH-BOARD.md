@@ -1,20 +1,22 @@
 # Codex Branch Board
 
-Source: post-merge branch probes from local `main` after Gate 9 merge.
+Source: live branch probes from local `main` after the Gate 6 merge.
 
 ## Main Baseline
 
-- Gate 9 merge commit: `efde929b142256b6b29906924377eb6607734d6c` (`docs: record gate 9 hosted ci evidence`).
-- Gate 0 through Gate 5 and Gate 9 are merged into `main`.
-- Gate 9 merge-candidate hosted CI is green: `https://github.com/nexus-scholar/core-csharp/actions/runs/28273143941`.
-- Gate 9 branch `cdx/gate-9-shared-identity` is included in the merge baseline.
+- Current `main` head: `7bb279e97a26c21b4400d0f38e245864931141f7` (`docs: record Gate 6 closeout evidence`).
+- Gate 0 through Gate 6 are merged into `main`.
+- Gate 9 shared identity is also merged into `main`; Gate 9 was intentionally completed before Gate 6.
+- Gate 6 final branch CI is green: `https://github.com/nexus-scholar/core-csharp/actions/runs/28275496330`.
+- Gate 6 push-triggered `main` CI is green: `https://github.com/nexus-scholar/core-csharp/actions/runs/28275617885`.
+- Gate 6 reviewer closeout returned no blockers.
 
 ## Branch Classes
 
-- merged: `main`, `cdx/gate-9-shared-identity`, `cdx/gate-5-provenance`, `cdx/gate-4-workflow`, `cdx/gate-4-workflow-planning`, `cdx/two-model-codex-workflow`, `cdx/main-gate2-merge`, `cdx/gate-3-protocol-lifecycle`, `cdx/gate-3-planning-decisions`, `cdx/gate-2-digest-kernel-cleanup`, `cdx/shared-identity-adr-0007`, `cdx/run-gate-zero-discovery`, `cdx/run-gate-0-discovery`
-- cleanup: `cdx/gate-9-shared-identity`, `cdx/gate-5-provenance`, `cdx/two-model-codex-workflow`, `cdx/main-gate2-merge`, `cdx/gate-4-workflow`, `cdx/gate-4-workflow-planning`, `cdx/gate-3-protocol-lifecycle`, `cdx/gate-3-planning-decisions`, `cdx/gate-2-digest-kernel-cleanup`, `cdx/run-gate-zero-discovery`
+- merged: `main`, `cdx/gate-6-bundle-planning`, `cdx/gate-9-shared-identity`, `cdx/gate-5-provenance`, `cdx/gate-4-workflow`, `cdx/gate-4-workflow-planning`, `cdx/two-model-codex-workflow`, `cdx/main-gate2-merge`, `cdx/gate-3-protocol-lifecycle`, `cdx/gate-3-planning-decisions`, `cdx/gate-2-digest-kernel-cleanup`, `cdx/shared-identity-adr-0007`, `cdx/run-gate-zero-discovery`, `cdx/run-gate-0-discovery`
+- cleanup: `cdx/gate-6-bundle-planning`, `cdx/gate-9-shared-identity`, `cdx/gate-5-provenance`, `cdx/two-model-codex-workflow`, `cdx/main-gate2-merge`, `cdx/gate-4-workflow`, `cdx/gate-4-workflow-planning`, `cdx/gate-3-protocol-lifecycle`, `cdx/gate-3-planning-decisions`, `cdx/gate-2-digest-kernel-cleanup`, `cdx/run-gate-zero-discovery`
 - active: `main`
-- blocked: Gate 6 implementation is blocked until `CF-002` and `CF-014` decisions are planned.
+- blocked: Search implementation, provider/network behavior, PHP compatibility claims, and generated PHP fixtures remain blocked until Search reconnaissance freezes behavior and fixture/comparator plans.
 - stale: `cdx/run-gate-0-discovery`, `cdx/main-gate2-merge`
 - review: none identified by current git state
 
@@ -22,6 +24,7 @@ Cleanup candidates above are confirmed by `git branch --merged main`.
 
 ## Safe Cleanup Candidates
 
+- `cdx/gate-6-bundle-planning`
 - `cdx/gate-9-shared-identity`
 - `cdx/gate-5-provenance`
 - `cdx/two-model-codex-workflow`
@@ -40,9 +43,9 @@ Cleanup candidates above are confirmed by `git branch --merged main`.
 
 ## Next Work
 
-- Next active branch target is `cdx/gate-6-bundle-planning`.
-- Gate 6 must plan the bundle/artifact contract before implementation because `CF-002` remains blocking and `CF-014` affects snapshot and bundle equality.
-- Gate 6 must not claim blueprint conformance, PHP compatibility, provenance parity, AI governance parity, persistence, API, UI, cloud sync, or workflow execution.
+- Next active branch target: `cdx/gate-9-search-recon`.
+- Scope: PHP Search behavior mapping only, including provider/cache/plan behavior, fixture plan, and comparator plan.
+- Do not implement providers, network behavior, Search execution, persistence, API/UI/cloud, PHP compatibility, or blueprint conformance in the reconnaissance branch.
 
 ## Unresolved Ambiguity
 
