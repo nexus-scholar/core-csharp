@@ -1,6 +1,6 @@
 # Gate 6 Evidence: Portable Bundle and Artifact Contract
 
-Status: local verification passed; hosted CI pending for the final branch head.
+Status: local verification passed; hosted CI passed for the Gate 6 implementation commit. The final branch head still requires hosted CI before merge when this evidence file changes.
 
 ## Scope
 
@@ -87,7 +87,12 @@ Fixtures are hand-authored local conformance fixtures, not PHP-generated goldens
 
 ## Hosted CI
 
-Pending for final branch head after push.
+- `gate-01` workflow dispatch on `cdx/gate-6-bundle-planning`: passed.
+- Commit: `a4cbd7b28f1543851c1a093d823b9f696304ea68`
+- Run: `https://github.com/nexus-scholar/core-csharp/actions/runs/28274623890`
+- Matrix:
+  - `verify (ubuntu-latest)`: passed.
+  - `verify (windows-latest)`: passed.
 
 ## Explicit Claims Not Made
 
