@@ -28,6 +28,7 @@ Still out of scope:
 - Event digest uses `DigestScope.ProvenanceEvent`, schema id `nexus.provenance-event`, and schema version `1.0.0`.
 - `ResearchEventFactory` validates required actor, required input digests, required output digests, and projection/cache/wiki/generated/local-path exclusions.
 - `InMemoryProvenanceStore` is append-only, rejects duplicate event ids, preserves append order, and returns immutable snapshots.
+- Event input/output collections and store snapshots are non-castable to mutable arrays and reject mutation through list interfaces.
 - `NexusScholar.Provenance` remains Kernel-only inside the Nexus domain dependency graph.
 
 ## Fixture IDs
@@ -55,7 +56,8 @@ Still out of scope:
 ## Hosted CI
 
 - `gate-01` workflow dispatch on `cdx/gate-5-provenance`: passed.
-- Run: `https://github.com/nexus-scholar/core-csharp/actions/runs/28271812104`
+- Commit: `478c70265291684d6f2628d85e185765405ba71a`
+- Run: `https://github.com/nexus-scholar/core-csharp/actions/runs/28272208593`
 - Matrix:
   - `verify (ubuntu-latest)`: passed.
   - `verify (windows-latest)`: passed.
