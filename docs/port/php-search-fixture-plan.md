@@ -25,6 +25,7 @@ Planned fixtures:
 - `search-cache-key-field-inclusion.json`
 - `search-cache-key-field-exclusion.json`
 - `search-cache-key-active-provider-set.json`
+- `search-cache-key-include-raw-data-included.json`
 - `search-query-pagination.json`
 
 Coverage:
@@ -34,8 +35,9 @@ Coverage:
 - multilingual term accepted
 - year range: below `1000`, inverted, future bound, one-sided, unbounded
 - provider alias normalization
-- cache key includes term, year range, language, max results, offset, and sorted active providers
-- cache key excludes query id, project id, and `includeRawData`
+- local C# cache key includes term, year range, language, max results, offset, sorted active providers, and `include_raw_data`
+- local C# cache key excludes generated query id, trace id, project id, runtime data, provider stats/failures, raw bytes, app ids/hashes, local paths, and provider credentials
+- PHP cache key excludes `includeRawData`; ADR 0010 classifies this as an intentional local incompatibility until a later ADR reverses it
 - provider order does not change cache identity
 - empty selected providers use the sorted active adapter alias set at aggregation time
 
@@ -65,6 +67,8 @@ Planned fixtures:
 
 - `search-plan-parse-nexus-cli-v4.json`
 - `search-plan-parse-legacy-queries.json`
+- `search-trace-schema-closed-plan.json`
+- `search-trace-php-legacy-plan-import.json`
 - `search-plan-root-defaults.json`
 - `search-plan-item-overrides.json`
 - `search-plan-select-id-priority.json`
@@ -92,6 +96,8 @@ Coverage:
 - priority filtering
 - runtime overrides for project, max results, and provider aliases
 - invalid YAML, non-list searches, non-mapping item, missing id, missing query, non-mapping metadata, non-positive limit
+- authoritative local C# plans are schema-closed and reject unknown fields, missing schema id, missing schema version, and unsupported schema version
+- PHP-permissive plan parsing is tested only through an explicit legacy import/comparator profile
 
 ### Provider Normalization
 
@@ -177,7 +183,8 @@ Required negative cases before implementation claim:
 - duplicate provider sightings preserved, not deduped
 - title-only duplicate rejected as Search identity
 - no-id candidate not promoted to canonical identity
-- raw-data request satisfied by non-raw cache entry, if PHP cache behavior is preserved
+- raw-data request satisfied by non-raw cache entry under the local C# cache contract
+- PHP raw-data cache ambiguity from excluding `includeRawData` classified as an intentional incompatibility
 
 ## Comparator Plan
 
@@ -202,7 +209,7 @@ Compare:
 - exact excluded material fields
 - SHA-256 output string
 
-For field-exclusion fixtures, mutate only one excluded field at a time and require identical cache keys.
+For field-exclusion fixtures, mutate only one excluded field at a time and require identical cache keys. `include_raw_data` is not an excluded local C# cache field.
 
 ### Plan Parser Comparator
 
@@ -264,15 +271,15 @@ The PHP fixture generator must:
 
 ## Implementation Readiness
 
-No.
+Yes, for a local stub-provider Search implementation after `ADR 0010`.
 
-Fixture and comparator design is ready enough for a future Search task contract, but implementation should wait until:
+Fixture and comparator design is ready enough for local implementation with explicit non-claims. It is still not ready for PHP compatibility or live provider behavior until:
 
-- `CF-016` Search/Deduplication boundary is resolved
-- `CF-017` Search plan schema-closure policy is resolved
-- cache identity handling of `includeRawData` exclusion is explicitly accepted or rejected
-- a stub-provider Search trace shape is accepted
-- generated PHP fixture harness exists or the implementation is explicitly local-only with no PHP compatibility claim
+- generated PHP fixture harness exists
+- PHP comparators classify the `includeRawData` cache difference and PHP Search-time deduplication difference
+- cassette-backed provider fixture generation is explicitly admitted
+- Deduplication and Screening behavior are handled in later gates
+- persistence/API/UI/job/cloud behavior is admitted by a later scope
 
 ## Explicit Non-Claims
 
