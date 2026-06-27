@@ -11,6 +11,8 @@ These questions should be resolved before implementing durable renderers or app 
 - `PayloadJson`, when supplied, must be valid JSON with an object root.
 - Workspace/context references use lightweight refs rather than Core types.
 - `NexusScholar.UiContracts` is a standalone project with no project references.
+- Phase 2 samples exist for import warnings, dedup review, and bundle verification.
+- Phase 2 samples are tested as `WorkspacePlan` JSON and remain non-authoritative.
 
 ## Still Open
 
@@ -18,7 +20,7 @@ These questions should be resolved before implementing durable renderers or app 
 - How should block contract versions be represented beyond assembly version and kind strings?
 - What constitutes a breaking block change?
 - Should renderer compatibility be tested through golden JSON examples?
-- Should sample plans become conformance fixtures after contracts stabilize?
+- Should sample plans become conformance fixtures after contracts stabilize? Current answer: not yet.
 - How should AI proposals be stored before acceptance?
 - How should prompt and response digests be exposed in UI blocks?
 - How should accepted AI suggestions be recorded in provenance or domain records?
@@ -28,3 +30,4 @@ These questions should be resolved before implementing durable renderers or app 
 - When should app persistence be introduced?
 - Should Avalonia renderer code live in this repo during prototyping?
 - Should web/mobile renderers live in separate repos?
+- When should sample payloads become typed payload records instead of object-root JSON strings?

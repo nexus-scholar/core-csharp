@@ -65,6 +65,25 @@ The v0 payload strategy is intentionally conservative:
 - The contract does not accept arbitrary `object` dictionaries.
 - No complex polymorphic payload schema exists yet.
 
+## Phase 2 Samples
+
+Phase 2 added contract-backed sample plans under `samples/block-plans`:
+
+- `import-warning.sample.json`;
+- `dedup-review.sample.json`;
+- `bundle-verification.sample.json`.
+
+These samples deserialize into `WorkspacePlan` and are tested through `NexusScholar.UiContracts.Tests`. They are intended to help future desktop and CLI renderer prototypes consume realistic block plans without inventing contracts in renderer code.
+
+The samples remain non-authoritative:
+
+- not Core records;
+- not ADRs;
+- not scientific fixtures;
+- not conformance fixtures;
+- not PHP compatibility fixtures;
+- not renderer implementations.
+
 ## Current Limitations
 
 - No renderer exists yet.
@@ -73,5 +92,6 @@ The v0 payload strategy is intentionally conservative:
 - No persistence or app state boundary is implemented.
 - No AI proposal storage or provenance acceptance path is implemented.
 - No PHP compatibility claim is made.
+- Sample payloads are simple JSON strings, not typed payload records.
 
-Phase 2 should create sample block plans using `NexusScholar.UiContracts` and tests that prove Import warning and Dedup review plans round-trip through the contract layer.
+Phase 3 can use these samples to build an isolated renderer prototype without changing Core.

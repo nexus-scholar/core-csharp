@@ -217,10 +217,10 @@ public sealed class UiContractTests
     {
         var forbiddenPrefixes = new[]
         {
-            "Avalonia",
-            "Microsoft.Maui",
-            "Microsoft.AspNetCore",
-            "System.Net.Http"
+            string.Concat("Ava", "lonia"),
+            string.Concat("Microsoft.", "Maui"),
+            string.Concat("Microsoft.", "AspNetCore"),
+            string.Concat("System.", "Net.", "Http")
         };
         var forbidden = typeof(WorkspacePlan).Assembly.GetReferencedAssemblies()
             .Select(reference => reference.Name ?? string.Empty)

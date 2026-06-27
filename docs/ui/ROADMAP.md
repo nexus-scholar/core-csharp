@@ -34,14 +34,17 @@ Phase 1 deliberately did not add Avalonia, app services, renderers, AI execution
 
 ## Phase 2: Sample Block Plans
 
-Create sample block plans using `NexusScholar.UiContracts` for:
+Status: implemented as contract-backed samples.
+
+Created sample plans under `samples/block-plans` using `NexusScholar.UiContracts` JSON shape for:
 
 - import warning;
 - dedup review;
-- bundle verification;
-- screening decision concept, only if Screening implementation exists or the sample is clearly non-authoritative.
+- bundle verification.
 
-Samples should remain illustrative until promoted into tests or fixtures.
+The samples deserialize into `WorkspacePlan`, round-trip through the contract test layer, preserve block order, validate object-root `PayloadJson`, and avoid renderer-specific fields. They remain illustrative. They are not Core authority, not ADRs, not scientific fixtures, and not PHP compatibility fixtures.
+
+No Screening sample was added in Phase 2 because Screening Core is still outside this UI sample task.
 
 ## Phase 3: Avalonia Block Renderer Prototype
 
