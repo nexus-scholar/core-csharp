@@ -6,6 +6,7 @@ using NexusScholar.Extensibility;
 using NexusScholar.Kernel;
 using NexusScholar.Protocol;
 using NexusScholar.Provenance;
+using NexusScholar.Shared;
 using NexusScholar.Workflow;
 
 namespace NexusScholar.Architecture.Tests;
@@ -39,6 +40,7 @@ public sealed class DependencyRulesTests
             typeof(ProtocolDraft).Assembly,
             typeof(WorkflowDefinition).Assembly,
             typeof(ResearchEvent).Assembly,
+            typeof(WorkId).Assembly,
             typeof(ReviewBundleManifest).Assembly,
             typeof(ExtensionManifest).Assembly,
             typeof(AiTaskPolicy).Assembly
@@ -81,7 +83,8 @@ public sealed class DependencyRulesTests
             typeof(ResearchEvent).Assembly,
             typeof(ReviewBundleManifest).Assembly,
             typeof(AiTaskPolicy).Assembly,
-            typeof(WorkflowDefinition).Assembly
+            typeof(WorkflowDefinition).Assembly,
+            typeof(WorkId).Assembly
         };
 
         foreach (var assembly in digestConsumerAssemblies)
@@ -125,6 +128,23 @@ public sealed class DependencyRulesTests
             0,
             disallowed.Length,
             $"NexusScholar.Provenance must depend inward only on Kernel. Found: {string.Join(", ", disallowed)}");
+    }
+
+    [TestMethod]
+    public void Shared_project_depends_only_on_kernel_inside_nexus_domain()
+    {
+        var sharedAssembly = typeof(WorkId).Assembly;
+        var kernelAssemblyName = typeof(IClock).Assembly.GetName().Name;
+        var disallowed = sharedAssembly.GetReferencedAssemblies()
+            .Select(reference => reference.Name ?? string.Empty)
+            .Where(name => name.StartsWith("NexusScholar.", StringComparison.Ordinal))
+            .Where(name => !string.Equals(name, kernelAssemblyName, StringComparison.Ordinal))
+            .ToArray();
+
+        Assert.AreEqual(
+            0,
+            disallowed.Length,
+            $"NexusScholar.Shared must depend inward only on Kernel. Found: {string.Join(", ", disallowed)}");
     }
 
     [TestMethod]

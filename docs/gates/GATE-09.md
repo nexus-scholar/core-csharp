@@ -1,82 +1,86 @@
-# Gate 9: Shared Identity Reconnaissance
+# Gate 9: Shared Scientific Identity
 
-Status: planning and reconnaissance only. No C# implementation on this gate.
+Status: implemented for local C# shared identity scope only.
 
 ## Goal
 
-Prepare porting evidence for shared scientific identity before asserting compatibility in later gates.
+Implement local C# shared scientific identity behavior from `ADR 0007` without claiming PHP compatibility, Search behavior, Deduplication behavior, Screening behavior, or corpus snapshot semantics.
 
 ## Scope
 
-- Shared identity value objects (`WorkId`, `WorkIdSet`, `WorkIdNamespace`)
-- Scholarly work identity (`ScholarlyWork`)
-- Corpus aggregation (`CorpusSlice`)
-- Author identity helpers only when needed for work-authorship behavior
-- External identifier precedence and portability risks
+- `WorkIdNamespace`
+- `WorkId`
+- `WorkIdSet`
+- `ScholarlyWork`
+- `CorpusSlice`
+- local shared identity fixtures
+- local conformance and architecture tests
 
-## Gate 9 Exit Standard
+## Implemented Local Behavior
 
-- PHP source lock is verified against `specs/SOURCE.lock.json`.
-- Behavior map and fixture plan for shared identity are stored under `docs/port/`.
-- Stable behaviors are mapped with negative cases and comparator rules.
-- Non-portable behavior (object-id fallback) is explicitly tracked in `OPEN-CONFLICTS.md`.
-- No implementation claims are made until conflicts and ADRs are resolved.
+- Approved `WorkId` namespace set: `doi`, `arxiv`, `openalex`, `s2`, `pubmed`, `pmcid`, `ieee`, `doaj`, and `internal`.
+- Strict `WorkId` parsing for `<namespace>:<value>` with unknown namespace, missing separator, empty value, and ambiguous multi-token forms rejected.
+- DOI and arXiv constructor normalization strips known DOI/arXiv prefixes and lowercases normalized values.
+- `WorkIdSet` deduplicates exact normalized namespace/value pairs.
+- `WorkIdSet.Primary` follows `ADR 0007` precedence: `doi`, `openalex`, `s2`, `arxiv`, `pmcid`, `pubmed`, `ieee`, `doaj`, `internal`.
+- Scientific work equality uses stable identifier overlap only.
+- Title-only equality is rejected as scientific identity.
+- Runtime object identity is not used as a scientific fallback.
+- No-id works can exist only as unresolved candidates with non-empty title and source context.
+- No-id candidates do not deduplicate by title, insertion order, runtime identity, or object hash.
+- `CorpusSlice.FromUnvalidatedCandidates` preserves raw candidates for import/fixture staging without treating runtime identity as scientific identity.
+- Immutable membership identity projection rejects unresolved no-id candidates.
 
-## Current status
+## Fixture IDs
 
-- `specs/SOURCE.lock.json` pins `../core` commit `b24d0d71ec7b64003465182477e7edb7f49994f4`.
-- Shared identity behavior exists in PHP as observed identity-first domain semantics.
-- `ADR 0007` resolves `CF-010` for Gate 9 planning scope by rejecting runtime object identity as scientific identity and treating no-primary-id works as unresolved candidates.
-- This gate currently produces planning artifacts only.
-- Gate 9 implementation remains blocked until fixtures and comparators are generated in a later implementation branch.
+Positive local fixtures:
 
-## Required follow-up
+- `shared-identity-workid-normalization.json`
+- `shared-identity-workid-namespaces.json`
+- `shared-identity-workidset-primary.json`
+- `shared-identity-workidset-merge.json`
+- `shared-identity-scholarlywork-merge.json`
+- `shared-identity-no-id-candidate.json`
+- `shared-identity-corpus-slice-dedupe.json`
+- `shared-identity-unvalidated-candidates.json`
+- `shared-identity-title-lookup-helper.json`
 
-- Generate fixture-backed conformance after reconciliation of identity semantics.
-- Implement `WorkId`, `WorkIdSet`, `ScholarlyWork`, and `CorpusSlice` against `ADR 0007`.
-- Classify PHP `spl_object_hash` fallback as an intentional incompatibility in comparator output.
-- Keep Search, Deduplication, Screening, and snapshot equality outside this gate unless later ADRs resolve them.
+Negative local fixtures:
 
-## ADR 0007 planning decisions
+- `shared-identity-bad-workid-string.json`
+- `shared-identity-blank-workid-constructor.json`
+- `shared-identity-empty-title-work.json`
+- `shared-identity-overlap-false.json`
+- `shared-identity-cross-namespace-normalized-clash.json`
+- `shared-identity-spl-object-fallback-probe.json`
+- `shared-identity-title-only-not-identity.json`
+- `shared-identity-no-id-no-dedupe.json`
+- `shared-identity-no-id-snapshot-reject.json`
+- `shared-identity-bad-merge-order.json`
 
-- Work identity is based on normalized stable identifier overlap.
-- Title is not scientific identity.
-- Runtime object identity is not scientific identity.
-- No-id works may exist only as unresolved candidates.
-- No-id works do not deduplicate by title, object identity, insertion order, or runtime hash.
-- C# constructor and parser validation is stricter than PHP for blank identifiers.
-- Any unsafe construction path must be scoped to unvalidated candidates, fixture replay, raw import staging, or negative-test setup.
+## Exit Standard
 
-## Required fixture consequences
+- `NexusScholar.Shared` builds as a domain project depending inward only on `NexusScholar.Kernel`.
+- Core tests cover parsing, normalization, primary precedence, ID overlap, no-title identity, no-id candidates, corpus dedupe, unvalidated candidates, immutable membership rejection, and immutable collection snapshots.
+- Conformance tests verify fixture presence, local metadata, explicit non-claims, and representative positive/negative fixture replay.
+- Architecture tests include `NexusScholar.Shared` in domain dependency guards.
+- Hosted CI passes on Windows and Ubuntu for the merge candidate.
 
-Positive fixture planning must cover:
+## Conflict Status
 
-- all approved `WorkId` namespaces;
-- DOI and arXiv normalization;
-- primary-id precedence;
-- ID-overlap equality;
-- no-id unresolved candidate admission;
-- raw candidate preservation through an explicitly unsafe or unvalidated import path.
-
-Negative fixture planning must cover:
-
-- bad namespace;
-- missing separator;
-- empty identifier value;
-- blank identifier construction;
-- title-only false-positive identity;
-- cross-namespace same-value non-overlap;
-- runtime object identity fallback rejection;
-- no-id candidate dedupe rejection;
-- no-id candidate rejection from immutable scientific identity contexts.
+- `CF-010`: implemented for local Gate 9 C# shared identity behavior.
+- PHP `spl_object_hash` / `spl_object_id` fallback remains an intentional incompatibility and is not ported.
+- PHP compatibility remains unclaimed until generator-backed PHP fixtures and semantic comparators exist.
 
 ## Non-Claims
 
 - no PHP compatibility claim
-- no implementation claim
-- no ported fixture claim
+- no generated PHP fixtures
 - no Search behavior resolution
 - no Deduplication behavior resolution
 - no Screening behavior resolution
-- no immutable snapshot equality rule
-- no blueprint/provenance/workflow/AI claim
+- no provider behavior
+- no persistence, API, UI, or cloud behavior
+- no corpus snapshot equality rule
+- no title-fuzzy matching rule
+- no blueprint conformance claim

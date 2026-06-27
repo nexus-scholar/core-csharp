@@ -12,6 +12,7 @@
     <None Include="../../fixtures/conformance/workflow/*.json" Link="fixtures/workflow/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../fixtures/conformance/provenance/*.json" Link="fixtures/provenance/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../fixtures/conformance/provenance/*.ndjson" Link="fixtures/provenance/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../fixtures/conformance/shared-identity/*.json" Link="fixtures/shared-identity/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../fixtures/conformance/kernel/*.json" Link="fixtures/kernel/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../fixtures/conformance/kernel/*.ndjson" Link="fixtures/kernel/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
@@ -19,6 +20,7 @@
     <ProjectReference Include="../../src/NexusScholar.Kernel/NexusScholar.Kernel.csproj" />
     <ProjectReference Include="../../src/NexusScholar.Protocol/NexusScholar.Protocol.csproj" />
     <ProjectReference Include="../../src/NexusScholar.Provenance/NexusScholar.Provenance.csproj" />
+    <ProjectReference Include="../../src/NexusScholar.Shared/NexusScholar.Shared.csproj" />
     <ProjectReference Include="../../src/NexusScholar.Workflow/NexusScholar.Workflow.csproj" />
   </ItemGroup>
 </Project>

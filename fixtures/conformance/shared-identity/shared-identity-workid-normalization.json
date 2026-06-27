@@ -1,0 +1,26 @@
+{
+  "fixtureId": "shared-identity-workid-normalization",
+  "sourceKind": "local-gate-9-contract",
+  "sourceCommit": "local-gate-9-implementation",
+  "generatorCommand": "hand-authored local Gate 9 shared identity fixture",
+  "generatorVersion": "gate-9-v1",
+  "sourceRefs": [
+    "docs/adr/0007-shared-scientific-identity.md",
+    "docs/port/php-shared-identity-behavior.md"
+  ],
+  "comparisonRules": [
+    "no-php-compatibility-claim",
+    "no-generated-php-fixture",
+    "no-search-dedup-screening-claim"
+  ],
+  "inputDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+  "outputDigest": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+  "case": {
+    "negative": false,
+    "normalized": [
+      "doi:10.1000/xyz",
+      "arxiv:2301.00001",
+      "openalex:w123"
+    ]
+  }
+}

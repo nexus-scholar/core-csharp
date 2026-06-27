@@ -1,0 +1,20 @@
+{
+  "fixtureId": "shared-identity-overlap-false",
+  "sourceKind": "local-gate-9-contract",
+  "sourceCommit": "local-gate-9-implementation",
+  "generatorCommand": "hand-authored local Gate 9 shared identity fixture",
+  "generatorVersion": "gate-9-v1",
+  "sourceRefs": [
+    "docs/adr/0007-shared-scientific-identity.md"
+  ],
+  "comparisonRules": [
+    "no-php-compatibility-claim",
+    "no-generated-php-fixture"
+  ],
+  "inputDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+  "outputDigest": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+  "case": {
+    "negative": true,
+    "overlap": false
+  }
+}

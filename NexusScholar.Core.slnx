@@ -5,6 +5,7 @@
     <Project Path="src/NexusScholar.Workflow/NexusScholar.Workflow.csproj" />
     <Project Path="src/NexusScholar.Artifacts/NexusScholar.Artifacts.csproj" />
     <Project Path="src/NexusScholar.Provenance/NexusScholar.Provenance.csproj" />
+    <Project Path="src/NexusScholar.Shared/NexusScholar.Shared.csproj" />
     <Project Path="src/NexusScholar.Bundles/NexusScholar.Bundles.csproj" />
     <Project Path="src/NexusScholar.Extensibility/NexusScholar.Extensibility.csproj" />
     <Project Path="src/NexusScholar.AI/NexusScholar.AI.csproj" />

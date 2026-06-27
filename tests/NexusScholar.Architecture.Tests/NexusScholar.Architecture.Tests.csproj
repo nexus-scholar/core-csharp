@@ -12,6 +12,7 @@
     <ProjectReference Include="../../src/NexusScholar.Protocol/NexusScholar.Protocol.csproj" />
     <ProjectReference Include="../../src/NexusScholar.Workflow/NexusScholar.Workflow.csproj" />
     <ProjectReference Include="../../src/NexusScholar.Provenance/NexusScholar.Provenance.csproj" />
+    <ProjectReference Include="../../src/NexusScholar.Shared/NexusScholar.Shared.csproj" />
     <ProjectReference Include="../../src/NexusScholar.Bundles/NexusScholar.Bundles.csproj" />
     <ProjectReference Include="../../src/NexusScholar.Extensibility/NexusScholar.Extensibility.csproj" />
     <ProjectReference Include="../../src/NexusScholar.AI/NexusScholar.AI.csproj" />
