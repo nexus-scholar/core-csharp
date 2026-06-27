@@ -4,7 +4,7 @@ Source: live branch probes from local `main` after the Gate 9 Search reconnaissa
 
 ## Main Baseline
 
-- Current `main` head: `3688ca16bc03f1fe5f86096e810ffebf97d0f2dd` (`docs: map PHP search behavior`).
+- Current `main` head: `7f344bb70b2a8b275a236a6c581af2c091a2f5c8` (`docs: refresh operations board after search recon merge`).
 - Gate 0 through Gate 6 are merged into `main`.
 - Gate 9 shared identity is merged into `main`; Gate 9 was intentionally started before Gate 6.
 - Gate 9 Search reconnaissance is merged into `main` as docs/planning only.
