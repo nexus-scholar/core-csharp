@@ -1,0 +1,43 @@
+{
+  "fixtureId": "screening-input-raw-search-trace-rejected",
+  "sourceKind": "local-gate-9-screening-implementation",
+  "sourceCommit": "local-gate-9-screening-local",
+  "generatorCommand": "hand-authored local Gate 9 Screening fixture",
+  "generatorVersion": "gate-9-screening-v1",
+  "sourceRefs": [
+    "docs/adr/0001-source-of-truth-and-porting.md",
+    "docs/adr/0002-canonical-json-and-digests.md",
+    "docs/adr/0007-shared-scientific-identity.md",
+    "docs/adr/0008-provenance-ledger.md",
+    "docs/adr/0012-deduplication-evidence-and-cluster-contract.md",
+    "docs/adr/0013-screening-decision-and-conflict-contract.md"
+  ],
+  "comparisonRules": [
+    "no-php-compatibility-claim",
+    "no-generated-php-fixture",
+    "no-persistence-api-ui-cloud",
+    "no-cli-web-authority",
+    "no-live-llm-provider-network",
+    "no-ai-governance-implementation",
+    "no-full-text-retrieval",
+    "no-search-or-dedup-behavior-change"
+  ],
+  "inputDigest": "sha256:60cbf37a93c72297fb03ebc416bd801ef90debf8582dfbe9b155691774a42e8e",
+  "outputDigest": "sha256:f002377e04796223e9e62d9e376f859fd8eb2d1de020fa62b03db09b6f3f6930",
+  "case": {
+    "trace": {
+      "traceId": "search-trace-raw-screening-forbidden-001",
+      "query": "screening input should be dedup result",
+      "yearFrom": 2020,
+      "yearTo": 2021,
+      "language": "en",
+      "maxResults": 25,
+      "offset": 0,
+      "includeRawData": true,
+      "validationYear": 2026
+    },
+    "expected": {
+      "category": "raw-search-trace-not-screenable"
+    }
+  }
+}

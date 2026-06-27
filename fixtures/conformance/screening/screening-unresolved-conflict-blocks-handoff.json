@@ -1,0 +1,133 @@
+{
+  "fixtureId": "screening-unresolved-conflict-blocks-handoff",
+  "sourceKind": "local-gate-9-screening-implementation",
+  "sourceCommit": "local-gate-9-screening-local",
+  "generatorCommand": "hand-authored local Gate 9 Screening fixture",
+  "generatorVersion": "gate-9-screening-v1",
+  "sourceRefs": [
+    "docs/adr/0001-source-of-truth-and-porting.md",
+    "docs/adr/0002-canonical-json-and-digests.md",
+    "docs/adr/0007-shared-scientific-identity.md",
+    "docs/adr/0008-provenance-ledger.md",
+    "docs/adr/0012-deduplication-evidence-and-cluster-contract.md",
+    "docs/adr/0013-screening-decision-and-conflict-contract.md"
+  ],
+  "comparisonRules": [
+    "no-php-compatibility-claim",
+    "no-generated-php-fixture",
+    "no-persistence-api-ui-cloud",
+    "no-cli-web-authority",
+    "no-live-llm-provider-network",
+    "no-ai-governance-implementation",
+    "no-full-text-retrieval",
+    "no-search-or-dedup-behavior-change"
+  ],
+  "inputDigest": "sha256:d442cb3f7571ad0c9aa4f2741c69b6148b096f788488937b4dfc6b4a4296614e",
+  "outputDigest": "sha256:064fe4e918ad6cbeeaf1d0861ce392134ae0c694d5ddba8d6f0424c626ee992f",
+  "case": {
+    "titleCriteria": {
+      "criteriaId": "criteria-handoff-block-001",
+      "criteriaVersion": "1.0.0",
+      "stage": "title_abstract",
+      "include": {
+        "mode": "and",
+        "terms": [
+          "network"
+        ]
+      },
+      "exclude": {
+        "mode": "or",
+        "terms": [
+          "thesis"
+        ]
+      },
+      "requiresProtocolBinding": true,
+      "approvedProtocolBinding": "protocol-screening-v1",
+      "approvedProtocolDigest": "sha256:c0cbe3ed40c4781508733a846848ab015ea7f6f95a5a4ff0c2f86907c90e9600",
+      "approvedProtocolDigestScope": "protocol-content",
+      "approvedProtocolStatus": "approved",
+      "currentProtocolContentDigest": "sha256:c0cbe3ed40c4781508733a846848ab015ea7f6f95a5a4ff0c2f86907c90e9600"
+    },
+    "fullTextCriteria": {
+      "criteriaId": "criteria-handoff-block-001",
+      "criteriaVersion": "1.0.0",
+      "stage": "full_text",
+      "include": {
+        "mode": "and",
+        "terms": [
+          "network"
+        ]
+      },
+      "exclude": {
+        "mode": "or",
+        "terms": [
+          "thesis"
+        ]
+      },
+      "requiresProtocolBinding": true,
+      "approvedProtocolBinding": "protocol-screening-v1",
+      "approvedProtocolDigest": "sha256:c0cbe3ed40c4781508733a846848ab015ea7f6f95a5a4ff0c2f86907c90e9600",
+      "fullTextRequirements": {
+        "required": true
+      },
+      "approvedProtocolDigestScope": "protocol-content",
+      "approvedProtocolStatus": "approved",
+      "currentProtocolContentDigest": "sha256:c0cbe3ed40c4781508733a846848ab015ea7f6f95a5a4ff0c2f86907c90e9600"
+    },
+    "candidateSet": {
+      "candidateSetId": "candidate-set-handoff-block-001",
+      "locked": true,
+      "sourceKind": "deduplication-result",
+      "dedupResult": {
+        "resultId": "dedup-result-handoff-block-001",
+        "schemaId": "nexus.deduplication.result",
+        "schemaVersion": "1.0.0",
+        "candidateIds": [
+          "candidate-1301"
+        ],
+        "unresolvedCandidateIds": []
+      }
+    },
+    "sourceDecisions": [
+      {
+        "decisionId": "decision-handoff-source-a-001",
+        "candidateId": "candidate-1301",
+        "stage": "title_abstract",
+        "verdict": "include",
+        "actor": {
+          "actorId": "human-handoff-a"
+        },
+        "decidedAt": "2026-06-27T03:00:00Z",
+        "rationale": "Included after review."
+      },
+      {
+        "decisionId": "decision-handoff-source-b-001",
+        "candidateId": "candidate-1301",
+        "stage": "title_abstract",
+        "verdict": "exclude",
+        "actor": {
+          "actorId": "human-handoff-b"
+        },
+        "decidedAt": "2026-06-27T03:00:10Z",
+        "rationale": "Exclude due mismatch."
+      }
+    ],
+    "fullTextDecision": {
+      "decisionId": "decision-handoff-blocked-001",
+      "candidateId": "candidate-1301",
+      "stage": "full_text",
+      "verdict": "include",
+      "actor": {
+        "actorId": "human-handoff-c"
+      },
+      "decidedAt": "2026-06-27T03:00:20Z",
+      "rationale": "Should be blocked because prior-stage conflict is unresolved.",
+      "evidenceRefs": [
+        "raw-artifact-bytes:sha256:c0cbe3ed40c4781508733a846848ab015ea7f6f95a5a4ff0c2f86907c90e9600"
+      ]
+    },
+    "expected": {
+      "category": "unresolved-conflict"
+    }
+  }
+}

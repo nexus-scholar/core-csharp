@@ -1,0 +1,82 @@
+{
+  "fixtureId": "screening-human-include-decision",
+  "sourceKind": "local-gate-9-screening-implementation",
+  "sourceCommit": "local-gate-9-screening-local",
+  "generatorCommand": "hand-authored local Gate 9 Screening fixture",
+  "generatorVersion": "gate-9-screening-v1",
+  "sourceRefs": [
+    "docs/adr/0001-source-of-truth-and-porting.md",
+    "docs/adr/0002-canonical-json-and-digests.md",
+    "docs/adr/0007-shared-scientific-identity.md",
+    "docs/adr/0008-provenance-ledger.md",
+    "docs/adr/0012-deduplication-evidence-and-cluster-contract.md",
+    "docs/adr/0013-screening-decision-and-conflict-contract.md"
+  ],
+  "comparisonRules": [
+    "no-php-compatibility-claim",
+    "no-generated-php-fixture",
+    "no-persistence-api-ui-cloud",
+    "no-cli-web-authority",
+    "no-live-llm-provider-network",
+    "no-ai-governance-implementation",
+    "no-full-text-retrieval",
+    "no-search-or-dedup-behavior-change"
+  ],
+  "inputDigest": "sha256:e5f916db69e868d37260acb67c16f84e6c00c0fa59692f63871a9e64c5876778",
+  "outputDigest": "sha256:2fbb2ac26517832703b9b025fa6f0b29ebc8a3d94a9917f986e65a8fe7cb1094",
+  "case": {
+    "criteria": {
+      "criteriaId": "criteria-human-include-001",
+      "criteriaVersion": "1.0.0",
+      "stage": "title_abstract",
+      "include": {
+        "mode": "and",
+        "terms": [
+          "machine learning"
+        ]
+      },
+      "exclude": {
+        "mode": "or",
+        "terms": [
+          "retracted",
+          "editorial"
+        ]
+      },
+      "requiresProtocolBinding": true,
+      "approvedProtocolBinding": "protocol-screening-v1",
+      "approvedProtocolDigest": "sha256:c0cbe3ed40c4781508733a846848ab015ea7f6f95a5a4ff0c2f86907c90e9600",
+      "approvedProtocolDigestScope": "protocol-content",
+      "approvedProtocolStatus": "approved",
+      "currentProtocolContentDigest": "sha256:c0cbe3ed40c4781508733a846848ab015ea7f6f95a5a4ff0c2f86907c90e9600"
+    },
+    "candidateSet": {
+      "candidateSetId": "candidate-set-human-include-001",
+      "locked": true,
+      "sourceKind": "deduplication-result",
+      "dedupResult": {
+        "resultId": "dedup-result-human-include-001",
+        "schemaId": "nexus.deduplication.result",
+        "schemaVersion": "1.0.0",
+        "candidateIds": [
+          "candidate-701"
+        ],
+        "unresolvedCandidateIds": []
+      }
+    },
+    "decision": {
+      "decisionId": "decision-human-include-001",
+      "candidateId": "candidate-701",
+      "stage": "title_abstract",
+      "verdict": "include",
+      "actor": {
+        "actorId": "human-include-001"
+      },
+      "decidedAt": "2026-06-27T02:00:00Z",
+      "rationale": "Study matches scope and should be included."
+    },
+    "expected": {
+      "stage": "title_abstract",
+      "verdict": "include"
+    }
+  }
+}

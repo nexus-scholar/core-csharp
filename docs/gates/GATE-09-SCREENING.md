@@ -1,12 +1,12 @@
-# Gate 9 Screening Reconnaissance
+# Gate 9 Screening
 
-Status: ADR 0013 contract decisions accepted locally. C# Screening implementation is ready to start only after this ADR branch is merged.
+Status: local ADR 0013 screening behavior is implemented and locally verified on branch `cdx/gate-9-screening-local`; hosted CI evidence is pending until push.
 
 ## Goal
 
-Map pinned PHP Screening behavior and CLI/Web screening behavior before any C# Screening implementation.
+Map pinned PHP Screening behavior and implement local C# Screening authority scope under `ADR 0013`.
 
-This document covers the Screening part of Gate 9 PHP behavior porting. It now includes the local contract decisions from `ADR 0013`. It does not implement Screening, generate fixtures, or claim PHP compatibility.
+This document covers local Gate 9 Screening implementation against `ADR 0013`. It does not claim PHP compatibility, persistence, API/UI/cloud behavior, or live provider/network behavior.
 
 ## Sources Read
 
@@ -32,24 +32,36 @@ This document covers the Screening part of Gate 9 PHP behavior porting. It now i
 
 Allowed paths:
 
-- `docs/adr/0013-screening-decision-and-conflict-contract.md`
-- `docs/port/php-screening-behavior.md`
-- `docs/port/php-screening-fixture-plan.md`
+- `NexusScholar.Core.slnx`
+- `src/NexusScholar.Screening/**`
+- `src/NexusScholar.Deduplication/**` only for safe type usage without behavior changes
+- `src/NexusScholar.Shared/**` only for existing identity primitives without ADR 0007 changes
+- `src/NexusScholar.Kernel/**` only for genuinely reusable primitives
+- `tests/NexusScholar.Core.Tests/**`
+- `tests/NexusScholar.Architecture.Tests/**`
+- `tests/NexusScholar.Conformance.Tests/**`
+- `fixtures/conformance/screening/**`
 - `docs/gates/GATE-09-SCREENING.md`
+- `docs/gates/GATE-09-SCREENING-EVIDENCE.md`
 - `docs/port/OPEN-CONFLICTS.md`
 - `docs/port/GOLDEN-FIXTURE-PLAN.md`
 
 Forbidden paths:
 
-- `src/**`
-- `tests/**`
-- `fixtures/**`
-- `specs/**`
+- `docs/ui/**`
+- `samples/**`
+- Search behavior changes
+- Dedup behavior changes except safe type usage
+- full-text retrieval
+- live LLM/provider/network behavior
+- AI governance implementation
+- persistence/API/UI/cloud
+- PHP-generated fixtures
+- PHP compatibility claim
 - PHP reference repo changes
 - `nexus-cli` changes
 - `nexus-web` changes
-- generated PHP fixtures
-- C# Screening implementation
+- app behavior made authoritative
 
 ## Reconnaissance Summary
 
@@ -79,6 +91,7 @@ Web behavior adds reviewer assignment, batches, conflict rows, adjudication UI, 
 - Screening consumes a Deduplication result or locked/reviewable candidate set, not raw Search traces directly.
 - Local stages are `title_abstract`, `full_text`, and `human_adjudication`.
 - Screening criteria use `nexus.screening.criteria` version `1.0.0` and an `ADR 0002` canonical JSON record digest.
+- Final scientific Screening criteria bind an approved protocol version id and explicit `protocol-content` digest.
 - Final Screening decisions use `nexus.screening.decision` version `1.0.0`.
 - Canonical verdicts are `include`, `exclude`, and `needs_review`; app labels such as `maybe` map explicitly to `needs_review`.
 - Final decisions require an identified human actor and rationale.
@@ -133,6 +146,7 @@ Required negative categories:
 - conflict/adjudication source links lost;
 - full-text screening without artifact evidence;
 - app rows treated as Core authority;
+- malformed, draft, stale, or non-`protocol-content` protocol binding;
 - PHP compatibility claimed without generated fixtures.
 
 ## Comparator Plan
@@ -157,7 +171,7 @@ Comparators may ignore generated ids, timestamps, and durations only when a fixt
 
 ## Implementation Readiness
 
-Implementation readiness: **yes for local C# Screening implementation after ADR 0013 is merged**.
+Implementation readiness: **local C# Screening conformance scope is implemented and locally verified after focused review fixes; hosted CI evidence for the review-fix commit is pending until push**.
 
 Still not ready:
 
@@ -171,10 +185,9 @@ Still not ready:
 
 ## Explicit Claims Not Made
 
-- no C# Screening implementation
 - no generated PHP fixtures
 - no PHP compatibility
-- no Screening fixtures generated
+- no PHP-generated screening fixtures
 - no full-text retrieval implementation
 - no persistence/API/UI/cloud behavior
 - no CLI/Web behavior made authoritative

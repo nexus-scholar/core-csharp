@@ -1,0 +1,80 @@
+{
+  "fixtureId": "screening-app-assignment-projection-not-authority",
+  "sourceKind": "local-gate-9-screening-implementation",
+  "sourceCommit": "local-gate-9-screening-local",
+  "generatorCommand": "hand-authored local Gate 9 Screening fixture",
+  "generatorVersion": "gate-9-screening-v1",
+  "sourceRefs": [
+    "docs/adr/0001-source-of-truth-and-porting.md",
+    "docs/adr/0002-canonical-json-and-digests.md",
+    "docs/adr/0007-shared-scientific-identity.md",
+    "docs/adr/0008-provenance-ledger.md",
+    "docs/adr/0012-deduplication-evidence-and-cluster-contract.md",
+    "docs/adr/0013-screening-decision-and-conflict-contract.md"
+  ],
+  "comparisonRules": [
+    "no-php-compatibility-claim",
+    "no-generated-php-fixture",
+    "no-persistence-api-ui-cloud",
+    "no-cli-web-authority",
+    "no-live-llm-provider-network",
+    "no-ai-governance-implementation",
+    "no-full-text-retrieval",
+    "no-search-or-dedup-behavior-change"
+  ],
+  "inputDigest": "sha256:796a8b9d5c4905a1c623978235837aa35c79393a583d7fc858bf23c93f108f0d",
+  "outputDigest": "sha256:6e38556b2cdab18ebebb2fbd27859386c4acfe3cf4cc25a2d369c455024f9b1f",
+  "case": {
+    "criteria": {
+      "criteriaId": "criteria-projection-app-001",
+      "criteriaVersion": "1.0.0",
+      "stage": "title_abstract",
+      "include": {
+        "mode": "and",
+        "terms": [
+          "signal"
+        ]
+      },
+      "exclude": {
+        "mode": "or",
+        "terms": [
+          "noise"
+        ]
+      },
+      "requiresProtocolBinding": true,
+      "approvedProtocolBinding": "protocol-screening-v1",
+      "approvedProtocolDigest": "sha256:c0cbe3ed40c4781508733a846848ab015ea7f6f95a5a4ff0c2f86907c90e9600",
+      "approvedProtocolDigestScope": "protocol-content",
+      "approvedProtocolStatus": "approved",
+      "currentProtocolContentDigest": "sha256:c0cbe3ed40c4781508733a846848ab015ea7f6f95a5a4ff0c2f86907c90e9600"
+    },
+    "candidateSet": {
+      "candidateSetId": "candidate-set-projection-app-001",
+      "locked": true,
+      "sourceKind": "deduplication-result",
+      "dedupResult": {
+        "resultId": "dedup-result-projection-app-001",
+        "schemaId": "nexus.deduplication.result",
+        "schemaVersion": "1.0.0",
+        "candidateIds": [
+          "candidate-1501"
+        ],
+        "unresolvedCandidateIds": []
+      }
+    },
+    "decision": {
+      "decisionId": "web-assignment-decision-001",
+      "candidateId": "candidate-1501",
+      "stage": "title_abstract",
+      "verdict": "include",
+      "actor": {
+        "actorId": "human-projection"
+      },
+      "decidedAt": "2026-06-27T03:20:00Z",
+      "rationale": "Projection identity should not become core authority."
+    },
+    "expected": {
+      "category": "app-projection-not-core-authority"
+    }
+  }
+}

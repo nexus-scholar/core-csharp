@@ -1,0 +1,105 @@
+{
+  "fixtureId": "screening-conflict-resolved-by-human",
+  "sourceKind": "local-gate-9-screening-implementation",
+  "sourceCommit": "local-gate-9-screening-local",
+  "generatorCommand": "hand-authored local Gate 9 Screening fixture",
+  "generatorVersion": "gate-9-screening-v1",
+  "sourceRefs": [
+    "docs/adr/0001-source-of-truth-and-porting.md",
+    "docs/adr/0002-canonical-json-and-digests.md",
+    "docs/adr/0007-shared-scientific-identity.md",
+    "docs/adr/0008-provenance-ledger.md",
+    "docs/adr/0012-deduplication-evidence-and-cluster-contract.md",
+    "docs/adr/0013-screening-decision-and-conflict-contract.md"
+  ],
+  "comparisonRules": [
+    "no-php-compatibility-claim",
+    "no-generated-php-fixture",
+    "no-persistence-api-ui-cloud",
+    "no-cli-web-authority",
+    "no-live-llm-provider-network",
+    "no-ai-governance-implementation",
+    "no-full-text-retrieval",
+    "no-search-or-dedup-behavior-change"
+  ],
+  "inputDigest": "sha256:6ed687d622a9b56e24178870378bdd23e053c39e215e148e5bd3865e205192ab",
+  "outputDigest": "sha256:145be3e37d1758836af2c45ad17f0a8b822f32864e217936c1dcf80fb7ae930a",
+  "case": {
+    "criteria": {
+      "criteriaId": "criteria-conflict-resolution-001",
+      "criteriaVersion": "1.0.0",
+      "stage": "title_abstract",
+      "include": {
+        "mode": "and",
+        "terms": [
+          "clinical"
+        ]
+      },
+      "exclude": {
+        "mode": "or",
+        "terms": [
+          "opinion"
+        ]
+      },
+      "requiresProtocolBinding": true,
+      "approvedProtocolBinding": "protocol-screening-v1",
+      "approvedProtocolDigest": "sha256:c0cbe3ed40c4781508733a846848ab015ea7f6f95a5a4ff0c2f86907c90e9600",
+      "approvedProtocolDigestScope": "protocol-content",
+      "approvedProtocolStatus": "approved",
+      "currentProtocolContentDigest": "sha256:c0cbe3ed40c4781508733a846848ab015ea7f6f95a5a4ff0c2f86907c90e9600"
+    },
+    "candidateSet": {
+      "candidateSetId": "candidate-set-conflict-resolution-001",
+      "locked": true,
+      "sourceKind": "deduplication-result",
+      "dedupResult": {
+        "resultId": "dedup-result-conflict-resolution-001",
+        "schemaId": "nexus.deduplication.result",
+        "schemaVersion": "1.0.0",
+        "candidateIds": [
+          "candidate-1201"
+        ],
+        "unresolvedCandidateIds": []
+      }
+    },
+    "sourceDecisions": [
+      {
+        "decisionId": "decision-conflict-resolution-include-001",
+        "candidateId": "candidate-1201",
+        "stage": "title_abstract",
+        "verdict": "include",
+        "actor": {
+          "actorId": "human-resolution-a"
+        },
+        "decidedAt": "2026-06-27T02:50:00Z",
+        "rationale": "Supports screening criteria."
+      },
+      {
+        "decisionId": "decision-conflict-resolution-exclude-001",
+        "candidateId": "candidate-1201",
+        "stage": "title_abstract",
+        "verdict": "exclude",
+        "actor": {
+          "actorId": "human-resolution-b"
+        },
+        "decidedAt": "2026-06-27T02:50:10Z",
+        "rationale": "Outside defined scope."
+      }
+    ],
+    "adjudication": {
+      "decisionId": "decision-conflict-adjudication-001",
+      "candidateId": "candidate-1201",
+      "stage": "title_abstract",
+      "verdict": "exclude",
+      "actor": {
+        "actorId": "human-chair-001"
+      },
+      "decidedAt": "2026-06-27T02:50:20Z",
+      "rationale": "Consensus reached after review."
+    },
+    "expected": {
+      "resolved": true,
+      "resolvedByDecisionId": "decision-conflict-adjudication-001"
+    }
+  }
+}

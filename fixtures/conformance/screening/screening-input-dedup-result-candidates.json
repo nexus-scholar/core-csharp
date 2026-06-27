@@ -1,0 +1,52 @@
+{
+  "fixtureId": "screening-input-dedup-result-candidates",
+  "sourceKind": "local-gate-9-screening-implementation",
+  "sourceCommit": "local-gate-9-screening-local",
+  "generatorCommand": "hand-authored local Gate 9 Screening fixture",
+  "generatorVersion": "gate-9-screening-v1",
+  "sourceRefs": [
+    "docs/adr/0001-source-of-truth-and-porting.md",
+    "docs/adr/0002-canonical-json-and-digests.md",
+    "docs/adr/0007-shared-scientific-identity.md",
+    "docs/adr/0008-provenance-ledger.md",
+    "docs/adr/0012-deduplication-evidence-and-cluster-contract.md",
+    "docs/adr/0013-screening-decision-and-conflict-contract.md"
+  ],
+  "comparisonRules": [
+    "no-php-compatibility-claim",
+    "no-generated-php-fixture",
+    "no-persistence-api-ui-cloud",
+    "no-cli-web-authority",
+    "no-live-llm-provider-network",
+    "no-ai-governance-implementation",
+    "no-full-text-retrieval",
+    "no-search-or-dedup-behavior-change"
+  ],
+  "inputDigest": "sha256:209b534c4dc21053c0e42a766f2f2f7943e0932c7d2e5babc9b399c6dd621237",
+  "outputDigest": "sha256:0db9871093d7028e9fc23dc2becee89cea28e108eee6b354384600b5fef9b49f",
+  "case": {
+    "candidateSet": {
+      "candidateSetId": "candidate-set-input-dedup-001",
+      "locked": true,
+      "dedupResult": {
+        "resultId": "dedup-result-input-001",
+        "schemaId": "nexus.deduplication.result",
+        "schemaVersion": "1.0.0",
+        "candidateIds": [
+          "candidate-101",
+          "candidate-102",
+          "candidate-103"
+        ],
+        "unresolvedCandidateIds": [
+          "candidate-201"
+        ]
+      }
+    },
+    "expected": {
+      "sourceKind": "deduplication-result",
+      "locked": true,
+      "candidateCount": 3,
+      "unresolvedCandidateCount": 1
+    }
+  }
+}

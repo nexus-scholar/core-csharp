@@ -1,0 +1,81 @@
+{
+  "fixtureId": "screening-criteria-key-order-stable",
+  "sourceKind": "local-gate-9-screening-implementation",
+  "sourceCommit": "local-gate-9-screening-local",
+  "generatorCommand": "hand-authored local Gate 9 Screening fixture",
+  "generatorVersion": "gate-9-screening-v1",
+  "sourceRefs": [
+    "docs/adr/0001-source-of-truth-and-porting.md",
+    "docs/adr/0002-canonical-json-and-digests.md",
+    "docs/adr/0007-shared-scientific-identity.md",
+    "docs/adr/0008-provenance-ledger.md",
+    "docs/adr/0012-deduplication-evidence-and-cluster-contract.md",
+    "docs/adr/0013-screening-decision-and-conflict-contract.md"
+  ],
+  "comparisonRules": [
+    "no-php-compatibility-claim",
+    "no-generated-php-fixture",
+    "no-persistence-api-ui-cloud",
+    "no-cli-web-authority",
+    "no-live-llm-provider-network",
+    "no-ai-governance-implementation",
+    "no-full-text-retrieval",
+    "no-search-or-dedup-behavior-change"
+  ],
+  "inputDigest": "sha256:2a50a30a68a0f51db934735a2b20d3f587dcf8c14494adb9862a294e27cf1ed1",
+  "outputDigest": "sha256:2a50a30a68a0f51db934735a2b20d3f587dcf8c14494adb9862a294e27cf1ed1",
+  "case": {
+    "criteriaA": {
+      "criteriaId": "criteria-key-order-a-001",
+      "criteriaVersion": "1.0.0",
+      "stage": "title_abstract",
+      "include": {
+        "mode": "priority",
+        "terms": [
+          "title",
+          "methods",
+          "results"
+        ]
+      },
+      "exclude": {
+        "reason": "out of scope",
+        "terms": [
+          "editorial",
+          "comment"
+        ]
+      },
+      "requiresProtocolBinding": true,
+      "approvedProtocolBinding": "protocol-screening-v1",
+      "approvedProtocolDigest": "sha256:c0cbe3ed40c4781508733a846848ab015ea7f6f95a5a4ff0c2f86907c90e9600",
+      "approvedProtocolDigestScope": "protocol-content",
+      "approvedProtocolStatus": "approved",
+      "currentProtocolContentDigest": "sha256:c0cbe3ed40c4781508733a846848ab015ea7f6f95a5a4ff0c2f86907c90e9600"
+    },
+    "criteriaB": {
+      "criteriaId": "criteria-key-order-a-001",
+      "criteriaVersion": "1.0.0",
+      "stage": "title_abstract",
+      "include": {
+        "terms": [
+          "title",
+          "methods",
+          "results"
+        ],
+        "mode": "priority"
+      },
+      "exclude": {
+        "terms": [
+          "editorial",
+          "comment"
+        ],
+        "reason": "out of scope"
+      },
+      "approvedProtocolBinding": "protocol-screening-v1",
+      "approvedProtocolDigest": "sha256:c0cbe3ed40c4781508733a846848ab015ea7f6f95a5a4ff0c2f86907c90e9600",
+      "requiresProtocolBinding": true,
+      "approvedProtocolDigestScope": "protocol-content",
+      "approvedProtocolStatus": "approved",
+      "currentProtocolContentDigest": "sha256:c0cbe3ed40c4781508733a846848ab015ea7f6f95a5a4ff0c2f86907c90e9600"
+    }
+  }
+}

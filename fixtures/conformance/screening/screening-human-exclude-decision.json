@@ -1,0 +1,82 @@
+{
+  "fixtureId": "screening-human-exclude-decision",
+  "sourceKind": "local-gate-9-screening-implementation",
+  "sourceCommit": "local-gate-9-screening-local",
+  "generatorCommand": "hand-authored local Gate 9 Screening fixture",
+  "generatorVersion": "gate-9-screening-v1",
+  "sourceRefs": [
+    "docs/adr/0001-source-of-truth-and-porting.md",
+    "docs/adr/0002-canonical-json-and-digests.md",
+    "docs/adr/0007-shared-scientific-identity.md",
+    "docs/adr/0008-provenance-ledger.md",
+    "docs/adr/0012-deduplication-evidence-and-cluster-contract.md",
+    "docs/adr/0013-screening-decision-and-conflict-contract.md"
+  ],
+  "comparisonRules": [
+    "no-php-compatibility-claim",
+    "no-generated-php-fixture",
+    "no-persistence-api-ui-cloud",
+    "no-cli-web-authority",
+    "no-live-llm-provider-network",
+    "no-ai-governance-implementation",
+    "no-full-text-retrieval",
+    "no-search-or-dedup-behavior-change"
+  ],
+  "inputDigest": "sha256:b9d3132851fa9965a7f268d0fc0cd7a286ae204ca300f1ecef76d40289a46732",
+  "outputDigest": "sha256:67e7f639b3851d395cf752890c228dd63e545b5cb4dab56fa3f2ec6f9e73cc9e",
+  "case": {
+    "criteria": {
+      "criteriaId": "criteria-human-exclude-001",
+      "criteriaVersion": "1.0.0",
+      "stage": "title_abstract",
+      "include": {
+        "mode": "and",
+        "terms": [
+          "climate"
+        ]
+      },
+      "exclude": {
+        "mode": "or",
+        "terms": [
+          "survey",
+          "editorial"
+        ]
+      },
+      "requiresProtocolBinding": true,
+      "approvedProtocolBinding": "protocol-screening-v1",
+      "approvedProtocolDigest": "sha256:c0cbe3ed40c4781508733a846848ab015ea7f6f95a5a4ff0c2f86907c90e9600",
+      "approvedProtocolDigestScope": "protocol-content",
+      "approvedProtocolStatus": "approved",
+      "currentProtocolContentDigest": "sha256:c0cbe3ed40c4781508733a846848ab015ea7f6f95a5a4ff0c2f86907c90e9600"
+    },
+    "candidateSet": {
+      "candidateSetId": "candidate-set-human-exclude-001",
+      "locked": true,
+      "sourceKind": "deduplication-result",
+      "dedupResult": {
+        "resultId": "dedup-result-human-exclude-001",
+        "schemaId": "nexus.deduplication.result",
+        "schemaVersion": "1.0.0",
+        "candidateIds": [
+          "candidate-702"
+        ],
+        "unresolvedCandidateIds": []
+      }
+    },
+    "decision": {
+      "decisionId": "decision-human-exclude-001",
+      "candidateId": "candidate-702",
+      "stage": "title_abstract",
+      "verdict": "exclude",
+      "actor": {
+        "actorId": "human-exclude-001"
+      },
+      "decidedAt": "2026-06-27T02:01:00Z",
+      "rationale": "Candidate is outside scope for the protocol criteria."
+    },
+    "expected": {
+      "stage": "title_abstract",
+      "verdict": "exclude"
+    }
+  }
+}

@@ -1,0 +1,105 @@
+{
+  "fixtureId": "screening-adjudication-source-decision-links",
+  "sourceKind": "local-gate-9-screening-implementation",
+  "sourceCommit": "local-gate-9-screening-local",
+  "generatorCommand": "hand-authored local Gate 9 Screening fixture",
+  "generatorVersion": "gate-9-screening-v1",
+  "sourceRefs": [
+    "docs/adr/0001-source-of-truth-and-porting.md",
+    "docs/adr/0002-canonical-json-and-digests.md",
+    "docs/adr/0007-shared-scientific-identity.md",
+    "docs/adr/0008-provenance-ledger.md",
+    "docs/adr/0012-deduplication-evidence-and-cluster-contract.md",
+    "docs/adr/0013-screening-decision-and-conflict-contract.md"
+  ],
+  "comparisonRules": [
+    "no-php-compatibility-claim",
+    "no-generated-php-fixture",
+    "no-persistence-api-ui-cloud",
+    "no-cli-web-authority",
+    "no-live-llm-provider-network",
+    "no-ai-governance-implementation",
+    "no-full-text-retrieval",
+    "no-search-or-dedup-behavior-change"
+  ],
+  "inputDigest": "sha256:f12d1f2e7f934c3876e7093fd0a8509294483c7d2a197cb4fb800b5dfed1bc19",
+  "outputDigest": "sha256:f12d1f2e7f934c3876e7093fd0a8509294483c7d2a197cb4fb800b5dfed1bc19",
+  "case": {
+    "criteria": {
+      "criteriaId": "criteria-adjudication-links-001",
+      "criteriaVersion": "1.0.0",
+      "stage": "title_abstract",
+      "include": {
+        "mode": "and",
+        "terms": [
+          "meta-analysis"
+        ]
+      },
+      "exclude": {
+        "mode": "or",
+        "terms": [
+          "duplicate data"
+        ]
+      },
+      "requiresProtocolBinding": true,
+      "approvedProtocolBinding": "protocol-screening-v1",
+      "approvedProtocolDigest": "sha256:c0cbe3ed40c4781508733a846848ab015ea7f6f95a5a4ff0c2f86907c90e9600",
+      "approvedProtocolDigestScope": "protocol-content",
+      "approvedProtocolStatus": "approved",
+      "currentProtocolContentDigest": "sha256:c0cbe3ed40c4781508733a846848ab015ea7f6f95a5a4ff0c2f86907c90e9600"
+    },
+    "candidateSet": {
+      "candidateSetId": "candidate-set-adjudication-links-001",
+      "locked": true,
+      "sourceKind": "deduplication-result",
+      "dedupResult": {
+        "resultId": "dedup-result-adjudication-links-001",
+        "schemaId": "nexus.deduplication.result",
+        "schemaVersion": "1.0.0",
+        "candidateIds": [
+          "candidate-1401"
+        ],
+        "unresolvedCandidateIds": []
+      }
+    },
+    "sourceDecisions": [
+      {
+        "decisionId": "decision-adjudication-links-source-001",
+        "candidateId": "candidate-1401",
+        "stage": "title_abstract",
+        "verdict": "include",
+        "actor": {
+          "actorId": "human-adjudication-link-a"
+        },
+        "decidedAt": "2026-06-27T03:10:00Z",
+        "rationale": "Initial include path."
+      },
+      {
+        "decisionId": "decision-adjudication-links-source-002",
+        "candidateId": "candidate-1401",
+        "stage": "title_abstract",
+        "verdict": "exclude",
+        "actor": {
+          "actorId": "human-adjudication-link-b"
+        },
+        "decidedAt": "2026-06-27T03:10:10Z",
+        "rationale": "Conflicting exclude path."
+      }
+    ],
+    "adjudication": {
+      "decisionId": "decision-adjudication-links-final-001",
+      "candidateId": "candidate-1401",
+      "stage": "title_abstract",
+      "verdict": "exclude",
+      "actor": {
+        "actorId": "human-chair-002"
+      },
+      "decidedAt": "2026-06-27T03:10:20Z",
+      "rationale": "Resolved against lower confidence include."
+    },
+    "sourceDecisionIds": [
+      "decision-adjudication-links-source-001",
+      "decision-adjudication-links-source-002"
+    ]
+  }
+}

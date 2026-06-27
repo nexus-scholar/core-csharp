@@ -7,6 +7,7 @@ using NexusScholar.Extensibility;
 using NexusScholar.Kernel;
 using NexusScholar.Protocol;
 using NexusScholar.Provenance;
+using NexusScholar.Screening;
 using NexusScholar.Search;
 using NexusScholar.Shared;
 using NexusScholar.Workflow;
@@ -45,6 +46,7 @@ public sealed class DependencyRulesTests
             typeof(ResearchEvent).Assembly,
             typeof(WorkId).Assembly,
             typeof(SearchTrace).Assembly,
+            typeof(ScreeningService).Assembly,
             typeof(ReviewBundleManifest).Assembly,
             typeof(ExtensionManifest).Assembly,
             typeof(AiTaskPolicy).Assembly
@@ -89,7 +91,8 @@ public sealed class DependencyRulesTests
             typeof(AiTaskPolicy).Assembly,
             typeof(WorkflowDefinition).Assembly,
             typeof(WorkId).Assembly,
-            typeof(SearchTrace).Assembly
+            typeof(SearchTrace).Assembly,
+            typeof(ScreeningService).Assembly
         };
 
         foreach (var assembly in digestConsumerAssemblies)
@@ -214,6 +217,27 @@ public sealed class DependencyRulesTests
             0,
             disallowed.Length,
             $"NexusScholar.Deduplication must depend only on Kernel, Shared, and Search inside the domain. Found: {string.Join(", ", disallowed)}");
+    }
+
+    [TestMethod]
+    public void Screening_project_depends_only_on_kernel_and_deduplication_inside_nexus_domain()
+    {
+        var screeningAssembly = typeof(ScreeningService).Assembly;
+        var allowed = new[]
+        {
+            typeof(IClock).Assembly.GetName().Name,
+            typeof(DeduplicationService).Assembly.GetName().Name
+        };
+        var disallowed = screeningAssembly.GetReferencedAssemblies()
+            .Select(reference => reference.Name ?? string.Empty)
+            .Where(name => name.StartsWith("NexusScholar.", StringComparison.Ordinal))
+            .Where(name => !allowed.Contains(name, StringComparer.Ordinal))
+            .ToArray();
+
+        Assert.AreEqual(
+            0,
+            disallowed.Length,
+            $"NexusScholar.Screening must depend only on Kernel and Deduplication inside the domain. Found: {string.Join(", ", disallowed)}");
     }
 
     [TestMethod]

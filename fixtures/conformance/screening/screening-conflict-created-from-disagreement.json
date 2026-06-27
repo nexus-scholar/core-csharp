@@ -1,0 +1,95 @@
+{
+  "fixtureId": "screening-conflict-created-from-disagreement",
+  "sourceKind": "local-gate-9-screening-implementation",
+  "sourceCommit": "local-gate-9-screening-local",
+  "generatorCommand": "hand-authored local Gate 9 Screening fixture",
+  "generatorVersion": "gate-9-screening-v1",
+  "sourceRefs": [
+    "docs/adr/0001-source-of-truth-and-porting.md",
+    "docs/adr/0002-canonical-json-and-digests.md",
+    "docs/adr/0007-shared-scientific-identity.md",
+    "docs/adr/0008-provenance-ledger.md",
+    "docs/adr/0012-deduplication-evidence-and-cluster-contract.md",
+    "docs/adr/0013-screening-decision-and-conflict-contract.md"
+  ],
+  "comparisonRules": [
+    "no-php-compatibility-claim",
+    "no-generated-php-fixture",
+    "no-persistence-api-ui-cloud",
+    "no-cli-web-authority",
+    "no-live-llm-provider-network",
+    "no-ai-governance-implementation",
+    "no-full-text-retrieval",
+    "no-search-or-dedup-behavior-change"
+  ],
+  "inputDigest": "sha256:5e145329fc3e51147a52e4a433b688d91b2a5641f9d8d2473082908633b21481",
+  "outputDigest": "sha256:d29db2b7c3b60c69055fabf86b4f66b7001af1d27fc9c2678ec6e2b6ba4e1f6a",
+  "case": {
+    "criteria": {
+      "criteriaId": "criteria-conflict-001",
+      "criteriaVersion": "1.0.0",
+      "stage": "title_abstract",
+      "include": {
+        "mode": "and",
+        "terms": [
+          "biomedical"
+        ]
+      },
+      "exclude": {
+        "mode": "or",
+        "terms": [
+          "duplicate"
+        ]
+      },
+      "requiresProtocolBinding": true,
+      "approvedProtocolBinding": "protocol-screening-v1",
+      "approvedProtocolDigest": "sha256:c0cbe3ed40c4781508733a846848ab015ea7f6f95a5a4ff0c2f86907c90e9600",
+      "approvedProtocolDigestScope": "protocol-content",
+      "approvedProtocolStatus": "approved",
+      "currentProtocolContentDigest": "sha256:c0cbe3ed40c4781508733a846848ab015ea7f6f95a5a4ff0c2f86907c90e9600"
+    },
+    "candidateSet": {
+      "candidateSetId": "candidate-set-conflict-created-001",
+      "locked": true,
+      "sourceKind": "deduplication-result",
+      "dedupResult": {
+        "resultId": "dedup-result-conflict-created-001",
+        "schemaId": "nexus.deduplication.result",
+        "schemaVersion": "1.0.0",
+        "candidateIds": [
+          "candidate-1101"
+        ],
+        "unresolvedCandidateIds": []
+      }
+    },
+    "decisions": [
+      {
+        "decisionId": "decision-conflict-include-001",
+        "candidateId": "candidate-1101",
+        "stage": "title_abstract",
+        "verdict": "include",
+        "actor": {
+          "actorId": "human-conflict-a"
+        },
+        "decidedAt": "2026-06-27T02:40:00Z",
+        "rationale": "Looks clearly relevant."
+      },
+      {
+        "decisionId": "decision-conflict-exclude-001",
+        "candidateId": "candidate-1101",
+        "stage": "title_abstract",
+        "verdict": "exclude",
+        "actor": {
+          "actorId": "human-conflict-b"
+        },
+        "decidedAt": "2026-06-27T02:40:10Z",
+        "rationale": "Evidence appears out-of-scope."
+      }
+    ],
+    "expected": {
+      "candidateId": "candidate-1101",
+      "stage": "title_abstract",
+      "resolved": false
+    }
+  }
+}

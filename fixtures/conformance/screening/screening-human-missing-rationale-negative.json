@@ -1,0 +1,80 @@
+{
+  "fixtureId": "screening-human-missing-rationale-negative",
+  "sourceKind": "local-gate-9-screening-implementation",
+  "sourceCommit": "local-gate-9-screening-local",
+  "generatorCommand": "hand-authored local Gate 9 Screening fixture",
+  "generatorVersion": "gate-9-screening-v1",
+  "sourceRefs": [
+    "docs/adr/0001-source-of-truth-and-porting.md",
+    "docs/adr/0002-canonical-json-and-digests.md",
+    "docs/adr/0007-shared-scientific-identity.md",
+    "docs/adr/0008-provenance-ledger.md",
+    "docs/adr/0012-deduplication-evidence-and-cluster-contract.md",
+    "docs/adr/0013-screening-decision-and-conflict-contract.md"
+  ],
+  "comparisonRules": [
+    "no-php-compatibility-claim",
+    "no-generated-php-fixture",
+    "no-persistence-api-ui-cloud",
+    "no-cli-web-authority",
+    "no-live-llm-provider-network",
+    "no-ai-governance-implementation",
+    "no-full-text-retrieval",
+    "no-search-or-dedup-behavior-change"
+  ],
+  "inputDigest": "sha256:946d45deff0fff44bc9f232c0e512486c19f6ecc6e5e1a09df5b0dd7e216c8c6",
+  "outputDigest": "sha256:50de7230ca12e05534681f3d8bb1a2652c5fae7f524c5c90604b6b247a5ff64a",
+  "case": {
+    "criteria": {
+      "criteriaId": "criteria-missing-rationale-001",
+      "criteriaVersion": "1.0.0",
+      "stage": "title_abstract",
+      "include": {
+        "mode": "and",
+        "terms": [
+          "systems"
+        ]
+      },
+      "exclude": {
+        "mode": "or",
+        "terms": [
+          "correction"
+        ]
+      },
+      "requiresProtocolBinding": true,
+      "approvedProtocolBinding": "protocol-screening-v1",
+      "approvedProtocolDigest": "sha256:c0cbe3ed40c4781508733a846848ab015ea7f6f95a5a4ff0c2f86907c90e9600",
+      "approvedProtocolDigestScope": "protocol-content",
+      "approvedProtocolStatus": "approved",
+      "currentProtocolContentDigest": "sha256:c0cbe3ed40c4781508733a846848ab015ea7f6f95a5a4ff0c2f86907c90e9600"
+    },
+    "candidateSet": {
+      "candidateSetId": "candidate-set-missing-rationale-001",
+      "locked": true,
+      "sourceKind": "deduplication-result",
+      "dedupResult": {
+        "resultId": "dedup-result-missing-rationale-001",
+        "schemaId": "nexus.deduplication.result",
+        "schemaVersion": "1.0.0",
+        "candidateIds": [
+          "candidate-802"
+        ],
+        "unresolvedCandidateIds": []
+      }
+    },
+    "decision": {
+      "decisionId": "decision-missing-rationale-001",
+      "candidateId": "candidate-802",
+      "stage": "title_abstract",
+      "verdict": "exclude",
+      "actor": {
+        "actorId": "human-no-rationale-001"
+      },
+      "decidedAt": "2026-06-27T02:11:00Z",
+      "rationale": "Temporary rationale entry."
+    },
+    "expected": {
+      "category": "missing-rationale"
+    }
+  }
+}

@@ -1,0 +1,83 @@
+{
+  "fixtureId": "screening-human-needs-review-decision",
+  "sourceKind": "local-gate-9-screening-implementation",
+  "sourceCommit": "local-gate-9-screening-local",
+  "generatorCommand": "hand-authored local Gate 9 Screening fixture",
+  "generatorVersion": "gate-9-screening-v1",
+  "sourceRefs": [
+    "docs/adr/0001-source-of-truth-and-porting.md",
+    "docs/adr/0002-canonical-json-and-digests.md",
+    "docs/adr/0007-shared-scientific-identity.md",
+    "docs/adr/0008-provenance-ledger.md",
+    "docs/adr/0012-deduplication-evidence-and-cluster-contract.md",
+    "docs/adr/0013-screening-decision-and-conflict-contract.md"
+  ],
+  "comparisonRules": [
+    "no-php-compatibility-claim",
+    "no-generated-php-fixture",
+    "no-persistence-api-ui-cloud",
+    "no-cli-web-authority",
+    "no-live-llm-provider-network",
+    "no-ai-governance-implementation",
+    "no-full-text-retrieval",
+    "no-search-or-dedup-behavior-change"
+  ],
+  "inputDigest": "sha256:514a40b2442e24c1957e9166125b0aca12b6110bf12cb399b96a9ef803e4ca17",
+  "outputDigest": "sha256:7672cb1140ce07511164ee2912ad936ae52652299ed67d82d51a8bad2b04eae2",
+  "case": {
+    "criteria": {
+      "criteriaId": "criteria-human-review-001",
+      "criteriaVersion": "1.0.0",
+      "stage": "title_abstract",
+      "include": {
+        "mode": "and",
+        "terms": [
+          "methods",
+          "results"
+        ]
+      },
+      "exclude": {
+        "mode": "or",
+        "terms": [
+          "non-peer-review",
+          "unknown"
+        ]
+      },
+      "requiresProtocolBinding": true,
+      "approvedProtocolBinding": "protocol-screening-v1",
+      "approvedProtocolDigest": "sha256:c0cbe3ed40c4781508733a846848ab015ea7f6f95a5a4ff0c2f86907c90e9600",
+      "approvedProtocolDigestScope": "protocol-content",
+      "approvedProtocolStatus": "approved",
+      "currentProtocolContentDigest": "sha256:c0cbe3ed40c4781508733a846848ab015ea7f6f95a5a4ff0c2f86907c90e9600"
+    },
+    "candidateSet": {
+      "candidateSetId": "candidate-set-human-review-001",
+      "locked": true,
+      "sourceKind": "deduplication-result",
+      "dedupResult": {
+        "resultId": "dedup-result-human-review-001",
+        "schemaId": "nexus.deduplication.result",
+        "schemaVersion": "1.0.0",
+        "candidateIds": [
+          "candidate-703"
+        ],
+        "unresolvedCandidateIds": []
+      }
+    },
+    "decision": {
+      "decisionId": "decision-human-review-001",
+      "candidateId": "candidate-703",
+      "stage": "title_abstract",
+      "verdict": "needs_review",
+      "actor": {
+        "actorId": "human-review-001"
+      },
+      "decidedAt": "2026-06-27T02:02:00Z",
+      "rationale": "Uncertain from full-text extract, needs manual check."
+    },
+    "expected": {
+      "stage": "title_abstract",
+      "verdict": "needs_review"
+    }
+  }
+}
