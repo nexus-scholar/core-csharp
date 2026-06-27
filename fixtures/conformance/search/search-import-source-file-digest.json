@@ -1,0 +1,23 @@
+{
+  "fixtureId": "search-import-source-file-digest",
+  "sourceKind": "local-gate-9-search-import-slice",
+  "sourceCommit": "local-gate-9-search-import-implementation",
+  "generatorCommand": "hand-authored local search-import digest fixture",
+  "generatorVersion": "gate-9-search-import-v1",
+  "case": {
+    "validationYear": 2026,
+    "request": {
+      "sourceDatabaseOrTool": "crossref",
+      "exportFormat": "scopus-csv",
+      "parserId": "local-slice-parser",
+      "parserVersion": "1.0.0",
+      "importedBy": "import-operator-1",
+      "importedAt": "2026-06-27T12:00:00Z"
+    },
+    "sourceFileText": "title,year,source title\\ntest digest,2026,Journal Digest",
+    "expected": {
+      "sourceFileDigestScope": "raw-artifact-bytes",
+      "expectedSourceFileDigest": "b756d493acd16350194ba9662d11e62aaf9cfdca5851ced618880180aad42a30"
+    }
+  }
+}

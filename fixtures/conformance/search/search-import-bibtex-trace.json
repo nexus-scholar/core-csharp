@@ -1,0 +1,24 @@
+{
+  "fixtureId": "search-import-bibtex-trace",
+  "sourceKind": "local-gate-9-search-import-slice",
+  "sourceCommit": "local-gate-9-search-import-implementation",
+  "generatorCommand": "hand-authored local search-import BibTeX fixture",
+  "generatorVersion": "gate-9-search-import-v1",
+  "case": {
+    "validationYear": 2026,
+    "request": {
+      "sourceDatabaseOrTool": "ieee",
+      "exportFormat": "bibtex",
+      "parserId": "local-slice-parser",
+      "parserVersion": "1.0.0",
+      "importedBy": "import-operator-1",
+      "importedAt": "2026-06-27T12:00:00Z"
+    },
+    "sourceFileText": "@article{row1,\n  title = {BibTeX evidence title},\n  doi = {10.1000/abc},\n  author = {Ada Smith},\n  year = {2024}\n}",
+    "expected": {
+      "recordCount": 1,
+      "sightingCount": 1,
+      "expectedWorkIds": ["doi:10.1000/abc"]
+    }
+  }
+}

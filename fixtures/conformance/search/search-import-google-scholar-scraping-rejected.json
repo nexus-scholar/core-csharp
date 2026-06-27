@@ -1,0 +1,22 @@
+{
+  "fixtureId": "search-import-google-scholar-scraping-rejected",
+  "sourceKind": "local-gate-9-search-import-slice",
+  "sourceCommit": "local-gate-9-search-import-implementation",
+  "generatorCommand": "hand-authored local search-import boundary fixture",
+  "generatorVersion": "gate-9-search-import-v1",
+  "case": {
+    "validationYear": 2026,
+    "request": {
+      "sourceDatabaseOrTool": "publish-or-perish",
+      "exportFormat": "google-scholar-csv",
+      "parserId": "local-slice-parser",
+      "parserVersion": "1.0.0",
+      "importedBy": "import-operator-1",
+      "importedAt": "2026-06-27T12:00:00Z"
+    },
+    "sourceFileText": "not a live import; no network allowed",
+    "expected": {
+      "expectedErrorCategory": "unsupported-format"
+    }
+  }
+}

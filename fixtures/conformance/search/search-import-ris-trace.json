@@ -1,0 +1,24 @@
+{
+  "fixtureId": "search-import-ris-trace",
+  "sourceKind": "local-gate-9-search-import-slice",
+  "sourceCommit": "local-gate-9-search-import-implementation",
+  "generatorCommand": "hand-authored local search-import RIS fixture",
+  "generatorVersion": "gate-9-search-import-v1",
+  "case": {
+    "validationYear": 2026,
+    "request": {
+      "sourceDatabaseOrTool": "crossref",
+      "exportFormat": "ris",
+      "parserId": "local-slice-parser",
+      "parserVersion": "1.0.0",
+      "importedBy": "import-operator-1",
+      "importedAt": "2026-06-27T12:00:00Z"
+    },
+    "sourceFileText": "TY  - JOUR\nTI  - RIS evidence title\nAU  - A. Smith\nPY  - 2024\nER  -",
+    "expected": {
+      "recordCount": 1,
+      "sightingCount": 1,
+      "expectedSourceContext": "crossref:row-1"
+    }
+  }
+}

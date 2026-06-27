@@ -1,0 +1,23 @@
+{
+  "fixtureId": "search-import-dedup-not-applied",
+  "sourceKind": "local-gate-9-search-import-slice",
+  "sourceCommit": "local-gate-9-search-import-implementation",
+  "generatorCommand": "hand-authored local search-import dedup boundary fixture",
+  "generatorVersion": "gate-9-search-import-v1",
+  "case": {
+    "validationYear": 2026,
+    "request": {
+      "sourceDatabaseOrTool": "arxiv",
+      "exportFormat": "scopus-csv",
+      "parserId": "local-slice-parser",
+      "parserVersion": "1.0.0",
+      "importedBy": "import-operator-1",
+      "importedAt": "2026-06-27T12:00:00Z"
+    },
+    "sourceFileText": "title,author names,year\nShared title,Author One,2024\nShared title,Author Two,2024",
+    "expected": {
+      "expectedSightingCount": 2,
+      "expectedRecordCount": 2
+    }
+  }
+}

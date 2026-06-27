@@ -1,12 +1,13 @@
-# Gate 9 Search Import Source Contract
+# Gate 9 Search Import Source Contract (Local First Slice)
 
-Status: ADR/contract only. No import parsers, source code, fixtures, provider/network behavior, PHP compatibility, CLI/Web behavior, or app authority are implemented by this branch.
+Status: local imported-export parser slice implemented, non-local parser families remain future.
 
 ## Goal
 
-Define the Search imported-export source contract for user-supplied external search exports before any C# import parser implementation.
+Implement the first local imported-export parsing slice for user-supplied RIS, BibTeX, and Scopus CSV exports under `ADR 0011`.
 
-This gate page applies `ADR 0011` to Gate 9 Search import planning. Gate 9 local Search remains implemented only for deterministic stub-provider traces under `ADR 0010`.
+This work is restricted to `acquisition_kind = imported-export` evidence parsing and local Search trace projection.
+No live providers, APIs, or scraping behavior is implemented.
 
 ## Sources Read
 
@@ -19,58 +20,93 @@ This gate page applies `ADR 0011` to Gate 9 Search import planning. Gate 9 local
 - `docs/adr/0010-search-trace-and-plan-contract.md`
 - `docs/adr/0011-search-import-source-contract.md`
 - `docs/gates/GATE-09-SEARCH.md`
-- `docs/port/php-search-behavior.md`
-- `docs/port/php-search-fixture-plan.md`
 - `docs/port/OPEN-CONFLICTS.md`
 - `docs/port/GOLDEN-FIXTURE-PLAN.md`
-- `docs/recon/apps/**`
+- `docs/port/php-search-behavior.md`
+- `docs/port/php-search-fixture-plan.md`
 
 ## Branch Scope
 
 Allowed paths:
 
-- `docs/adr/0011-search-import-source-contract.md`
+- `src/NexusScholar.Search/**`
+- `src/NexusScholar.Kernel/**` (only if a primitive is genuinely reusable)
+- `src/NexusScholar.Shared/**` (only existing identity primitives)
+- `tests/NexusScholar.Core.Tests/**`
+- `tests/NexusScholar.Architecture.Tests/**` (no changes expected in this slice)
+- `tests/NexusScholar.Conformance.Tests/**`
+- `fixtures/conformance/search/**`
 - `docs/gates/GATE-09-SEARCH-IMPORT.md`
+- `docs/gates/GATE-09-SEARCH-IMPORT-EVIDENCE.md`
 - `docs/port/OPEN-CONFLICTS.md`
 - `docs/port/GOLDEN-FIXTURE-PLAN.md`
-- `docs/port/php-search-fixture-plan.md`
 
-Forbidden paths:
+Forbidden:
 
-- `src/**`
-- `tests/**`
-- `fixtures/**`
-- `specs/**`
-- PHP reference repo changes
-- `nexus-cli`
-- `nexus-web`
-- import parser implementation
-- provider/network behavior
-- generated fixtures
+- live provider/network adapters
+- provider network adapters
+- HTTP clients
+- Scopus API
+- Web of Science API
+- Google Scholar scraping
+- provider SDKs
+- API keys or credentials
+- imported-export parser families outside this first slice
+- PHP-generated fixtures
+- Deduplication
+- Screening
+- persistence/API/UI/cloud
+- nexus-cli changes
+- nexus-web changes
 
-## Decisions
+## Implemented Local Slice
 
-`ADR 0011` defines:
-
-- `acquisition_kind = imported-export`
-- source identity fields for user-supplied exports
-- supported future import families: RIS, BibTeX, Scopus export, Web of Science export, Zotero/CSL JSON, EndNote export, and Publish or Perish CSV
-- raw exported file byte preservation or digest binding through `source_file_digest`
-- local import actor identification for accepted imported Search evidence
-- local paths excluded from Search identity
-- parser output as a projection over raw evidence
-- imported records as Search trace sightings or unresolved candidates
-- no Search-time Deduplication
-- no title-only identity
-- no expansion of `ADR 0007` WorkId namespaces
-- source-specific ids retained as `source_record_id` or `source_identifier` evidence
-- Google Scholar scraping rejected
-- Scopus and Web of Science APIs rejected for this gate
-- parser warning and error categories
+- Parser implementation for:
+  - RIS (`ris`)
+  - BibTeX (`bibtex`)
+  - Scopus CSV (`scopus-csv`)
+- Imported source metadata:
+  - `acquisition_kind = imported-export`
+  - `source_database_or_tool`
+  - `export_format`
+  - `parser_id`
+  - `parser_version`
+  - `source_file_digest` derived from exact source bytes
+  - `imported_by`
+  - `imported_at`
+  - optional `original_query_text`
+  - optional `exported_at`
+  - `record_count`
+  - `parser_warnings`
+- Imported record projection:
+  - required stable identifiers normalize through existing `ADR 0007` namespaces only
+  - no new namespace expansion for source-specific ids
+  - source-specific ids preserved in `source_identifiers`/`raw_identifiers`
+  - no-id records become unresolved candidates
+  - each parsed record maps into `SearchSighting`
+  - skipped records are preserved as skipped imported records and skipped from sightings
+  - parser warning/error evidence is preserved where possible
+- Local policy:
+  - raw exported bytes are required and digested directly as source file evidence
+  - imported records are not deduplicated inside Search
+  - title-only overlap does not deduplicate imported Trace evidence
+  - Google Scholar scraping is rejected
 
 ## Conflict Status
 
-`CF-019`: resolved for the local imported Search source contract by `ADR 0011`. Parser implementation, supported format parsers, source-specific identifier namespace expansion, PHP compatibility, provider/API integrations, and app alignment remain future work.
+`CF-019`: implemented for local first-slice import parser behavior only.
+
+- Implemented:
+  - local imported-export parser behavior
+  - parser-slice for RIS/BibTeX/Scopus CSV
+  - raw source file digest binding
+- Still future:
+  - live providers/API integrations
+  - PHP compatibility
+  - Scopus API
+  - Web of Science API
+  - broader app alignment
+  - future import formats (WOS, Zotero, EndNote, Publish or Perish)
 
 Unchanged:
 
@@ -79,17 +115,13 @@ Unchanged:
 - `CF-017`: implemented for local schema-closed Search plans.
 - `CF-018`: narrowed for Search consumer boundary; broader app alignment remains pending.
 
-## Fixture Consequences
+## Fixture Evidence
 
-Future imported-export fixture IDs:
+Implemented local conformance fixtures:
 
 - `search-import-ris-trace.json`
 - `search-import-bibtex-trace.json`
 - `search-import-scopus-csv-trace.json`
-- `search-import-wos-export-trace.json`
-- `search-import-zotero-csl-json-trace.json`
-- `search-import-endnote-export-trace.json`
-- `search-import-publish-or-perish-csv-trace.json`
 - `search-import-source-file-digest.json`
 - `search-import-parser-warning.json`
 - `search-import-no-id-candidates.json`
@@ -97,58 +129,35 @@ Future imported-export fixture IDs:
 - `search-import-source-specific-id-not-workid.json`
 - `search-import-google-scholar-scraping-rejected.json`
 
-Negative cases:
+Pending future fixture families:
+
+- `search-import-wos-export-trace.json`
+- `search-import-zotero-csl-json-trace.json`
+- `search-import-endnote-export-trace.json`
+- `search-import-publish-or-perish-csv-trace.json`
+
+Negative cases covered:
 
 - unsupported import format
-- missing source file digest
-- missing required field
-- malformed record
-- unknown identifier type
-- duplicate source record id
-- missing local import actor
-- parser warning preserved
-- skipped record preserved as evidence where possible
-- source-specific id not promoted to `WorkIdNamespace`
-- imported title-only duplicate not deduped by Search
-- Google Scholar scraping rejected
+- missing import actor
+- malformed/missing required field
+- skipped record evidence
+- parser warning preservation
+- parser metadata preservation
+- source-specific id not promoted to WorkId
+- unknown identifier handling
+- title-only duplicate not deduped by Search
+- Google Scholar scraping not allowed
 
-## Implementation Readiness
+## Not Ready
 
-Ready:
-
-- future local parser implementation over user-supplied export files, after a bounded implementation task is opened
-- local conformance fixture generation for imported-export parser behavior
-
-Not ready:
-
-- live provider/API implementation
-- Scopus API integration
-- Web of Science API integration
-- Google Scholar scraping
-- PHP compatibility
-- generated PHP fixtures
-- Deduplication
-- Screening
-- persistence/API/UI/cloud
-- CLI/Web behavior changes
-
-## Explicit Claims Not Made
-
-- no import parser implementation
-- no source code changes
-- no fixture generation
+- no live provider/API behavior
+- no Scopus or Web of Science API work
+- no Google Scholar scraping
 - no PHP compatibility
 - no generated PHP fixtures
-- no live provider/network behavior
-- no Scopus API integration
-- no Web of Science API integration
-- no Google Scholar scraping
-- no provider SDKs or credentials
-- no Deduplication behavior
-- no Screening behavior
+- no Deduplication
+- no Screening
 - no persistence/API/UI/cloud behavior
-- no CLI/Web behavior changes
-- no app behavior made authoritative
-- no bundle behavior change
-- no AI governance behavior
-- no blueprint conformance
+- no app authority
+- no blueprint claim

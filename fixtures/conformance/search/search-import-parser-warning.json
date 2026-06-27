@@ -1,0 +1,23 @@
+{
+  "fixtureId": "search-import-parser-warning",
+  "sourceKind": "local-gate-9-search-import-slice",
+  "sourceCommit": "local-gate-9-search-import-implementation",
+  "generatorCommand": "hand-authored local search-import parser-warning fixture",
+  "generatorVersion": "gate-9-search-import-v1",
+  "case": {
+    "validationYear": 2026,
+    "request": {
+      "sourceDatabaseOrTool": "crossref",
+      "exportFormat": "ris",
+      "parserId": "local-slice-parser",
+      "parserVersion": "1.0.0",
+      "importedBy": "import-operator-1",
+      "importedAt": "2026-06-27T12:00:00Z"
+    },
+    "sourceFileText": "TY  - JOUR\nTI  - Bad year\nPY  - bad-year\nER  -",
+    "expected": {
+      "sightings": 1,
+      "expectedParserWarning": "parser-warning"
+    }
+  }
+}

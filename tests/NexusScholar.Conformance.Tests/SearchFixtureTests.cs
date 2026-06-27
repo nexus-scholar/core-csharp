@@ -30,7 +30,16 @@ public sealed class SearchFixtureTests
         "search-trace-no-id-candidates.json",
         "search-trace-raw-data-preserved.json",
         "search-trace-raw-data-not-requested.json",
-        "search-trace-dedup-not-applied.json"
+        "search-trace-dedup-not-applied.json",
+        "search-import-ris-trace.json",
+        "search-import-bibtex-trace.json",
+        "search-import-scopus-csv-trace.json",
+        "search-import-source-file-digest.json",
+        "search-import-parser-warning.json",
+        "search-import-no-id-candidates.json",
+        "search-import-dedup-not-applied.json",
+        "search-import-source-specific-id-not-workid.json",
+        "search-import-google-scholar-scraping-rejected.json"
     };
 
     [TestMethod]

@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Globalization;
 using NexusScholar.Kernel;
 using NexusScholar.Shared;
 
@@ -197,7 +198,121 @@ public sealed record SearchTrace(
     {
         "no-php-compatibility-claim",
         "no-live-provider-network",
-        "no-import-parser-implementation",
         "no-dedup-at-search-time"
     };
+}
+
+public static class SearchImportErrorCodes
+{
+    public const string UnsupportedFormat = "unsupported-format";
+    public const string MalformedRecord = "malformed-record";
+    public const string MissingRequiredField = "missing-required-field";
+    public const string UnknownIdentifierType = "unknown-identifier-type";
+    public const string DuplicateSourceRecordId = "duplicate-source-record-id";
+    public const string SkippedRecord = "skipped-record";
+    public const string ParserWarning = "parser-warning";
+}
+
+public sealed record SearchImportRequest(
+    string SourceDatabaseOrTool,
+    string ExportFormat,
+    string ParserId,
+    string ParserVersion,
+    string ImportedBy,
+    string ImportedAt,
+    string? OriginalQueryText = null,
+    string? ExportedAt = null);
+
+public sealed record SearchImportParserNotice(
+    string Category,
+    string Message,
+    int? RecordIndex = null,
+    string? SourceRecordId = null);
+
+public sealed record SearchImportMetadata(
+    string AcquisitionKind,
+    string SourceDatabaseOrTool,
+    string ExportFormat,
+    string ParserId,
+    string ParserVersion,
+    string SourceFileDigest,
+    string ImportedBy,
+    string ImportedAt,
+    string? OriginalQueryText,
+    string? ExportedAt,
+    int RecordCount,
+    IReadOnlyList<SearchImportParserNotice> ParserWarnings)
+{
+    public const string AcquisitionKindImportedExport = "imported-export";
+}
+
+public sealed record SearchImportRecord(
+    string SourceDatabaseOrTool,
+    string SourceRecordId,
+    string? SourceIdentifier,
+    IReadOnlyList<string> SourceIdentifiers,
+    ScholarlyWork Work,
+    IReadOnlyList<string> Authors,
+    int? Year,
+    string? Venue,
+    string? Abstract,
+    IReadOnlyList<string> Keywords,
+    string? RawRecordDigest,
+    string? RawRecordText,
+    bool IsSkipped,
+    string? SkipReason,
+    IReadOnlyList<SearchImportParserNotice> Notices)
+{
+    public static SearchImportRecord Skipped(
+        string sourceDatabaseOrTool,
+        string sourceRecordId,
+        string message,
+        IReadOnlyList<SearchImportParserNotice> notices)
+    {
+        var work = ScholarlyWork.UnresolvedCandidate("Unknown title", sourceRecordId);
+        return new SearchImportRecord(
+            sourceDatabaseOrTool,
+            sourceRecordId,
+            null,
+            Array.Empty<string>(),
+            work,
+            Array.Empty<string>(),
+            null,
+            null,
+            null,
+            Array.Empty<string>(),
+            null,
+            null,
+            true,
+            message,
+            notices);
+    }
+
+    public bool IsResolved => Work.HasStableIdentifier;
+}
+
+public sealed record SearchImportTrace(
+    string TraceId,
+    string SchemaId,
+    string SchemaVersion,
+    SearchImportMetadata Metadata,
+    IReadOnlyList<SearchImportRecord> ImportedRecords,
+    IReadOnlyList<SearchSighting> Sightings,
+    IReadOnlyList<SearchImportParserNotice> ParserWarnings,
+    IReadOnlyList<string> NonClaims)
+{
+    public static readonly IReadOnlyList<string> DefaultNonClaims = new[]
+    {
+        "no-php-compatibility-claim",
+        "no-live-provider-network",
+        "no-network-requests",
+        "no-google-scholar-scraping",
+        "no-import-parser"
+    };
+
+    public string TraceSummary()
+    {
+        var importer = CultureInfo.InvariantCulture;
+        return string.Format(importer, "imported {0}/{1} records", Sightings.Count, Metadata.RecordCount);
+    }
 }

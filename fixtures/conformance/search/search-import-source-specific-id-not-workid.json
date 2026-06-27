@@ -1,0 +1,23 @@
+{
+  "fixtureId": "search-import-source-specific-id-not-workid",
+  "sourceKind": "local-gate-9-search-import-slice",
+  "sourceCommit": "local-gate-9-search-import-implementation",
+  "generatorCommand": "hand-authored local search-import source-specific-id fixture",
+  "generatorVersion": "gate-9-search-import-v1",
+  "case": {
+    "validationYear": 2026,
+    "request": {
+      "sourceDatabaseOrTool": "scopus",
+      "exportFormat": "scopus-csv",
+      "parserId": "local-slice-parser",
+      "parserVersion": "1.0.0",
+      "importedBy": "import-operator-1",
+      "importedAt": "2026-06-27T12:00:00Z"
+    },
+    "sourceFileText": "eid,title,author names,year\n2-s2.0-12345,Only source evidence,Author One,2024",
+    "expected": {
+      "expectedSourceIdentifier": "eid:2-s2.0-12345",
+      "expectedStableIdentifier": false
+    }
+  }
+}

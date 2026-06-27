@@ -1,0 +1,24 @@
+{
+  "fixtureId": "search-import-scopus-csv-trace",
+  "sourceKind": "local-gate-9-search-import-slice",
+  "sourceCommit": "local-gate-9-search-import-implementation",
+  "generatorCommand": "hand-authored local search-import Scopus CSV fixture",
+  "generatorVersion": "gate-9-search-import-v1",
+  "case": {
+    "validationYear": 2026,
+    "request": {
+      "sourceDatabaseOrTool": "scopus",
+      "exportFormat": "scopus-csv",
+      "parserId": "local-slice-parser",
+      "parserVersion": "1.0.0",
+      "importedBy": "import-operator-1",
+      "importedAt": "2026-06-27T12:00:00Z"
+    },
+    "sourceFileText": "title,author names,year,source title,doi\nCSV evidence title,Ada Lovelace,2024,Journal of Records,https://doi.org/10.1000/csv-1",
+    "expected": {
+      "recordCount": 1,
+      "sightingCount": 1,
+      "expectedWorkIds": ["doi:10.1000/csv-1"]
+    }
+  }
+}
