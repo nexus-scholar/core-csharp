@@ -32,6 +32,14 @@
 - `dotnet format NexusScholar.Core.slnx --verify-no-changes --no-restore`
 - `powershell -ExecutionPolicy Bypass -File .\scripts\verify.ps1`
 
+## Hosted Verification
+
+- Implementation commit: `06c28bd69aa20a5525baec9f3a7d3b7b8f311f85`
+- Hosted CI run: `https://github.com/nexus-scholar/core-csharp/actions/runs/28291815861`
+- `verify (ubuntu-latest)`: success
+- `verify (windows-latest)`: success
+- Steps passed on both: checkout, .NET setup, restore, build, test, format
+
 ## Conformance Fixtures Added
 
 - `search-import-ris-trace.json`
