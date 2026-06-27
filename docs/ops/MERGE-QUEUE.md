@@ -1,6 +1,6 @@
 # Merge Queue
 
-Source: live status from branch probes after the Gate 9 Screening reconnaissance merge.
+Source: live status from branch probes after the ADR 0013 Screening contract merge.
 
 ## Completed Merges
 
@@ -23,22 +23,21 @@ Source: live status from branch probes after the Gate 9 Screening reconnaissance
 - `cdx/gate-9-dedup-contract` (merged to `main`)
 - `cdx/gate-9-dedup-local` (merged to `main`)
 - `cdx/gate-9-screening-recon` (merged to `main`)
+- `cdx/gate-9-screening-contract` (merged to `main`)
 - `cdx/two-model-codex-workflow` (historical merged workflow setup branch)
 - `cdx/shared-identity-adr-0007` (historical planning branch)
 
 ## Current Queue
 
-- `main` includes Gate 9 Screening reconnaissance at `095a275`.
-- Gate 9 Screening recon branch CI is green: `https://github.com/nexus-scholar/core-csharp/actions/runs/28299101552`.
-- Gate 9 Screening recon push-triggered `main` CI is green: `https://github.com/nexus-scholar/core-csharp/actions/runs/28299166389`.
+- `main` includes ADR 0013 Screening Decision and Conflict Contract at `49d068c`.
+- Gate 9 Screening contract branch CI is green: `https://github.com/nexus-scholar/core-csharp/actions/runs/28299739622`.
+- Gate 9 Screening contract push-triggered `main` CI is green: `https://github.com/nexus-scholar/core-csharp/actions/runs/28299837271`.
 - GitHub remote branch cleanup candidates: none.
-- Next primary branch: `cdx/gate-9-screening-contract`.
-- Screening work should continue with ADR 0013 contract decisions only.
+- Next primary branch: `cdx/gate-9-screening-local`.
+- Screening work should continue with local C# implementation against ADR 0013.
 
 ## Not Queued Yet
 
-- C# Screening implementation
-- Screening fixtures
 - Screening PHP compatibility
 - remaining imported-export parser families beyond RIS, BibTeX, and Scopus CSV/export
 - live provider/network calls
@@ -60,5 +59,5 @@ Source: live status from branch probes after the Gate 9 Screening reconnaissance
 
 ## Verification
 
-- `git branch --merged main` includes `cdx/gate-9-screening-recon`, `cdx/gate-9-dedup-local`, `cdx/gate-9-dedup-contract`, and `cdx/gate-9-dedup-recon`.
+- `git branch --merged main` includes `cdx/gate-9-screening-contract`, `cdx/gate-9-screening-recon`, `cdx/gate-9-dedup-local`, `cdx/gate-9-dedup-contract`, and `cdx/gate-9-dedup-recon`.
 - `git branch -r` returns only `origin/main` after this refresh.
