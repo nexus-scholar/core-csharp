@@ -57,17 +57,20 @@ Planned fixtures:
 
 - `dedup-title-fuzzy-threshold-decision.json`
 - `dedup-title-fuzzy-threshold-conflict-92-vs-95.json`
+- `dedup-title-fuzzy-review-required.json`
 - `dedup-title-fuzzy-year-gap.json`
 - `dedup-title-fuzzy-empty-title-rejected.json`
 - `dedup-title-fuzzy-below-threshold.json`
 
 Coverage:
 
-- Threshold conflict is classified before implementation.
+- Local default threshold `95` / `0.95` is asserted.
+- PHP `92` is preserved as drift evidence, not as the local default.
 - Year gap greater than the accepted maximum is rejected when both years exist.
 - Missing year does not automatically block fuzzy comparison.
 - Empty normalized title does not match.
 - Title-only matching does not become shared scientific identity.
+- Fuzzy title evidence is review-required by default.
 
 ### Transitive Clusters
 
@@ -269,17 +272,21 @@ The PHP fixture generator must:
 
 ## Implementation Readiness
 
-Implementation readiness: **no**.
+Implementation readiness: **yes for local C# Deduplication implementation against ADR 0012**.
 
-Reasons:
+ADR 0012 resolved the local contract decisions:
 
-- `CF-011` raw Dedup input shape needs a local contract.
-- `CF-012` title fuzzy threshold is unresolved.
-- `CF-020` app projection and representative snapshot boundary needs narrowing.
+- Dedup input is Search trace/import sighting evidence.
+- The local title fuzzy threshold is `95` / `0.95`.
+- No-id records are unresolved candidates and require review.
+- Representative election uses deterministic evidence-backed tie-breakers.
+- Web membership hashes, persisted runs, and representative snapshots are app projections.
+
+Still not ready:
+
 - No generated PHP fixtures exist.
 - Comparator rules are planned but not implemented.
-
-Local implementation can become ready after a compact Deduplication ADR/contract resolves those items with explicit non-claims.
+- PHP compatibility remains unclaimed.
 
 ## Explicit Non-Claims
 

@@ -1,10 +1,10 @@
-# Gate 9 Deduplication Reconnaissance
+# Gate 9 Deduplication Contract
 
-Status: reconnaissance and planning only. C# Deduplication implementation is not ready.
+Status: contract accepted for local C# Deduplication implementation. C# Deduplication is not implemented in this branch.
 
 ## Goal
 
-Map pinned PHP Deduplication behavior and prepare fixture/comparator planning before any C# Deduplication implementation.
+Record the PHP Deduplication reconnaissance outcome, ADR 0012 local contract decisions, and fixture/comparator plan before C# Deduplication implementation.
 
 This document extends Gate 9 porting work after Shared Identity, Search trace, and Search import local slices. It does not alter those accepted scopes.
 
@@ -17,6 +17,7 @@ This document extends Gate 9 porting work after Shared Identity, Search trace, a
 - `docs/adr/0007-shared-scientific-identity.md`
 - `docs/adr/0010-search-trace-and-plan-contract.md`
 - `docs/adr/0011-search-import-source-contract.md`
+- `docs/adr/0012-deduplication-evidence-and-cluster-contract.md`
 - `docs/gates/GATE-09-SEARCH.md`
 - `docs/gates/GATE-09-SEARCH-IMPORT.md`
 - `docs/port/php-search-behavior.md`
@@ -35,7 +36,7 @@ This document extends Gate 9 porting work after Shared Identity, Search trace, a
 
 Allowed paths:
 
-- `docs/port/php-deduplication-behavior.md`
+- `docs/adr/0012-deduplication-evidence-and-cluster-contract.md`
 - `docs/port/php-deduplication-fixture-plan.md`
 - `docs/gates/GATE-09-DEDUP.md`
 - `docs/port/OPEN-CONFLICTS.md`
@@ -77,27 +78,39 @@ PHP app behavior adds important projections:
 - Web blocks corpus lock until dedup evidence is fresh and complete.
 - Web Screening requires a representative-aware locked snapshot.
 
-## Open Conflicts
+## Contract Decisions
 
-`CF-011`: blocking for C# Dedup implementation.
+ADR 0012 decides:
 
-Raw Dedup input shape is not resolved. PHP uses `CorpusSlice`, but normal `CorpusSlice` may premerge exact identifier duplicates. Web uses `fromWorksUnsafe()` and C# Search preserves raw traces. C# must define a raw candidate input contract from Search traces/imported sightings before implementation.
+- C# Deduplication consumes Search trace/import sighting evidence.
+- PHP's pre-deduplicated Search corpus is not authoritative C# Deduplication input.
+- Exact identifier overlap uses ADR 0007 normalized stable identifiers and namespace-sensitive matching.
+- Title-only identity remains forbidden.
+- Fuzzy title matching creates candidate evidence and requires review by default.
+- The local default fuzzy title threshold is `95` / `0.95`; PHP `92` is treated as documentation/configuration drift unless an explicit custom policy records otherwise.
+- Exact identifier clusters are transitive, but candidate-only evidence does not create automatic clusters.
+- Representative election is deterministic, evidence-backed, and independent of runtime object identity.
+- Representative projection fills missing fields without erasing raw sightings or evidence links.
+- No-id works remain unresolved candidates unless future human review accepts a duplicate decision.
+- Web membership hashes, representative snapshots, persisted runs, and app clustering are app projections, not Core authority.
 
-`CF-012`: blocking for C# Dedup implementation.
+## Conflict Status
 
-Title fuzzy threshold is unresolved. PHP `TitleFuzzyPolicy` defaults to `92`, Laravel binding uses `95`, docs say `95`, Web persisted runs write `0.95`, and demo seed data includes `0.92`.
+`CF-011`: resolved for local C# Deduplication contract.
 
-`CF-016`: implemented for local Search scope; Dedup handoff pending.
+Raw Dedup input is Search trace/import sighting evidence with source bindings. PHP `CorpusSlice` and PHP Search-time deduplicated corpus output are not authoritative C# Dedup input.
 
-Search already emits raw traces and does not call Deduplication. Deduplication must now define how it consumes those traces without reintroducing Search-time dedupe.
+`CF-012`: resolved for local C# Deduplication contract.
 
-`CF-018`: narrowed for Search consumer boundary; Dedup app boundary pending.
+The local title fuzzy default is `95` / `0.95`. PHP `92` remains drift evidence and can be represented only by an explicit custom policy.
 
-CLI/Web projections are useful evidence but not Core authority. Dedup needs an explicit decision about which app concepts remain projections.
+`CF-016`: implemented for Search; narrowed for Dedup handoff.
 
-`CF-020`: newly opened for Deduplication app projection and representative snapshot boundary.
+Search already emits raw traces and does not call Deduplication. Deduplication consumes those traces later without changing Search behavior.
 
-Nexus Web has membership hashes, persisted dedup runs, representative scoring fallback, stale run detection, and representative-aware corpus lock snapshots. C# Core must decide which pieces are domain contract, which are snapshot/persistence gate work, and which remain app projections.
+`CF-020`: narrowed for Core.
+
+CLI/Web projections are useful evidence but not Core authority. Web membership hashes, persisted runs, representative snapshots, stale-run checks, and app scoring remain projections unless a later ADR adopts them.
 
 ## Fixture Plan
 
@@ -107,18 +120,18 @@ Required planned fixture families:
 
 - input shape from Search traces and imported sightings
 - exact identifier clustering
-- title fuzzy threshold and year-gap behavior
+- title fuzzy threshold, review-required, and year-gap behavior
 - transitive cluster assembly
 - representative election and merge behavior
 - no-id unresolved candidates
 - raw duplicate evidence preservation
-- locked corpus rejection if admitted by local contract
-- Web/app projection catalog
+- app projection catalog
 
 Key planned fixture IDs:
 
 - `dedup-input-search-trace-to-candidates.json`
 - `dedup-input-imported-sightings-to-candidates.json`
+- `dedup-input-raw-sightings-preserved.json`
 - `dedup-exact-doi-cluster.json`
 - `dedup-exact-openalex-cluster.json`
 - `dedup-exact-s2-cluster.json`
@@ -127,14 +140,17 @@ Key planned fixture IDs:
 - `dedup-source-specific-id-not-workid.json`
 - `dedup-title-fuzzy-threshold-decision.json`
 - `dedup-title-fuzzy-threshold-conflict-92-vs-95.json`
+- `dedup-title-fuzzy-review-required.json`
 - `dedup-transitive-cluster.json`
 - `dedup-transitive-evidence-preserved.json`
 - `dedup-representative-election-completeness.json`
 - `dedup-representative-election-provider-priority.json`
+- `dedup-representative-election-doi-tiebreak.json`
+- `dedup-representative-election-stable-tiebreak.json`
 - `dedup-merge-field-preservation.json`
+- `dedup-merge-identifier-union.json`
 - `dedup-no-id-candidate-not-auto-merged.json`
 - `dedup-raw-duplicate-evidence-preserved.json`
-- `dedup-locked-corpus-rejected.json`
 - `dedup-app-membership-hash-projection.json`
 - `dedup-representative-snapshot-app-projection.json`
 
@@ -146,26 +162,27 @@ Comparator groups:
 
 - input comparator: Search/import sightings to Dedup candidates
 - identifier comparator: normalized namespace/value overlap
-- title fuzzy comparator: normalization, threshold, year gap, confidence rounding
+- title fuzzy comparator: normalization, threshold `95` / `0.95`, year gap, confidence rounding, and review-required flag
 - cluster comparator: unordered member sets plus ordered/direct evidence edges
 - representative comparator: deterministic election and tie-breakers
 - merge comparator: representative field preservation and fill behavior
 - app projection comparator: membership hash, persisted run summaries, representative snapshot membership, stale run detection
 
-Generated ids, runtime durations, PHP object ids, and wall-clock retrieval times must not be semantic comparator anchors unless fixture generators pin them.
+Generated ids, runtime durations, PHP object ids, wall-clock retrieval times, app row ids, and local file paths must not be semantic comparator anchors unless fixture generators pin them.
 
 ## Implementation Readiness
 
-Implementation readiness: **no**.
+Implementation readiness: **yes for local C# Deduplication implementation against ADR 0012**.
 
-Required before C# Dedup implementation:
+Still not ready:
 
-- ADR/contract for raw Dedup input shape from Search traces and imported sightings
-- ADR/contract decision for title fuzzy threshold and algorithm
-- decision on no-id candidate processing without runtime object identity
-- decision on representative election deterministic tie-breakers
-- decision on app projection boundary for Web membership hash, representative snapshot, persisted runs, and scoring fallback
-- local fixture and comparator catalog accepted
+- PHP compatibility
+- generated PHP fixtures
+- Screening behavior
+- corpus snapshot implementation
+- Deduplication persistence schema
+- API/UI/cloud behavior
+- `nexus-cli` or `nexus-web` behavior as Core authority
 
 ## Explicit Claims Not Made
 
