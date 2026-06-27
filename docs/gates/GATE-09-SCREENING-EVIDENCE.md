@@ -55,9 +55,9 @@ All Screening fixtures are hand-authored local contract fixtures with fixture id
 
 ## Hosted verification
 
-Hosted CI run: https://github.com/nexus-scholar/core-csharp/actions/runs/28302445540
+Hosted CI run: https://github.com/nexus-scholar/core-csharp/actions/runs/28302751414
 
-Implementation commit verified by hosted CI: `4bc249d`
+Implementation commit verified by hosted CI: `18cedb2`
 
 Hosted matrix:
 
