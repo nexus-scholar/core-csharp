@@ -1,6 +1,6 @@
 # Gate 9 Screening
 
-Status: local ADR 0013 screening behavior is implemented and locally verified on branch `cdx/gate-9-screening-local`; hosted CI evidence is pending until push.
+Status: local ADR 0013 screening behavior is implemented, locally verified, and hosted-CI verified on branch `cdx/gate-9-screening-local`.
 
 ## Goal
 
@@ -171,7 +171,7 @@ Comparators may ignore generated ids, timestamps, and durations only when a fixt
 
 ## Implementation Readiness
 
-Implementation readiness: **local C# Screening conformance scope is implemented and locally verified after focused review fixes; hosted CI evidence for the review-fix commit is pending until push**.
+Implementation readiness: **local C# Screening conformance scope is implemented, locally verified, and hosted-CI verified after focused review fixes**.
 
 Still not ready:
 

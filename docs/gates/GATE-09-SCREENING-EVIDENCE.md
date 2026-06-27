@@ -53,7 +53,25 @@ All Screening fixtures are hand-authored local contract fixtures with fixture id
 - `dotnet format NexusScholar.Core.slnx --verify-no-changes --no-restore`: passed
 - `powershell -ExecutionPolicy Bypass -File .\scripts\verify.ps1`: passed
 
-Hosted Windows/Linux matrix evidence for the review-fix commit is not recorded yet; branch must be pushed and verified before merge.
+## Hosted verification
+
+Hosted CI run: https://github.com/nexus-scholar/core-csharp/actions/runs/28302445540
+
+Implementation commit verified by hosted CI: `4bc249d`
+
+Hosted matrix:
+
+- `verify (ubuntu-latest)`: success
+- `verify (windows-latest)`: success
+
+Steps passed on both:
+
+- checkout
+- setup .NET
+- restore
+- build
+- test
+- format
 
 ## Leila review fixes
 
