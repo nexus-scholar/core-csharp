@@ -1,6 +1,6 @@
 # Merge Queue
 
-Source: live status from branch probes after the Gate 9 Search local implementation merge.
+Source: live status from branch probes after the Gate 9 Search import contract merge and GitHub branch cleanup.
 
 ## Completed Merges
 
@@ -17,22 +17,26 @@ Source: live status from branch probes after the Gate 9 Search local implementat
 - `cdx/app-recon-cli-web-core-usage` (merged to `main`)
 - `cdx/gate-9-search-contract` (merged to `main`)
 - `cdx/gate-9-search-local` (merged to `main`)
+- `cdx/gate-9-search-import-contract` (merged to `main`)
 - `cdx/two-model-codex-workflow` (historical merged workflow setup branch)
 - `cdx/shared-identity-adr-0007` (reconnaissance planning branch)
 
 ## Current Queue
 
-- `main` includes Gate 9 Search local implementation at `9431e4b56112f0c0a97e63a3665aec06497f3fce`.
+- `main` includes ADR 0011 Search Import Source Contract at `89f065b`.
 - ADR 0010 branch CI is green: `https://github.com/nexus-scholar/core-csharp/actions/runs/28289131170`.
 - ADR 0010 push-triggered `main` CI is green: `https://github.com/nexus-scholar/core-csharp/actions/runs/28289224733`.
 - Gate 9 Search local branch CI is green: `https://github.com/nexus-scholar/core-csharp/actions/runs/28290113371`.
 - Gate 9 Search push-triggered `main` CI is green: `https://github.com/nexus-scholar/core-csharp/actions/runs/28290167673`.
-- Next primary branch: `cdx/gate-9-search-import-contract`.
-- Gate 9 Search import-contract work is planning only until `CF-019` is resolved.
+- ADR 0011 branch CI is green: `https://github.com/nexus-scholar/core-csharp/actions/runs/28290630584`.
+- ADR 0011 push-triggered `main` CI is green: `https://github.com/nexus-scholar/core-csharp/actions/runs/28290718641`.
+- GitHub remote branch cleanup is complete; only `origin/main` remains.
+- Next primary branch: `cdx/gate-9-search-import-local`.
+- Gate 9 Search import-local work may implement local parsers over user-supplied export files only.
 
 ## Not Queued Yet
 
-- imported-export parser contract or implementation
+- imported-export parser implementation
 - live provider/network calls
 - Scopus API
 - Web of Science API
@@ -46,23 +50,7 @@ Source: live status from branch probes after the Gate 9 Search local implementat
 
 ## Cleanup Candidates
 
-- `cdx/gate-9-search-contract`
-- `cdx/gate-9-search-local`
-- `cdx/app-recon-cli-web-core-usage`
-- `cdx/gate-9-search-recon`
-- `cdx/gate-6-bundle-planning`
-- `cdx/gate-9-shared-identity`
-- `cdx/gate-5-provenance`
-- `cdx/two-model-codex-workflow`
-- `cdx/main-gate2-merge`
-- `cdx/gate-4-workflow`
-- `cdx/gate-4-workflow-planning`
-- `cdx/gate-3-protocol-lifecycle`
-- `cdx/gate-3-planning-decisions`
-- `cdx/gate-2-digest-kernel-cleanup`
-- `cdx/shared-identity-adr-0007`
-- `cdx/run-gate-zero-discovery`
-- `cdx/run-gate-0-discovery`
+- no GitHub remote cleanup candidates remain after this refresh
 
 ## Not Safe To Delete
 
@@ -70,5 +58,5 @@ Source: live status from branch probes after the Gate 9 Search local implementat
 
 ## Verification
 
-- `git branch --merged main` confirms all local branch names listed in cleanup candidates above are merged.
+- `git branch -r` returns only `origin/HEAD -> origin/main` and `origin/main`.
 - `git branch --all --no-merged main` returned no unmerged local or remote branches at the time of this refresh.

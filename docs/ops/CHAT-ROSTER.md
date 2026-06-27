@@ -1,10 +1,11 @@
 # Chat Roster
 
-Branch-derived Codex lane roster from current git state after the Gate 9 Search local implementation merge.
+Branch-derived Codex lane roster from current git state after the Gate 9 Search import contract merge and GitHub branch cleanup.
 
 ## Active Lanes
 
-- Lane `main`: merged baseline containing Gate 0 through Gate 6, Gate 9 shared identity, Gate 9 Search reconnaissance, app consumer reconnaissance, ADR 0010 Search Trace and Plan Contract, and Gate 9 local stub-provider Search implementation; current head `9431e4b`.
+- Lane `main`: merged baseline containing Gate 0 through Gate 6, Gate 9 shared identity, Gate 9 Search reconnaissance, app consumer reconnaissance, ADR 0010 Search Trace and Plan Contract, Gate 9 local stub-provider Search implementation, and ADR 0011 Search Import Source Contract; current head `89f065b`.
+- Lane `gate-9-search-import-contract`: merged ADR/contract branch `cdx/gate-9-search-import-contract`, head `89f065b`.
 - Lane `gate-9-search-local`: merged local implementation branch `cdx/gate-9-search-local`, head `9431e4b`.
 - Lane `gate-9-search-contract`: merged ADR/contract branch `cdx/gate-9-search-contract`, head `49d2a60`.
 - Lane `app-recon-cli-web-core-usage`: merged docs-only app consumer reconnaissance branch, head `c783d55`.
@@ -22,26 +23,28 @@ Branch-derived Codex lane roster from current git state after the Gate 9 Search 
 
 ## Branch Containment Relationships
 
-- `main` contains Gate 0 through Gate 6, Gate 9 shared identity, Gate 9 Search reconnaissance, app consumer reconnaissance, ADR 0010, and local stub-provider Search.
+- `main` contains Gate 0 through Gate 6, Gate 9 shared identity, Gate 9 Search reconnaissance, app consumer reconnaissance, ADR 0010, local stub-provider Search, and ADR 0011.
 - `main` contains the two-model workflow setup branch and the Gate 9 shared-identity ADR/reconnaissance branch.
 - `cdx/gate-9-search-contract` is now a merged historical lane rather than an active planning branch.
 - `cdx/gate-9-search-local` is now a merged historical lane rather than an active implementation branch.
+- `cdx/gate-9-search-import-contract` is now a merged historical lane rather than an active planning branch.
+- GitHub remote branch cleanup is complete; only `origin/main` remains.
 - No local or remote branches were unmerged from `main` at the time of this refresh.
 
 ## Status Notes
 
 - Gate 9 Search local implementation is merged with green branch CI and green push-triggered `main` CI.
+- ADR 0011 Search Import Source Contract is merged with green branch CI and green push-triggered `main` CI.
 - ADR 0010 defines Search output as a raw trace, not a deduplicated corpus.
 - First Search implementation is stub-provider-only.
-- Imported-export traces are admitted only as future acquisition evidence; import parser implementation remains blocked by `CF-019`.
+- Imported-export traces are admitted only as user-supplied acquisition evidence; parser implementation is now ready for a local-only implementation gate.
 - Search implementation readiness is complete only for local deterministic stub-provider Search.
-- Next branch should be `cdx/gate-9-search-import-contract`.
-- Cleanup-safe merged lanes now include `cdx/gate-9-search-local`, `cdx/gate-9-search-contract`, `cdx/app-recon-cli-web-core-usage`, `cdx/gate-9-search-recon`, `cdx/gate-6-bundle-planning`, `cdx/gate-9-shared-identity`, `cdx/gate-5-provenance`, `cdx/two-model-codex-workflow`, `cdx/main-gate2-merge`, `cdx/gate-4-workflow`, `cdx/gate-4-workflow-planning`, `cdx/gate-3-protocol-lifecycle`, `cdx/gate-3-planning-decisions`, `cdx/gate-2-digest-kernel-cleanup`, `cdx/shared-identity-adr-0007`, `cdx/run-gate-zero-discovery`, and `cdx/run-gate-0-discovery`.
+- Next branch should be `cdx/gate-9-search-import-local`.
+- GitHub has no cleanup-safe merged remote branches left after this refresh.
 
 ## Explicit Non-Claims For Next Lane
 
 - no live provider/network behavior
-- no import parser implementation
 - no Scopus API
 - no Web of Science API
 - no Google Scholar scraping
