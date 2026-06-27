@@ -1,12 +1,12 @@
 # Gate 9 Screening Reconnaissance
 
-Status: reconnaissance and planning only. C# Screening implementation is not ready.
+Status: ADR 0013 contract decisions accepted locally. C# Screening implementation is ready to start only after this ADR branch is merged.
 
 ## Goal
 
 Map pinned PHP Screening behavior and CLI/Web screening behavior before any C# Screening implementation.
 
-This document covers the Screening part of Gate 9 PHP behavior porting. It does not implement Screening, generate fixtures, or claim PHP compatibility.
+This document covers the Screening part of Gate 9 PHP behavior porting. It now includes the local contract decisions from `ADR 0013`. It does not implement Screening, generate fixtures, or claim PHP compatibility.
 
 ## Sources Read
 
@@ -20,6 +20,7 @@ This document covers the Screening part of Gate 9 PHP behavior porting. It does 
 - `docs/adr/0012-deduplication-evidence-and-cluster-contract.md`
 - `docs/port/OPEN-CONFLICTS.md`
 - `docs/port/GOLDEN-FIXTURE-PLAN.md`
+- `docs/adr/0013-screening-decision-and-conflict-contract.md`
 - `docs/recon/apps/**`
 - `specs/SOURCE.lock.json`
 - pinned PHP Screening module under `../core`
@@ -70,23 +71,38 @@ CLI behavior adds a file-based deterministic/LLM screening path that writes loca
 
 Web behavior adds reviewer assignment, batches, conflict rows, adjudication UI, audit rows, representative-aware locked snapshot requirements, and full-text screening workflows. These are app workflow evidence, not Core authority unless a later ADR admits them.
 
-## Open Conflicts
+## Contract Decisions
+
+`ADR 0013` decides:
+
+- Screening consumes a Deduplication result or locked/reviewable candidate set, not raw Search traces directly.
+- Local stages are `title_abstract`, `full_text`, and `human_adjudication`.
+- Screening criteria use `nexus.screening.criteria` version `1.0.0` and an `ADR 0002` canonical JSON record digest.
+- Final Screening decisions use `nexus.screening.decision` version `1.0.0`.
+- Canonical verdicts are `include`, `exclude`, and `needs_review`; app labels such as `maybe` map explicitly to `needs_review`.
+- Final decisions require an identified human actor and rationale.
+- AI/model/rule outputs are suggestion evidence only.
+- Conflicts are detected from differing final human verdicts for the same candidate, stage, criteria digest, and candidate set.
+- Adjudication is append-only, preserves source decision ids, and resolves rather than mutates prior decisions.
+- Web assignments, batches, conflict rows, full-text item links, CLI screen files, and app audit rows remain app projections.
+
+## Conflict Status
 
 `CF-021`: Screening input and locked candidate boundary.
 
-C# Screening must decide whether input is a Deduplication result, a locked representative-aware corpus snapshot, a reviewable candidate set, or another stage-specific record. Screening must not consume raw Search traces directly.
+Resolved for the local contract by `ADR 0013`. Screening consumes a Deduplication result or locked/reviewable candidate set and must not consume raw Search traces directly.
 
 `CF-022`: Screening decision authority and AI proposal boundary.
 
-PHP records LLM-produced verdicts. C# must define how model votes and council aggregates remain proposal evidence and when an authorized human action creates a scientific screening decision.
+Resolved for the local contract by `ADR 0013`. Final Screening decisions require an identified human actor; AI/model/rule outputs are proposal evidence only.
 
 `CF-023`: Screening criteria schema and digest contract.
 
-PHP criteria hash is raw SHA-256 over normalized JSON. C# must define criteria schema, criteria digest scope, stage binding, and protocol/workflow binding before implementation.
+Resolved for the local contract by `ADR 0013`. Criteria are schema-identified, versioned, stage-bound, and digest-bound using `ADR 0002` canonical JSON record rules.
 
 `CF-024`: Screening app workflow projection boundary.
 
-CLI file outputs and Web batch, assignment, conflict, audit, and full-text item rows are app workflow evidence. C# Core must decide which, if any, become domain records.
+Narrowed for Core by `ADR 0013`. CLI file outputs and Web batch, assignment, conflict, audit, and full-text item rows remain app workflow evidence unless a later ADR admits them.
 
 ## Fixture Plan
 
@@ -140,29 +156,17 @@ Comparators may ignore generated ids, timestamps, and durations only when a fixt
 
 ## Implementation Readiness
 
-Implementation readiness: **no**.
+Implementation readiness: **yes for local C# Screening implementation after ADR 0013 is merged**.
 
-Next required branch should be an ADR/contract, not implementation:
+Still not ready:
 
-```text
-ADR 0013: Screening Decision and Conflict Contract
-```
-
-ADR 0013 should resolve:
-
-- `CF-021`
-- `CF-022`
-- `CF-023`
-- `CF-024`
-
-Expected local stance unless evidence contradicts it:
-
-- Screening consumes a locked/reviewable post-Dedup candidate set.
-- Human decisions require actor and rationale.
-- AI/model output is suggestion evidence only.
-- Decisions append and never overwrite.
-- Criteria digest uses explicit C# canonical digest semantics.
-- Web assignments/conflicts are app workflow projections unless admitted by the ADR.
+- PHP compatibility
+- generated PHP fixtures
+- persistence/API/UI/cloud
+- app workflow authority
+- live LLM/provider/network behavior
+- AI governance implementation
+- full-text retrieval or artifact storage behavior
 
 ## Explicit Claims Not Made
 

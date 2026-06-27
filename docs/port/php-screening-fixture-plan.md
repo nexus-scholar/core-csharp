@@ -12,7 +12,7 @@ Pinned PHP source:
 
 This plan defines the fixture and comparator catalog needed before C# Screening can claim local implementation completion or PHP compatibility. Existing PHP tests, CLI files, Web workflow rows, and app docs are source evidence, not generated golden fixtures.
 
-C# Screening should be implemented only after a Screening ADR resolves the input snapshot, decision authority, criteria digest, human/AI boundary, and app projection boundary.
+C# Screening may be implemented locally after `ADR 0013` is merged. PHP compatibility still requires generated fixtures and comparators.
 
 ## Fixture Families
 
@@ -95,6 +95,7 @@ Planned fixtures:
 - `screening-adjudication-source-decision-links.json`
 - `screening-conflict-created-from-disagreement.json`
 - `screening-conflict-resolved-by-human.json`
+- `screening-unresolved-conflict-blocks-handoff.json`
 - `screening-conflict-resolution-missing-reason-negative.json`
 - `screening-adjudication-wrong-project-or-stage-negative.json`
 
@@ -277,9 +278,9 @@ The PHP fixture generator must:
 
 ## Implementation Readiness
 
-Implementation readiness: **no**.
+Implementation readiness: **yes for local C# Screening implementation after ADR 0013 is merged**.
 
-Blocking decisions:
+Resolved local decisions:
 
 - Screening input shape and lock boundary (`CF-021`);
 - human decision authority and AI proposal handling (`CF-022`);
@@ -288,7 +289,6 @@ Blocking decisions:
 
 Still not ready:
 
-- no Screening ADR exists;
 - no generated PHP fixtures exist;
 - comparator rules are planned but not implemented;
 - PHP compatibility remains unclaimed.
@@ -298,7 +298,6 @@ Still not ready:
 - no generated PHP fixtures
 - no PHP compatibility
 - no C# Screening implementation
-- no Screening ADR
 - no Search or Deduplication behavior change
 - no full-text retrieval implementation
 - no persistence schema
