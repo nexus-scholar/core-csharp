@@ -1,6 +1,6 @@
 # Merge Queue
 
-Source: live status from branch probes after the ADR 0010 Search contract merge.
+Source: live status from branch probes after the Gate 9 Search local implementation merge.
 
 ## Completed Merges
 
@@ -16,16 +16,19 @@ Source: live status from branch probes after the ADR 0010 Search contract merge.
 - `cdx/gate-9-search-recon` (merged to `main`)
 - `cdx/app-recon-cli-web-core-usage` (merged to `main`)
 - `cdx/gate-9-search-contract` (merged to `main`)
+- `cdx/gate-9-search-local` (merged to `main`)
 - `cdx/two-model-codex-workflow` (historical merged workflow setup branch)
 - `cdx/shared-identity-adr-0007` (reconnaissance planning branch)
 
 ## Current Queue
 
-- `main` includes ADR 0010 at `49d2a6073a04dc21bac5097987022d8747c86a24`.
+- `main` includes Gate 9 Search local implementation at `9431e4b56112f0c0a97e63a3665aec06497f3fce`.
 - ADR 0010 branch CI is green: `https://github.com/nexus-scholar/core-csharp/actions/runs/28289131170`.
 - ADR 0010 push-triggered `main` CI is green: `https://github.com/nexus-scholar/core-csharp/actions/runs/28289224733`.
-- Next primary branch: `cdx/gate-9-search-local`.
-- Gate 9 Search local implementation is allowed only for deterministic stub-provider Search trace behavior.
+- Gate 9 Search local branch CI is green: `https://github.com/nexus-scholar/core-csharp/actions/runs/28290113371`.
+- Gate 9 Search push-triggered `main` CI is green: `https://github.com/nexus-scholar/core-csharp/actions/runs/28290167673`.
+- Next primary branch: `cdx/gate-9-search-import-contract`.
+- Gate 9 Search import-contract work is planning only until `CF-019` is resolved.
 
 ## Not Queued Yet
 
@@ -44,6 +47,7 @@ Source: live status from branch probes after the ADR 0010 Search contract merge.
 ## Cleanup Candidates
 
 - `cdx/gate-9-search-contract`
+- `cdx/gate-9-search-local`
 - `cdx/app-recon-cli-web-core-usage`
 - `cdx/gate-9-search-recon`
 - `cdx/gate-6-bundle-planning`
