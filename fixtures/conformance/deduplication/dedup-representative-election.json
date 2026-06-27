@@ -15,8 +15,8 @@
     "no-screening",
     "no-app-projection-authority"
   ],
-  "inputDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
-  "outputDigest": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+  "inputDigest": "sha256:f298fb0321310d6a6d5cece69f9039163a32b44dd721935b8bfec404279a81f0",
+  "outputDigest": "sha256:e1a417e5f5ba16217dbd7e7b3ef44b5cd6bb31d223bdce388da999f5102c47ce",
   "case": {
     "scenario": "representative-election",
     "searchTraces": [
@@ -36,7 +36,7 @@
             "providerOrder": 1,
             "providerLocalRank": 2,
             "title": "Representative paper title",
-            "workIds": ["crossref:CR-001", "arxiv:arXiv:9999.9999"],
+            "workIds": ["doi:10.1000/rep-2", "arxiv:9999.9999"],
             "isUnresolved": false
           },
           {
@@ -44,7 +44,7 @@
             "providerOrder": 1,
             "providerLocalRank": 3,
             "title": "Representative paper title",
-            "workIds": ["s2:S2-001", "arxiv:arXiv:9999.9999"],
+            "workIds": ["s2:S2-001", "arxiv:9999.9999"],
             "isUnresolved": false
           }
         ]

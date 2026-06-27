@@ -6,7 +6,7 @@ Status: local implementation complete and pending hosted re-run on branch head.
 
 - deterministic exact identifier clustering using `ADR 0007` identity
 - namespace-sensitive matches only
-- fuzzy title review candidates at local threshold `0.95`/`0.95`
+- fuzzy title review candidates at local threshold `95` / `0.95`
 - transitive exact-ID clustering
 - deterministic representative election and projection behavior
 - no-id unresolved candidates and review-only path

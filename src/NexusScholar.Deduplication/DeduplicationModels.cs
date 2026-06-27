@@ -19,6 +19,7 @@ public sealed record DedupCandidateRecord(
     bool HasStableIdentifier,
     string? PrimaryWorkId,
     IReadOnlyList<string> WorkIds,
+    IReadOnlyList<string> SourceSpecificIds,
     DedupSightingRef Source);
 
 public sealed record DedupEvidence(
@@ -34,6 +35,9 @@ public sealed record DedupEvidence(
 public sealed record DedupRepresentativeResult(
     string CandidateId,
     string Title,
+    string? PrimaryWorkId,
+    IReadOnlyList<string> WorkIds,
+    IReadOnlyList<string> SourceSightingIds,
     double CompletenessScore,
     IReadOnlyList<string> ReasonCodes);
 
@@ -77,5 +81,6 @@ public enum DedupEvidenceKind
     SourceSighting,
     ExactIdentifier,
     FuzzyTitle,
-    NoIdCandidate
+    NoIdCandidate,
+    SourceSpecificIdentifier
 }

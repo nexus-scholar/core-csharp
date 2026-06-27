@@ -15,8 +15,8 @@
     "no-screening",
     "no-app-projection-authority"
   ],
-  "inputDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
-  "outputDigest": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
+  "inputDigest": "sha256:bfd27bf272f30903900769baa91416dc961d3b1c76f45007ad3dd38a3a553c76",
+  "outputDigest": "sha256:517107a31f2d31a26f9ecde87c4fabd0b46be13b7d682e8bfe9c3fae84538515",
   "case": {
     "scenario": "representative-merge-preserves-evidence",
     "searchTraces": [
@@ -44,7 +44,7 @@
             "providerOrder": 1,
             "providerLocalRank": 3,
             "title": "Evidence preservation supplemental",
-            "workIds": ["openalex:other-merge"],
+            "workIds": ["doi:10.1000/merge"],
             "isUnresolved": false
           }
         ]

@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Globalization;
+using System.Linq;
 using System.Text.RegularExpressions;
 using NexusScholar.Kernel;
 using NexusScholar.Search;
@@ -98,6 +100,7 @@ public sealed class DeduplicationService
                 var candidate = BuildFromImportRecord(trace.TraceId, index, record, trace.Metadata);
                 candidates.Add(candidate);
                 evidence.Add(CreateSourceEvidence(candidate));
+                AddSourceSpecificEvidence(candidate, evidence);
 
                 if (!candidate.HasStableIdentifier)
                 {
@@ -166,19 +169,20 @@ public sealed class DeduplicationService
             }
 
             var members = group.Select(index => rawCandidates[index]).ToArray();
-            Array.Sort(members, (left, right) => string.Compare(left.CandidateId, right.CandidateId, StringComparison.Ordinal));
+            Array.Sort(
+                members,
+                (left, right) => string.Compare(left.CandidateId, right.CandidateId, StringComparison.Ordinal));
 
             var representative = ElectRepresentative(members);
-            var sourceEvidence = evidence
-                .Where(item => item.Kind == DedupEvidenceKind.SourceSighting)
+            var fullEvidence = evidence
                 .Where(item => ContainsCandidate(item, members))
                 .ToArray();
-            var connectedEvidence = exactEvidence
+            var exactEvidenceForMembers = exactEvidence
                 .Where(item => ContainsCandidate(item, members))
                 .ToArray();
 
-            var fullEvidence = sourceEvidence
-                .Concat(connectedEvidence)
+            var clusterEvidence = fullEvidence
+                .Concat(exactEvidenceForMembers)
                 .Distinct()
                 .OrderBy(item => item.EvidenceId, StringComparer.Ordinal)
                 .ToArray();
@@ -187,7 +191,7 @@ public sealed class DeduplicationService
                 BuildClusterId(group),
                 new ReadOnlyCollection<DedupCandidateRecord>(members),
                 representative,
-                new ReadOnlyCollection<DedupEvidence>(fullEvidence)));
+                new ReadOnlyCollection<DedupEvidence>(clusterEvidence)));
         }
 
         var unresolvedCandidates = rawCandidates
@@ -205,43 +209,55 @@ public sealed class DeduplicationService
             {
                 var leftCandidate = rawCandidates[left];
                 var rightCandidate = rawCandidates[right];
+                var pairKey = BuildEvidencePairKey(leftCandidate.CandidateId, rightCandidate.CandidateId);
+
+                if (reviewPairs.Contains(pairKey))
+                {
+                    continue;
+                }
 
                 if (exactUnion.Find(left) == exactUnion.Find(right))
                 {
                     continue;
                 }
 
+                var hasSourceSpecific = HasSourceSpecificOverlap(leftCandidate, rightCandidate);
                 var similarity = ComputeTitleSimilarity(leftCandidate.Title, rightCandidate.Title);
-                if (similarity < fuzzyTitleThreshold)
+                var hasExactId = leftCandidate.HasStableIdentifier &&
+                                 rightCandidate.HasStableIdentifier &&
+                                 HasExactWorkIdOverlap(leftCandidate, rightCandidate);
+
+                if (hasSourceSpecific)
+                {
+                    reviewPairs.Add(pairKey);
+                    reviewRequired.Add(new DedupReviewCandidate(
+                        leftCandidate.CandidateId,
+                        rightCandidate.CandidateId,
+                        similarity,
+                        fuzzyTitleThreshold));
+                    reviewEvidence.Add(CreateSourceSpecificPairEvidence(leftCandidate, rightCandidate, similarity));
+                    continue;
+                }
+
+                if (hasExactId || similarity < fuzzyTitleThreshold)
                 {
                     continue;
                 }
 
-                if (leftCandidate.HasStableIdentifier &&
-                    rightCandidate.HasStableIdentifier &&
-                    HasExactWorkIdOverlap(leftCandidate, rightCandidate))
-                {
-                    continue;
-                }
-
-                var pairKey = BuildEvidencePairKey(leftCandidate.CandidateId, rightCandidate.CandidateId);
-                if (!reviewPairs.Add(pairKey))
-                {
-                    continue;
-                }
-
+                reviewPairs.Add(pairKey);
                 reviewRequired.Add(new DedupReviewCandidate(
                     leftCandidate.CandidateId,
                     rightCandidate.CandidateId,
                     similarity,
                     fuzzyTitleThreshold));
-
                 reviewEvidence.Add(new DedupEvidence(
                     BuildEvidenceId("fuzzy-title", leftCandidate.CandidateId, rightCandidate.CandidateId),
                     DedupEvidenceKind.FuzzyTitle,
                     leftCandidate.CandidateId,
                     rightCandidate.CandidateId,
-                    BuildEvidenceReason("title-similarity", similarity.ToString("0.####", System.Globalization.CultureInfo.InvariantCulture)),
+                    BuildEvidenceReason(
+                        "title-similarity",
+                        similarity.ToString("0.####", CultureInfo.InvariantCulture)),
                     similarity,
                     PolicyId,
                     PolicyVersion));
@@ -293,6 +309,7 @@ public sealed class DeduplicationService
             work.HasStableIdentifier,
             work.PrimaryWorkId?.ToString(),
             work.WorkIds.Ids.Select(id => id.ToString()).ToArray(),
+            Array.Empty<string>(),
             new DedupSightingRef(
                 "search",
                 traceId,
@@ -319,6 +336,10 @@ public sealed class DeduplicationService
             work.HasStableIdentifier,
             work.PrimaryWorkId?.ToString(),
             work.WorkIds.Ids.Select(id => id.ToString()).ToArray(),
+            record.SourceIdentifiers.Select(identifier => identifier.Trim())
+                .Where(identifier => identifier.Length > 0)
+                .Distinct(StringComparer.Ordinal)
+                .ToArray(),
             new DedupSightingRef(
                 "import",
                 traceId,
@@ -334,6 +355,11 @@ public sealed class DeduplicationService
     private static bool HasExactWorkIdOverlap(DedupCandidateRecord left, DedupCandidateRecord right)
     {
         return left.WorkIds.Any(item => right.WorkIds.Any(other => string.Equals(item, other, StringComparison.Ordinal)));
+    }
+
+    private static bool HasSourceSpecificOverlap(DedupCandidateRecord left, DedupCandidateRecord right)
+    {
+        return left.SourceSpecificIds.Any(item => right.SourceSpecificIds.Any(other => string.Equals(item, other, StringComparison.Ordinal)));
     }
 
     private static DedupRepresentativeResult ElectRepresentative(DedupCandidateRecord[] members)
@@ -356,9 +382,29 @@ public sealed class DeduplicationService
             .ThenBy(item => item.Candidate.CandidateId, StringComparer.Ordinal)
             .First();
 
+        var unionWorkIds = members
+            .SelectMany(member => member.WorkIds)
+            .Distinct(StringComparer.Ordinal)
+            .OrderBy(id => id, StringComparer.Ordinal)
+            .ToArray();
+
+        var representativeTitle = !string.IsNullOrWhiteSpace(elected.Candidate.Title)
+            ? elected.Candidate.Title
+            : members.FirstOrDefault(member => !string.IsNullOrWhiteSpace(member.Title))?.Title ?? string.Empty;
+
+        var representativePrimaryWorkId = !string.IsNullOrWhiteSpace(elected.Candidate.PrimaryWorkId)
+            ? elected.Candidate.PrimaryWorkId
+            : unionWorkIds.FirstOrDefault(value => !string.IsNullOrWhiteSpace(value));
+
         return new DedupRepresentativeResult(
             elected.Candidate.CandidateId,
-            elected.Candidate.Title,
+            representativeTitle,
+            representativePrimaryWorkId,
+            new ReadOnlyCollection<string>(unionWorkIds),
+            members.Select(member => member.Source.SourceSightingId)
+                .Distinct(StringComparer.Ordinal)
+                .OrderBy(item => item, StringComparer.Ordinal)
+                .ToArray(),
             elected.Completeness,
             new ReadOnlyCollection<string>(new[]
             {
@@ -367,7 +413,8 @@ public sealed class DeduplicationService
                 "provider-priority",
                 "primary-id",
                 "title-length",
-                "candidate-id"
+                "candidate-id",
+                "workid-union"
             }));
     }
 
@@ -515,6 +562,38 @@ public sealed class DeduplicationService
             candidate.CandidateId,
             $"source-trace:{candidate.Source.SourceTraceId}|source:{candidate.Source.SourceSightingId}|policy={PolicyId}/{PolicyVersion}",
             0.0,
+            PolicyId,
+            PolicyVersion);
+    }
+
+    private static void AddSourceSpecificEvidence(DedupCandidateRecord candidate, ICollection<DedupEvidence> evidence)
+    {
+        foreach (var sourceSpecificId in candidate.SourceSpecificIds)
+        {
+            evidence.Add(new DedupEvidence(
+                BuildEvidenceId("source-specific-id", candidate.CandidateId, sourceSpecificId),
+                DedupEvidenceKind.SourceSpecificIdentifier,
+                candidate.CandidateId,
+                null,
+                $"source-specific-id:{sourceSpecificId}|policy={PolicyId}/{PolicyVersion}",
+                0.0,
+                PolicyId,
+                PolicyVersion));
+        }
+    }
+
+    private static DedupEvidence CreateSourceSpecificPairEvidence(
+        DedupCandidateRecord leftCandidate,
+        DedupCandidateRecord rightCandidate,
+        double similarity)
+    {
+        return new DedupEvidence(
+            BuildEvidenceId("source-specific", leftCandidate.CandidateId, rightCandidate.CandidateId),
+            DedupEvidenceKind.SourceSpecificIdentifier,
+            leftCandidate.CandidateId,
+            rightCandidate.CandidateId,
+            $"source-specific-id-overlap:{similarity.ToString("0.####", CultureInfo.InvariantCulture)}|policy={PolicyId}/{PolicyVersion}",
+            1.0,
             PolicyId,
             PolicyVersion);
     }

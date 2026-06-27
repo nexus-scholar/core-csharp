@@ -15,8 +15,8 @@
     "no-screening",
     "no-app-projection-authority"
   ],
-  "inputDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
-  "outputDigest": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+  "inputDigest": "sha256:6454bb87d82f906345a72fe122d28d1eba1b6829b24fbac6dd975007e7576a3f",
+  "outputDigest": "sha256:9726e43288c2e511fcce28cf05844db8f3cd9ca53d169af7553bb9977e0c2411",
   "case": {
     "scenario": "no-id-title-only",
     "searchTraces": [

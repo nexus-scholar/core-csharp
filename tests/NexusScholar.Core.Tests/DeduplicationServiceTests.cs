@@ -136,6 +136,10 @@ public sealed class DeduplicationServiceTests
         Assert.AreEqual(firstResultCluster.Representative.CandidateId, secondResultCluster.Representative.CandidateId);
         Assert.IsTrue(firstResultCluster.Members.Any(member => member.CandidateId == firstResultCluster.Representative.CandidateId));
         Assert.AreEqual(first.Work.Title, firstResultCluster.Representative.Title);
+        Assert.AreEqual("doi:10.1000/1", firstResultCluster.Representative.PrimaryWorkId);
+        CollectionAssert.AreEquivalent(
+            new[] { "doi:10.1000/1" },
+            firstResultCluster.Representative.WorkIds.ToArray());
     }
 
     [TestMethod]
@@ -155,6 +159,34 @@ public sealed class DeduplicationServiceTests
         Assert.IsTrue(cluster.Members.Any(member => member.CandidateId.Contains("search-trace-evidence:1:openalex:1:1")));
         Assert.IsTrue(result.UnresolvedCandidates.Any(candidate => candidate.CandidateId.Contains("search-trace-evidence:3:crossref:3:1")));
         Assert.AreEqual(3, cluster.Evidence.Count(entry => entry.Kind == DedupEvidenceKind.SourceSighting || entry.Kind == DedupEvidenceKind.ExactIdentifier));
+    }
+
+    [TestMethod]
+    public void Source_specific_identifiers_are_review_required_and_do_not_auto_cluster()
+    {
+        var import = BuildImportTrace(
+            "import-trace-source-specific",
+            BuildImportRecord(
+                "scopus-csv",
+                "Source specific evidence paper",
+                "s1",
+                identifier: null,
+                sourceIdentifiers: new[] { "scopus:EID:2-s2.0-8500000000" },
+                unresolved: true),
+            BuildImportRecord(
+                "scopus-csv",
+                "Source specific evidence paper",
+                "s2",
+                identifier: null,
+                sourceIdentifiers: new[] { "scopus:EID:2-s2.0-8500000000" },
+                unresolved: true));
+
+        var result = new DeduplicationService().Execute("dedup-result", [], [import]);
+
+        Assert.AreEqual(0, result.Clusters.Count);
+        Assert.AreEqual(2, result.UnresolvedCandidates.Count);
+        Assert.AreEqual(1, result.ReviewRequiredCandidates.Count);
+        Assert.AreEqual(3, result.Evidence.Count(entry => entry.Kind == DedupEvidenceKind.SourceSpecificIdentifier));
     }
 
     [TestMethod]
@@ -320,8 +352,30 @@ public sealed class DeduplicationServiceTests
         string sourceDatabaseOrTool,
         string title,
         string sourceRecordId,
-        WorkId? identifier)
+        WorkId? identifier,
+        IReadOnlyList<string>? sourceIdentifiers = null,
+        bool unresolved = false)
     {
+        if (unresolved)
+        {
+            return new SearchImportRecord(
+                sourceDatabaseOrTool,
+                sourceRecordId,
+                null,
+                sourceIdentifiers ?? Array.Empty<string>(),
+                ScholarlyWork.UnresolvedCandidate(title, $"import:{sourceRecordId}"),
+                Array.Empty<string>(),
+                null,
+                null,
+                null,
+                Array.Empty<string>(),
+                null,
+                null,
+                false,
+                null,
+                Array.Empty<SearchImportParserNotice>());
+        }
+
         var work = identifier is null
             ? ScholarlyWork.UnresolvedCandidate(title, $"import:{sourceRecordId}")
             : ScholarlyWork.Identified(title, WorkIdSet.From(identifier.Value));
@@ -330,7 +384,7 @@ public sealed class DeduplicationServiceTests
             sourceDatabaseOrTool,
             sourceRecordId,
             null,
-            Array.Empty<string>(),
+            sourceIdentifiers ?? Array.Empty<string>(),
             work,
             Array.Empty<string>(),
             null,

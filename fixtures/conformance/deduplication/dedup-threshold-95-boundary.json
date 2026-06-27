@@ -15,8 +15,8 @@
     "no-screening",
     "no-app-projection-authority"
   ],
-  "inputDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
-  "outputDigest": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+  "inputDigest": "sha256:c42a7d9bc291a30c6344a7b2981036725ecef2aa3077ce87b93864f4dc17c0d3",
+  "outputDigest": "sha256:c58f6c0761c1dedfc71c015d62ecd0b7d46d5a8fcffbb78b967550d56518cb3d",
   "case": {
     "scenario": "threshold-95-boundary",
     "searchTraces": [

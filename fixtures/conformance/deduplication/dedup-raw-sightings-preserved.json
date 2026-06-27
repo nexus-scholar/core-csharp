@@ -16,8 +16,8 @@
     "no-screening",
     "no-app-projection-authority"
   ],
-  "inputDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
-  "outputDigest": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+  "inputDigest": "sha256:d6a1c67d7f30d300db349c1411cba36f89dd1977c1e0b18b79645e29257a33fa",
+  "outputDigest": "sha256:1eff6f0b1dc420cb8010693b2023fe8024dd48e212a1347d8fe1dcc3a1b80dd1",
   "case": {
     "scenario": "raw-sightings-preserved",
     "searchTraces": [
@@ -51,7 +51,7 @@
             "sourceDatabaseOrTool": "ris",
             "sourceRecordId": "r1",
             "title": "Imported raw evidence",
-            "workIds": ["pmid:999"],
+            "workIds": ["pubmed:999"],
             "isUnresolved": false
           },
           {
@@ -66,9 +66,9 @@
     ],
     "expected": {
       "rawCandidates": 4,
-      "clusters": 2,
+      "clusters": 1,
       "unresolved": 1,
-      "reviewRequired": 1,
+      "reviewRequired": 0,
       "sourceSearchTraces": 1,
       "sourceImportTraces": 1
     }

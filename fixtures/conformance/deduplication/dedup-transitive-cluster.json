@@ -6,8 +6,8 @@
   "generatorVersion": "gate-9-dedup-v1",
   "sourceRefs": ["docs/adr/0007-shared-scientific-identity.md","docs/adr/0012-deduplication-evidence-and-cluster-contract.md"],
   "comparisonRules": ["no-php-compatibility-claim","no-generated-php-fixture","no-search-screening-claim","no-screening","no-app-projection-authority"],
-  "inputDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
-  "outputDigest": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+  "inputDigest": "sha256:a743382701ad8ab584ebad2153841235cf4c65af34b6309e79b5b84f02a66b8e",
+  "outputDigest": "sha256:efd69666101f4b83c61bebfd07add07769828f2f6855d87230d4eb9d76d54523",
   "case": {
     "scenario": "transitive-cluster",
     "searchTraces": [
@@ -16,7 +16,7 @@
         "sightings": [
           {"providerAlias":"openalex","providerOrder":1,"providerLocalRank":1,"title":"Transitive A","workIds":["doi:10.1000/t1"],"isUnresolved":false},
           {"providerAlias":"crossref","providerOrder":1,"providerLocalRank":2,"title":"Transitive B","workIds":["doi:10.1000/t1"],"isUnresolved":false},
-          {"providerAlias":"ieee","providerOrder":1,"providerLocalRank":3,"title":"Transitive C","workIds":["openalex:x1"],"isUnresolved":false}
+          {"providerAlias":"ieee","providerOrder":1,"providerLocalRank":3,"title":"Transitive C","workIds":["doi:10.1000/t1"],"isUnresolved":false}
         ]
       }
     ],

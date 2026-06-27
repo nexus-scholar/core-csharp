@@ -17,8 +17,8 @@
     "no-screening",
     "no-app-projection-authority"
   ],
-  "inputDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
-  "outputDigest": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+  "inputDigest": "sha256:87b16d69259d25246ed73fb86a04ebec2cc80327203d21a7b5017ff05b44d68d",
+  "outputDigest": "sha256:9692db88f7a13ff54f53343d74c41576c4c346408123a5507d268ae2ff0741bf",
   "case": {
     "scenario": "exact-cross-provider-id-cluster",
     "searchTraces": [
@@ -38,7 +38,7 @@
             "providerOrder": 1,
             "providerLocalRank": 2,
             "title": "Cross provider A",
-            "workIds": ["crossref:10.1000/xyz"],
+            "workIds": ["doi:10.1000/xyz"],
             "isUnresolved": false
           },
           {

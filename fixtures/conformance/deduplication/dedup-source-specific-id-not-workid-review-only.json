@@ -1,0 +1,55 @@
+{
+  "fixtureId": "dedup-source-specific-id-not-workid-review-only",
+  "sourceKind": "local-gate-9-dedup-implementation",
+  "sourceCommit": "local-gate-9-dedup-local",
+  "generatorCommand": "hand-authored local Gate 9 Dedup fixture",
+  "generatorVersion": "gate-9-dedup-v1",
+  "sourceRefs": [
+    "docs/adr/0007-shared-scientific-identity.md",
+    "docs/adr/0012-deduplication-evidence-and-cluster-contract.md"
+  ],
+  "comparisonRules": [
+    "no-php-compatibility-claim",
+    "no-generated-php-fixture",
+    "no-search-screening-claim",
+    "no-screening",
+    "no-app-projection-authority"
+  ],
+  "inputDigest": "sha256:d418c332b2032ac51c9c0c894cd571f942b98557e0e2aa40261e79764d9b78cb",
+  "outputDigest": "sha256:91d3f60845abca001791272d67cf078b1fb9ded6300c958a6cd55f9d2817083e",
+  "case": {
+    "scenario": "source-specific-id-not-workid-review-only",
+    "importTraces": [
+      {
+        "traceId": "import-trace-source-specific",
+        "records": [
+          {
+            "sourceDatabaseOrTool": "scopus-csv",
+            "sourceRecordId": "s1",
+            "title": "Source specific evidence review",
+            "sourceIdentifiers": [
+              "scopus:EID:2-s2.0-8500000000"
+            ],
+            "workIds": [],
+            "isUnresolved": true
+          },
+          {
+            "sourceDatabaseOrTool": "scopus-csv",
+            "sourceRecordId": "s2",
+            "title": "Source specific evidence review",
+            "sourceIdentifiers": [
+              "scopus:EID:2-s2.0-8500000000"
+            ],
+            "workIds": [],
+            "isUnresolved": true
+          }
+        ]
+      }
+    ],
+    "expected": {
+      "clusters": 0,
+      "unresolved": 2,
+      "reviewRequired": 1
+    }
+  }
+}

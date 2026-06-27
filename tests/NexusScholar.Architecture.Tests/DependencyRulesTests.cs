@@ -2,6 +2,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NexusScholar.AI;
 using NexusScholar.Artifacts;
 using NexusScholar.Bundles;
+using NexusScholar.Deduplication;
 using NexusScholar.Extensibility;
 using NexusScholar.Kernel;
 using NexusScholar.Protocol;
@@ -36,6 +37,7 @@ public sealed class DependencyRulesTests
         var assemblies = new[]
         {
             typeof(IClock).Assembly,
+            typeof(DeduplicationService).Assembly,
             typeof(ContentDigest).Assembly,
             typeof(ArtifactDescriptor).Assembly,
             typeof(ProtocolDraft).Assembly,
@@ -190,6 +192,28 @@ public sealed class DependencyRulesTests
             0,
             disallowed.Length,
             $"NexusScholar.Search must depend only on Kernel and Shared inside the domain. Found: {string.Join(", ", disallowed)}");
+    }
+
+    [TestMethod]
+    public void Deduplication_project_depends_only_on_kernel_shared_and_search_inside_nexus_domain()
+    {
+        var dedupAssembly = typeof(DeduplicationService).Assembly;
+        var allowed = new[]
+        {
+            typeof(IClock).Assembly.GetName().Name,
+            typeof(WorkId).Assembly.GetName().Name,
+            typeof(SearchTrace).Assembly.GetName().Name
+        };
+        var disallowed = dedupAssembly.GetReferencedAssemblies()
+            .Select(reference => reference.Name ?? string.Empty)
+            .Where(name => name.StartsWith("NexusScholar.", StringComparison.Ordinal))
+            .Where(name => !allowed.Contains(name, StringComparer.Ordinal))
+            .ToArray();
+
+        Assert.AreEqual(
+            0,
+            disallowed.Length,
+            $"NexusScholar.Deduplication must depend only on Kernel, Shared, and Search inside the domain. Found: {string.Join(", ", disallowed)}");
     }
 
     [TestMethod]

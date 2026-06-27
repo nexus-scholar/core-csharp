@@ -15,8 +15,8 @@
     "no-screening",
     "no-app-projection-authority"
   ],
-  "inputDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
-  "outputDigest": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+  "inputDigest": "sha256:ce6a7b127c8bf548e58db63e5ca3800e3347d9605544be7bd84e6dc0132691a7",
+  "outputDigest": "sha256:7d8f5df0d8ff107e6d5ac4d8d552f21659aaa789a47d326c85c8a6285bc90051",
   "case": {
     "scenario": "fuzzy-title-review-required",
     "searchTraces": [

@@ -17,8 +17,8 @@
     "no-screening",
     "no-app-projection-authority"
   ],
-  "inputDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
-  "outputDigest": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+  "inputDigest": "sha256:473ba7a302cd0260bfada99db2b37111fe1240a9a2d48d8e8ce861f19225e016",
+  "outputDigest": "sha256:12c17c0e5c2f39aa4ddc79ee150aaade8d46afd9d5db3775741565c9132afc1f",
   "case": {
     "scenario": "exact-doi-cluster",
     "searchTraces": [
