@@ -171,7 +171,6 @@ Still not ready:
 ## Explicit Claims Not Made
 
 - no C# Screening implementation
-- no Screening ADR accepted
 - no generated PHP fixtures
 - no PHP compatibility
 - no Screening fixtures generated
