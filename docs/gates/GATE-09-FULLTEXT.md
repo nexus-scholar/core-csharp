@@ -1,12 +1,12 @@
 # Gate 9 Full Text
 
-Status: reconnaissance and planning only. No C# Full Text behavior is implemented by this gate document.
+Status: reconnaissance complete and `ADR 0014` accepted for local Full Text contract. No C# Full Text behavior is implemented by this gate document.
 
 ## Goal
 
-Map pinned PHP Full Text retrieval behavior and CLI/Web full-text behavior before any C# Full Text implementation.
+Map pinned PHP Full Text retrieval behavior and CLI/Web full-text behavior, then define the local Full Text acquisition, artifact, and extraction contract before C# implementation.
 
-Full Text is the missing evidence bridge between Screening and actual paper artifacts. `ADR 0013` recognizes `full_text` Screening and requires digest-bound artifact evidence, but full-text retrieval, artifact storage, provider/network behavior, and app batch workflow remain non-claims.
+Full Text is the missing evidence bridge between Screening and actual paper artifacts. `ADR 0013` recognizes `full_text` Screening and requires digest-bound artifact evidence. `ADR 0014` now defines the local no-network Core contract for acquisition records, artifact evidence, source attempts, extraction records, and app projection boundaries.
 
 ## Sources Read
 
@@ -17,6 +17,7 @@ Full Text is the missing evidence bridge between Screening and actual paper arti
 - `docs/adr/0008-provenance-ledger.md`
 - `docs/adr/0009-portable-bundle-and-artifact-contract.md`
 - `docs/adr/0013-screening-decision-and-conflict-contract.md`
+- `docs/adr/0014-fulltext-acquisition-artifact-and-extraction-contract.md`
 - `docs/port/OPEN-CONFLICTS.md`
 - `docs/port/GOLDEN-FIXTURE-PLAN.md`
 - `docs/recon/apps/**`
@@ -29,11 +30,11 @@ Full Text is the missing evidence bridge between Screening and actual paper arti
 
 Allowed paths:
 
-- `docs/port/php-fulltext-behavior.md`
-- `docs/port/php-fulltext-fixture-plan.md`
+- `docs/adr/0014-fulltext-acquisition-artifact-and-extraction-contract.md`
 - `docs/gates/GATE-09-FULLTEXT.md`
 - `docs/port/OPEN-CONFLICTS.md`
 - `docs/port/GOLDEN-FIXTURE-PLAN.md`
+- `docs/port/php-fulltext-fixture-plan.md` only for fixture consequence clarification
 
 Forbidden paths:
 
@@ -46,6 +47,10 @@ Forbidden paths:
 - `nexus-web` changes
 - generated PHP fixtures
 - C# Full Text implementation
+- live provider/network code
+- PDF extraction implementation
+- OCR implementation
+- persistence/API/UI/cloud behavior
 
 ## Behavior Summary
 
@@ -98,22 +103,23 @@ C# Full Text must use:
 - `raw-artifact-bytes` digest scope from `ADR 0002`;
 - artifact logical references compatible with `ADR 0009`;
 - full-text Screening evidence refs compatible with `ADR 0013`.
+- acquisition, artifact, source-attempt, and extraction records compatible with `ADR 0014`.
 
 Local paths, storage-disk paths, app routes, app row ids, CLI manifests, Web batches/items, and Web audit rows are projections unless a later ADR maps them into Core records.
 
 ## Open Conflicts
 
-`CF-025`: Full Text artifact evidence and raw-byte identity.
+`CF-025`: resolved for the local Full Text contract by `ADR 0014`.
 
-PHP records storage paths and metadata but not raw artifact byte digests. C# must define a digest-bound artifact evidence record before implementation.
+Full Text artifact evidence uses exact accepted bytes plus `raw-artifact-bytes` digest. PHP storage paths, CLI manifest paths, Web routes, app row ids, and local paths remain projections.
 
-`CF-026`: Full Text provider/network and legal-access boundary.
+`CF-026`: narrowed by `ADR 0014`.
 
-PHP includes live legal OA sources and HTTP downloads. C# must decide the local first implementation boundary before adding provider/network behavior. Paywall bypass, shadow-library sources, and scraping remain forbidden.
+The first C# Full Text implementation may proceed only as a no-network slice using user-supplied bytes, deterministic stub artifacts, manual acquisition records, source references, and digest-bound evidence. Live providers, HTTP downloads, provider SDKs, credentials, scraping, paywall bypass, and shadow-library sources remain future work.
 
-`CF-027`: Full Text app projection and Screening handoff boundary.
+`CF-027`: narrowed for Core by `ADR 0014`.
 
-CLI manifests, Web full-text batches/items, `pdf_fetches`, app audit rows, download routes, and source-full-text item links are integration evidence. C# must decide which fields, if any, become Core Full Text records and how they bind to Screening.
+Full-text Screening handoff requires digest-bound artifact or extraction evidence. CLI manifests, Web full-text batches/items, `pdf_fetches`, app audit rows, download routes, and source-full-text item links remain projections unless transformed into `ADR 0014` records.
 
 ## Fixture Plan
 
@@ -125,6 +131,8 @@ Required future fixture groups:
 - source candidate resolution;
 - artifact raw-byte digest and validation;
 - retrieval result and source-attempt audit;
+- acquisition record and no-network source-reference evidence;
+- extraction record and derived-text source binding;
 - full-text Screening handoff;
 - app projection boundary.
 
@@ -140,6 +148,9 @@ Required negative categories:
 - wrong digest scope;
 - invalid PDF/XML/text payload accepted;
 - failed/skipped item sent to full-text Screening as screenable;
+- derived text accepted without source artifact digest binding;
+- extraction output treated as replacement for raw artifact;
+- OCR or PDF parsing implementation claimed by contract fixtures;
 - app batch/item/audit rows treated as Core authority;
 - PHP compatibility claimed without generated fixtures.
 
@@ -153,6 +164,8 @@ Comparators must preserve:
 - digest scope;
 - success/failure/skipped status;
 - source attempt outcome;
+- acquisition kind;
+- extraction source artifact digest when derived evidence is present;
 - error category;
 - metadata that affects legal/source evidence;
 - Screening handoff candidate and artifact evidence refs.
@@ -171,16 +184,29 @@ Comparators must not ignore artifact byte digest, digest scope, artifact type, s
 
 ## Implementation Readiness
 
-Implementation readiness: **no**.
+Implementation readiness: **yes, for local no-network C# Full Text implementation against `ADR 0014`**.
 
-Required before C# implementation:
+Allowed first implementation scope:
 
-- ADR for Full Text artifact evidence and source attempt records;
-- decision on local first implementation: stub artifacts, user-supplied local bytes, or another no-network evidence path;
-- decision on XML/text sidecar canonical versus projection status;
-- decision on Full Text source policy and legal-access boundary;
-- decision on app projection mapping for CLI/Web batches, items, manifests, and audit rows;
-- fixture and comparator plan acceptance.
+- Screening/candidate-set handoff input validation;
+- user-supplied local bytes and deterministic stub artifact bytes;
+- manual acquisition records and no-network source references;
+- raw artifact byte digest validation with `raw-artifact-bytes`;
+- source attempt records;
+- artifact evidence records;
+- derived extraction records or stub/user-supplied extracted text records with source artifact digest binding;
+- full-text Screening evidence references compatible with `ADR 0013`.
+
+Implementation readiness remains **no** for:
+
+- live providers;
+- HTTP downloads;
+- provider SDKs or credentials;
+- actual PDF parsing implementation;
+- OCR;
+- artifact storage implementation;
+- persistence/API/UI/cloud behavior;
+- PHP compatibility and generated PHP fixture comparison.
 
 ## Explicit Claims Not Made
 
@@ -193,6 +219,8 @@ Required before C# implementation:
 - no paywall bypass
 - no shadow-library source
 - no scraping
+- no PDF extraction implementation
+- no OCR implementation
 - no persistence/API/UI/cloud behavior
 - no CLI/Web behavior change
 - no app behavior made authoritative

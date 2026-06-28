@@ -10,9 +10,9 @@ Pinned PHP source:
 
 ## Scope
 
-This plan defines fixture and comparator families for Full Text retrieval, artifact evidence, and Screening handoff. Existing PHP tests, CLI manifests, Web batch rows, and app docs are source evidence only. They are not generated PHP golden fixtures and do not create C# implementation or compatibility claims.
+This plan defines fixture and comparator families for Full Text retrieval, artifact evidence, extraction evidence, and Screening handoff. Existing PHP tests, CLI manifests, Web batch rows, and app docs are source evidence only. They are not generated PHP golden fixtures and do not create C# implementation or compatibility claims.
 
-C# Full Text implementation is not ready until a contract ADR resolves artifact evidence shape, raw-byte digest binding, source policy, provider/network boundaries, and app projection boundaries.
+`ADR 0014` resolves the local contract for artifact evidence shape, raw-byte digest binding, source attempts, extraction records, no-network first implementation scope, provider/network boundaries, and app projection boundaries. Local C# implementation is ready only for the no-network slice described by `ADR 0014`.
 
 ## Fixture Families
 
@@ -56,12 +56,32 @@ Coverage:
 - Shadow-library or bypass sources are rejected.
 - Live provider calls are not required for local C# fixtures; source outputs must be deterministic recorded or stub evidence.
 
+### Acquisition Records And Source Attempts
+
+Planned fixtures:
+
+- `fulltext-acquisition-user-supplied-file.json`
+- `fulltext-acquisition-manual-evidence.json`
+- `fulltext-acquisition-deterministic-stub-artifact.json`
+- `fulltext-acquisition-source-reference-no-download.json`
+- `fulltext-acquisition-source-attempt-order.json`
+- `fulltext-acquisition-missing-actor-negative.json`
+
+Coverage:
+
+- Acquisition records use `nexus.fulltext.acquisition-record` version `1.0.0`.
+- User-supplied and manual acquisition require a local actor.
+- Source references do not authorize live downloads.
+- Source attempts preserve success, failure, skipped, and manual-needed states.
+- Failed attempts remain evidence when a later source succeeds.
+
 ### Artifact Evidence And Digest
 
 Planned fixtures:
 
 - `fulltext-artifact-pdf-raw-byte-digest.json`
 - `fulltext-artifact-xml-raw-byte-digest.json`
+- `fulltext-artifact-text-raw-byte-digest.json`
 - `fulltext-artifact-text-sidecar-derived.json`
 - `fulltext-artifact-path-not-identity.json`
 - `fulltext-artifact-invalid-pdf-signature.json`
@@ -76,6 +96,27 @@ Coverage:
 - PDF validation covers signature and media type.
 - XML and text validation preserve source artifact and derived sidecar boundaries.
 - Oversized artifacts are rejected before storage.
+
+### Extraction Evidence
+
+Planned fixtures:
+
+- `fulltext-extraction-source-artifact-binding.json`
+- `fulltext-extraction-derived-text-digest.json`
+- `fulltext-extraction-page-text-projection.json`
+- `fulltext-extraction-section-projection.json`
+- `fulltext-extraction-partial-warning.json`
+- `fulltext-extraction-failure.json`
+- `fulltext-extraction-replaces-raw-artifact-negative.json`
+- `fulltext-extraction-missing-source-digest-negative.json`
+
+Coverage:
+
+- Extraction records use `nexus.fulltext.extraction-record` version `1.0.0`.
+- Extracted text and section/page projections bind back to the source artifact id and `raw-artifact-bytes` digest.
+- Extraction output is derived evidence and cannot replace raw artifact evidence.
+- Partial extraction and extraction failure remain auditable states.
+- OCR and PDF parsing are not implied by contract fixtures.
 
 ### Retrieval Result And Audit
 
@@ -146,6 +187,9 @@ Required negative cases:
 - storage path used as artifact identity
 - missing raw artifact digest
 - wrong digest scope for artifact bytes
+- extracted text accepted without source artifact digest
+- extraction output treated as replacement for raw artifact
+- OCR behavior claimed by fixture metadata
 - invalid PDF signature
 - invalid PDF content type
 - invalid XML
@@ -188,6 +232,7 @@ Compare:
 - byte size when fixture pins it;
 - validation category;
 - derived sidecar relationship if present.
+- extraction source artifact id and source raw digest when derived evidence is present.
 
 Local file paths may be compared only as projection fields in app-projection fixtures, not as artifact identity.
 
@@ -218,6 +263,21 @@ Compare:
 
 Do not accept app full-text item ids as Core authority unless a later ADR admits them.
 
+### Extraction Comparator
+
+Compare:
+
+- source artifact id;
+- source raw-byte digest;
+- source raw-byte digest scope;
+- extractor id and version when pinned;
+- extraction status;
+- extracted text digest when present;
+- extraction warning/error category;
+- page/section projection markers when present.
+
+Do not compare extracted text as a replacement for raw artifact evidence.
+
 ## Generator Requirements
 
 The PHP fixture generator must:
@@ -233,17 +293,30 @@ The PHP fixture generator must:
 
 ## Implementation Readiness
 
-Implementation readiness: **no**.
+Implementation readiness: **yes, for local no-network C# Full Text implementation against `ADR 0014`**.
 
-Blockers:
+Ready local scope:
 
-- no Full Text artifact evidence ADR exists;
-- no local C# Full Text artifact record shape exists;
-- raw-byte digest binding for Full Text artifacts is not yet frozen beyond the general `ADR 0002`/`ADR 0009` rules;
-- provider/network behavior is not authorized for a local implementation;
-- XML/text sidecar canonical/projection status is undecided;
-- app batch/item/audit projection mapping is undecided;
-- no generated PHP fixtures or comparators exist.
+- user-supplied local bytes;
+- deterministic stub artifacts;
+- manual acquisition records;
+- source-reference metadata with no download;
+- raw artifact byte digest validation;
+- source attempt records;
+- artifact evidence records;
+- extraction records or stub/user-supplied extracted text records that bind to source artifact digest;
+- full-text Screening evidence references.
+
+Implementation readiness remains **no** for:
+
+- live providers;
+- HTTP downloads;
+- provider SDKs or credentials;
+- actual PDF parsing implementation;
+- OCR;
+- persistence/API/UI/cloud behavior;
+- PHP compatibility;
+- generated PHP fixtures or comparators.
 
 ## Explicit Non-Claims
 
@@ -253,6 +326,8 @@ Blockers:
 - no live provider/network behavior
 - no provider SDK, credentials, or API integrations
 - no paywall bypass or shadow-library support
+- no PDF extraction implementation
+- no OCR implementation
 - no persistence schema
 - no API/UI/cloud behavior
 - no CLI/Web behavior changes
