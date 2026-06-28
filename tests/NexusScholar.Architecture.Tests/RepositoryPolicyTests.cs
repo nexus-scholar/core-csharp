@@ -61,7 +61,8 @@ public sealed class RepositoryPolicyTests
 
             foreach (var reference in references)
             {
-                if (ForbiddenPackagePrefixes.Any(prefix => reference.Include.StartsWith(prefix, StringComparison.Ordinal)))
+                if (ForbiddenPackagePrefixes.Any(prefix => reference.Include.StartsWith(prefix, StringComparison.Ordinal)) &&
+                    !IsAllowedRendererPackageReference(root, reference.File, reference.Include))
                 {
                     violations.Add($"{MakeRelative(root, reference.File)} -> {reference.Include}");
                 }
@@ -149,6 +150,21 @@ public sealed class RepositoryPolicyTests
     {
         return path.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase)
             || path.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool IsAllowedRendererPackageReference(string root, string file, string include)
+    {
+        if (!include.StartsWith("Avalonia", StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        var relative = NormalizeRelativePath(MakeRelative(root, file));
+        return string.Equals(relative, "Directory.Packages.props", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(
+                relative,
+                "src/NexusScholar.Avalonia.Blocks/NexusScholar.Avalonia.Blocks.csproj",
+                StringComparison.OrdinalIgnoreCase);
     }
 
     private static string MakeRelative(string root, string path)

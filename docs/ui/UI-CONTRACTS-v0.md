@@ -86,7 +86,7 @@ The samples remain non-authoritative:
 
 ## Current Limitations
 
-- No renderer exists yet.
+- Phase 3 adds an Avalonia renderer-only prototype in `NexusScholar.Avalonia.Blocks`.
 - No app service composes block plans from Core state.
 - No Core commands are invoked from block actions.
 - No persistence or app state boundary is implemented.
@@ -94,4 +94,4 @@ The samples remain non-authoritative:
 - No PHP compatibility claim is made.
 - Sample payloads are simple JSON strings, not typed payload records.
 
-Phase 3 can use these samples to build an isolated renderer prototype without changing Core.
+`NexusScholar.Avalonia.Blocks` consumes sample plans through `NexusScholar.UiContracts`, projects them into view models, and renders them as Avalonia controls. It has no Core domain dependency. Its action buttons are display/callback placeholders only, not Core command execution.

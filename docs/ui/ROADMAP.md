@@ -48,11 +48,26 @@ No Screening sample was added in Phase 2 because Screening Core is still outside
 
 ## Phase 3: Avalonia Block Renderer Prototype
 
-Create an isolated Avalonia renderer package after Phase 2 proves sample plans:
+Status: implemented as a renderer-only prototype.
+
+Created package:
 
 - `NexusScholar.Avalonia.Blocks`
 
-Renderer actions must route through application services later. They must not call Core mutation directly.
+Created tests:
+
+- `tests/NexusScholar.Avalonia.Blocks.Tests`
+
+Scope:
+
+- deserialize sample `WorkspacePlan` JSON through `NexusScholar.UiContracts`;
+- project plans into renderer view models;
+- render workspace plans, blocks, evidence refs, validation refs, action placeholders, human-confirmation flags, destructive-action flags, and payload JSON;
+- preserve block order;
+- keep action buttons as no-op or caller-supplied callbacks only;
+- keep Core behavior, scientific records, app services, AI execution, persistence, CLI, web, and mobile renderers out of scope.
+
+No desktop shell was added. Renderer actions must route through application services later. They must not call Core mutation directly.
 
 ## Later Phases
 
