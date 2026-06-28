@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Protocol Module - Nexus Scholar Core</title>
+  <link rel="stylesheet" href="../../../assets/css/site.css">
+</head>
+<body>
+  <header class="site-header">
+    <nav class="nav" aria-label="Primary navigation">
+      <a class="brand" href="../../../"><span class="brand-mark">NS</span><span>Nexus Scholar Core</span></a>
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-links">Menu</button>
+      <div class="nav-links" id="nav-links">
+        <a href="../../../developers/" aria-current="page">Developers</a>
+        <a href="../../../tutorials/">Tutorials</a>
+        <a href="../../../blog/">Blog</a>
+        <a href="../../../about/">About</a>
+        <a href="https://github.com/nexus-scholar/core-csharp">GitHub</a>
+      </div>
+    </nav>
+  </header>
+  <main class="page">
+    <p class="eyebrow">Module documentation</p>
+    <h1>Protocol</h1>
+    <p class="lede">Scientific protocol lifecycle records, approvals, waivers, amendments, and immutable protocol content for review and workflow execution.</p>
+
+    <section class="content-section">
+      <h2>Scope and ownership</h2>
+      <p>Protocol owns in-kernel scientific records for study plan intent, required decision declarations, draft edits, and immutable approved versions. It depends only on <code>NexusScholar.Kernel</code> and does not define storage, API schema, CLI behavior, or UI concerns.</p>
+      <ul class="check-list">
+        <li>Draft lifecycle: <code>draft</code> → <code>ready_for_review</code> → <code>approved</code> and <code>superseded</code>/<code>withdrawn</code>.</li>
+        <li>Decision integrity: no decision overwrite once recorded; duplicate keys are rejected by explicit error category.</li>
+        <li>Approval and approval policy enforcement for human-only authority and digest binding.</li>
+        <li>Canonical digest contract for protocol content and approval records using Kernel scopes.</li>
+      </ul>
+    </section>
+
+    <section class="content-section">
+      <h2>Gate and ADR status</h2>
+      <p><a href="https://github.com/nexus-scholar/core-csharp/blob/main/docs/gates/GATE-03.md">GATE-03</a> is accepted for local protocol lifecycle behavior. This is bounded by <a href="https://github.com/nexus-scholar/core-csharp/blob/main/docs/adr/0003-protocol-record-contract.md">ADR 0003</a> and <a href="https://github.com/nexus-scholar/core-csharp/blob/main/docs/adr/0004-protocol-approval-semantics.md">ADR 0004</a>.</p>
+      <ul class="check-list">
+        <li>Protocol content digest uses <code>DigestScope.ProtocolContent</code> with schema <code>nexus.protocol-content</code>.</li>
+        <li>Approval record digest uses <code>DigestScope.ApprovalRecord</code> with schema <code>nexus.protocol-approval-record</code>.</li>
+        <li>Approval is restricted to human actors; stale content binds, duplicate approvals, blocking unresolved decisions, and dual-policy failures are rejected with stable categories.</li>
+        <li>Evidence bundle: <a href="https://github.com/nexus-scholar/core-csharp/blob/main/docs/gates/GATE-03-EVIDENCE.md">GATE-03-EVIDENCE</a>.</li>
+      </ul>
+    </section>
+
+    <section class="content-section">
+      <h2>Source modules</h2>
+      <ul class="check-list">
+        <li><a href="https://github.com/nexus-scholar/core-csharp/blob/main/src/NexusScholar.Protocol/NexusScholar.Protocol.csproj">NexusScholar.Protocol.csproj</a></li>
+        <li><a href="https://github.com/nexus-scholar/core-csharp/blob/main/src/NexusScholar.Protocol/ProtocolDraft.cs">ProtocolDraft.cs</a></li>
+        <li><a href="https://github.com/nexus-scholar/core-csharp/blob/main/src/NexusScholar.Protocol/ProtocolModels.cs">ProtocolModels.cs</a></li>
+      </ul>
+    </section>
+
+    <section class="content-section">
+      <h2>Fixtures and tests</h2>
+      <ul class="check-list">
+        <li>Conformance fixtures: <a href="https://github.com/nexus-scholar/core-csharp/blob/main/fixtures/conformance/protocol/">fixtures/conformance/protocol</a>.</li>
+        <li>Core tests: <a href="https://github.com/nexus-scholar/core-csharp/blob/main/tests/NexusScholar.Core.Tests/ProtocolTests.cs">ProtocolTests.cs</a>.</li>
+        <li>Cross-module compiler tests using approved protocol invariants: <a href="https://github.com/nexus-scholar/core-csharp/blob/main/tests/NexusScholar.Core.Tests/WorkflowCompilerTests.cs">WorkflowCompilerTests.cs</a>.</li>
+        <li>Fixture harness assertions: <a href="https://github.com/nexus-scholar/core-csharp/blob/main/tests/NexusScholar.Conformance.Tests/ProtocolFixtureTests.cs">ProtocolFixtureTests.cs</a>.</li>
+        <li>Protocol scope dependencies and inward-boundary checks include this module in <a href="https://github.com/nexus-scholar/core-csharp/blob/main/tests/NexusScholar.Architecture.Tests/DependencyRulesTests.cs">DependencyRulesTests.cs</a>.</li>
+      </ul>
+    </section>
+
+    <section class="content-section">
+      <h2>Related modules (consumers and boundaries)</h2>
+      <ul class="check-list">
+        <li><a href="https://github.com/nexus-scholar/core-csharp/tree/main/src/NexusScholar.Workflow/">Workflow</a>: compiles approved protocol versions and validates waivers/invalidation plan bindings.</li>
+        <li><a href="https://github.com/nexus-scholar/core-csharp/tree/main/src/NexusScholar.Bundles/">Bundles</a>: binds protocol versions into review manifests.</li>
+        <li><a href="https://github.com/nexus-scholar/core-csharp/tree/main/src/NexusScholar.Provenance/">Provenance</a>: records protocol binding metadata from protocol versions.</li>
+        <li><a href="https://github.com/nexus-scholar/core-csharp/tree/main/src/NexusScholar.Cli/">CLI</a>: consumes protocol records in sample entry paths.</li>
+        <li><a href="https://github.com/nexus-scholar/core-csharp/tree/main/src/NexusScholar.AI/">AI</a>: no direct dependency from Protocol; approvals remain local scientific authority rules.</li>
+      </ul>
+    </section>
+
+    <section class="content-section">
+      <h2>Current issues to track</h2>
+      <ul class="check-list">
+        <li><strong>Draft overload convenience surface includes hard-coded legacy defaults.</strong> <code>ProtocolDraft.Create(ids, title, requiredDecisionKeys)</code> still emits fixed placeholders (legacy template id and project id), so it should remain sample/utility only.</li>
+        <li><strong>Draft identity semantics are confusing.</strong> <code>ProtocolDraft.Id</code> mirrors <code>ProtocolId</code> rather than exposing a single stable draft identifier; callers should use <code>DraftId</code> explicitly for draft-level identity.</li>
+        <li><strong>Withdrawal workflow remains scoped.</strong> Current behavior validates human-only authority and staleness paths but does not expose a dedicated high-level withdrawal action surface in this contract.</li>
+      </ul>
+    </section>
+
+    <section class="content-section">
+      <h2>Next module</h2>
+      <p>After Protocol, continue with <a href="../workflow/">Workflow</a> and keep the same gate-first inspection pattern: gate status, source files, consumers, tests, and issues.</p>
+    </section>
+  </main>
+  <footer class="site-footer"><p>Protocol module documentation for Module 2.</p></footer>
+  <script src="../../../assets/js/site.js"></script>
+</body>
+</html>
