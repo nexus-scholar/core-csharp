@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kernel Module - Nexus Scholar Core</title>
+  <link rel="stylesheet" href="../../../assets/css/site.css">
+</head>
+<body>
+  <header class="site-header">
+    <nav class="nav" aria-label="Primary navigation">
+      <a class="brand" href="../../../"><span class="brand-mark">NS</span><span>Nexus Scholar Core</span></a>
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-links">Menu</button>
+      <div class="nav-links" id="nav-links">
+        <a href="../../../developers/" aria-current="page">Developers</a>
+        <a href="../../../tutorials/">Tutorials</a>
+        <a href="../../../blog/">Blog</a>
+        <a href="../../../about/">About</a>
+        <a href="https://github.com/nexus-scholar/core-csharp">GitHub</a>
+      </div>
+    </nav>
+  </header>
+  <main class="page">
+    <p class="eyebrow">Module documentation</p>
+    <h1>Kernel</h1>
+    <p class="lede">Deterministic primitives and canonicalization contracts that every higher-level module uses for authoritative identity and reproducibility.</p>
+
+    <section class="content-section">
+      <h2>Scope and ownership</h2>
+      <p>Kernel defines canonical IDs, value objects, canonical JSON representation rules, UTC timestamp format, and digest-envelope behavior. It is a domain-only module and must remain dependency-free toward applications and infrastructure.</p>
+      <ul class="check-list">
+        <li>Core primitives: <code>IClock</code>, <code>EntityId</code>, <code>Guard</code>, digest vocabulary, canonical timestamp policy.</li>
+        <li>Canonical contracts: <code>CanonicalJson*</code> model + serializer, normalized Unicode handling, and array/object shape conventions.</li>
+        <li>Digest contracts: <code>ContentDigest</code>, <code>DigestEnvelope</code>, <code>DigestScope</code>, <code>DigestAlgorithm</code>.</li>
+      </ul>
+    </section>
+
+    <section class="content-section">
+      <h2>Gate and ADR status</h2>
+      <p><a href="https://github.com/nexus-scholar/core-csharp/blob/main/docs/gates/GATE-02.md">Gate 2</a> is the currently accepted authority scope for deterministic kernel behavior. Source decision is <a href="https://github.com/nexus-scholar/core-csharp/blob/main/docs/adr/0002-canonical-json-and-digests.md">ADR 0002</a>.</p>
+      <ul class="check-list">
+        <li>Canonical digest format: <code>sha256:&lt;64 lowercase hex&gt;</code>.</li>
+        <li>Canonical JSON profile: <code>rfc8785-jcs</code> with deterministic property ordering.</li>
+        <li>Canonical timestamp format: <code>yyyy-MM-ddTHH:mm:ss.fffffffZ</code>.</li>
+        <li>Digest scope vocabulary includes raw-artifact, canonical-json, protocol-content, approval-record, provenance-event, bundle-manifest, and ndjson-stream.</li>
+        <li>Digest envelope validator excludes draft/local defaults and requires schema + version fields.</li>
+      </ul>
+      <p>Evidence file set: <a href="https://github.com/nexus-scholar/core-csharp/blob/main/docs/gates/GATE-02-EVIDENCE.md">GATE-02-EVIDENCE</a>.</p>
+    </section>
+
+    <section class="content-section">
+      <h2>Source modules</h2>
+      <ul class="check-list">
+        <li><a href="https://github.com/nexus-scholar/core-csharp/blob/main/src/NexusScholar.Kernel/KernelPrimitives.cs">KernelPrimitives.cs</a></li>
+        <li><a href="https://github.com/nexus-scholar/core-csharp/blob/main/src/NexusScholar.Kernel/DigestTypes.cs">DigestTypes.cs</a></li>
+        <li><a href="https://github.com/nexus-scholar/core-csharp/blob/main/src/NexusScholar.Kernel/ContentDigest.cs">ContentDigest.cs</a></li>
+        <li><a href="https://github.com/nexus-scholar/core-csharp/blob/main/src/NexusScholar.Kernel/DigestEnvelope.cs">DigestEnvelope.cs</a></li>
+        <li><a href="https://github.com/nexus-scholar/core-csharp/blob/main/src/NexusScholar.Kernel/CanonicalJson.cs">CanonicalJson.cs</a></li>
+        <li><a href="https://github.com/nexus-scholar/core-csharp/blob/main/src/NexusScholar.Kernel/CanonicalTimestamp.cs">CanonicalTimestamp.cs</a></li>
+        <li><a href="https://github.com/nexus-scholar/core-csharp/blob/main/src/NexusScholar.Kernel/NdjsonCanonicalizer.cs">NdjsonCanonicalizer.cs</a></li>
+      </ul>
+    </section>
+
+    <section class="content-section">
+      <h2>Fixtures and tests</h2>
+      <ul class="check-list">
+        <li>Conformance tests: <a href="https://github.com/nexus-scholar/core-csharp/blob/main/tests/NexusScholar.Core.Tests/DeterministicKernelTests.cs">DeterministicKernelTests.cs</a>, <a href="https://github.com/nexus-scholar/core-csharp/blob/main/tests/NexusScholar.Conformance.Tests/KernelFixtureTests.cs">KernelFixtureTests.cs</a>.</li>
+        <li>Fixtures: all files in <a href="https://github.com/nexus-scholar/core-csharp/blob/main/fixtures/conformance/kernel/">fixtures/conformance/kernel/</a> with generator metadata and fixture IDs.</li>
+        <li>Conformance fixture project link: <a href="https://github.com/nexus-scholar/core-csharp/blob/main/tests/NexusScholar.Conformance.Tests/NexusScholar.Conformance.Tests.csproj">Conformance test project</a>.</li>
+      </ul>
+    </section>
+
+    <section class="content-section">
+      <h2>Related modules (direct dependency consumers)</h2>
+      <ul class="check-list">
+        <li><a href="https://github.com/nexus-scholar/core-csharp/tree/main/src/NexusScholar.Protocol/">Protocol</a> (digest material, digest envelopes, protocol IDs)</li>
+        <li><a href="https://github.com/nexus-scholar/core-csharp/tree/main/src/NexusScholar.Workflow/">Workflow</a> (canonical content serialization)</li>
+        <li><a href="https://github.com/nexus-scholar/core-csharp/tree/main/src/NexusScholar.Provenance/">Provenance</a> (canonical event hashes)</li>
+        <li><a href="https://github.com/nexus-scholar/core-csharp/tree/main/src/NexusScholar.Shared/">Shared</a> (shared identifiers)</li>
+        <li><a href="https://github.com/nexus-scholar/core-csharp/tree/main/src/NexusScholar.Search/">Search</a> (trace and canonical payloads)</li>
+        <li><a href="https://github.com/nexus-scholar/core-csharp/tree/main/src/NexusScholar.Screening/">Screening</a> (trace, decision material, review evidence)</li>
+        <li><a href="https://github.com/nexus-scholar/core-csharp/tree/main/src/NexusScholar.Deduplication/">Deduplication</a> (cluster and content-id identity material)</li>
+        <li><a href="https://github.com/nexus-scholar/core-csharp/tree/main/src/NexusScholar.Bundles/">Bundles</a> (manifest and checksum shaping)</li>
+        <li><a href="https://github.com/nexus-scholar/core-csharp/tree/main/src/NexusScholar.AI/">AI</a> (proposal payload hashes and record fields)</li>
+        <li><a href="https://github.com/nexus-scholar/core-csharp/tree/main/src/NexusScholar.Artifacts/">Artifacts</a> (artifact descriptors)</li>
+        <li><a href="https://github.com/nexus-scholar/core-csharp/tree/main/src/NexusScholar.Cli/">CLI</a> (verification behavior and output)</li>
+        <li><a href="https://github.com/nexus-scholar/core-csharp/tree/main/src/NexusScholar.Extensibility/">Extensibility</a> (plugin contract identity fields)</li>
+      </ul>
+    </section>
+
+    <section class="content-section">
+      <h2>Current issues to track</h2>
+      <ul class="check-list">
+        <li><strong>Protocol still carries legacy provisional digest material in parts of its implementation.</strong> The local gate intentionally limits scope to kernel determinism and does not upgrade protocol compatibility.</li>
+        <li><strong>Non-integer very large numeric literals.</strong> <code>CanonicalJson.ParseNumber</code> accepts long integers and decimal/double via explicit parse paths; extreme numeric inputs should be validated at schema boundaries if precision assumptions matter.</li>
+      </ul>
+    </section>
+
+    <section class="content-section">
+      <h2>Suggested next step</h2>
+      <p>After inspection, move to Module 2 (<a href="../protocol/">Protocol</a>) and repeat the same format: gate status, files, related modules, and local risks.</p>
+    </section>
+  </main>
+  <footer class="site-footer"><p>Kernel module documentation scaffold for Module 1.</p></footer>
+  <script src="../../../assets/js/site.js"></script>
+</body>
+</html>
