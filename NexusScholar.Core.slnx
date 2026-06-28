@@ -12,11 +12,13 @@
     <Project Path="src/NexusScholar.Bundles/NexusScholar.Bundles.csproj" />
     <Project Path="src/NexusScholar.Extensibility/NexusScholar.Extensibility.csproj" />
     <Project Path="src/NexusScholar.AI/NexusScholar.AI.csproj" />
+    <Project Path="src/NexusScholar.UiContracts/NexusScholar.UiContracts.csproj" />
     <Project Path="src/NexusScholar.Cli/NexusScholar.Cli.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/NexusScholar.Core.Tests/NexusScholar.Core.Tests.csproj" />
     <Project Path="tests/NexusScholar.Architecture.Tests/NexusScholar.Architecture.Tests.csproj" />
     <Project Path="tests/NexusScholar.Conformance.Tests/NexusScholar.Conformance.Tests.csproj" />
+    <Project Path="tests/NexusScholar.UiContracts.Tests/NexusScholar.UiContracts.Tests.csproj" />
   </Folder>
 </Solution>

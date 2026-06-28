@@ -1,0 +1,48 @@
+{
+  "workspaceId": "sample.workspace.bundle-verification",
+  "title": "Bundle verification sample",
+  "mode": "Audit",
+  "description": "Illustrative WorkspacePlan only. This is not Core authority, not an ADR, not a scientific fixture, and not a PHP compatibility fixture.",
+  "contextRefs": [
+    {
+      "kind": "core-record",
+      "value": "sample-bundle-manifest-001",
+      "label": "Sample bundle manifest",
+      "digest": "sha256:sample-bundle-manifest-digest",
+      "scope": "canonical-json-record"
+    }
+  ],
+  "blocks": [
+    {
+      "blockId": "block.bundle.verification.001",
+      "kind": "nexus.block.bundle.verification-summary",
+      "title": "Bundle verification summary",
+      "mode": "Audit",
+      "severity": "Success",
+      "sourceKind": "Sample",
+      "summary": "Sample renderer-neutral block for a bundle verification summary.",
+      "payloadJson": "{\"sample\":true,\"nonAuthoritative\":true,\"verified\":true,\"manifestId\":\"sample-bundle-manifest-001\",\"artifactCount\":5}",
+      "evidenceRefs": [
+        {
+          "kind": "core-record",
+          "value": "sample-bundle-manifest-001",
+          "label": "Sample bundle manifest",
+          "digest": "sha256:sample-bundle-manifest-digest",
+          "scope": "canonical-json-record"
+        }
+      ],
+      "validationRefs": [],
+      "actions": [
+        {
+          "actionId": "export-bundle",
+          "kind": "ExportBundle",
+          "label": "Export bundle",
+          "requiresHumanConfirmation": true,
+          "isDestructive": false,
+          "commandKind": "nexus.command.bundle.export",
+          "targetRef": "sample-bundle-manifest-001"
+        }
+      ]
+    }
+  ]
+}

@@ -10,6 +10,7 @@ using NexusScholar.Provenance;
 using NexusScholar.Screening;
 using NexusScholar.Search;
 using NexusScholar.Shared;
+using NexusScholar.UiContracts;
 using NexusScholar.Workflow;
 
 namespace NexusScholar.Architecture.Tests;
@@ -49,7 +50,8 @@ public sealed class DependencyRulesTests
             typeof(ScreeningService).Assembly,
             typeof(ReviewBundleManifest).Assembly,
             typeof(ExtensionManifest).Assembly,
-            typeof(AiTaskPolicy).Assembly
+            typeof(AiTaskPolicy).Assembly,
+            typeof(WorkspacePlan).Assembly
         }.Distinct();
 
         foreach (var assembly in assemblies)
@@ -238,6 +240,36 @@ public sealed class DependencyRulesTests
             0,
             disallowed.Length,
             $"NexusScholar.Screening must depend only on Kernel and Deduplication inside the domain. Found: {string.Join(", ", disallowed)}");
+    }
+
+    [TestMethod]
+    public void Core_domain_projects_do_not_reference_ui_contracts()
+    {
+        var uiContractsAssemblyName = typeof(WorkspacePlan).Assembly.GetName().Name;
+        var coreAssemblies = new[]
+        {
+            typeof(IClock).Assembly,
+            typeof(DeduplicationService).Assembly,
+            typeof(ContentDigest).Assembly,
+            typeof(ArtifactDescriptor).Assembly,
+            typeof(ProtocolDraft).Assembly,
+            typeof(WorkflowDefinition).Assembly,
+            typeof(ResearchEvent).Assembly,
+            typeof(WorkId).Assembly,
+            typeof(SearchTrace).Assembly,
+            typeof(ScreeningService).Assembly,
+            typeof(ReviewBundleManifest).Assembly,
+            typeof(ExtensionManifest).Assembly,
+            typeof(AiTaskPolicy).Assembly
+        }.Distinct();
+
+        foreach (var assembly in coreAssemblies)
+        {
+            var referencesUiContracts = assembly.GetReferencedAssemblies()
+                .Any(reference => string.Equals(reference.Name, uiContractsAssemblyName, StringComparison.Ordinal));
+
+            Assert.IsFalse(referencesUiContracts, $"{assembly.GetName().Name} must not reference NexusScholar.UiContracts.");
+        }
     }
 
     [TestMethod]

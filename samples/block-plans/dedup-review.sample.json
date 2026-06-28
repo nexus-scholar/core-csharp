@@ -1,0 +1,145 @@
+{
+  "workspaceId": "sample.workspace.dedup-review",
+  "title": "Dedup review sample",
+  "mode": "Review",
+  "description": "Illustrative WorkspacePlan only. This is not Core authority, not an ADR, not a scientific fixture, and not a PHP compatibility fixture.",
+  "contextRefs": [
+    {
+      "kind": "deduplication-result",
+      "value": "sample-dedup-result-001",
+      "label": "Sample deduplication result",
+      "digest": "sha256:sample-dedup-result-digest",
+      "scope": "canonical-json-record"
+    }
+  ],
+  "blocks": [
+    {
+      "blockId": "block.dedup.cluster.001",
+      "kind": "nexus.block.dedup.candidate-cluster",
+      "title": "Candidate cluster requires review",
+      "mode": "Review",
+      "severity": "ReviewRequired",
+      "sourceKind": "Sample",
+      "summary": "Title-only duplicate evidence is enough to ask for review, but not enough to merge automatically.",
+      "payloadJson": "{\"sample\":true,\"nonAuthoritative\":true,\"clusterId\":\"sample-candidate-cluster-001\",\"reviewRequired\":true,\"reason\":\"fuzzy-title-only\"}",
+      "evidenceRefs": [
+        {
+          "kind": "deduplication-result",
+          "value": "sample-dedup-result-001",
+          "label": "Sample deduplication result",
+          "digest": "sha256:sample-dedup-result-digest",
+          "scope": "canonical-json-record"
+        }
+      ],
+      "validationRefs": [
+        {
+          "code": "review-required",
+          "severity": "ReviewRequired",
+          "message": "Candidate evidence is title similarity only.",
+          "target": "sample-candidate-cluster-001"
+        }
+      ],
+      "actions": [
+        {
+          "actionId": "show-comparison",
+          "kind": "ShowDetails",
+          "label": "Show comparison",
+          "requiresHumanConfirmation": false,
+          "isDestructive": false,
+          "commandKind": "nexus.command.show-details",
+          "targetRef": "sample-candidate-cluster-001"
+        }
+      ]
+    },
+    {
+      "blockId": "block.dedup.comparison.001",
+      "kind": "nexus.block.dedup.record-comparison",
+      "title": "Compare candidate records",
+      "mode": "Audit",
+      "severity": "Info",
+      "sourceKind": "Sample",
+      "summary": "Renderer-neutral comparison payload for two sample candidate members.",
+      "payloadJson": "{\"sample\":true,\"nonAuthoritative\":true,\"records\":[{\"recordId\":\"candidate-member-001\",\"title\":\"Example title for a search result\",\"sourceRefs\":[\"search-sighting-001\"]},{\"recordId\":\"candidate-member-002\",\"title\":\"Example title for search result\",\"sourceRefs\":[\"import-record-007\"]}],\"titleSimilarity\":0.97,\"threshold\":0.95}",
+      "evidenceRefs": [
+        {
+          "kind": "search-sighting",
+          "value": "search-sighting-001",
+          "label": "Sample search sighting"
+        },
+        {
+          "kind": "import-record",
+          "value": "import-record-007",
+          "label": "Sample import record"
+        }
+      ],
+      "validationRefs": [],
+      "actions": [
+        {
+          "actionId": "open-candidate-evidence",
+          "kind": "OpenEvidence",
+          "label": "Open candidate evidence",
+          "requiresHumanConfirmation": false,
+          "isDestructive": false,
+          "commandKind": "nexus.command.open-evidence",
+          "targetRef": "sample-candidate-cluster-001"
+        }
+      ]
+    },
+    {
+      "blockId": "block.dedup.merge-gate.001",
+      "kind": "nexus.block.human-gate.merge-decision",
+      "title": "Human merge decision required",
+      "mode": "Review",
+      "severity": "Blocking",
+      "sourceKind": "Sample",
+      "summary": "A human decision is required before a review-required candidate can be merged, rejected, or left unresolved.",
+      "payloadJson": "{\"sample\":true,\"nonAuthoritative\":true,\"requiresHumanActor\":true,\"availableDecisions\":[\"accept-merge\",\"reject-merge\",\"mark-unresolved\"]}",
+      "evidenceRefs": [
+        {
+          "kind": "deduplication-result",
+          "value": "sample-dedup-result-001",
+          "label": "Sample deduplication result",
+          "digest": "sha256:sample-dedup-result-digest",
+          "scope": "canonical-json-record"
+        }
+      ],
+      "validationRefs": [
+        {
+          "code": "human-decision-required",
+          "severity": "Blocking",
+          "message": "The sample gate cannot be resolved automatically.",
+          "target": "sample-candidate-cluster-001"
+        }
+      ],
+      "actions": [
+        {
+          "actionId": "accept-merge",
+          "kind": "AcceptMerge",
+          "label": "Accept merge",
+          "requiresHumanConfirmation": true,
+          "isDestructive": false,
+          "commandKind": "nexus.command.dedup.accept-merge",
+          "targetRef": "sample-candidate-cluster-001"
+        },
+        {
+          "actionId": "reject-merge",
+          "kind": "RejectMerge",
+          "label": "Reject merge",
+          "requiresHumanConfirmation": true,
+          "isDestructive": false,
+          "commandKind": "nexus.command.dedup.reject-merge",
+          "targetRef": "sample-candidate-cluster-001"
+        },
+        {
+          "actionId": "mark-unresolved",
+          "kind": "MarkUnresolved",
+          "label": "Mark unresolved",
+          "requiresHumanConfirmation": true,
+          "isDestructive": false,
+          "commandKind": "nexus.command.dedup.mark-unresolved",
+          "targetRef": "sample-candidate-cluster-001"
+        }
+      ]
+    }
+  ]
+}
