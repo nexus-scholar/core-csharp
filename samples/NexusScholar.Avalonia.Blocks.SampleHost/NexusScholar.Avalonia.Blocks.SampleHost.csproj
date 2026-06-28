@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <AvaloniaUseCompiledBindingsByDefault>false</AvaloniaUseCompiledBindingsByDefault>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Avalonia" />
+    <PackageReference Include="Avalonia.Desktop" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../src/NexusScholar.Avalonia.Blocks/NexusScholar.Avalonia.Blocks.csproj" />
+    <ProjectReference Include="../../src/NexusScholar.UiContracts/NexusScholar.UiContracts.csproj" />
+  </ItemGroup>
+</Project>

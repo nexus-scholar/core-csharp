@@ -16,11 +16,15 @@
     <Project Path="src/NexusScholar.Avalonia.Blocks/NexusScholar.Avalonia.Blocks.csproj" />
     <Project Path="src/NexusScholar.Cli/NexusScholar.Cli.csproj" />
   </Folder>
+  <Folder Name="/samples/">
+    <Project Path="samples/NexusScholar.Avalonia.Blocks.SampleHost/NexusScholar.Avalonia.Blocks.SampleHost.csproj" />
+  </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/NexusScholar.Core.Tests/NexusScholar.Core.Tests.csproj" />
     <Project Path="tests/NexusScholar.Architecture.Tests/NexusScholar.Architecture.Tests.csproj" />
     <Project Path="tests/NexusScholar.Conformance.Tests/NexusScholar.Conformance.Tests.csproj" />
     <Project Path="tests/NexusScholar.UiContracts.Tests/NexusScholar.UiContracts.Tests.csproj" />
     <Project Path="tests/NexusScholar.Avalonia.Blocks.Tests/NexusScholar.Avalonia.Blocks.Tests.csproj" />
+    <Project Path="tests/NexusScholar.Avalonia.Blocks.SampleHost.Tests/NexusScholar.Avalonia.Blocks.SampleHost.Tests.csproj" />
   </Folder>
 </Solution>

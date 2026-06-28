@@ -55,13 +55,13 @@ public sealed class WorkspacePlanView : UserControl
         }
     }
 
-    internal static TextBlock Text(string text, double size = 12, FontWeight weight = default)
+    internal static TextBlock Text(string text, double size = 12, FontWeight? weight = null)
     {
         return new TextBlock
         {
             Text = text,
             FontSize = size,
-            FontWeight = weight,
+            FontWeight = weight ?? FontWeight.Normal,
             TextWrapping = TextWrapping.Wrap
         };
     }

@@ -7,6 +7,7 @@
     <PackageReference Include="MSTest" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="../../samples/NexusScholar.Avalonia.Blocks.SampleHost/NexusScholar.Avalonia.Blocks.SampleHost.csproj" />
     <ProjectReference Include="../../src/NexusScholar.Avalonia.Blocks/NexusScholar.Avalonia.Blocks.csproj" />
     <ProjectReference Include="../../src/NexusScholar.Kernel/NexusScholar.Kernel.csproj" />
     <ProjectReference Include="../../src/NexusScholar.Artifacts/NexusScholar.Artifacts.csproj" />

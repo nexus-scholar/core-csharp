@@ -164,6 +164,10 @@ public sealed class RepositoryPolicyTests
             || string.Equals(
                 relative,
                 "src/NexusScholar.Avalonia.Blocks/NexusScholar.Avalonia.Blocks.csproj",
+                StringComparison.OrdinalIgnoreCase)
+            || string.Equals(
+                relative,
+                "samples/NexusScholar.Avalonia.Blocks.SampleHost/NexusScholar.Avalonia.Blocks.SampleHost.csproj",
                 StringComparison.OrdinalIgnoreCase);
     }
 

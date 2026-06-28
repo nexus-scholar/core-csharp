@@ -69,6 +69,29 @@ Scope:
 
 No desktop shell was added. Renderer actions must route through application services later. They must not call Core mutation directly.
 
+## Phase 3.5: Visual Harness
+
+Status: implemented as a sample-only inspection host.
+
+Created sample host:
+
+- `samples/NexusScholar.Avalonia.Blocks.SampleHost`
+
+Created tests:
+
+- `tests/NexusScholar.Avalonia.Blocks.SampleHost.Tests`
+
+Scope:
+
+- load the three Phase 2 sample `WorkspacePlan` JSON files from `samples/block-plans`;
+- deserialize through `NexusScholar.UiContracts`;
+- render through `NexusScholar.Avalonia.Blocks`;
+- switch between the three sample workspaces;
+- surface sample/non-authoritative status;
+- keep action callbacks as host-local placeholders only.
+
+Phase 3.5 deliberately does not add a product desktop shell, app services, Core calls, Core mutation, persistence, AI execution, or additional renderer targets.
+
 ## Later Phases
 
 - Import/Dedup workspace prototype.

@@ -2,6 +2,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NexusScholar.AI;
 using NexusScholar.Artifacts;
 using NexusScholar.Avalonia.Blocks;
+using NexusScholar.Avalonia.Blocks.SampleHost;
 using NexusScholar.Bundles;
 using NexusScholar.Deduplication;
 using NexusScholar.Extensibility;
@@ -297,6 +298,40 @@ public sealed class DependencyRulesTests
             typeof(AiTaskPolicy).Assembly.GetName().Name
         }.Where(name => name is not null).ToArray();
 
+        CollectionAssert.Contains(references, typeof(WorkspacePlan).Assembly.GetName().Name);
+        Assert.IsTrue(references.Any(name => name.StartsWith("Avalonia", StringComparison.Ordinal)));
+
+        foreach (var coreAssemblyName in coreAssemblyNames)
+        {
+            CollectionAssert.DoesNotContain(references, coreAssemblyName);
+        }
+    }
+
+    [TestMethod]
+    public void Avalonia_sample_host_references_renderer_and_ui_contracts_without_referencing_core_domain_projects()
+    {
+        var hostAssembly = typeof(SampleWorkspaceLoader).Assembly;
+        var references = hostAssembly.GetReferencedAssemblies()
+            .Select(reference => reference.Name ?? string.Empty)
+            .ToArray();
+        var coreAssemblyNames = new[]
+        {
+            typeof(IClock).Assembly.GetName().Name,
+            typeof(DeduplicationService).Assembly.GetName().Name,
+            typeof(ContentDigest).Assembly.GetName().Name,
+            typeof(ArtifactDescriptor).Assembly.GetName().Name,
+            typeof(ProtocolDraft).Assembly.GetName().Name,
+            typeof(WorkflowDefinition).Assembly.GetName().Name,
+            typeof(ResearchEvent).Assembly.GetName().Name,
+            typeof(WorkId).Assembly.GetName().Name,
+            typeof(SearchTrace).Assembly.GetName().Name,
+            typeof(ScreeningService).Assembly.GetName().Name,
+            typeof(ReviewBundleManifest).Assembly.GetName().Name,
+            typeof(ExtensionManifest).Assembly.GetName().Name,
+            typeof(AiTaskPolicy).Assembly.GetName().Name
+        }.Where(name => name is not null).ToArray();
+
+        CollectionAssert.Contains(references, typeof(WorkspacePlanView).Assembly.GetName().Name);
         CollectionAssert.Contains(references, typeof(WorkspacePlan).Assembly.GetName().Name);
         Assert.IsTrue(references.Any(name => name.StartsWith("Avalonia", StringComparison.Ordinal)));
 

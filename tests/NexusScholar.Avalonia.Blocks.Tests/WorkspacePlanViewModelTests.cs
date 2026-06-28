@@ -1,3 +1,4 @@
+using Avalonia.Media;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NexusScholar.Avalonia.Blocks;
 using NexusScholar.UiContracts;
@@ -98,6 +99,14 @@ public sealed class WorkspacePlanViewModelTests
             .ToArray();
 
         Assert.IsFalse(references.Any(reference => reference.StartsWith("Avalonia", StringComparison.Ordinal)));
+    }
+
+    [TestMethod]
+    public void Workspace_text_helper_uses_valid_normal_font_weight_by_default()
+    {
+        var text = WorkspacePlanView.Text("plain renderer text");
+
+        Assert.AreEqual(FontWeight.Normal, text.FontWeight);
     }
 
     private static WorkspacePlanViewModel LoadSample(string fileName, BlockActionCallback? actionCallback = null)
