@@ -40,6 +40,71 @@
         </section>
 
         <section class="content-section">
+          <h2>Diagrams</h2>
+          <p>Workflow is the easiest module to lose in detail because a lot of the contract is encoded as validation logic. The diagrams below separate the core type relationships from the compiler’s end-to-end use case.</p>
+          <div class="diagram-grid">
+            <article class="diagram-card">
+              <h3>Compiler structure</h3>
+              <p>Templates and compile input flow through the compiler into a digest-bearing workflow definition with compiled nodes and bindings.</p>
+              <svg viewBox="0 0 520 250" role="img" aria-label="Workflow compiler structure">
+                <defs>
+                  <marker id="arrow-workflow-a" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+                    <path d="M0,0 L8,4 L0,8 z" fill="#0b4f4a"></path>
+                  </marker>
+                </defs>
+                <rect x="22" y="34" width="128" height="56" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="86" y="58" text-anchor="middle">WorkflowTemplate</text>
+                <text x="86" y="76" text-anchor="middle" class="diagram-muted">nodes, gates, refs</text>
+                <rect x="22" y="146" width="128" height="56" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="86" y="170" text-anchor="middle">WorkflowCompileInput</text>
+                <text x="86" y="188" text-anchor="middle" class="diagram-muted">protocol plus params</text>
+                <rect x="196" y="90" width="128" height="56" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="260" y="114" text-anchor="middle">WorkflowCompiler</text>
+                <text x="260" y="132" text-anchor="middle" class="diagram-muted">validates and normalizes</text>
+                <rect x="370" y="34" width="128" height="56" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="434" y="58" text-anchor="middle">WorkflowCompiledNode</text>
+                <text x="434" y="76" text-anchor="middle" class="diagram-muted">ordered graph units</text>
+                <rect x="370" y="146" width="128" height="56" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="434" y="170" text-anchor="middle">WorkflowDefinition</text>
+                <text x="434" y="188" text-anchor="middle" class="diagram-muted">final digest-bearing plan</text>
+                <line x1="150" y1="62" x2="196" y2="108" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-workflow-a)"></line>
+                <line x1="150" y1="174" x2="196" y2="128" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-workflow-a)"></line>
+                <line x1="324" y1="108" x2="370" y2="62" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-workflow-a)"></line>
+                <line x1="324" y1="128" x2="370" y2="174" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-workflow-a)"></line>
+              </svg>
+            </article>
+            <article class="diagram-card">
+              <h3>Compile use case</h3>
+              <p>An approved protocol version and a schema-closed template enter the compiler, which either rejects bad planning state or emits a reproducible workflow definition.</p>
+              <svg viewBox="0 0 520 220" role="img" aria-label="Workflow compile use case">
+                <defs>
+                  <marker id="arrow-workflow-b" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+                    <path d="M0,0 L8,4 L0,8 z" fill="#0b4f4a"></path>
+                  </marker>
+                </defs>
+                <rect x="20" y="74" width="106" height="60" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="73" y="99" text-anchor="middle">approved protocol</text>
+                <text x="73" y="117" text-anchor="middle" class="diagram-muted">plus template</text>
+                <rect x="164" y="74" width="106" height="60" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="217" y="99" text-anchor="middle">compile checks</text>
+                <text x="217" y="117" text-anchor="middle" class="diagram-muted">schema, graph, gates</text>
+                <rect x="308" y="38" width="92" height="50" rx="8" fill="#f4f1ea" stroke="#b7791f"></rect>
+                <text x="354" y="67" text-anchor="middle">reject</text>
+                <rect x="308" y="122" width="92" height="50" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="354" y="151" text-anchor="middle">compile</text>
+                <rect x="430" y="74" width="72" height="60" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="466" y="99" text-anchor="middle">plan</text>
+                <text x="466" y="117" text-anchor="middle" class="diagram-muted">Bundle</text>
+                <line x1="126" y1="104" x2="164" y2="104" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-workflow-b)"></line>
+                <line x1="270" y1="94" x2="308" y2="68" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-workflow-b)"></line>
+                <line x1="270" y1="114" x2="308" y2="146" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-workflow-b)"></line>
+                <line x1="400" y1="146" x2="430" y2="104" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-workflow-b)"></line>
+              </svg>
+            </article>
+          </div>
+        </section>
+
+        <section class="content-section">
           <h2>Validation pipeline</h2>
           <p>The strongest part of this module is the validation chain. Before a workflow definition exists, the compiler checks template normalization, amended-protocol witness requirements, protocol digest freshness, schema closure, template digest freshness, graph shape, artifact declarations, approval roles, capability references, waiver mapping, and invalidation notices. This is where the repository turns a broad template concept into a narrow, replayable local contract.</p>
           <p class="section-intro">The source is concentrated in <a href="https://github.com/nexus-scholar/core-csharp/blob/main/src/NexusScholar.Workflow/Workflow.cs">Workflow.cs</a>, with the sample entry path in <a href="https://github.com/nexus-scholar/core-csharp/blob/main/src/NexusScholar.Cli/Program.cs">NexusScholar.Cli/Program.cs</a>. That single-file concentration is convenient for inspection, but it also means the module will become harder to navigate as the contract expands. For now, the benefit is that the validation logic is visible in one place and can be read against the gate docs without hunting through multiple assemblies.</p>

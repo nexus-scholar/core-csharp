@@ -401,6 +401,47 @@ h3 {
   background: var(--surface-tint);
 }
 
+.diagram-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.diagram-card {
+  border: 1px solid var(--line);
+  background: linear-gradient(180deg, #fffdfa 0%, #f6f3ec 100%);
+  padding: 1rem;
+}
+
+.diagram-card h3 {
+  margin-bottom: 0.35rem;
+}
+
+.diagram-card p {
+  max-width: none;
+  font-family: var(--sans);
+  font-size: 0.95rem;
+  line-height: 1.55;
+}
+
+.diagram-card svg {
+  width: 100%;
+  height: auto;
+  display: block;
+  margin-top: 0.85rem;
+}
+
+.diagram-card text {
+  fill: var(--ink);
+  font-family: var(--sans);
+  font-size: 12px;
+}
+
+.diagram-muted {
+  fill: var(--muted);
+}
+
 .content-section,
 .post-list {
   margin-top: 2.5rem;
@@ -487,7 +528,8 @@ code {
   .feature-grid,
   .module-grid,
   .split-band,
-  .doc-shell {
+  .doc-shell,
+  .diagram-grid {
     grid-template-columns: 1fr;
   }
 

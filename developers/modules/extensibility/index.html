@@ -39,6 +39,65 @@
         </section>
 
         <section class="content-section">
+          <h2>Diagrams</h2>
+          <p>Extensibility is easier to understand when the diagrams make one thing explicit: the current code models request and selection, not plugin execution.</p>
+          <div class="diagram-grid">
+            <article class="diagram-card">
+              <h3>Current contract surface</h3>
+              <p>The existing types define manifest metadata, a capability enum, and a narrowed selection record. No runtime host sits inside this module.</p>
+              <svg viewBox="0 0 520 230" role="img" aria-label="Extensibility contract surface">
+                <defs>
+                  <marker id="arrow-ext-a" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+                    <path d="M0,0 L8,4 L0,8 z" fill="#0b4f4a"></path>
+                  </marker>
+                </defs>
+                <rect x="28" y="86" width="146" height="58" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="101" y="111" text-anchor="middle">ExtensionManifest</text>
+                <text x="101" y="129" text-anchor="middle" class="diagram-muted">id, version, entry point</text>
+                <rect x="208" y="24" width="146" height="58" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="281" y="49" text-anchor="middle">ExtensionCapability</text>
+                <text x="281" y="67" text-anchor="middle" class="diagram-muted">typed capability set</text>
+                <rect x="208" y="148" width="146" height="58" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="281" y="173" text-anchor="middle">CapabilitySelection</text>
+                <text x="281" y="191" text-anchor="middle" class="diagram-muted">approved subset</text>
+                <rect x="388" y="86" width="104" height="58" rx="8" fill="#f4f1ea" stroke="#b7791f"></rect>
+                <text x="440" y="111" text-anchor="middle">runtime host</text>
+                <text x="440" y="129" text-anchor="middle" class="diagram-muted">not here</text>
+                <line x1="174" y1="102" x2="208" y2="62" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-ext-a)"></line>
+                <line x1="174" y1="128" x2="208" y2="172" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-ext-a)"></line>
+                <line x1="354" y1="177" x2="388" y2="120" stroke="#0b4f4a" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#arrow-ext-a)"></line>
+              </svg>
+            </article>
+            <article class="diagram-card">
+              <h3>Planned use case boundary</h3>
+              <p>The intended flow is request, narrow, and then hand off to an external host. The module intentionally stops before execution.</p>
+              <svg viewBox="0 0 520 220" role="img" aria-label="Extensibility use case boundary">
+                <defs>
+                  <marker id="arrow-ext-b" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+                    <path d="M0,0 L8,4 L0,8 z" fill="#0b4f4a"></path>
+                  </marker>
+                </defs>
+                <rect x="20" y="76" width="108" height="58" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="74" y="101" text-anchor="middle">plugin requests</text>
+                <text x="74" y="119" text-anchor="middle" class="diagram-muted">manifest caps</text>
+                <rect x="160" y="76" width="108" height="58" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="214" y="101" text-anchor="middle">narrow grant</text>
+                <text x="214" y="119" text-anchor="middle" class="diagram-muted">CapabilitySelection</text>
+                <rect x="300" y="76" width="108" height="58" rx="8" fill="#f4f1ea" stroke="#b7791f"></rect>
+                <text x="354" y="101" text-anchor="middle">external host</text>
+                <text x="354" y="119" text-anchor="middle" class="diagram-muted">future gate</text>
+                <rect x="440" y="76" width="62" height="58" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="471" y="101" text-anchor="middle">output</text>
+                <text x="471" y="119" text-anchor="middle" class="diagram-muted">staged</text>
+                <line x1="128" y1="105" x2="160" y2="105" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-ext-b)"></line>
+                <line x1="268" y1="105" x2="300" y2="105" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-ext-b)"></line>
+                <line x1="408" y1="105" x2="440" y2="105" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-ext-b)"></line>
+              </svg>
+            </article>
+          </div>
+        </section>
+
+        <section class="content-section">
           <h2>Code surface and integration</h2>
           <p>The implementation is limited to <a href="https://github.com/nexus-scholar/core-csharp/blob/main/src/NexusScholar.Extensibility/ExtensionManifest.cs">ExtensionManifest.cs</a>, <a href="https://github.com/nexus-scholar/core-csharp/blob/main/src/NexusScholar.Extensibility/PluginContracts.cs">PluginContracts.cs</a>, <a href="https://github.com/nexus-scholar/core-csharp/blob/main/src/NexusScholar.Extensibility/CapabilitySelection.cs">CapabilitySelection.cs</a>, and the module-local guidance in <a href="https://github.com/nexus-scholar/core-csharp/blob/main/src/NexusScholar.Extensibility/AGENTS.md">AGENTS.md</a>. The manifest factory validates non-blank inputs and collapses duplicate capability requests via a set, which is fine for local identity shaping.</p>
           <p class="section-intro">The actual integration point today is indirect. Workflow templates can declare capability requirements and optional plugin capability labels, and the workflow compiler validates that capability references are known. But extension manifests are not consulted during compilation, no runtime resolver grants capabilities, and the CLI project reference is only for build alignment rather than actual extension execution.</p>

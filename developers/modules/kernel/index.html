@@ -40,6 +40,68 @@
         </section>
 
         <section class="content-section">
+          <h2>Diagrams</h2>
+          <p>The Kernel page benefits from diagrams because the source files are small but easy to mentally blur together. One view below shows the internal contract layering, and the other shows the standard “canonicalize then digest” use case that downstream modules depend on.</p>
+          <div class="diagram-grid">
+            <article class="diagram-card">
+              <h3>Class map</h3>
+              <p>Primitive guards and IDs feed canonicalization and digest contracts, which then support every higher-level record type.</p>
+              <svg viewBox="0 0 520 250" role="img" aria-label="Kernel class map">
+                <defs>
+                  <marker id="arrow-kernel-a" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+                    <path d="M0,0 L8,4 L0,8 z" fill="#0b4f4a"></path>
+                  </marker>
+                </defs>
+                <rect x="20" y="28" width="132" height="58" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="86" y="52" text-anchor="middle">KernelPrimitives</text>
+                <text x="86" y="70" text-anchor="middle" class="diagram-muted">Guard, IDs, clock</text>
+                <rect x="194" y="28" width="132" height="58" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="260" y="52" text-anchor="middle">CanonicalJson</text>
+                <text x="260" y="70" text-anchor="middle" class="diagram-muted">stable content form</text>
+                <rect x="368" y="28" width="132" height="58" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="434" y="52" text-anchor="middle">CanonicalTimestamp</text>
+                <text x="434" y="70" text-anchor="middle" class="diagram-muted">UTC normalization</text>
+                <rect x="116" y="144" width="132" height="58" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="182" y="168" text-anchor="middle">ContentDigest</text>
+                <text x="182" y="186" text-anchor="middle" class="diagram-muted">sha256 rendering</text>
+                <rect x="286" y="144" width="132" height="58" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="352" y="168" text-anchor="middle">DigestEnvelope</text>
+                <text x="352" y="186" text-anchor="middle" class="diagram-muted">scope plus schema</text>
+                <line x1="152" y1="57" x2="194" y2="57" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-kernel-a)"></line>
+                <line x1="326" y1="57" x2="368" y2="57" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-kernel-a)"></line>
+                <line x1="260" y1="86" x2="200" y2="144" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-kernel-a)"></line>
+                <line x1="434" y1="86" x2="366" y2="144" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-kernel-a)"></line>
+              </svg>
+            </article>
+            <article class="diagram-card">
+              <h3>Use case flow</h3>
+              <p>Most modules use Kernel in the same sequence: normalize the content, compute a digest, wrap it in an envelope, and then carry that identity forward.</p>
+              <svg viewBox="0 0 520 210" role="img" aria-label="Kernel use case flow">
+                <defs>
+                  <marker id="arrow-kernel-b" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+                    <path d="M0,0 L8,4 L0,8 z" fill="#0b4f4a"></path>
+                  </marker>
+                </defs>
+                <rect x="16" y="76" width="96" height="52" rx="26" fill="#f4f1ea" stroke="#b7791f"></rect>
+                <text x="64" y="106" text-anchor="middle">raw record</text>
+                <rect x="148" y="70" width="104" height="64" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="200" y="97" text-anchor="middle">canonicalize</text>
+                <text x="200" y="115" text-anchor="middle" class="diagram-muted">JSON plus time</text>
+                <rect x="288" y="70" width="104" height="64" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="340" y="97" text-anchor="middle">digest</text>
+                <text x="340" y="115" text-anchor="middle" class="diagram-muted">scope-aware hash</text>
+                <rect x="428" y="70" width="76" height="64" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="466" y="97" text-anchor="middle">reuse</text>
+                <text x="466" y="115" text-anchor="middle" class="diagram-muted">Protocol</text>
+                <line x1="112" y1="102" x2="148" y2="102" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-kernel-b)"></line>
+                <line x1="252" y1="102" x2="288" y2="102" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-kernel-b)"></line>
+                <line x1="392" y1="102" x2="428" y2="102" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-kernel-b)"></line>
+              </svg>
+            </article>
+          </div>
+        </section>
+
+        <section class="content-section">
           <h2>Code surface and verification</h2>
           <p>The implementation is compact and intentionally concentrated. The main files are <a href="https://github.com/nexus-scholar/core-csharp/blob/main/src/NexusScholar.Kernel/KernelPrimitives.cs">KernelPrimitives.cs</a>, <a href="https://github.com/nexus-scholar/core-csharp/blob/main/src/NexusScholar.Kernel/DigestTypes.cs">DigestTypes.cs</a>, <a href="https://github.com/nexus-scholar/core-csharp/blob/main/src/NexusScholar.Kernel/ContentDigest.cs">ContentDigest.cs</a>, <a href="https://github.com/nexus-scholar/core-csharp/blob/main/src/NexusScholar.Kernel/DigestEnvelope.cs">DigestEnvelope.cs</a>, <a href="https://github.com/nexus-scholar/core-csharp/blob/main/src/NexusScholar.Kernel/CanonicalJson.cs">CanonicalJson.cs</a>, <a href="https://github.com/nexus-scholar/core-csharp/blob/main/src/NexusScholar.Kernel/CanonicalTimestamp.cs">CanonicalTimestamp.cs</a>, and <a href="https://github.com/nexus-scholar/core-csharp/blob/main/src/NexusScholar.Kernel/NdjsonCanonicalizer.cs">NdjsonCanonicalizer.cs</a>.</p>
           <p class="section-intro">Verification is equally direct: <a href="https://github.com/nexus-scholar/core-csharp/blob/main/tests/NexusScholar.Core.Tests/DeterministicKernelTests.cs">DeterministicKernelTests.cs</a> exercises the native behavior, while <a href="https://github.com/nexus-scholar/core-csharp/blob/main/tests/NexusScholar.Conformance.Tests/KernelFixtureTests.cs">KernelFixtureTests.cs</a> replays the conformance fixtures under <a href="https://github.com/nexus-scholar/core-csharp/blob/main/fixtures/conformance/kernel/">fixtures/conformance/kernel/</a>. That combination is appropriate for a low-level module: fast direct tests for the implementation, fixture replay for the contract surface.</p>
