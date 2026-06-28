@@ -1,63 +1,55 @@
 # Codex Branch Board
 
-Source: live branch probes from local `main` after the ADR 0013 Screening contract merge.
+Source: live branch probes after Gate 9 Full Text reconnaissance was applied to `main`.
 
 ## Main Baseline
 
-- Latest ADR 0013 Screening contract merge on `main`: `49d068c` (`docs: close screening ADR review findings`); later ops-only commits may sit on top.
+- Current `main`: `37a2881` (`docs: map PHP full text behavior`).
+- `main` also includes UI contract/block-plan samples from merge commit `13f343e`.
 - Gate 0 through Gate 6 are merged into `main`.
-- Gate 9 shared identity is merged into `main`.
-- Gate 9 Search reconnaissance is merged into `main` as docs/planning only.
-- ADR 0010 Search Trace and Plan Contract is merged into `main`.
-- Gate 9 Search local stub-provider implementation is merged into `main`.
-- ADR 0011 Search Import Source Contract is merged into `main`.
-- Gate 9 Search import local first-slice parser implementation is merged into `main`.
-- Gate 9 Deduplication reconnaissance is merged into `main` as docs/planning only.
-- ADR 0012 Deduplication Evidence and Cluster Contract is merged into `main`.
-- Gate 9 Dedup local implementation is merged into `main`.
-- Gate 9 Screening reconnaissance is merged into `main` as docs/planning only.
-- ADR 0013 Screening Decision and Conflict Contract is merged into `main`.
-- Gate 9 Screening contract branch CI is green: `https://github.com/nexus-scholar/core-csharp/actions/runs/28299739622`.
-- Gate 9 Screening contract push-triggered `main` CI is green: `https://github.com/nexus-scholar/core-csharp/actions/runs/28299837271`.
-- Local C# Dedup behavior is implemented for ADR 0012 scope only.
-- Local C# Screening implementation is ready to start from ADR 0013, but is not implemented yet.
-- PHP compatibility, generated PHP fixtures, persistence/API/UI/cloud, live provider/network behavior, AI governance, and app behavior as Core authority remain unclaimed.
+- Gate 9 Shared Identity is merged into `main`.
+- Gate 9 Search, Search Import, Deduplication, and Screening local C# scopes are merged into `main`.
+- Gate 9 Full Text reconnaissance is applied to `main` at `37a2881`.
+- Original Full Text recon branch commit: `85d2e17`.
+- Full Text recon branch CI: https://github.com/nexus-scholar/core-csharp/actions/runs/28318711028
+- Final push-triggered `main` CI for `37a2881`: https://github.com/nexus-scholar/core-csharp/actions/runs/28318771878
+- Both CI runs passed Ubuntu and Windows restore, build, test, and format.
+- PHP compatibility, generated PHP fixtures, persistence/API/UI/cloud, live provider/network behavior, full-text artifact storage, AI governance, and app behavior as Core authority remain unclaimed.
 
 ## Branch Classes
 
-- merged: `main`, `cdx/gate-9-screening-contract`, `cdx/gate-9-screening-recon`, `cdx/gate-9-dedup-local`, `cdx/gate-9-dedup-contract`, `cdx/gate-9-dedup-recon`, `cdx/gate-9-search-import-local`, `cdx/gate-9-search-import-contract`, `cdx/gate-9-search-local`, `cdx/gate-9-search-contract`, `cdx/app-recon-cli-web-core-usage`, `cdx/gate-9-search-recon`, `cdx/gate-6-bundle-planning`, `cdx/gate-9-shared-identity`, `cdx/gate-5-provenance`, `cdx/gate-4-workflow`, `cdx/gate-4-workflow-planning`, `cdx/two-model-codex-workflow`, `cdx/main-gate2-merge`, `cdx/gate-3-protocol-lifecycle`, `cdx/gate-3-planning-decisions`, `cdx/gate-2-digest-kernel-cleanup`, `cdx/shared-identity-adr-0007`, `cdx/run-gate-zero-discovery`, `cdx/run-gate-0-discovery`
-- cleanup: no merged GitHub remote branch cleanup candidates remain; local historical branches listed above may be pruned locally when desired.
-- active: none in the local branch graph after this refresh
-- review: none
-- blocked: PHP compatibility claims, generated PHP fixtures, persistence/API/UI/cloud, live provider/network behavior, Scopus API, Web of Science API, Google Scholar scraping, AI governance, and app integration claims remain out of scope.
-- stale: none newly identified beyond merged historical branches.
+- merged: `main`, `cdx/ui-contract-block-plan-samples`, `cdx/gate-9-screening-local`, `cdx/gate-9-screening-contract`, `cdx/gate-9-screening-recon`, `cdx/gate-9-dedup-local`, `cdx/gate-9-dedup-contract`, `cdx/gate-9-dedup-recon`, `cdx/gate-9-search-import-local`, `cdx/gate-9-search-import-contract`, `cdx/gate-9-search-local`, `cdx/gate-9-search-contract`, `cdx/app-recon-cli-web-core-usage`, `cdx/gate-9-search-recon`, `cdx/gate-6-bundle-planning`, `cdx/gate-9-shared-identity`, `cdx/gate-5-provenance`, `cdx/gate-4-workflow`, `cdx/gate-4-workflow-planning`, `cdx/two-model-codex-workflow`, `cdx/main-gate2-merge`, `cdx/gate-3-protocol-lifecycle`, `cdx/gate-3-planning-decisions`, `cdx/gate-2-digest-kernel-cleanup`, `cdx/shared-identity-adr-0007`, `cdx/run-gate-zero-discovery`, `cdx/run-gate-0-discovery`
+- cleanup: none currently safe by ancestry on GitHub; `git branch -r --merged main` returns only `origin/main`.
+- active: none.
+- review: none.
+- blocked: PHP compatibility claims, generated PHP fixtures, persistence/API/UI/cloud, live provider/network behavior, Scopus API, Web of Science API, Google Scholar scraping, paywall bypass, shadow-library sources, AI governance, full-text artifact storage, and app integration claims remain out of scope.
+- stale: `origin/cdx/gate-9-fulltext-recon` is patch-equivalent to `37a2881` but not ancestry-merged because `origin/main` advanced before the merge; do not classify it as an ancestry-merged cleanup branch without explicit human approval.
 
-Remote cleanup state from `git branch -r`: only `origin/main` remains.
+Remote cleanup state from `git branch -r`:
+
+- `origin/main`
+- `origin/cdx/gate-9-fulltext-recon`
 
 ## Safe Cleanup Candidates
 
-- none on GitHub
+- none on GitHub by ancestry.
 
 ## Not Safe To Delete
 
 - `main`
+- `origin/cdx/gate-9-fulltext-recon` until patch-equivalent branch cleanup is explicitly accepted.
 
 ## Next Work
 
-- Next branch: `cdx/gate-9-screening-local`.
-- Goal: implement local C# Screening behavior against ADR 0013.
-- Focus areas: locked/reviewable candidate-set intake, criteria digest binding, human final decisions, AI/rule suggestions as proposal evidence, conflict detection, append-only adjudication, source decision links, immutable decision history, fixtures, conformance checks, and Gate 9 Screening evidence.
-- Do not add persistence/API/UI/cloud, live provider/network behavior, PHP-generated fixtures, PHP compatibility claims, CLI/Web changes, AI governance implementation, full-text retrieval, artifact storage, or app behavior as Core authority.
+- Next branch: `cdx/gate-9-fulltext-contract`.
+- Goal: write `ADR 0014: Full Text Artifact Evidence Contract`.
+- Focus areas: Full Text input boundary, raw artifact byte identity, artifact evidence record shape, no-network first implementation boundary, source attempt model, legal/access boundary, PDF/XML/text validation, XML/text sidecar status, Screening handoff, app projection boundary, and fixture/comparator consequences.
+- Do not add C# Full Text implementation, live providers, HTTP clients, credentials, scraping, artifact storage, persistence/API/UI/cloud, PHP-generated fixtures, PHP compatibility claims, CLI/Web changes, or Screening behavior changes.
 
 ## Unresolved Boundaries
 
-- `CF-011`: implemented for local Dedup input shape; PHP compatibility pending.
-- `CF-012`: implemented for local threshold `95` / `0.95`; PHP compatibility pending.
-- `CF-016`: implemented for Search and local Dedup handoff without changing Search behavior.
-- `CF-018`: remains narrowed for app consumer boundary.
-- `CF-019`: implemented for local first-slice Search import parser behavior only; remaining parser families, live APIs, source-specific namespace expansion, PHP compatibility, and app alignment remain future.
-- `CF-020`: narrowed by ADR 0012; Web hashes, snapshots, persisted runs, and app scoring remain app projections, not Core authority.
-- `CF-021`: resolved for local Screening contract by ADR 0013; implementation pending.
-- `CF-022`: resolved for local Screening contract by ADR 0013; implementation pending.
-- `CF-023`: resolved for local Screening contract by ADR 0013; implementation pending.
-- `CF-024`: narrowed for Core by ADR 0013; app workflow rows remain projections.
+- `CF-025`: Full Text artifact evidence and raw-byte identity; blocks C# Full Text implementation.
+- `CF-026`: Full Text provider/network and legal-access boundary; blocks live source adapters.
+- `CF-027`: Full Text app projection and Screening handoff boundary; blocks treating CLI/Web rows or paths as Core authority.
+- `CF-024`: Screening app workflow rows remain projections.
+- `CF-019`: Search import remaining parser families and live provider/API integration remain future.
