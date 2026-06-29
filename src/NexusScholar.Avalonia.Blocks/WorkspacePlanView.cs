@@ -10,14 +10,27 @@ namespace NexusScholar.Avalonia.Blocks;
 public sealed class WorkspacePlanView : UserControl
 {
     private readonly StackPanel _root = new() { Spacing = 12 };
+    private static readonly IBrush Accent = new SolidColorBrush(Color.Parse("#0f766e"));
+    private static readonly IBrush AccentDark = new SolidColorBrush(Color.Parse("#0b4f4a"));
+    private static readonly IBrush BorderLine = new SolidColorBrush(Color.Parse("#d9dedb"));
+    private static readonly IBrush Muted = new SolidColorBrush(Color.Parse("#5e6870"));
+    private static readonly IBrush Paper = new SolidColorBrush(Color.Parse("#fbfaf7"));
+    private static readonly IBrush Surface = Brushes.White;
+    private static readonly IBrush SurfaceTint = new SolidColorBrush(Color.Parse("#f4f1ea"));
 
     public WorkspacePlanView()
     {
-        Content = new ScrollViewer
+        _root.Margin = new Thickness(2);
+
+        Content = new Border
         {
-            Content = _root,
-            HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
-            VerticalScrollBarVisibility = ScrollBarVisibility.Auto
+            Background = Paper,
+            Child = new ScrollViewer
+            {
+                Content = _root,
+                HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
+                VerticalScrollBarVisibility = ScrollBarVisibility.Auto
+            }
         };
     }
 
@@ -31,13 +44,11 @@ public sealed class WorkspacePlanView : UserControl
         ArgumentNullException.ThrowIfNull(plan);
 
         _root.Children.Clear();
-        _root.Children.Add(Text(plan.Title, 22, FontWeight.SemiBold));
-        _root.Children.Add(Text(plan.AuthorityStatus, 13, FontWeight.SemiBold));
-        _root.Children.Add(Text($"Mode: {plan.Mode}  Workspace: {plan.WorkspaceId}", 12));
+        _root.Children.Add(BuildPlanHeader(plan));
 
         if (!string.IsNullOrWhiteSpace(plan.Description))
         {
-            _root.Children.Add(Text(plan.Description, 12));
+            _root.Children.Add(Text(plan.Description, 13, foreground: Muted));
         }
 
         if (plan.ContextRefs.Count > 0)
@@ -55,13 +66,14 @@ public sealed class WorkspacePlanView : UserControl
         }
     }
 
-    internal static TextBlock Text(string text, double size = 12, FontWeight? weight = null)
+    internal static TextBlock Text(string text, double size = 12, FontWeight? weight = null, IBrush? foreground = null)
     {
         return new TextBlock
         {
             Text = text,
             FontSize = size,
             FontWeight = weight ?? FontWeight.Normal,
+            Foreground = foreground ?? Brushes.Black,
             TextWrapping = TextWrapping.Wrap
         };
     }
@@ -74,9 +86,60 @@ public sealed class WorkspacePlanView : UserControl
 
         return new Border
         {
-            BorderBrush = Brushes.LightGray,
+            Background = SurfaceTint,
+            BorderBrush = BorderLine,
             BorderThickness = new Thickness(1),
-            Padding = new Thickness(8),
+            CornerRadius = new CornerRadius(6),
+            Padding = new Thickness(10),
+            Child = panel
+        };
+    }
+
+    internal static Border Badge(string text, IBrush? background = null, IBrush? foreground = null)
+    {
+        return new Border
+        {
+            Background = background ?? SurfaceTint,
+            BorderBrush = BorderLine,
+            BorderThickness = new Thickness(1),
+            CornerRadius = new CornerRadius(6),
+            Padding = new Thickness(8, 3),
+            Child = Text(text, 12, FontWeight.SemiBold, foreground ?? AccentDark)
+        };
+    }
+
+    internal static IBrush SeverityBrush(string severity)
+    {
+        return severity switch
+        {
+            "Blocking" or "Error" => new SolidColorBrush(Color.Parse("#9f3a38")),
+            "ReviewRequired" or "Warning" => new SolidColorBrush(Color.Parse("#b7791f")),
+            _ => Accent
+        };
+    }
+
+    private static Border BuildPlanHeader(WorkspacePlanViewModel plan)
+    {
+        var badges = new WrapPanel
+        {
+            ItemSpacing = 6,
+            LineSpacing = 6
+        };
+        badges.Children.Add(Badge(plan.AuthorityStatus, new SolidColorBrush(Color.Parse("#e4f2ee"))));
+        badges.Children.Add(Badge($"Mode: {plan.Mode}"));
+        badges.Children.Add(Badge($"Workspace: {plan.WorkspaceId}"));
+
+        var panel = new StackPanel { Spacing = 10 };
+        panel.Children.Add(Text(plan.Title, 24, FontWeight.Bold));
+        panel.Children.Add(badges);
+
+        return new Border
+        {
+            Background = Surface,
+            BorderBrush = BorderLine,
+            BorderThickness = new Thickness(1),
+            CornerRadius = new CornerRadius(8),
+            Padding = new Thickness(16),
             Child = panel
         };
     }

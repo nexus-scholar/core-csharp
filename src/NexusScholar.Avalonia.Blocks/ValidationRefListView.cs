@@ -1,4 +1,6 @@
+using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Media;
 
 namespace NexusScholar.Avalonia.Blocks;
 
@@ -35,7 +37,15 @@ public sealed class ValidationRefListView : UserControl
                 detail += $"  {validation.Message}";
             }
 
-            _root.Children.Add(WorkspacePlanView.Text(detail, 12));
+            _root.Children.Add(new Border
+            {
+                Background = Brushes.White,
+                BorderBrush = WorkspacePlanView.SeverityBrush(validation.Severity),
+                BorderThickness = new Thickness(3, 1, 1, 1),
+                CornerRadius = new CornerRadius(6),
+                Padding = new Thickness(8),
+                Child = WorkspacePlanView.Text(detail, 12)
+            });
         }
     }
 }

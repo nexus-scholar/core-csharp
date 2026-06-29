@@ -30,10 +30,11 @@ public sealed class MainWindow : Window
         _samples = samples;
 
         Title = "Nexus Scholar Avalonia Blocks Sample Host";
-        Width = 1100;
-        Height = 800;
+        Width = 1180;
+        Height = 840;
         MinWidth = 760;
         MinHeight = 520;
+        Background = new SolidColorBrush(Color.Parse("#f7f4ed"));
 
         Content = BuildContent();
         RenderSample(_samples[0]);
@@ -44,6 +45,7 @@ public sealed class MainWindow : Window
         var selector = new ComboBox
         {
             MinWidth = 320,
+            MaxWidth = 440,
             ItemsSource = _samples.Select(sample => sample.DisplayName).ToArray(),
             SelectedIndex = 0
         };
@@ -55,36 +57,64 @@ public sealed class MainWindow : Window
             }
         };
 
-        var header = new StackPanel { Spacing = 4 };
-        header.Children.Add(new TextBlock
+        var headerContent = new StackPanel { Spacing = 10 };
+        headerContent.Children.Add(new TextBlock
         {
-            Text = "Phase 3.5 sample harness",
-            FontSize = 22,
-            FontWeight = FontWeight.SemiBold
-        });
-        header.Children.Add(new TextBlock
-        {
-            Text = "Visual inspection only. Sample plans are non-authoritative; actions are placeholder callbacks and do not call Core.",
+            Text = "Nexus Scholar Core sample host",
+            FontSize = 26,
+            FontWeight = FontWeight.Bold,
+            Foreground = Brushes.White,
             TextWrapping = TextWrapping.Wrap
         });
-        header.Children.Add(selector);
+        headerContent.Children.Add(new TextBlock
+        {
+            Text = "Visual inspection only. Sample plans are non-authoritative; actions are placeholder callbacks and do not call Core.",
+            TextWrapping = TextWrapping.Wrap,
+            Foreground = new SolidColorBrush(Color.Parse("#d7e7e2"))
+        });
+        headerContent.Children.Add(selector);
 
         _status.Text = "Ready. No Core calls, persistence, AI, or scientific mutation are available in this host.";
+        _status.Foreground = new SolidColorBrush(Color.Parse("#3b3428"));
+
+        var header = new Border
+        {
+            Background = new SolidColorBrush(Color.Parse("#123b3a")),
+            CornerRadius = new CornerRadius(8),
+            Padding = new Thickness(18),
+            Margin = new Thickness(0, 0, 0, 12),
+            Child = headerContent
+        };
+
+        var statusBar = new Border
+        {
+            Background = new SolidColorBrush(Color.Parse("#fff7df")),
+            BorderBrush = new SolidColorBrush(Color.Parse("#b7791f")),
+            BorderThickness = new Thickness(1),
+            CornerRadius = new CornerRadius(6),
+            Padding = new Thickness(10),
+            Margin = new Thickness(0, 12, 0, 0),
+            Child = _status
+        };
 
         var panel = new DockPanel
         {
             LastChildFill = true,
-            Margin = new Thickness(12)
+            Margin = new Thickness(16)
         };
 
         DockPanel.SetDock(header, Dock.Top);
-        DockPanel.SetDock(_status, Dock.Bottom);
+        DockPanel.SetDock(statusBar, Dock.Bottom);
 
         panel.Children.Add(header);
-        panel.Children.Add(_status);
+        panel.Children.Add(statusBar);
         panel.Children.Add(_workspaceView);
 
-        return panel;
+        return new Border
+        {
+            Background = new SolidColorBrush(Color.Parse("#f7f4ed")),
+            Child = panel
+        };
     }
 
     private void RenderSample(SampleWorkspace sample)
