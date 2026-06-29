@@ -1,10 +1,30 @@
 # Nexus Scholar Core for .NET
 
-This is the ready-to-start C# workspace for Nexus Scholar 2.
+Nexus Scholar Core is an audit-grade, local-first C# research workflow kernel. Its purpose is to make research methods, human decisions, automation, evidence, amendments, deviations, and outputs reconstructable from durable records.
 
-The PHP package remains the behavioral reference for proven scholarly workflows. The .NET implementation starts with protocol governance, workflow compilation, artifacts, provenance, plugins, and governed AI. Port observable behavior rather than translating PHP classes.
+The pinned PHP package remains behavioral evidence for proven workflows. This repo ports observable behavior into stricter local contracts instead of translating PHP classes or app storage shapes directly.
 
-## Start
+## Current Status
+
+`main` contains the local Core implementation through the first no-network Full Text slice, plus a contract-backed UI renderer prototype:
+
+- deterministic kernel primitives, canonical JSON, and digest scopes;
+- protocol drafts, decisions, approvals, amendments, waivers, deviations, and invalidation notices;
+- workflow template compilation with schema closure, approval gates, waivers, and invalidation planning;
+- artifact and review-bundle contracts with immutable digest-bound entries;
+- append-only provenance events and local in-memory ledger behavior;
+- shared scientific identity, Search traces, imported Search evidence, Deduplication, Screening, and Full Text;
+- plugin capability and governed-AI proposal contracts;
+- UI contracts, sample block plans, an Avalonia block renderer, and a sample visual host;
+- a small CLI with `doctor` and `sample` commands.
+
+The Full Text slice is local and no-network. It accepts digest-bound user-supplied or deterministic artifact bytes, records acquisition/source-attempt evidence, validates PDF/XML/text shapes, detects duplicate artifacts by raw byte digest, and keeps extraction as derived evidence bound to the raw artifact. It does not download papers, call provider APIs, parse PDFs, run OCR, persist data, expose an API, or claim PHP compatibility.
+
+## Try It Locally
+
+Prerequisite: .NET SDK for `net10.0`.
+
+Bootstrap:
 
 ```powershell
 pwsh ./scripts/bootstrap.ps1
@@ -14,38 +34,86 @@ pwsh ./scripts/bootstrap.ps1
 ./scripts/bootstrap.sh
 ```
 
-Then open `NexusScholar.Core.slnx`, read `AGENTS.md`, and use the first prompt in `prompts/00-gate-zero-discovery.md`.
+Verify the solution:
 
-## Verify
-
-```bash
+```powershell
 dotnet restore NexusScholar.Core.slnx
 dotnet build NexusScholar.Core.slnx -c Release --no-restore
 dotnet test NexusScholar.Core.slnx -c Release --no-build
 dotnet format NexusScholar.Core.slnx --verify-no-changes --no-restore
 ```
 
-## Initial modules
+Or run the repository verification script:
 
-- `Kernel`: deterministic primitives and contracts.
-- `Protocol`: drafts, decisions, approvals, and amendments.
-- `Workflow`: graph compilation, gates, and invalidation.
-- `Artifacts`: immutable content identity.
-- `Provenance`: append-only activity records.
-- `Bundles`: portable review package contracts.
-- `Extensibility`: plugin manifests and capability grants.
-- `AI`: governed AI task and proposal contracts.
-- `Cli`: local developer and researcher entry point.
+```powershell
+powershell -ExecutionPolicy Bypass -File ./scripts/verify.ps1
+```
 
-Search, corpus, screening, extraction, persistence, API, desktop, and web modules are added only when their implementation gates begin.
+Run the CLI smoke commands:
 
-## Source-of-truth order
+```powershell
+dotnet run --project src/NexusScholar.Cli -- doctor
+dotnet run --project src/NexusScholar.Cli -- sample
+```
 
-1. Approved specifications.
-2. Accepted architecture decisions.
-3. Golden fixtures.
+Launch the UI sample host:
+
+```powershell
+dotnet run --project samples/NexusScholar.Avalonia.Blocks.SampleHost
+```
+
+The sample host renders non-authoritative sample `WorkspacePlan` JSON through `NexusScholar.UiContracts` and `NexusScholar.Avalonia.Blocks`. It is a visual inspection harness, not a product desktop shell.
+
+## Project Map
+
+- `src/NexusScholar.Kernel`: deterministic primitives, clocks, ids, canonical JSON, and digests.
+- `src/NexusScholar.Protocol`: protocol lifecycle records and human approval semantics.
+- `src/NexusScholar.Workflow`: deterministic workflow compilation.
+- `src/NexusScholar.Artifacts`: immutable artifact identity helpers.
+- `src/NexusScholar.Provenance`: append-only local provenance records.
+- `src/NexusScholar.Bundles`: portable review-bundle manifests and verification.
+- `src/NexusScholar.Shared`: stable scholarly identity primitives.
+- `src/NexusScholar.Search`: Search traces, provider stubs, schema-closed plans, and imported evidence parsing.
+- `src/NexusScholar.Deduplication`: local deduplication clusters, review candidates, representatives, and evidence preservation.
+- `src/NexusScholar.Screening`: human-authorized Screening decisions, AI suggestions as proposals, conflicts, and adjudication.
+- `src/NexusScholar.FullText`: local no-network acquisition, artifact evidence, source attempts, validation, duplicate artifact detection, and extraction records.
+- `src/NexusScholar.Extensibility`: extension manifests and scoped capability selections.
+- `src/NexusScholar.AI`: governed AI task policies and proposal acceptance contracts.
+- `src/NexusScholar.UiContracts`: renderer-neutral workspace and research block contracts.
+- `src/NexusScholar.Avalonia.Blocks`: Avalonia renderer controls for UI contract blocks.
+- `src/NexusScholar.Cli`: local CLI entry point.
+- `samples/block-plans`: non-authoritative UI sample plans.
+- `samples/NexusScholar.Avalonia.Blocks.SampleHost`: sample-only Avalonia host.
+- `tests`: unit, conformance, architecture, UI-contract, renderer, and sample-host tests.
+- `fixtures/conformance`: local contract fixtures.
+- `docs/adr`: accepted architecture decisions.
+- `docs/gates`: gate plans and evidence.
+- `docs/ui`: UI planning, contract, renderer, and sample-host notes.
+
+## Authority Rules
+
+The source-of-truth order is:
+
+1. Approved files in `specs/`.
+2. Accepted ADRs in `docs/adr/`.
+3. Golden fixtures in `fixtures/`.
 4. Observable behavior of the pinned PHP reference.
-5. Current C# behavior.
-6. Informal notes.
+5. Current C# implementation.
+6. Informal notes and comments.
 
-Resolve conflicts through an architecture decision and a conformance fixture. Never guess silently.
+When sources conflict, record the conflict and resolve it through an ADR or fixture-backed gate. Do not guess silently.
+
+Core domain projects must not depend on EF Core, ASP.NET Core, UI frameworks, provider SDKs, storage SDKs, or concrete model clients. Infrastructure depends inward. `NexusScholar.UiContracts` and `NexusScholar.Avalonia.Blocks` are intentionally outside Core authority, and Core projects must not reference them.
+
+## Non-Claims
+
+This repository does not currently claim:
+
+- PHP compatibility without generated PHP fixtures and semantic comparators;
+- live scholarly provider access;
+- HTTP download, scraping, paywall bypass, or shadow-library acquisition;
+- persistence, API, web app, cloud sync, or production desktop-shell behavior;
+- PDF extraction, OCR, or page/section parsing algorithms;
+- AI authority over scientific decisions.
+
+Model outputs remain proposals until an authorized human action accepts them. Drafts are not approved protocols. Paths and app rows are projections, not scientific identity.

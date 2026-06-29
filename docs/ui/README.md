@@ -1,27 +1,39 @@
-# Nexus Scholar UI Planning
+# Nexus Scholar UI Notes
 
-This folder prepares future UI and UX work for Nexus Scholar. It is planning material only. It does not define Core authority, scientific record shape, compatibility behavior, or accepted product law. Authoritative scientific behavior remains in `specs/`, accepted ADRs, fixtures, observable pinned PHP behavior, and the current C# implementation.
+This folder tracks UI and UX work for Nexus Scholar without changing Core scientific authority. Authoritative scientific behavior remains in `specs/`, accepted ADRs, fixtures, observable pinned PHP behavior, and the current C# implementation.
 
-The intent is to make future desktop, CLI, web, and mobile work easier without pulling UI dependencies into Core. These notes describe how strict Core records can be translated into understandable research workflows while preserving audit-grade evidence, provenance, validation, and human authorization.
+The current UI lane has moved past planning-only docs. `main` now includes renderer-neutral UI contracts, sample block plans, an Avalonia block renderer prototype, and a sample visual host. These pieces are still non-authoritative: they render workflow plans and sample evidence summaries, but they do not approve protocols, mutate Core records, persist app state, run AI, or claim product desktop behavior.
 
 ## Documents
 
-- `UI-PHILOSOPHY.md`: Product philosophy for strict internals, simple workflows, AI assistance, and human-authorized science.
-- `PRODUCT-POSITIONING.md`: Market and wedge positioning for an audit-grade research workflow system rather than another paper summarizer.
-- `BLOCK-FRAMEWORK-BLUEPRINT.md`: Early architecture for Nexus Scholar Blocks as typed research interaction units.
-- `BLOCK-CATALOG-v0.md`: Candidate block families and first prototype candidates around Import and Deduplication.
-- `PORTABILITY-STRATEGY.md`: How shared block plans can render across desktop, CLI, web, and mobile without making Core UI-aware.
-- `AI-ASSISTED-UI-RULES.md`: Safe and unsafe AI roles in the user experience.
-- `RESEARCH-COCKPIT-CONCEPT.md`: Desktop shell concept with workflow navigation, adaptive workspace, assistant, and evidence/provenance inspector.
-- `BEGINNER-VS-AUDIT-MODE.md`: How the same block can be rendered differently for beginner and audit users.
+- `UI-PHILOSOPHY.md`: product philosophy for strict internals, simple workflows, AI assistance, and human-authorized science.
+- `PRODUCT-POSITIONING.md`: market and wedge positioning for an audit-grade research workflow system rather than another paper summarizer.
+- `BLOCK-FRAMEWORK-BLUEPRINT.md`: early architecture for Nexus Scholar Blocks as typed research interaction units.
+- `BLOCK-CATALOG-v0.md`: candidate block families and first prototype candidates around Import and Deduplication.
+- `PORTABILITY-STRATEGY.md`: how shared block plans can render across desktop, CLI, web, and mobile without making Core UI-aware.
+- `AI-ASSISTED-UI-RULES.md`: safe and unsafe AI roles in the user experience.
+- `RESEARCH-COCKPIT-CONCEPT.md`: desktop shell concept with workflow navigation, adaptive workspace, assistant, and evidence/provenance inspector.
+- `BEGINNER-VS-AUDIT-MODE.md`: how the same block can be rendered differently for beginner and audit users.
 - `UI-CONTRACTS-v0.md`: Phase 1 contract-layer summary for `NexusScholar.UiContracts`.
-- `DEDUP-REVIEW-WORKSPACE-v0.md`: First serious workflow prototype concept for review-required duplicate candidates.
-- `SCREENING-WORKSPACE-v0.md`: Early screening workspace concept aligned with human decision authority.
-- `ROADMAP.md`: Staged path from documentation to UI contracts, sample block plans, renderers, and later AI proposal support.
-- `OPEN-QUESTIONS.md`: Product and technical questions that should be resolved before contract implementation.
+- `DEDUP-REVIEW-WORKSPACE-v0.md`: first serious workflow prototype concept for review-required duplicate candidates.
+- `SCREENING-WORKSPACE-v0.md`: early screening workspace concept aligned with human decision authority.
+- `AVALONIA-RENDERER-PROTOTYPE-v0.md`: Phase 3 renderer-only Avalonia block prototype.
+- `AVALONIA-SAMPLE-HOST-v0.md`: Phase 3.5 sample host for manually inspecting the renderer.
+- `ROADMAP.md`: staged path from documentation to UI contracts, sample block plans, renderers, and later AI proposal support.
+- `OPEN-QUESTIONS.md`: product and technical questions that remain open.
+
+## Implemented UI Packages
+
+- `src/NexusScholar.UiContracts`: renderer-neutral `WorkspacePlan`, `ResearchBlockDescriptor`, evidence refs, validation refs, action descriptors, and display mode vocabulary.
+- `src/NexusScholar.Avalonia.Blocks`: Avalonia controls and view models that render `WorkspacePlan` data.
+- `samples/block-plans`: sample-only workspace plan JSON files.
+- `samples/NexusScholar.Avalonia.Blocks.SampleHost`: local visual inspection host for those samples.
+- `tests/NexusScholar.UiContracts.Tests`, `tests/NexusScholar.Avalonia.Blocks.Tests`, and `tests/NexusScholar.Avalonia.Blocks.SampleHost.Tests`: serialization, view-model, architecture, and loader coverage.
 
 ## Boundary
 
-The planning documents may propose future projects such as `NexusScholar.UiContracts`, `NexusScholar.AppServices`, or renderer packages. Creating these documents does not create those packages, does not add Avalonia, and does not change Core behavior.
+Core projects must not reference `NexusScholar.UiContracts`, Avalonia, renderer packages, app services, persistence, or AI/model clients.
 
-Any future implementation that affects scientific authority, record schemas, digest material, provenance, AI acceptance, app persistence, or PHP compatibility requires the normal ADR, fixture, and verification path.
+`NexusScholar.UiContracts` must remain UI-framework-free. `NexusScholar.Avalonia.Blocks` may reference Avalonia and `NexusScholar.UiContracts`, but it must not reference Core domain packages. The sample host may load only sample plans and render placeholder actions.
+
+Any future UI work that affects scientific authority, record schemas, digest material, provenance, AI acceptance, app persistence, or PHP compatibility requires the normal ADR, fixture, and verification path.
