@@ -12,9 +12,12 @@ public sealed class ResearchBlockView : UserControl
     {
         Content = new Border
         {
-            BorderBrush = Brushes.LightGray,
+            Background = Brushes.White,
+            BorderBrush = new SolidColorBrush(Color.Parse("#d9dedb")),
             BorderThickness = new Thickness(1),
-            Padding = new Thickness(10),
+            CornerRadius = new CornerRadius(8),
+            Padding = new Thickness(14),
+            Margin = new Thickness(0, 0, 0, 2),
             Child = _root
         };
     }
@@ -24,13 +27,30 @@ public sealed class ResearchBlockView : UserControl
         ArgumentNullException.ThrowIfNull(block);
 
         _root.Children.Clear();
-        _root.Children.Add(WorkspacePlanView.Text($"{block.Order}. {block.Title}", 17, FontWeight.SemiBold));
-        _root.Children.Add(WorkspacePlanView.Text($"Mode: {block.Mode}  Severity: {block.Severity}  Source: {block.SourceKind}", 12));
-        _root.Children.Add(WorkspacePlanView.Text($"Kind: {block.Kind}  Block: {block.BlockId}", 12));
+        if (Content is Border border)
+        {
+            border.BorderBrush = WorkspacePlanView.SeverityBrush(block.Severity);
+            border.BorderThickness = new Thickness(4, 1, 1, 1);
+        }
+
+        _root.Children.Add(WorkspacePlanView.Text($"{block.Order}. {block.Title}", 18, FontWeight.Bold));
+
+        var metadata = new WrapPanel
+        {
+            ItemSpacing = 6,
+            LineSpacing = 6
+        };
+        metadata.Children.Add(WorkspacePlanView.Badge($"Mode: {block.Mode}"));
+        metadata.Children.Add(WorkspacePlanView.Badge($"Severity: {block.Severity}", foreground: WorkspacePlanView.SeverityBrush(block.Severity)));
+        metadata.Children.Add(WorkspacePlanView.Badge($"Source: {block.SourceKind}"));
+        metadata.Children.Add(WorkspacePlanView.Badge($"Kind: {block.Kind}"));
+        _root.Children.Add(metadata);
+
+        _root.Children.Add(WorkspacePlanView.Text($"Block: {block.BlockId}", 12, foreground: new SolidColorBrush(Color.Parse("#5e6870"))));
 
         if (!string.IsNullOrWhiteSpace(block.Summary))
         {
-            _root.Children.Add(WorkspacePlanView.Text(block.Summary, 12));
+            _root.Children.Add(WorkspacePlanView.Text(block.Summary, 13));
         }
 
         var evidence = new EvidenceRefListView();

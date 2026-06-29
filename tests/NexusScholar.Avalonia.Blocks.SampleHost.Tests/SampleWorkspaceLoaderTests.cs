@@ -1,3 +1,6 @@
+using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
+using Avalonia.Layout;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NexusScholar.Avalonia.Blocks.SampleHost;
 using NexusScholar.UiContracts;
@@ -55,6 +58,31 @@ public sealed class SampleWorkspaceLoaderTests
         CollectionAssert.DoesNotContain(references, "NexusScholar.Bundles");
         CollectionAssert.DoesNotContain(references, "NexusScholar.Extensibility");
         CollectionAssert.DoesNotContain(references, "NexusScholar.AI");
+    }
+
+    [TestMethod]
+    public void Sample_host_layout_keeps_status_outside_scrollable_workspace_area()
+    {
+        var root = MainWindow.BuildHostLayout(new Border(), new Border(), new Border());
+        var layout = Assert.IsInstanceOfType<Grid>(root.Child);
+
+        Assert.AreEqual(3, layout.RowDefinitions.Count);
+        Assert.AreEqual(GridUnitType.Auto, layout.RowDefinitions[0].Height.GridUnitType);
+        Assert.AreEqual(GridUnitType.Star, layout.RowDefinitions[1].Height.GridUnitType);
+        Assert.AreEqual(GridUnitType.Auto, layout.RowDefinitions[2].Height.GridUnitType);
+
+        Assert.IsTrue(layout.Children.Count >= 3);
+        var workspaceScroller = Assert.IsInstanceOfType<ScrollViewer>(
+            layout.Children.Single(child => Grid.GetRow(child) == 1));
+        Assert.AreEqual(ScrollBarVisibility.Disabled, workspaceScroller.HorizontalScrollBarVisibility);
+        Assert.AreEqual(ScrollBarVisibility.Visible, workspaceScroller.VerticalScrollBarVisibility);
+        Assert.IsTrue(workspaceScroller.Focusable);
+        Assert.AreEqual(VerticalAlignment.Stretch, workspaceScroller.VerticalAlignment);
+        var scrolledContent = Assert.IsInstanceOfType<Control>(workspaceScroller.Content);
+        Assert.AreEqual(VerticalAlignment.Top, scrolledContent.VerticalAlignment);
+
+        var statusChild = layout.Children.Single(child => Grid.GetRow(child) == 2);
+        Assert.IsInstanceOfType<Border>(statusChild);
     }
 
     private static string FindRepositoryRoot()
