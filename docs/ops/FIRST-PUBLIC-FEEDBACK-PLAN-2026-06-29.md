@@ -4,10 +4,11 @@ Status: accepted working plan for the next public-readiness push. No code is imp
 
 Baseline:
 
-- `main` at `e79f5cd`
+- `main` at `7cd63ae`
 - `gh-pages` at `53d7aa4`
 - remote branches: `main`, `gh-pages`
-- hosted `gate-01` green on `main`
+- latest watched hosted `gate-01` green on `main`: run `28381357879` for `e79f5cd`
+- planning commit `7cd63ae` was pushed before `cdx/public-feedback-cli-onboarding` was created
 
 ## Decision
 

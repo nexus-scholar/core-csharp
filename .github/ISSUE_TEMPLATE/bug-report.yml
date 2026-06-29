@@ -1,0 +1,52 @@
+name: Bug report
+description: Report a reproducible local failure in build, tests, CLI, sample host, or docs.
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: OS, shell, .NET SDK version, commit or branch.
+      placeholder: "Windows 11, PowerShell, .NET 10.x, main@..."
+    validations:
+      required: true
+  - type: textarea
+    id: commands-run
+    attributes:
+      label: Commands run
+      description: Paste exact commands.
+      placeholder: |
+        dotnet build NexusScholar.Core.slnx -c Release
+        dotnet test NexusScholar.Core.slnx -c Release --no-build
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: Paste errors, failed output, or screenshots if useful.
+    validations:
+      required: true
+  - type: textarea
+    id: reproducibility
+    attributes:
+      label: Reproducibility notes
+      description: Does this happen every time? Did it require a clean clone?
+    validations:
+      required: false
+  - type: checkboxes
+    id: scope
+    attributes:
+      label: Scope
+      options:
+        - label: This report is about local repo behavior, not live provider/network availability.
+          required: true
+        - label: I did not expect persistence, API/cloud, PDF/OCR, production app behavior, or PHP compatibility unless a doc explicitly claimed it.
+          required: true

@@ -1,0 +1,46 @@
+name: Architecture boundary review
+description: Review Core authority, dependency boundaries, or non-claim preservation.
+title: "[Architecture] "
+labels: ["architecture", "feedback"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this for boundary concerns: Core dependencies, scientific authority, evidence identity, UI separation, provider/network scope, or non-claims.
+  - type: input
+    id: area
+    attributes:
+      label: Area reviewed
+      placeholder: "Core/UI boundary, Full Text, Search Import, Deduplication, Screening, Bundles"
+    validations:
+      required: true
+  - type: textarea
+    id: concern
+    attributes:
+      label: Concern or finding
+      description: Describe the boundary issue as specifically as possible.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: Link files, lines, docs, tests, commands, or expected vs actual behavior.
+    validations:
+      required: true
+  - type: textarea
+    id: expected-boundary
+    attributes:
+      label: Expected boundary
+      description: What rule or non-claim did you expect the project to preserve?
+    validations:
+      required: true
+  - type: checkboxes
+    id: scope-check
+    attributes:
+      label: Scope check
+      options:
+        - label: This issue does not request live provider/network behavior without a provider/network/legal ADR.
+          required: true
+        - label: This issue does not request persistence, API, cloud, PDF/OCR, or UI product-shell behavior unless explicitly framed as future planning.
+          required: true
