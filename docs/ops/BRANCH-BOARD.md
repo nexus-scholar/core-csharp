@@ -70,7 +70,12 @@ Best next work:
 1. Public onboarding and first-tester walkthrough.
 2. Feedback issue templates and PR template.
 3. Maintainer routing docs refresh (`CODEX-START-HERE.md`, `PLANS.md`).
-4. AppServices/read-only block composition planning for Import + Dedup.
+4. CLI local deterministic demo.
+5. AppServices/read-only block composition planning for Import + Dedup.
+
+Detailed plan:
+
+- `docs/ops/FIRST-PUBLIC-FEEDBACK-PLAN-2026-06-29.md`
 
 ## Unresolved Boundaries
 

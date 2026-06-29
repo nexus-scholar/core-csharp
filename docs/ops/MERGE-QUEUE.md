@@ -60,7 +60,12 @@ Create a fresh branch from `main` for one of:
 1. public onboarding and first-tester walkthrough;
 2. issue/PR feedback templates;
 3. maintainer routing docs refresh;
-4. AppServices/read-only block composition planning.
+4. CLI local deterministic demo;
+5. AppServices/read-only block composition planning.
+
+Current detailed plan:
+
+- `docs/ops/FIRST-PUBLIC-FEEDBACK-PLAN-2026-06-29.md`
 
 ## Verification
 
