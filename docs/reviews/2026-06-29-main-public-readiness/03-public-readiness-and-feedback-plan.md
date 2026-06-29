@@ -4,7 +4,7 @@
 
 Use this public framing:
 
-> Nexus Scholar Core is an audit-grade, local-first C# research workflow kernel. It currently proves strict records, authority boundaries, conformance fixtures, and a sample block-rendering path. It is not yet a finished researcher app.
+> Nexus Scholar Core is an audit-grade, local-first C# research workflow kernel. It currently proves strict records, authority boundaries, conformance fixtures, local no-network Full Text evidence, and a sample block-rendering path. It is not yet a finished researcher app.
 
 Do not pitch it as:
 
@@ -14,6 +14,15 @@ Do not pitch it as:
 - a live scholarly-provider tool;
 - a PDF extraction/OCR tool;
 - a cloud collaboration platform.
+
+## What Is Better After Consolidation
+
+- `main` now contains Full Text implementation, UI contracts, Avalonia renderer, and sample host together.
+- Remote branch state is clean: only `main` and `gh-pages`.
+- README now describes the real current surface and non-claims.
+- Hosted CI is green on Ubuntu and Windows for `main` at `ebb7bba`.
+
+This makes the project safer to show, but it does not make it ready for general researcher use.
 
 ## Who To Ask For Feedback First
 
@@ -31,18 +40,17 @@ Do not ask: "Can you use Nexus for your review?"
 
 Ask concrete tasks:
 
-1. Read the homepage and tell me what you think the project does.
+1. Read the README and tell me what you think the project does.
 2. Run the verification commands and report whether setup succeeds.
 3. Run the CLI doctor/sample commands and explain what is unclear.
 4. Run the Avalonia sample host and inspect the three sample workspaces.
-5. Open the Deduplication or Screening module page and identify one unclear boundary.
-6. File one feedback issue using a template.
+5. Open the Deduplication, Screening, or Full Text module docs and identify one unclear boundary.
+6. File one feedback issue once templates exist.
 
 ## First Feedback Loop To Build
 
 Minimum public-feedback loop:
 
-- top-level README with current status;
 - getting-started tutorial that is not a placeholder;
 - issue templates;
 - one public "help wanted: first feedback" post;
@@ -59,7 +67,7 @@ What is already good:
 - blog posts explain motivation and market distinction;
 - architecture page is strong;
 - module pages exist for current modules;
-- internal links pass a local static link check;
+- internal links passed a local static link check in the earlier review;
 - public docs are mostly honest about non-claims.
 
 What blocks first testers:
@@ -69,24 +77,14 @@ What blocks first testers:
 - no explicit first-tester path;
 - no sample-host screenshot/GIF;
 - no "try this in 10 minutes" page;
-- no clear distinction between "developer feedback", "methodology feedback", and "researcher workflow feedback";
+- no clear distinction between developer feedback, methodology feedback, and researcher workflow feedback;
 - no public roadmap page tied to current `origin/main`.
 
 ## Repo Landing Page Review
 
-The repo README should be upgraded before inviting testers.
+The repo README is now acceptable as a developer-facing entry point.
 
-Suggested README structure:
-
-1. One-sentence product claim.
-2. What is implemented now.
-3. What is explicitly not implemented.
-4. Quick start.
-5. Try the CLI smoke path.
-6. Try the sample host.
-7. Where to read architecture.
-8. How to give feedback.
-9. Branch/state note: `main` is the current public baseline; `gh-pages` is public site.
+It still should not be the only public onboarding path. The public site needs a walkthrough that mirrors the README quick start and shows the sample host visually.
 
 ## Feedback Channels To Add
 
@@ -116,6 +114,7 @@ Best first public artifact:
 It should show:
 
 - `dotnet test` green;
+- hosted `gate-01` green;
 - `dotnet run --project src/NexusScholar.Cli -- doctor`;
 - `dotnet run --project src/NexusScholar.Cli -- sample`;
 - sample host screenshot;

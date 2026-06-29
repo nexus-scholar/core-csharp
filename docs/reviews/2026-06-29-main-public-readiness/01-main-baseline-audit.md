@@ -1,22 +1,25 @@
 # Main Baseline Audit
 
-Baseline: `origin/main` at `16cabc3`.
+Baseline: `origin/main` at `ebb7bba`.
 
 ## Bottom Line
 
-`origin/main` is a coherent technical foundation. It is not just UI planning. It has real C# modules, conformance fixtures, architecture guards, and a public site. The weakness is presentation and product readiness: the top-level repo docs still read like an earlier scaffold, the ops docs lag the current merge state, and there is no complete runnable first-tester path.
+`origin/main` is now a coherent technical foundation with the main implementation and branch cleanup consolidated. It is not just UI planning and it is not merely a scaffold. It contains real C# modules, conformance fixtures, architecture guards, a local no-network Full Text slice, UI contracts, a renderer prototype, and a sample visual host.
 
-## What Is Actually Present
+The remaining weakness is public product readiness: the repo can be reviewed by developers and methodologists, but it still lacks a complete first-tester walkthrough, issue templates, screenshots/GIFs, and a current public getting-started page.
 
-Measured from the clean `origin/main` worktree:
+## Measured Current State
 
-- 15 source/sample projects in `NexusScholar.Core.slnx`.
+Measured from the current clean `main` worktree:
+
+- 16 source projects under `src/`.
+- 2 sample folders under `samples/`.
 - 6 test projects.
-- 137 C# files under `src/`.
-- 62 C# files under `tests/`.
-- 141 JSON conformance fixtures.
+- 144 C# files under `src/`.
+- 64 C# files under `tests/`.
+- 163 JSON conformance fixtures.
 - 14 ADR files.
-- 25 gate/evidence docs.
+- 26 gate/evidence docs.
 
 Implemented or scaffolded module surface:
 
@@ -29,6 +32,7 @@ Implemented or scaffolded module surface:
 - `NexusScholar.Search`
 - `NexusScholar.Deduplication`
 - `NexusScholar.Screening`
+- `NexusScholar.FullText`
 - `NexusScholar.Bundles`
 - `NexusScholar.Extensibility`
 - `NexusScholar.AI`
@@ -47,9 +51,9 @@ Implemented or scaffolded module surface:
 
    The repo preserves product laws such as suggestion-not-decision, draft-not-approved-protocol, automation-not-authority, current-state-not-history, and projection-not-canonical-evidence.
 
-3. Search, Deduplication, and Screening are separated correctly.
+3. Search, Deduplication, Screening, and Full Text are separated correctly.
 
-   Search preserves observations and imports. Deduplication structures duplicate evidence without deleting raw sightings. Screening requires human decision authority and blocks unresolved conflicts.
+   Search preserves observations and imports. Deduplication structures duplicate evidence without deleting raw sightings. Screening requires human decision authority and blocks unresolved conflicts. Full Text records local artifact evidence by exact raw bytes plus `raw-artifact-bytes` digest and keeps extraction derived.
 
 4. The UI direction is safe so far.
 
@@ -57,46 +61,39 @@ Implemented or scaffolded module surface:
 
 5. Public Pages already exist.
 
-   `gh-pages` has a homepage, narrative posts, architecture page, module pages, contributing guide, and developer docs. Internal static links passed a local link check.
+   `gh-pages` has a homepage, narrative posts, architecture page, module pages, contributing guide, and developer docs. Internal static links passed in the earlier review.
 
-## Blocking Public-Readiness Findings
+6. Branch state is clean.
 
-### 1. The top-level README undersells and misstates current scope.
+   Remote branches are now only `main` and `gh-pages`. Local branches are `main` and `gh-pages`. Old `cdx/*` branches were deleted after the useful Full Text implementation was ported.
 
-`README.md` still says Search, corpus, screening, extraction, persistence, API, desktop, and web modules are added only when their gates begin. But `origin/main` already includes Search, Search import, Deduplication, Screening, UiContracts, Avalonia Blocks, and a sample host.
+## Remaining Public-Readiness Findings
 
-Impact: a first visitor gets a stale picture from the repo landing page.
+### 1. The top-level README drift is resolved.
 
-Fix: rewrite `README.md` around the current evidence-backed state:
+The README now reflects the current implementation surface, quick start, CLI smoke path, sample host, authority rules, and non-claims.
 
-- what works now;
-- what is contract-only;
-- what is sample-only;
-- what is explicitly not claimed;
-- how to run verification;
-- how to run the CLI smoke path and sample host.
+Residual risk: the README is suitable for developer review, but it still does not replace a guided public tutorial.
 
 ### 2. `CODEX-START-HERE.md` is stale.
 
-It tells Codex to read AGENTS and run Gate 0 discovery. That was right at project start; it is wrong for the current public baseline.
+It still tells Codex to read `AGENTS.md` and run Gate 0 discovery. That was right at project start; it is wrong for the current public baseline.
 
 Impact: future work may restart from old discovery instead of current `main`.
 
-Fix: make it route to a current maintainer path:
+Fix: route to the current maintainer path:
 
 - read `README.md`;
-- read `docs/ops/BRANCH-BOARD.md` after refresh;
 - read current ADR/gate docs for the target lane;
 - use `scripts/verify.ps1`;
-- do not broaden non-claims.
+- preserve non-claims;
+- treat old gate plans as history unless the target lane needs them.
 
-### 3. Ops docs are stale after PR #4.
+### 3. Ops docs were stale and have now been refreshed.
 
-`docs/ops/BRANCH-BOARD.md`, `MERGE-QUEUE.md`, and `CHAT-ROSTER.md` still describe `main` at `c3ced65`, not `16cabc3`.
+`docs/ops/BRANCH-BOARD.md`, `MERGE-QUEUE.md`, and `CHAT-ROSTER.md` now describe `main` at `ebb7bba`, remote branches `main`/`gh-pages`, and no active `cdx/*` branch queue.
 
-Impact: branch cleanup and next-lane planning can be wrong.
-
-Fix: refresh ops docs from live branch state after the branch cleanup decision.
+Residual risk: these docs should be refreshed again after the next real branch/PR.
 
 ### 4. The public tutorial is still a placeholder.
 
@@ -107,33 +104,19 @@ Impact: this is the main blocker for first testers. A tester needs an exact path
 Fix: create one verified tutorial:
 
 1. clone repo;
-2. install .NET SDK per `global.json`;
-3. run build/test/format;
+2. install the .NET SDK used by the repo;
+3. run build/test/format or `scripts/verify`;
 4. run `dotnet run --project src/NexusScholar.Cli -- doctor`;
 5. run `dotnet run --project src/NexusScholar.Cli -- sample`;
 6. run the Avalonia sample host;
 7. inspect `samples/block-plans/dedup-review.sample.json`;
 8. report feedback through a GitHub issue template.
 
-## Important Findings
-
-### 1. The CLI is not a product CLI.
-
-`src/NexusScholar.Cli` supports `doctor` and `sample`. It is useful for smoke testing, but it does not expose Search, Import, Deduplication, Screening, bundles, or Full Text.
-
-Implication: do not invite researchers to "use Nexus" yet. Invite them to review architecture, run the sample, and critique first workflows.
-
-### 2. Full Text implementation exists only on an unmerged local branch.
-
-`cdx/gate-9-fulltext-local` adds a serious implementation slice, fixtures, and tests, but it is based before current UI merges. A direct merge would delete current UI renderer/host files.
-
-Implication: Full Text local work is likely the next valuable implementation lane, but it must be rebased or cherry-picked onto `origin/main` carefully.
-
-### 3. No GitHub issue templates exist.
+### 5. No GitHub issue templates exist.
 
 Only `.github/workflows/gate-01.yml` exists. There are no public feedback issue templates.
 
-Implication: if you ask people for feedback now, their feedback will be noisy and hard to sort.
+Impact: if you ask people for feedback now, their feedback will be noisy and hard to sort.
 
 Fix: add issue templates for:
 
@@ -143,15 +126,35 @@ Fix: add issue templates for:
 - bug/report validation failure;
 - documentation confusion.
 
+## Important Product Findings
+
+### 1. The CLI is still not a product CLI.
+
+`src/NexusScholar.Cli` supports `doctor` and `sample`. It is useful for smoke testing, but it does not expose Search, Import, Deduplication, Screening, bundles, or Full Text workflows.
+
+Implication: do not invite researchers to "use Nexus" yet. Invite them to review architecture, run the sample, and critique first workflows.
+
+### 2. Full Text is implemented only as a local no-network evidence slice.
+
+The implementation is valuable and now merged to `main`, but it deliberately excludes live providers, HTTP downloads, provider SDKs, credentials, scraping, paywall bypass, shadow-library sources, actual PDF parsing, OCR, persistence/API/UI/cloud behavior, and PHP compatibility claims.
+
+Implication: Full Text can support architecture review and local evidence-shape testing, not live paper retrieval.
+
 ## Verification Evidence
 
 ```text
-dotnet build NexusScholar.Core.slnx -c Release /nr:false /p:UseSharedCompilation=false
+dotnet build NexusScholar.Core.slnx -c Release
 Passed
 
 dotnet test NexusScholar.Core.slnx -c Release --no-build
-Passed: 297 tests
+Passed: 318 tests
 
 dotnet format NexusScholar.Core.slnx --verify-no-changes --no-restore
 Passed
+
+powershell -ExecutionPolicy Bypass -File ./scripts/verify.ps1
+Passed: 318 tests
+
+Hosted gate-01 run 28380516236
+Passed: ubuntu-latest and windows-latest
 ```

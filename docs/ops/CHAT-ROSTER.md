@@ -1,34 +1,40 @@
 # Chat Roster
 
-Branch-derived Codex lane roster from current git state after ADR 0014 Full Text contract merge.
+Branch-derived Codex lane roster from current git state after main consolidation and remote branch cleanup.
 
 ## Active Lanes
 
-- Lane `main`: merged baseline containing Gate 0 through Gate 6, Gate 9 Shared Identity, Gate 9 Search, Search Import, Deduplication, Screening, UI contract/block-plan samples, Full Text reconnaissance, and ADR 0014 Full Text contract; current head `c3ced65`.
-- Lane `gate-9-fulltext-recon`: closed docs-only reconnaissance lane, original branch head `85d2e17`, content applied to `main` at `37a2881`; remote branch remains because it is patch-equivalent but not ancestry-merged.
-- Lane `ui-phase-3-avalonia-renderer`: unrelated UI renderer prototype lane at `4efd341`; keep separate from Full Text implementation.
+- Lane `main`: current implementation baseline at `ebb7bba`.
+- Lane `gh-pages`: public documentation site at `53d7aa4`.
+
+There are no active `cdx/*` branches locally or remotely.
 
 ## Branch Containment Relationships
 
-- `main` contains the implemented local review pipeline through Search, Import, Deduplication, and Screening.
-- `main` contains Gate 9 Full Text reconnaissance docs and conflict/fixture planning.
-- `main` contains ADR 0014 Full Text acquisition, artifact, and extraction contract.
-- `main` contains UI contract/block-plan sample work from merge commit `13f343e`.
-- `cdx/gate-9-fulltext-contract` is ancestry-contained by `main`.
-- `cdx/gate-9-fulltext-recon` is not ancestry-contained by `main`; it is patch-equivalent to `37a2881` and should not be treated as a normal merged branch without explicit cleanup approval.
-- `cdx/ui-phase-3-avalonia-renderer` is not contained by `main` and should not be touched by Full Text work.
+- `main` contains the implemented local review pipeline through Search, Import, Deduplication, Screening, and local no-network Full Text.
+- `main` contains UI contracts, sample block plans, Avalonia renderer prototype, and Avalonia sample host.
+- `main` contains refreshed README and review docs.
+- `gh-pages` remains separate public-site history.
 
 ## Status Notes
 
-- Full Text contract branch CI is green on Ubuntu and Windows: https://github.com/nexus-scholar/core-csharp/actions/runs/28320117650
-- Final `main` CI for `c3ced65` is green on Ubuntu and Windows: https://github.com/nexus-scholar/core-csharp/actions/runs/28320176602
+- Final `main` CI for `ebb7bba` is green on Ubuntu and Windows: https://github.com/nexus-scholar/core-csharp/actions/runs/28380516236
 - ADR 0014 defines Full Text input boundary, acquisition records, source attempts, artifact evidence records, raw byte digest identity, extraction records, failure categories, legal/access boundary, app projection boundary, and Screening handoff.
-- Local C# Full Text implementation is ready only for a no-network slice.
+- Local C# Full Text implementation is no-network only.
 - Raw artifact identity is exact bytes plus `raw-artifact-bytes` digest.
 - Derived extraction evidence must bind back to source artifact id and raw digest, and must not replace raw artifact evidence.
 - PHP `pdf_fetches`, CLI manifests, Web batches/items, app audit rows, storage paths, and download routes are projections unless transformed into ADR 0014 records.
 - Live providers, scraping, paywall bypass, shadow libraries, artifact storage, actual PDF parsing, OCR, and app behavior as Core authority remain unclaimed.
-- Next branch should be `cdx/gate-9-fulltext-local`.
+
+## Recommended Next Conversation
+
+Focus next on public-feedback readiness:
+
+1. getting-started tutorial;
+2. sample host screenshot/GIF;
+3. issue templates;
+4. first-tester checklist;
+5. maintainer routing docs refresh.
 
 ## Explicit Non-Claims For Next Lane
 
@@ -44,5 +50,4 @@ Branch-derived Codex lane roster from current git state after ADR 0014 Full Text
 - no OCR
 - no artifact storage implementation
 - no Screening behavior change
-- no CLI/Web behavior changes
 - no app behavior made authoritative

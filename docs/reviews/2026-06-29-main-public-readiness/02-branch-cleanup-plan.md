@@ -1,139 +1,82 @@
-# Branch Cleanup Plan
+# Branch Cleanup Record
 
-Baseline after `git fetch --all`: `origin/main` at `16cabc3`.
+Baseline before cleanup: `origin/main` at `16cabc3`.
+
+Current baseline after cleanup: `origin/main` at `ebb7bba`.
 
 ## Verdict
 
-Do not merge every branch blindly.
+Branch cleanup is complete for the current consolidation pass.
 
-The correct strategy is:
+The original plan was correct:
 
 1. Treat `origin/main` as the baseline.
 2. Keep `gh-pages`.
-3. Delete remote branches that are ancestry-merged into `origin/main`.
-4. Delete `origin/cdx/gate-9-fulltext-recon` only after accepting patch-equivalent cleanup.
-5. Keep or rebase `cdx/gate-9-fulltext-local`; do not direct-merge it.
-6. Delete stale local branches only after the valuable Full Text local branch is preserved.
+3. Do not direct-merge stale branches.
+4. Port the useful Full Text implementation onto current `main`.
+5. Delete stale local and remote `cdx/*` branches after preservation.
 
-## Remote Branches
+## Completed Actions
 
-Remote branches ancestry-merged into `origin/main`:
+- Fast-forwarded local `main` to `origin/main`.
+- Cherry-picked the Full Text implementation commit `a520616` onto current `main` as `5a13abc`.
+- Preserved the UI renderer and sample host while adding Full Text.
+- Refreshed README and review docs in commit `ebb7bba`.
+- Pushed `main` to `origin`.
+- Deleted remote branches:
+  - `cdx/gate-9-fulltext-contract`
+  - `cdx/gate-9-fulltext-recon`
+  - `cdx/ui-phase-3-5-avalonia-sample-host`
+  - `cdx/ui-phase-3-avalonia-renderer`
+- Pruned remote refs.
+- Removed clean obsolete local `cdx/*` worktrees.
+- Deleted local `cdx/*` branches.
+- Kept `gh-pages`.
 
-- `origin/cdx/gate-9-fulltext-contract`
-- `origin/cdx/ui-phase-3-5-avalonia-sample-host`
-- `origin/cdx/ui-phase-3-avalonia-renderer`
+## Current Remote Branches
 
-Remote branch not ancestry-merged but patch-equivalent:
-
-- `origin/cdx/gate-9-fulltext-recon`
-
-`git cherry -v origin/main origin/cdx/gate-9-fulltext-recon` returned:
-
-```text
-- 85d2e17 docs: map PHP full text behavior
-```
-
-That means its patch content is already represented on `origin/main`, but the branch is not an ancestry-merge cleanup candidate.
-
-Remote branch to keep:
-
-- `origin/gh-pages`
-
-## Local Branches
-
-Most local `cdx/*` branches are ancestry-contained by `origin/main` and can be deleted locally after you are comfortable with branch cleanup.
-
-Branches that need special handling:
-
-- `cdx/gate-9-fulltext-local`
-- `cdx/gate-9-screening-local-with-ui-base`
-- `gh-pages`
-
-### `cdx/gate-9-fulltext-local`
-
-Status: valuable but not merge-ready against current `origin/main`.
-
-It has one unique commit:
+Verified with `git ls-remote --heads origin`:
 
 ```text
-a520616 Implement local full text evidence slice
+53d7aa429471faf65ea6b94c3febd1015c1e94a1 refs/heads/gh-pages
+ebb7bba6131c27a5608a63d302de555b26db849e refs/heads/main
 ```
 
-It adds:
+## Current Local Branches
 
-- `src/NexusScholar.FullText/`
-- `tests/NexusScholar.Core.Tests/FullTextTests.cs`
-- `tests/NexusScholar.Conformance.Tests/FullTextFixtureTests.cs`
-- `fixtures/conformance/fulltext/*.json`
-- Full Text evidence docs.
+Verified with `git branch -a --verbose --no-abbrev`:
 
-But the branch is based before UI renderer/sample-host merges. The diff against current `origin/main` includes deletions of:
-
-- `src/NexusScholar.Avalonia.Blocks/**`
-- `samples/NexusScholar.Avalonia.Blocks.SampleHost/**`
-- Avalonia test projects;
-- current UI renderer docs.
-
-Safe action: create a new branch from `origin/main` and cherry-pick or port only the Full Text implementation files. Resolve architecture tests so both Full Text and UI renderer boundaries coexist.
-
-Unsafe action: direct merge `cdx/gate-9-fulltext-local` into `main`.
-
-### `cdx/gate-9-screening-local-with-ui-base`
-
-Status: do not merge.
-
-This branch is stale and destructive relative to current `origin/main`. Its diff deletes ADR 0014, Full Text docs, much of `docs/ui`, Avalonia renderer/host files, and many current tests.
-
-Safe action: delete after confirming no required work remains.
-
-### `gh-pages`
-
-Keep. It is intentionally separate public-site history.
-
-## Recommended Cleanup Sequence
-
-1. Fast-forward local `main` to `origin/main`.
-2. Create a safety tag before cleanup:
-
-```powershell
-git tag pre-cleanup-2026-06-29 origin/main
+```text
+main     ebb7bba6131c27a5608a63d302de555b26db849e
+gh-pages 53d7aa429471faf65ea6b94c3febd1015c1e94a1
 ```
 
-3. Delete remote ancestry-merged branches:
+Remote tracking refs:
 
-```powershell
-git push origin --delete cdx/gate-9-fulltext-contract
-git push origin --delete cdx/ui-phase-3-avalonia-renderer
-git push origin --delete cdx/ui-phase-3-5-avalonia-sample-host
+```text
+origin/main     ebb7bba6131c27a5608a63d302de555b26db849e
+origin/gh-pages 53d7aa429471faf65ea6b94c3febd1015c1e94a1
 ```
 
-4. If you accept patch-equivalent cleanup:
+## What Was Not Merged Blindly
 
-```powershell
-git push origin --delete cdx/gate-9-fulltext-recon
-```
+The stale local branch `cdx/gate-9-screening-local-with-ui-base` was not merged. Its two-dot diff against current `origin/main` would have deleted accepted Full Text docs, UI renderer/host files, and current tests.
 
-5. Preserve Full Text local work before deleting old local branches:
+The old Full Text local branch was not direct-merged. Only its useful implementation commit was cherry-picked onto current `main`, preserving UI work.
 
-```powershell
-git switch --detach origin/main
-git switch -c cdx/gate-9-fulltext-local-rebased
-git cherry-pick a520616
-```
+## Hosted Verification
 
-Expect conflicts. Preserve current UI files and port only Full Text behavior.
+After pushing `main`, GitHub Actions run `28380516236` passed on:
 
-6. After the rebased Full Text branch is green, delete stale local branches.
+- `ubuntu-latest`
+- `windows-latest`
 
-## Branch Cleanup Decision Table
+Run URL: https://github.com/nexus-scholar/core-csharp/actions/runs/28380516236
 
-| Branch | Classification | Action |
-| --- | --- | --- |
-| `origin/cdx/gate-9-fulltext-contract` | ancestry-merged | delete remote |
-| `origin/cdx/ui-phase-3-avalonia-renderer` | ancestry-merged | delete remote |
-| `origin/cdx/ui-phase-3-5-avalonia-sample-host` | ancestry-merged | delete remote |
-| `origin/cdx/gate-9-fulltext-recon` | patch-equivalent | delete only after explicit acceptance |
-| `origin/gh-pages` | public site | keep |
-| `cdx/gate-9-fulltext-local` | valuable unmerged local work | rebase/cherry-pick, do not direct-merge |
-| `cdx/gate-9-screening-local-with-ui-base` | stale destructive local branch | delete after confirmation |
-| old local `cdx/*` branches with `AncestorMerged=True` | local clutter | delete after cleanup tag |
+## Remaining Branch Policy
+
+- Keep `main` as the implementation baseline.
+- Keep `gh-pages` as the public site branch.
+- Create future work on fresh short-lived branches from current `main`.
+- Do not recreate long-lived `cdx/*` branch piles without an explicit branch board update.
+- Refresh this record or `docs/ops/*` after the next pushed branch or PR.
