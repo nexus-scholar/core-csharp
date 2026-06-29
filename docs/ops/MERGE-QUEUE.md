@@ -1,24 +1,26 @@
 # Merge Queue
 
-Source: live status after main consolidation, remote push, remote branch cleanup, and hosted CI.
+Source: live status after main consolidation, remote branch cleanup, first public-feedback planning, and branch creation.
 
 ## Current Queue
 
-No implementation branch is queued.
+Active docs/planning branch: `cdx/public-feedback-cli-onboarding`.
 
 Current baseline:
 
-- `main` head: `ebb7bba` (`docs: refresh readmes after main consolidation`).
-- `origin/main`: `ebb7bba`.
-- Hosted `main` CI: `gate-01` run `28380516236`, passed on Ubuntu and Windows.
+- `main` head: `7cd63ae` (`docs: plan first public feedback loop`).
+- `origin/main`: `7cd63ae`.
+- Hosted `main` CI: `gate-01` run `28381357879`, passed on Ubuntu and Windows for the review-refresh baseline. The first public-feedback plan commit was then pushed to `main`.
 - Remote branches: `main`, `gh-pages`.
-- Local branches: `main`, `gh-pages`.
+- Local branches include `main`, `gh-pages`, and active branch `cdx/public-feedback-cli-onboarding`.
 
 ## Completed Consolidation
 
 - `origin/main` was advanced from `16cabc3` to `ebb7bba`.
 - Full Text implementation was ported from old local commit `a520616` into `main` as `5a13abc`.
 - Review and README refresh landed as `ebb7bba`.
+- Review/ops state refresh landed as `e79f5cd`.
+- First public-feedback plan landed as `7cd63ae`.
 - Remote `cdx/*` branches were deleted.
 - Local `cdx/*` branches and clean obsolete worktrees were deleted.
 
@@ -53,15 +55,19 @@ Current baseline:
 - CLI/Web app alignment
 - AI governance beyond current proposal contracts
 
-## Recommended Next Branch
+## Active Work
 
-Create a fresh branch from `main` for one of:
+Current branch:
 
-1. public onboarding and first-tester walkthrough;
-2. issue/PR feedback templates;
-3. maintainer routing docs refresh;
-4. CLI local deterministic demo;
-5. AppServices/read-only block composition planning.
+- `cdx/public-feedback-cli-onboarding`
+
+Current packets:
+
+1. PF-01 maintainer routing docs.
+2. PF-02 issue/PR feedback templates.
+3. CLI-01 local deterministic demo contract.
+
+Stop after CLI-01 review. Do not implement CLI demo code yet.
 
 Current detailed plan:
 

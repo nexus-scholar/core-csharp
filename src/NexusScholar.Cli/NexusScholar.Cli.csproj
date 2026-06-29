@@ -10,5 +10,7 @@
     <ProjectReference Include="../NexusScholar.Bundles/NexusScholar.Bundles.csproj" />
     <ProjectReference Include="../NexusScholar.Extensibility/NexusScholar.Extensibility.csproj" />
     <ProjectReference Include="../NexusScholar.AI/NexusScholar.AI.csproj" />
+    <ProjectReference Include="../NexusScholar.Search/NexusScholar.Search.csproj" />
+    <ProjectReference Include="../NexusScholar.Deduplication/NexusScholar.Deduplication.csproj" />
   </ItemGroup>
 </Project>

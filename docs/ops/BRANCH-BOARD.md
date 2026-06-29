@@ -1,15 +1,16 @@
 # Codex Branch Board
 
-Source: live branch probes after main consolidation, remote push, remote `cdx/*` cleanup, and hosted CI.
+Source: live branch probes after main consolidation, remote `cdx/*` cleanup, first public-feedback planning, and branch creation.
 
 ## Main Baseline
 
-- Current `main`: `ebb7bba` (`docs: refresh readmes after main consolidation`).
-- Current `origin/main`: `ebb7bba`.
+- Current branch: `cdx/public-feedback-cli-onboarding`.
+- Current `main`: `7cd63ae` (`docs: plan first public feedback loop`).
+- Current `origin/main`: `7cd63ae`.
 - Current public site branch: `gh-pages` / `origin/gh-pages` at `53d7aa4`.
 - Remote heads are only `main` and `gh-pages`.
-- Local heads are only `main` and `gh-pages`.
-- Hosted `main` CI run `28380516236` passed Ubuntu and Windows restore, build, test, and format.
+- Local heads include `main`, `gh-pages`, and active branch `cdx/public-feedback-cli-onboarding`.
+- Hosted `main` CI run `28381357879` passed Ubuntu and Windows restore, build, test, and format for the review-refresh baseline. The first public-feedback plan commit was then pushed to `main`.
 
 ## Main Contains
 
@@ -22,13 +23,13 @@ Source: live branch probes after main consolidation, remote push, remote `cdx/*`
 - UI contracts and sample block plans.
 - Avalonia block renderer prototype.
 - Avalonia sample host.
-- README and review docs refreshed after consolidation.
+- README, review docs, ops docs, and first public-feedback plan.
 
 ## Branch Classes
 
 - merged: all prior local `cdx/*` branches needed for the current baseline have been merged, cherry-picked, or superseded into `main`.
 - cleanup: none pending locally or remotely.
-- active: `main`.
+- active: `cdx/public-feedback-cli-onboarding`.
 - review: none.
 - blocked: PHP compatibility claims, generated PHP fixtures, persistence/API/UI/cloud, live provider/network behavior, Scopus API, Web of Science API, Google Scholar scraping, paywall bypass, shadow-library sources, AI governance beyond proposal contracts, full-text artifact storage, actual PDF parsing, OCR, and app integration claims remain out of scope.
 - stale: none retained locally or remotely.
@@ -40,7 +41,7 @@ Source: live branch probes after main consolidation, remote push, remote `cdx/*`
 
 ```text
 53d7aa429471faf65ea6b94c3febd1015c1e94a1 refs/heads/gh-pages
-ebb7bba6131c27a5608a63d302de555b26db849e refs/heads/main
+7cd63ae9f80962b47ac478e0a6b5b156c5d83d6b refs/heads/main
 ```
 
 Remote branches deleted in this consolidation:
@@ -63,15 +64,15 @@ None.
 
 ## Next Work
 
-Recommended next branch should be created fresh from current `main`.
+Active branch was created fresh from current `main`.
 
-Best next work:
+Current work:
 
-1. Public onboarding and first-tester walkthrough.
-2. Feedback issue templates and PR template.
-3. Maintainer routing docs refresh (`CODEX-START-HERE.md`, `PLANS.md`).
-4. CLI local deterministic demo.
-5. AppServices/read-only block composition planning for Import + Dedup.
+1. PF-01 maintainer routing docs.
+2. PF-02 feedback issue templates and PR template.
+3. CLI-01 local deterministic demo contract.
+
+Explicit stop point: do not implement the CLI demo until CLI-01 is reviewed.
 
 Detailed plan:
 

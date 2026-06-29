@@ -22,6 +22,7 @@
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/NexusScholar.Core.Tests/NexusScholar.Core.Tests.csproj" />
+    <Project Path="tests/NexusScholar.Cli.Tests/NexusScholar.Cli.Tests.csproj" />
     <Project Path="tests/NexusScholar.Architecture.Tests/NexusScholar.Architecture.Tests.csproj" />
     <Project Path="tests/NexusScholar.Conformance.Tests/NexusScholar.Conformance.Tests.csproj" />
     <Project Path="tests/NexusScholar.UiContracts.Tests/NexusScholar.UiContracts.Tests.csproj" />

@@ -1,0 +1,58 @@
+name: First tester run
+description: Report a first pass through the public onboarding or local demo path.
+title: "[First tester] "
+labels: ["first-tester", "feedback"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this when you tried the README, CLI, sample host, or getting-started path. Nexus Scholar Core is not yet a production researcher app.
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: OS, terminal, .NET SDK version, and commit or branch.
+      placeholder: "Windows 11, PowerShell, .NET 10.x, main@..."
+    validations:
+      required: true
+  - type: textarea
+    id: commands-run
+    attributes:
+      label: Commands run
+      description: Paste the exact commands you ran.
+      placeholder: |
+        dotnet build NexusScholar.Core.slnx -c Release
+        dotnet test NexusScholar.Core.slnx -c Release --no-build
+        dotnet run --project src/NexusScholar.Cli -- doctor
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected result
+      description: What did you expect to happen?
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual result
+      description: What happened instead? Include errors or confusing output.
+    validations:
+      required: true
+  - type: textarea
+    id: unclear
+    attributes:
+      label: What was unclear?
+      description: Name the README, tutorial, command, or screen that confused you.
+    validations:
+      required: false
+  - type: checkboxes
+    id: non-claims
+    attributes:
+      label: Non-claims understood
+      options:
+        - label: I understand this is not a production systematic-review app yet.
+          required: true
+        - label: I understand this path should not call live providers, network APIs, PDF/OCR, persistence, API, or cloud behavior.
+          required: true

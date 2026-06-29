@@ -1,0 +1,41 @@
+name: Documentation confusion
+description: Report unclear, stale, contradictory, or missing documentation.
+title: "[Docs] "
+labels: ["documentation", "feedback"]
+body:
+  - type: input
+    id: location
+    attributes:
+      label: Documentation location
+      description: File, page, section, or URL.
+      placeholder: "README.md, docs/ops/..., gh-pages tutorial..."
+    validations:
+      required: true
+  - type: textarea
+    id: confusion
+    attributes:
+      label: What was confusing?
+      description: Explain what you understood and where the text failed.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected explanation
+      description: What did you expect the docs to say?
+    validations:
+      required: true
+  - type: textarea
+    id: commands-or-context
+    attributes:
+      label: Commands or context
+      description: If this came from trying commands, paste them here.
+    validations:
+      required: false
+  - type: checkboxes
+    id: non-claims
+    attributes:
+      label: Non-claim check
+      options:
+        - label: This documentation issue should preserve the project's non-claims around live providers, network behavior, persistence/API/cloud, PDF/OCR, production app behavior, and PHP compatibility.
+          required: true
