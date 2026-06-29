@@ -42,7 +42,7 @@ Ask concrete tasks:
 
 1. Read the README and tell me what you think the project does.
 2. Run the verification commands and report whether setup succeeds.
-3. Run the CLI doctor/sample commands and explain what is unclear.
+3. Run the CLI `doctor`, `sample`, and `demo` commands and explain what is unclear.
 4. Run the Avalonia sample host and inspect the three sample workspaces.
 5. Open the Deduplication, Screening, or Full Text module docs and identify one unclear boundary.
 6. File one feedback issue once templates exist.
@@ -117,6 +117,8 @@ It should show:
 - hosted `gate-01` green;
 - `dotnet run --project src/NexusScholar.Cli -- doctor`;
 - `dotnet run --project src/NexusScholar.Cli -- sample`;
+- `dotnet run --project src/NexusScholar.Cli -- demo`;
+- the demo's stable local/no-network import and dedup summary;
 - sample host screenshot;
 - `samples/block-plans/dedup-review.sample.json`;
 - one module page link;

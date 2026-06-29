@@ -1,10 +1,10 @@
 # Local CLI Demo Contract v0
 
-Status: planning contract for a future CLI implementation task. No source code or tests are changed by this document.
+Status: implemented by CLI-02 and documented for first-tester feedback by CLI-03. The command remains local-only, deterministic, and non-authoritative.
 
 ## Goal
 
-Add a deterministic local `demo` command that lets first testers see the current Nexus Scholar value without live providers, persistence, API/cloud behavior, PDF/OCR, or UI product-shell behavior.
+Provide a deterministic local `demo` command that lets first testers see the current Nexus Scholar value without live providers, provider SDKs, persistence, API/cloud behavior, PDF/OCR, PHP compatibility claims, or UI product-shell behavior.
 
 The command should demonstrate:
 
@@ -27,18 +27,13 @@ Exit code:
 
 ## Current CLI Baseline
 
-Current `src/NexusScholar.Cli/Program.cs` supports:
+Current `src/NexusScholar.Cli/Program.cs` dispatches:
 
 - `doctor`
 - `sample`
+- `demo`
 
 Current help text is:
-
-```text
-Usage: dotnet run --project src/NexusScholar.Cli -- [doctor|sample]
-```
-
-The implementation task should update it to:
 
 ```text
 Usage: dotnet run --project src/NexusScholar.Cli -- [doctor|sample|demo]
@@ -46,15 +41,12 @@ Usage: dotnet run --project src/NexusScholar.Cli -- [doctor|sample|demo]
 
 ## Required Project References
 
-`src/NexusScholar.Cli/NexusScholar.Cli.csproj` currently does not reference Search or Deduplication.
-
-The implementation task may add project references to:
+`src/NexusScholar.Cli/NexusScholar.Cli.csproj` references the local Search and Deduplication projects needed to run the deterministic demo:
 
 - `../NexusScholar.Search/NexusScholar.Search.csproj`
 - `../NexusScholar.Deduplication/NexusScholar.Deduplication.csproj`
-- `../NexusScholar.Shared/NexusScholar.Shared.csproj` only if required by direct compile use
 
-Do not change `src/NexusScholar.Search/**` or `src/NexusScholar.Deduplication/**` for the first demo implementation.
+The implementation did not change `src/NexusScholar.Search/**` or `src/NexusScholar.Deduplication/**`.
 
 ## Demo Input
 

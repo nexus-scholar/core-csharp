@@ -16,7 +16,7 @@ The pinned PHP package remains behavioral evidence for proven workflows. This re
 - shared scientific identity, Search traces, imported Search evidence, Deduplication, Screening, and Full Text;
 - plugin capability and governed-AI proposal contracts;
 - UI contracts, sample block plans, an Avalonia block renderer, and a sample visual host;
-- a small CLI with `doctor` and `sample` commands.
+- a small CLI with `doctor`, `sample`, and deterministic local `demo` commands.
 
 The Full Text slice is local and no-network. It accepts digest-bound user-supplied or deterministic artifact bytes, records acquisition/source-attempt evidence, validates PDF/XML/text shapes, detects duplicate artifacts by raw byte digest, and keeps extraction as derived evidence bound to the raw artifact. It does not download papers, call provider APIs, parse PDFs, run OCR, persist data, expose an API, or claim PHP compatibility.
 
@@ -54,6 +54,28 @@ Run the CLI smoke commands:
 ```powershell
 dotnet run --project src/NexusScholar.Cli -- doctor
 dotnet run --project src/NexusScholar.Cli -- sample
+dotnet run --project src/NexusScholar.Cli -- demo
+```
+
+The `demo` command is for first-tester feedback, not researcher production use. It is local-only, deterministic, and non-authoritative: it uses embedded sample Search-import bytes, does not call live providers or provider SDKs, does not download or scrape, does not persist data, does not expose an API/cloud workflow, does not run PDF extraction/OCR, and does not claim PHP compatibility.
+
+Stable `demo` summary:
+
+```text
+Nexus Scholar Core local demo
+Mode: deterministic local sample
+Network: none
+Live providers: none
+Persistence: none
+Import source: scopus-csv
+Imported records: 5
+Search sightings: 4
+Parser warnings: 2
+Source digest scope: raw-artifact-bytes
+Dedup raw candidates: 4
+Dedup exact clusters: 1
+Dedup review-required pairs: 1
+Non-claims: no live providers; no provider SDKs; no persistence/API/cloud; no PDF/OCR; no PHP compatibility
 ```
 
 Launch the UI sample host:
