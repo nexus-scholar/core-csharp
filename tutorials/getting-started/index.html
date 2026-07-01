@@ -80,6 +80,10 @@ Non-claims: no live providers; no provider SDKs; no persistence/API/cloud; no PD
           <h2>4. Inspect the sample host</h2>
           <pre><code>dotnet run --project samples/NexusScholar.Avalonia.Blocks.SampleHost</code></pre>
           <p>The sample host is a visual inspection harness for non-authoritative <code>WorkspacePlan</code> JSON rendered through <code>NexusScholar.UiContracts</code> and <code>NexusScholar.Avalonia.Blocks</code>. It is not a product desktop app, not an app-service layer, and not a Core command surface.</p>
+          <figure class="screenshot-frame">
+            <img src="../../assets/img/sample-host-first-tester.png" alt="Nexus Scholar Core sample host showing a non-authoritative import warning review sample." loading="lazy">
+            <figcaption>Current sample host view. It is sample-only visual inspection output; actions are placeholder callbacks and do not call Core.</figcaption>
+          </figure>
           <p>Look for whether the blocks, evidence references, validation references, and placeholder action labels make sense to you. If the visual language is confusing, file documentation or UI feedback rather than treating the sample host as a finished workflow.</p>
         </section>
 
