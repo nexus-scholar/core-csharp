@@ -41,8 +41,8 @@ research-project/
     imports/
       search-001.import-trace.json
       search-002.import-trace.json
-    analysis/
-      deduplication-result.json
+    dedup/
+      current.deduplication-result.json
     workspace/
       current.workspace-plan.json
     reports/
@@ -155,7 +155,7 @@ Expected behavior:
 
 - runs Deduplication over imported Search evidence;
 - composes a `WorkspacePlan` through `NexusScholar.AppServices`;
-- writes `nexus-output/analysis/deduplication-result.json`;
+- writes `nexus-output/dedup/current.deduplication-result.json`;
 - writes `nexus-output/workspace/current.workspace-plan.json`;
 - every generated APP-01 block uses `BlockSourceKind.AppProjection`;
 - does not execute block actions or mutate Core scientific records.

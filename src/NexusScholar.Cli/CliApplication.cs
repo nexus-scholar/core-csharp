@@ -1,4 +1,5 @@
 using NexusScholar.Bundles;
+using NexusScholar.Cli.ResearchWorkspace;
 using NexusScholar.Kernel;
 using NexusScholar.Protocol;
 using NexusScholar.Provenance;
@@ -8,13 +9,25 @@ namespace NexusScholar.Cli;
 
 public static class CliApplication
 {
-    public const string Usage = "Usage: dotnet run --project src/NexusScholar.Cli -- [doctor|sample|demo]";
+    public const string Usage = "Usage: dotnet run --project src/NexusScholar.Cli -- [doctor|sample|demo|init|status]";
 
     public static int Run(string[] args, TextWriter output, TextWriter error)
+    {
+        return Run(args, output, error, Directory.GetCurrentDirectory(), () => DateTimeOffset.UtcNow);
+    }
+
+    internal static int Run(
+        string[] args,
+        TextWriter output,
+        TextWriter error,
+        string workingDirectory,
+        Func<DateTimeOffset> utcNow)
     {
         ArgumentNullException.ThrowIfNull(args);
         ArgumentNullException.ThrowIfNull(output);
         ArgumentNullException.ThrowIfNull(error);
+        ArgumentException.ThrowIfNullOrWhiteSpace(workingDirectory);
+        ArgumentNullException.ThrowIfNull(utcNow);
 
         var command = args.FirstOrDefault()?.ToLowerInvariant() ?? "doctor";
 
@@ -23,6 +36,8 @@ public static class CliApplication
             "doctor" => RunDoctor(output),
             "sample" => RunSample(output),
             "demo" => LocalDemoCommand.Run(output),
+            "init" => ResearchWorkspaceInitCommand.Run(args.Skip(1).ToArray(), output, error, workingDirectory, utcNow),
+            "status" => ResearchWorkspaceStatusCommand.Run(output, error, workingDirectory),
             _ => ShowHelp(error)
         };
     }
