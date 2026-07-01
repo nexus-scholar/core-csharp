@@ -1,0 +1,10 @@
+Imported search export: search-warning
+Source: web-of-science
+Format: ris
+Copied to: inputs/search/search-warning-web-of-science.ris
+Source digest: sha256:312aefd70d44aa77d5a6649cf469fbe96fe30fe2bacaa6b519342bc4051d025d
+Imported records: 0
+Parser warnings: 3
+Skipped records: 1
+Trace: nexus-output/imports/search-warning.import-trace.json
+Next: nexus verify

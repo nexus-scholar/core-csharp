@@ -16,7 +16,7 @@ internal static class ResearchWorkspaceStatusCommand
                 return ResearchWorkspaceExitCodes.MissingProjectOrInput;
             }
 
-            var project = ReadProject(projectFile);
+            var project = ResearchWorkspaceStore.ReadProject(projectFile);
             if (!string.Equals(project.Schema, ResearchWorkspaceProject.CurrentSchema, StringComparison.Ordinal))
             {
                 error.WriteLine($"Unsupported Nexus project schema: {project.Schema}");
@@ -46,46 +46,6 @@ internal static class ResearchWorkspaceStatusCommand
         {
             error.WriteLine($"Unable to read Nexus research workspace: {exception.Message}");
             return ResearchWorkspaceExitCodes.UnexpectedRuntimeFailure;
-        }
-    }
-
-    private static ResearchWorkspaceProject ReadProject(string projectFile)
-    {
-        var project = ResearchWorkspaceJson.Deserialize(File.ReadAllText(projectFile));
-        if (project is null)
-        {
-            throw new JsonException("Project file did not contain an object.");
-        }
-
-        ValidateProject(project);
-        return project;
-    }
-
-    private static void ValidateProject(ResearchWorkspaceProject project)
-    {
-        if (string.IsNullOrWhiteSpace(project.Schema))
-        {
-            throw new JsonException("Project schema is required.");
-        }
-
-        if (string.IsNullOrWhiteSpace(project.WorkspaceId))
-        {
-            throw new JsonException("Project workspaceId is required.");
-        }
-
-        if (string.IsNullOrWhiteSpace(project.Title))
-        {
-            throw new JsonException("Project title is required.");
-        }
-
-        if (project.Inputs is null)
-        {
-            throw new JsonException("Project inputs must be an array.");
-        }
-
-        if (project.Outputs is null)
-        {
-            throw new JsonException("Project outputs must be an object.");
         }
     }
 

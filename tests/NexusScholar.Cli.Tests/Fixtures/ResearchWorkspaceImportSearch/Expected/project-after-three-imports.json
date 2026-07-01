@@ -1,0 +1,48 @@
+{
+  "schema": "nexus.project.v0",
+  "workspaceId": "workspace-ai-screening-tools-review",
+  "title": "AI screening tools review",
+  "createdAt": "2026-07-01T00:00:00Z",
+  "inputs": [
+    {
+      "inputId": "search-001",
+      "kind": "search-export",
+      "source": "scopus",
+      "format": "csv",
+      "relativePath": "inputs/search/search-001-scopus.csv",
+      "sha256": "sha256:34b3877e416692e7ec25ddc2d052d84e6c00ae44597ee57ad7943ae1869101c7",
+      "queryId": "search-001",
+      "queryText": "systematic review screening software",
+      "importTracePath": "nexus-output/imports/search-001.import-trace.json"
+    },
+    {
+      "inputId": "search-002",
+      "kind": "search-export",
+      "source": "web-of-science",
+      "format": "ris",
+      "relativePath": "inputs/search/search-002-web-of-science.ris",
+      "sha256": "sha256:dfab16ff2a5c36d94c55bf0a95d5a7e408d90ea9cfce4e770875308bed349445",
+      "queryId": "search-002",
+      "queryText": "systematic review screening software",
+      "importTracePath": "nexus-output/imports/search-002.import-trace.json"
+    },
+    {
+      "inputId": "search-003",
+      "kind": "search-export",
+      "source": "google-scholar",
+      "format": "bibtex",
+      "relativePath": "inputs/search/search-003-google-scholar.bib",
+      "sha256": "sha256:07fa6e308e67d53e7eee88dca251645721ede6d4d560c9dbd744806c877a86c4",
+      "queryId": "search-003",
+      "queryText": "systematic review screening software",
+      "importTracePath": "nexus-output/imports/search-003.import-trace.json"
+    }
+  ],
+  "outputs": {},
+  "nonClaims": [
+    "local-folder-project",
+    "no-live-providers",
+    "no-cloud-sync",
+    "no-database"
+  ]
+}

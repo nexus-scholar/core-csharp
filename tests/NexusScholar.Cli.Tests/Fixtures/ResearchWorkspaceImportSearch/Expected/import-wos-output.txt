@@ -1,0 +1,10 @@
+Imported search export: search-002
+Source: web-of-science
+Format: ris
+Copied to: inputs/search/search-002-web-of-science.ris
+Source digest: sha256:dfab16ff2a5c36d94c55bf0a95d5a7e408d90ea9cfce4e770875308bed349445
+Imported records: 2
+Parser warnings: 0
+Skipped records: 0
+Trace: nexus-output/imports/search-002.import-trace.json
+Next: nexus verify

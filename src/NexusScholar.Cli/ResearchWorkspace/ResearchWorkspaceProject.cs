@@ -39,6 +39,12 @@ internal sealed record ResearchWorkspaceProject(
             });
     }
 
+    public ResearchWorkspaceProject WithInput(ResearchWorkspaceInput input)
+    {
+        ArgumentNullException.ThrowIfNull(input);
+        return this with { Inputs = Inputs.Concat(new[] { input }).ToArray() };
+    }
+
     private static string CreateWorkspaceId(string title)
     {
         var lowercase = title.ToLowerInvariant();

@@ -1,11 +1,18 @@
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace NexusScholar.Cli.ResearchWorkspace;
 
 internal static class ResearchWorkspaceJson
 {
-    public static readonly JsonSerializerOptions SerializerOptions = new(JsonSerializerDefaults.Web)
+    private static readonly JsonSerializerOptions ProjectSerializerOptions = new(JsonSerializerDefaults.Web)
+    {
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+        WriteIndented = true
+    };
+
+    private static readonly JsonSerializerOptions TraceSerializerOptions = new(JsonSerializerDefaults.Web)
     {
         WriteIndented = true
     };
@@ -14,16 +21,22 @@ internal static class ResearchWorkspaceJson
 
     public static string Serialize(ResearchWorkspaceProject project)
     {
-        return JsonSerializer.Serialize(project, SerializerOptions).ReplaceLineEndings("\n");
+        return JsonSerializer.Serialize(project, ProjectSerializerOptions).ReplaceLineEndings("\n");
     }
 
     public static ResearchWorkspaceProject? Deserialize(string json)
     {
-        return JsonSerializer.Deserialize<ResearchWorkspaceProject>(json, SerializerOptions);
+        return JsonSerializer.Deserialize<ResearchWorkspaceProject>(json, ProjectSerializerOptions);
     }
 
     public static void WriteProjectFile(string path, ResearchWorkspaceProject project)
     {
         File.WriteAllText(path, Serialize(project) + "\n", Utf8NoBom);
+    }
+
+    public static void WriteJsonFile<T>(string path, T value)
+    {
+        var json = JsonSerializer.Serialize(value, TraceSerializerOptions).ReplaceLineEndings("\n");
+        File.WriteAllText(path, json + "\n", Utf8NoBom);
     }
 }

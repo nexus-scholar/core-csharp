@@ -1,0 +1,10 @@
+Imported search export: search-001
+Source: scopus
+Format: csv
+Copied to: inputs/search/search-001-scopus.csv
+Source digest: sha256:34b3877e416692e7ec25ddc2d052d84e6c00ae44597ee57ad7943ae1869101c7
+Imported records: 2
+Parser warnings: 2
+Skipped records: 0
+Trace: nexus-output/imports/search-001.import-trace.json
+Next: nexus verify
