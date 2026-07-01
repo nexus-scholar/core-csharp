@@ -60,8 +60,8 @@ internal static class SearchImportWorkspaceCommand
                 return ResearchWorkspaceExitCodes.UnsupportedSchemaOrFormat;
             }
 
-            var source = NormalizeSource(options.Source);
-            var format = NormalizeFormat(options.Format);
+            var source = SearchImportAliases.NormalizeSource(options.Source);
+            var format = SearchImportAliases.NormalizeFormat(options.Format);
             var inputId = string.IsNullOrWhiteSpace(options.QueryId)
                 ? NextInputId(project)
                 : options.QueryId.Trim();
@@ -75,7 +75,7 @@ internal static class SearchImportWorkspaceCommand
             }
 
             var sourceBytes = File.ReadAllBytes(sourcePath);
-            var relativeSourcePath = $"{ResearchWorkspacePaths.SearchInputs}/{inputId}-{source}.{ExtensionFor(format)}";
+            var relativeSourcePath = $"{ResearchWorkspacePaths.SearchInputs}/{inputId}-{source}.{SearchImportAliases.ExtensionFor(format)}";
             var targetSourcePath = ResearchWorkspacePaths.InProject(location.RootDirectory, relativeSourcePath);
             if (File.Exists(targetSourcePath))
             {
@@ -92,7 +92,7 @@ internal static class SearchImportWorkspaceCommand
                 traceId,
                 new SearchImportRequest(
                     source,
-                    ParserFormatFor(format),
+                    SearchImportAliases.ParserFormatFor(format),
                     ParserId,
                     ParserVersion,
                     ImportedBy,
@@ -202,55 +202,6 @@ internal static class SearchImportWorkspaceCommand
 
         index++;
         return args[index];
-    }
-
-    private static string NormalizeSource(string source)
-    {
-        var normalized = source.Trim().ToLowerInvariant();
-        return normalized switch
-        {
-            "scopus" => "scopus",
-            "web-of-science" or "webofscience" or "wos" => "web-of-science",
-            "google-scholar" or "googlescholar" or "scholar" => "google-scholar",
-            "openalex" => "openalex",
-            "semantic-scholar" or "semanticscholar" or "s2" => "semantic-scholar",
-            "other" => "other",
-            _ => throw new ArgumentException($"Unsupported search source alias: {source}")
-        };
-    }
-
-    private static string NormalizeFormat(string format)
-    {
-        var normalized = format.Trim().ToLowerInvariant();
-        return normalized switch
-        {
-            "csv" or "scopus-csv" => "csv",
-            "ris" or "wos-ris" or "openalex-ris" => "ris",
-            "bibtex" or "bib" or "semantic-scholar-bibtex" or "google-scholar-bibtex" => "bibtex",
-            _ => throw new ArgumentException($"Unsupported search format alias: {format}")
-        };
-    }
-
-    private static string ParserFormatFor(string normalizedFormat)
-    {
-        return normalizedFormat switch
-        {
-            "csv" => "scopus-csv",
-            "ris" => "ris",
-            "bibtex" => "bibtex",
-            _ => throw new ArgumentException($"Unsupported search format alias: {normalizedFormat}")
-        };
-    }
-
-    private static string ExtensionFor(string normalizedFormat)
-    {
-        return normalizedFormat switch
-        {
-            "csv" => "csv",
-            "ris" => "ris",
-            "bibtex" => "bib",
-            _ => throw new ArgumentException($"Unsupported search format alias: {normalizedFormat}")
-        };
     }
 
     private static string NextInputId(ResearchWorkspaceProject project)

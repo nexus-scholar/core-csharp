@@ -1,0 +1,6 @@
+Workspace verification
+Status: invalid
+Inputs: 1
+Digest mismatches: 1
+Changed: inputs/search/search-001-scopus.csv
+Next: re-import the file intentionally or restore the original bytes.

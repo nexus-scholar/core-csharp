@@ -1,0 +1,9 @@
+Workspace verification
+Status: valid
+Inputs: 1
+Files unchanged: 1
+Files missing: 0
+Digest mismatches: 0
+Parser warnings: 0
+Skipped records: 0
+Next: nexus analyze

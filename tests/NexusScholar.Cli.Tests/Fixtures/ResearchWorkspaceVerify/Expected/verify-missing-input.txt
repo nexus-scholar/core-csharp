@@ -1,0 +1,7 @@
+Workspace verification
+Status: invalid
+Inputs: 1
+Files unchanged: 0
+Files missing: 1
+Missing: inputs/search/search-001-scopus.csv
+Next: restore the missing file or remove the input entry intentionally.
