@@ -1,7 +1,7 @@
 name: First tester run
 description: Report a first pass through the public onboarding or local demo path.
 title: "[First tester] "
-labels: ["first-tester", "feedback"]
+labels: ["question"]
 body:
   - type: markdown
     attributes:

@@ -20,6 +20,17 @@ The pinned PHP package remains behavioral evidence for proven workflows. This re
 
 The Full Text slice is local and no-network. It accepts digest-bound user-supplied or deterministic artifact bytes, records acquisition/source-attempt evidence, validates PDF/XML/text shapes, detects duplicate artifacts by raw byte digest, and keeps extraction as derived evidence bound to the raw artifact. It does not download papers, call provider APIs, parse PDFs, run OCR, persist data, expose an API, or claim PHP compatibility.
 
+## Public Walkthrough And Feedback
+
+- First-tester walkthrough: https://nexus-scholar.github.io/core-csharp/tutorials/getting-started/
+- Contributing guide: `CONTRIBUTING.md`
+- Security policy: `SECURITY.md`
+- First tester run issue: https://github.com/nexus-scholar/core-csharp/issues/new?template=first-tester-run.yml
+- Architecture boundary review: https://github.com/nexus-scholar/core-csharp/issues/new?template=architecture-boundary-review.yml
+- Documentation confusion: https://github.com/nexus-scholar/core-csharp/issues/new?template=documentation-confusion.yml
+
+The walkthrough and issue templates are for first-tester feedback. They do not imply production systematic-review use, live providers, persistence/API/cloud behavior, PDF/OCR, or PHP compatibility.
+
 ## Try It Locally
 
 Prerequisite: .NET SDK for `net10.0`.
@@ -31,7 +42,7 @@ pwsh ./scripts/bootstrap.ps1
 ```
 
 ```bash
-./scripts/bootstrap.sh
+bash scripts/bootstrap.sh
 ```
 
 Verify the solution:
@@ -47,6 +58,10 @@ Or run the repository verification script:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File ./scripts/verify.ps1
+```
+
+```bash
+bash scripts/verify.sh
 ```
 
 Run the CLI smoke commands:

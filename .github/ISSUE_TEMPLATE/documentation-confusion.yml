@@ -1,7 +1,7 @@
 name: Documentation confusion
 description: Report unclear, stale, contradictory, or missing documentation.
 title: "[Docs] "
-labels: ["documentation", "feedback"]
+labels: ["documentation"]
 body:
   - type: input
     id: location
