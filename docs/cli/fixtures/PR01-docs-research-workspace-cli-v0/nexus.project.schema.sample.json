@@ -1,0 +1,14 @@
+{
+  "schema": "nexus.project.v0",
+  "workspaceId": "workspace-ai-screening-tools-review",
+  "title": "AI screening tools review",
+  "createdAt": "2026-07-01T00:00:00Z",
+  "inputs": [],
+  "outputs": {},
+  "nonClaims": [
+    "local-folder-project",
+    "no-live-providers",
+    "no-cloud-sync",
+    "no-database"
+  ]
+}
