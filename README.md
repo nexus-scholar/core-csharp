@@ -74,6 +74,8 @@ dotnet run --project src/NexusScholar.Cli -- demo
 
 The `demo` command is for first-tester feedback, not researcher production use. It is local-only, deterministic, and non-authoritative: it uses embedded sample Search-import bytes, does not call live providers or provider SDKs, does not download or scrape, does not persist data, does not expose an API/cloud workflow, does not run PDF extraction/OCR, and does not claim PHP compatibility.
 
+The proposed researcher workspace CLI workflow is documented in `docs/cli/RESEARCH-WORKSPACE-CLI-v0.md`. It describes future `nexus init`, `status`, `import search`, `verify`, `analyze`, `review`, and `clusters` commands; those commands are not implemented in the current CLI surface.
+
 Stable `demo` summary:
 
 ```text
