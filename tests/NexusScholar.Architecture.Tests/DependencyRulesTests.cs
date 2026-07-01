@@ -1,5 +1,6 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NexusScholar.AI;
+using NexusScholar.AppServices;
 using NexusScholar.Artifacts;
 using NexusScholar.Avalonia.Blocks;
 using NexusScholar.Avalonia.Blocks.SampleHost;
@@ -55,7 +56,8 @@ public sealed class DependencyRulesTests
             typeof(ReviewBundleManifest).Assembly,
             typeof(ExtensionManifest).Assembly,
             typeof(AiTaskPolicy).Assembly,
-            typeof(WorkspacePlan).Assembly
+            typeof(WorkspacePlan).Assembly,
+            typeof(SearchDedupWorkspacePlanComposer).Assembly
         }.Distinct();
 
         foreach (var assembly in assemblies)
@@ -265,8 +267,66 @@ public sealed class DependencyRulesTests
     }
 
     [TestMethod]
-    public void Core_domain_projects_do_not_reference_ui_contracts()
+    public void AppServices_project_references_only_allowed_nexus_projects()
     {
+        var appServicesAssembly = typeof(SearchDedupWorkspacePlanComposer).Assembly;
+        var allowed = new[]
+        {
+            typeof(IClock).Assembly.GetName().Name,
+            typeof(SearchTrace).Assembly.GetName().Name,
+            typeof(DeduplicationService).Assembly.GetName().Name,
+            typeof(WorkspacePlan).Assembly.GetName().Name
+        };
+        var disallowed = appServicesAssembly.GetReferencedAssemblies()
+            .Select(reference => reference.Name ?? string.Empty)
+            .Where(name => name.StartsWith("NexusScholar.", StringComparison.Ordinal))
+            .Where(name => !allowed.Contains(name, StringComparer.Ordinal))
+            .ToArray();
+
+        Assert.AreEqual(
+            0,
+            disallowed.Length,
+            $"NexusScholar.AppServices must depend only on Kernel, Search, Deduplication, and UiContracts inside Nexus. Found: {string.Join(", ", disallowed)}");
+    }
+
+    [TestMethod]
+    public void AppServices_source_contains_no_live_provider_or_host_symbols()
+    {
+        var repositoryRoot = FindRepositoryRoot();
+        var sourceRoot = Path.Combine(repositoryRoot, "src", "NexusScholar.AppServices");
+        var source = string.Join(
+            "\n",
+            Directory.GetFiles(sourceRoot, "*.cs", SearchOption.AllDirectories)
+                .Where(path => !path.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}", StringComparison.Ordinal) &&
+                    !path.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}", StringComparison.Ordinal))
+                .OrderBy(path => path, StringComparer.Ordinal)
+                .Select(File.ReadAllText));
+        var forbidden = new[]
+        {
+            string.Concat("Http", "Client"),
+            string.Concat("System.", "Net.", "Http"),
+            "DbContext",
+            string.Concat("Ava", "lonia"),
+            "OpenAI",
+            "Anthropic",
+            "SemanticKernel",
+            "ProviderSdk",
+            "ProviderClient",
+            string.Concat("File", "."),
+            string.Concat("Directory", ".")
+        };
+
+        var matches = forbidden
+            .Where(symbol => source.Contains(symbol, StringComparison.Ordinal))
+            .ToArray();
+
+        Assert.AreEqual(0, matches.Length, $"Forbidden AppServices source symbols: {string.Join(", ", matches)}");
+    }
+
+    [TestMethod]
+    public void Core_domain_projects_do_not_reference_appservices_or_ui_contracts()
+    {
+        var appServicesAssemblyName = typeof(SearchDedupWorkspacePlanComposer).Assembly.GetName().Name;
         var uiContractsAssemblyName = typeof(WorkspacePlan).Assembly.GetName().Name;
         var coreAssemblies = new[]
         {
@@ -290,8 +350,11 @@ public sealed class DependencyRulesTests
         {
             var referencesUiContracts = assembly.GetReferencedAssemblies()
                 .Any(reference => string.Equals(reference.Name, uiContractsAssemblyName, StringComparison.Ordinal));
+            var referencesAppServices = assembly.GetReferencedAssemblies()
+                .Any(reference => string.Equals(reference.Name, appServicesAssemblyName, StringComparison.Ordinal));
 
             Assert.IsFalse(referencesUiContracts, $"{assembly.GetName().Name} must not reference NexusScholar.UiContracts.");
+            Assert.IsFalse(referencesAppServices, $"{assembly.GetName().Name} must not reference NexusScholar.AppServices.");
         }
     }
 
@@ -314,9 +377,11 @@ public sealed class DependencyRulesTests
             typeof(WorkId).Assembly.GetName().Name,
             typeof(SearchTrace).Assembly.GetName().Name,
             typeof(ScreeningService).Assembly.GetName().Name,
+            typeof(FullTextInput).Assembly.GetName().Name,
             typeof(ReviewBundleManifest).Assembly.GetName().Name,
             typeof(ExtensionManifest).Assembly.GetName().Name,
-            typeof(AiTaskPolicy).Assembly.GetName().Name
+            typeof(AiTaskPolicy).Assembly.GetName().Name,
+            typeof(SearchDedupWorkspacePlanComposer).Assembly.GetName().Name
         }.Where(name => name is not null).ToArray();
 
         CollectionAssert.Contains(references, typeof(WorkspacePlan).Assembly.GetName().Name);
@@ -347,9 +412,11 @@ public sealed class DependencyRulesTests
             typeof(WorkId).Assembly.GetName().Name,
             typeof(SearchTrace).Assembly.GetName().Name,
             typeof(ScreeningService).Assembly.GetName().Name,
+            typeof(FullTextInput).Assembly.GetName().Name,
             typeof(ReviewBundleManifest).Assembly.GetName().Name,
             typeof(ExtensionManifest).Assembly.GetName().Name,
-            typeof(AiTaskPolicy).Assembly.GetName().Name
+            typeof(AiTaskPolicy).Assembly.GetName().Name,
+            typeof(SearchDedupWorkspacePlanComposer).Assembly.GetName().Name
         }.Where(name => name is not null).ToArray();
 
         CollectionAssert.Contains(references, typeof(WorkspacePlanView).Assembly.GetName().Name);
@@ -422,5 +489,21 @@ public sealed class DependencyRulesTests
     private sealed class FixedClock : IClock
     {
         public DateTimeOffset UtcNow { get; } = new(2026, 6, 25, 12, 0, 0, TimeSpan.Zero);
+    }
+
+    private static string FindRepositoryRoot()
+    {
+        var directory = new DirectoryInfo(AppContext.BaseDirectory);
+        while (directory is not null)
+        {
+            if (File.Exists(Path.Combine(directory.FullName, "NexusScholar.Core.slnx")))
+            {
+                return directory.FullName;
+            }
+
+            directory = directory.Parent;
+        }
+
+        throw new InvalidOperationException("Repository root could not be found.");
     }
 }

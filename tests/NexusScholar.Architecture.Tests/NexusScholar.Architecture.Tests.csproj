@@ -23,5 +23,6 @@
     <ProjectReference Include="../../src/NexusScholar.Extensibility/NexusScholar.Extensibility.csproj" />
     <ProjectReference Include="../../src/NexusScholar.AI/NexusScholar.AI.csproj" />
     <ProjectReference Include="../../src/NexusScholar.UiContracts/NexusScholar.UiContracts.csproj" />
+    <ProjectReference Include="../../src/NexusScholar.AppServices/NexusScholar.AppServices.csproj" />
   </ItemGroup>
 </Project>
