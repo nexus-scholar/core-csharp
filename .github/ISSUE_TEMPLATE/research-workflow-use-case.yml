@@ -1,7 +1,7 @@
 name: Research workflow use case
 description: Describe a real research workflow problem Nexus should eventually support.
 title: "[Use case] "
-labels: ["workflow-use-case", "feedback"]
+labels: ["enhancement", "question"]
 body:
   - type: markdown
     attributes:

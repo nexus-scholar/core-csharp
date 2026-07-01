@@ -1,7 +1,7 @@
 name: Architecture boundary review
 description: Review Core authority, dependency boundaries, or non-claim preservation.
 title: "[Architecture] "
-labels: ["architecture", "feedback"]
+labels: ["question"]
 body:
   - type: markdown
     attributes:

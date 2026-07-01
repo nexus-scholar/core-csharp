@@ -29,6 +29,9 @@ Paste exact commands and results.
 ```text
 dotnet build NexusScholar.Core.slnx -c Release
 dotnet test NexusScholar.Core.slnx -c Release --no-build
+dotnet run --project src/NexusScholar.Cli --configuration Release --no-build -- doctor
+dotnet run --project src/NexusScholar.Cli --configuration Release --no-build -- sample
+dotnet run --project src/NexusScholar.Cli --configuration Release --no-build -- demo
 dotnet format NexusScholar.Core.slnx --verify-no-changes --no-restore
 ```
 
