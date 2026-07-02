@@ -1,9 +1,9 @@
 using System.Text.Json;
 using NexusScholar.UiContracts;
 
-namespace NexusScholar.Cli.ResearchWorkspace;
+namespace NexusScholar.ResearchWorkspace;
 
-internal static class WorkspacePlanReader
+public static class WorkspacePlanReader
 {
     public static LoadedWorkspacePlan Read(string workingDirectory, bool requireDeduplicationResult = false)
     {
@@ -54,12 +54,12 @@ internal static class WorkspacePlanReader
     }
 }
 
-internal sealed record LoadedWorkspacePlan(
+public sealed record LoadedWorkspacePlan(
     ResearchWorkspaceLocation Location,
     ResearchWorkspaceProject Project,
     WorkspacePlan Plan);
 
-internal sealed class WorkspacePlanReadException : Exception
+public sealed class WorkspacePlanReadException : Exception
 {
     public WorkspacePlanReadException(string message, int exitCode)
         : base(message)

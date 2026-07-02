@@ -1,8 +1,8 @@
 using System.Text.Json.Serialization;
 
-namespace NexusScholar.Cli.ResearchWorkspace;
+namespace NexusScholar.ResearchWorkspace;
 
-internal sealed record ResearchWorkspaceInput
+public sealed record ResearchWorkspaceInput
 {
     public string? InputId { get; init; }
 

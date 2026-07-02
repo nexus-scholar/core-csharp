@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Text.RegularExpressions;
 using NexusScholar.Kernel;
+using NexusScholar.ResearchWorkspace;
 using NexusScholar.Search;
 
 namespace NexusScholar.Cli.ResearchWorkspace;

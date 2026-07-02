@@ -1,6 +1,6 @@
-namespace NexusScholar.Cli.ResearchWorkspace;
+namespace NexusScholar.ResearchWorkspace;
 
-internal sealed class ResearchWorkspaceMissingInputException : Exception
+public sealed class ResearchWorkspaceMissingInputException : Exception
 {
     public ResearchWorkspaceMissingInputException(string message)
         : base(message)
@@ -8,7 +8,7 @@ internal sealed class ResearchWorkspaceMissingInputException : Exception
     }
 }
 
-internal sealed class ResearchWorkspaceDigestMismatchException : Exception
+public sealed class ResearchWorkspaceDigestMismatchException : Exception
 {
     public ResearchWorkspaceDigestMismatchException(string message)
         : base(message)

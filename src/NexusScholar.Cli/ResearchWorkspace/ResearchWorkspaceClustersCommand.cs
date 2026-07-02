@@ -1,5 +1,7 @@
 using System.Text.Json;
 
+using NexusScholar.ResearchWorkspace;
+
 namespace NexusScholar.Cli.ResearchWorkspace;
 
 internal static class ResearchWorkspaceClustersCommand

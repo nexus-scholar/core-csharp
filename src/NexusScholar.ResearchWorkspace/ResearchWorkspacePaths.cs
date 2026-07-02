@@ -1,6 +1,6 @@
-namespace NexusScholar.Cli.ResearchWorkspace;
+namespace NexusScholar.ResearchWorkspace;
 
-internal static class ResearchWorkspacePaths
+public static class ResearchWorkspacePaths
 {
     public const string ProjectFileName = "nexus.project.json";
     public const string SearchInputs = "inputs/search";

@@ -2,9 +2,9 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace NexusScholar.Cli.ResearchWorkspace;
+namespace NexusScholar.ResearchWorkspace;
 
-internal static class ResearchWorkspaceJson
+public static class ResearchWorkspaceJson
 {
     private static readonly JsonSerializerOptions ProjectSerializerOptions = new(JsonSerializerDefaults.Web)
     {

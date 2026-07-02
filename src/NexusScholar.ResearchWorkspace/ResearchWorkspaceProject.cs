@@ -1,9 +1,9 @@
 using System.Globalization;
 using System.Text.RegularExpressions;
 
-namespace NexusScholar.Cli.ResearchWorkspace;
+namespace NexusScholar.ResearchWorkspace;
 
-internal sealed record ResearchWorkspaceProject(
+public sealed record ResearchWorkspaceProject(
     string Schema,
     string WorkspaceId,
     string Title,

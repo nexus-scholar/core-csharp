@@ -1,6 +1,6 @@
-namespace NexusScholar.Cli.ResearchWorkspace;
+namespace NexusScholar.ResearchWorkspace;
 
-internal static class WorkspacePlanReportWriter
+public static class WorkspacePlanReportWriter
 {
     public static string Format(ResearchWorkspaceAnalysisResult result)
     {

@@ -1,6 +1,6 @@
-namespace NexusScholar.Cli.ResearchWorkspace;
+namespace NexusScholar.ResearchWorkspace;
 
-internal sealed record ResearchWorkspaceVerificationReport(
+public sealed record ResearchWorkspaceVerificationReport(
     int InputCount,
     int FilesUnchanged,
     IReadOnlyList<string> MissingFiles,

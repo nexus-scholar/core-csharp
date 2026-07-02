@@ -1,9 +1,9 @@
 using NexusScholar.Kernel;
 using NexusScholar.Search;
 
-namespace NexusScholar.Cli.ResearchWorkspace;
+namespace NexusScholar.ResearchWorkspace;
 
-internal static class ResearchWorkspaceVerifier
+public static class ResearchWorkspaceVerifier
 {
     private const string ParserId = "nexus.cli.verify";
     private const string ParserVersion = "1.0.0";

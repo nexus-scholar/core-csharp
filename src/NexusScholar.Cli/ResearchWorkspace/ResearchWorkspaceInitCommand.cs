@@ -1,3 +1,5 @@
+using NexusScholar.ResearchWorkspace;
+
 namespace NexusScholar.Cli.ResearchWorkspace;
 
 internal static class ResearchWorkspaceInitCommand

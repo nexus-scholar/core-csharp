@@ -4,9 +4,9 @@ using NexusScholar.Kernel;
 using NexusScholar.Search;
 using NexusScholar.UiContracts;
 
-namespace NexusScholar.Cli.ResearchWorkspace;
+namespace NexusScholar.ResearchWorkspace;
 
-internal static class ResearchWorkspaceAnalyzer
+public static class ResearchWorkspaceAnalyzer
 {
     public const string DeduplicationResultPath = "nexus-output/dedup/current.deduplication-result.json";
     public const string WorkspacePlanPath = "nexus-output/workspace/current.workspace-plan.json";
@@ -132,7 +132,7 @@ internal static class ResearchWorkspaceAnalyzer
     }
 }
 
-internal sealed record ResearchWorkspaceAnalysisResult(
+public sealed record ResearchWorkspaceAnalysisResult(
     IReadOnlyList<SearchImportTrace> ImportTraces,
     DeduplicationResult DeduplicationResult,
     WorkspacePlan WorkspacePlan)

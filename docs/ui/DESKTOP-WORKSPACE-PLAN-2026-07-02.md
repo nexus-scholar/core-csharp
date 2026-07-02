@@ -120,6 +120,8 @@ Owner: application-services.
 
 Prerequisite: UI-ADR-01 accepted.
 
+Status: complete in `cdx/rw01-researchworkspace-services`.
+
 Goal: make CLI and future desktop UI share the same workspace logic without shelling out to CLI text.
 
 Allowed paths:
@@ -170,6 +172,8 @@ git diff --check
 Owner: application-services.
 
 Prerequisite: RW-01.
+
+Status: current after RW-01.
 
 Goal: expose structured read models that match the imported UI spec without parsing CLI console text.
 

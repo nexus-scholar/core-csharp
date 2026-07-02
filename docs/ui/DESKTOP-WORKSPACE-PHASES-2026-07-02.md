@@ -88,7 +88,7 @@ git diff --check
 
 ## Phase RW-01: Extract Shared ResearchWorkspace Services
 
-Status: current after UI-ADR-01 acceptance.
+Status: complete in `cdx/rw01-researchworkspace-services`.
 
 ### Goal
 
@@ -182,7 +182,7 @@ git diff --check
 
 ## Phase RW-02: Add UI-Friendly Read Models
 
-Status: after RW-01.
+Status: current after RW-01.
 
 ### Goal
 

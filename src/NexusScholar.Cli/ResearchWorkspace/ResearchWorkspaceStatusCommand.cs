@@ -1,4 +1,5 @@
 using System.Text.Json;
+using NexusScholar.ResearchWorkspace;
 using NexusScholar.Search;
 using NexusScholar.UiContracts;
 

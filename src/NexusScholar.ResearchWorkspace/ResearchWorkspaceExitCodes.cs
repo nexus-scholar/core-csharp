@@ -1,6 +1,6 @@
-namespace NexusScholar.Cli.ResearchWorkspace;
+namespace NexusScholar.ResearchWorkspace;
 
-internal static class ResearchWorkspaceExitCodes
+public static class ResearchWorkspaceExitCodes
 {
     public const int Success = 0;
     public const int UsageOrValidationFailure = 1;

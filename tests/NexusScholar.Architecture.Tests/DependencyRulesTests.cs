@@ -11,6 +11,7 @@ using NexusScholar.FullText;
 using NexusScholar.Kernel;
 using NexusScholar.Protocol;
 using NexusScholar.Provenance;
+using NexusScholar.ResearchWorkspace;
 using NexusScholar.Screening;
 using NexusScholar.Search;
 using NexusScholar.Shared;
@@ -321,6 +322,62 @@ public sealed class DependencyRulesTests
             .ToArray();
 
         Assert.AreEqual(0, matches.Length, $"Forbidden AppServices source symbols: {string.Join(", ", matches)}");
+    }
+
+    [TestMethod]
+    public void ResearchWorkspace_project_references_only_allowed_nexus_projects()
+    {
+        var researchWorkspaceAssembly = typeof(ResearchWorkspaceProject).Assembly;
+        var allowed = new[]
+        {
+            typeof(IClock).Assembly.GetName().Name,
+            typeof(SearchTrace).Assembly.GetName().Name,
+            typeof(DeduplicationService).Assembly.GetName().Name,
+            typeof(SearchDedupWorkspacePlanComposer).Assembly.GetName().Name,
+            typeof(WorkspacePlan).Assembly.GetName().Name
+        };
+        var disallowed = researchWorkspaceAssembly.GetReferencedAssemblies()
+            .Select(reference => reference.Name ?? string.Empty)
+            .Where(name => name.StartsWith("NexusScholar.", StringComparison.Ordinal))
+            .Where(name => !allowed.Contains(name, StringComparer.Ordinal))
+            .ToArray();
+
+        Assert.AreEqual(
+            0,
+            disallowed.Length,
+            $"NexusScholar.ResearchWorkspace must depend only on Kernel, Search, Deduplication, AppServices, and UiContracts inside Nexus. Found: {string.Join(", ", disallowed)}");
+    }
+
+    [TestMethod]
+    public void ResearchWorkspace_source_contains_no_ui_provider_persistence_cloud_or_model_symbols()
+    {
+        var repositoryRoot = FindRepositoryRoot();
+        var sourceRoot = Path.Combine(repositoryRoot, "src", "NexusScholar.ResearchWorkspace");
+        var source = string.Join(
+            "\n",
+            Directory.GetFiles(sourceRoot, "*.cs", SearchOption.AllDirectories)
+                .Where(path => !path.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}", StringComparison.Ordinal) &&
+                    !path.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}", StringComparison.Ordinal))
+                .OrderBy(path => path, StringComparer.Ordinal)
+                .Select(File.ReadAllText));
+        var forbidden = new[]
+        {
+            string.Concat("Http", "Client"),
+            string.Concat("System.", "Net.", "Http"),
+            "DbContext",
+            string.Concat("Ava", "lonia"),
+            "OpenAI",
+            "Anthropic",
+            "SemanticKernel",
+            "ProviderSdk",
+            "ProviderClient"
+        };
+
+        var matches = forbidden
+            .Where(symbol => source.Contains(symbol, StringComparison.Ordinal))
+            .ToArray();
+
+        Assert.AreEqual(0, matches.Length, $"Forbidden ResearchWorkspace source symbols: {string.Join(", ", matches)}");
     }
 
     [TestMethod]

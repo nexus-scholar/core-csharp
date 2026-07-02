@@ -1,6 +1,6 @@
-namespace NexusScholar.Cli.ResearchWorkspace;
+namespace NexusScholar.ResearchWorkspace;
 
-internal static class SearchImportAliases
+public static class SearchImportAliases
 {
     public static string NormalizeSource(string source)
     {

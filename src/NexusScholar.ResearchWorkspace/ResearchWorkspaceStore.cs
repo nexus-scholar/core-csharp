@@ -1,8 +1,8 @@
 using System.Text.Json;
 
-namespace NexusScholar.Cli.ResearchWorkspace;
+namespace NexusScholar.ResearchWorkspace;
 
-internal static class ResearchWorkspaceStore
+public static class ResearchWorkspaceStore
 {
     public static ResearchWorkspaceLocation? FindFrom(string startingDirectory)
     {
