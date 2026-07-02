@@ -39,6 +39,8 @@ The UI should feel like a professional JetBrains-style desktop workspace for res
 - Avalonia renderer prototype: `docs/ui/AVALONIA-RENDERER-PROTOTYPE-v0.md`
 - Sample host: `docs/ui/AVALONIA-SAMPLE-HOST-v0.md`
 - APP-01 ADR: `docs/adr/0015-app-services-readonly-workspace-composition.md`
+- Desktop boundary ADR draft: `docs/adr/0016-desktop-shell-and-researchworkspace-boundary.md`
+- Desktop workspace phases: `docs/ui/DESKTOP-WORKSPACE-PHASES-2026-07-02.md`
 - Current implementation: `src/NexusScholar.Cli/ResearchWorkspace/`, `src/NexusScholar.AppServices/`, `src/NexusScholar.UiContracts/`, `src/NexusScholar.Avalonia.Blocks/`
 
 ## Non-Negotiable Boundary
@@ -75,6 +77,8 @@ git diff --check
 ### UI-ADR-01 - Desktop Shell And ResearchWorkspace Boundary ADR
 
 Owner: docs/adr.
+
+Status: proposed as `docs/adr/0016-desktop-shell-and-researchworkspace-boundary.md`.
 
 Goal: decide whether and how to introduce a durable desktop UI and a shared ResearchWorkspace application-service layer.
 

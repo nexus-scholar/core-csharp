@@ -21,6 +21,8 @@ The current UI lane has moved past planning-only docs. `main` now includes rende
 - `AVALONIA-SAMPLE-HOST-v0.md`: Phase 3.5 sample host for manually inspecting the renderer.
 - `imported/2026-07-02-ui-guides-and-specs/`: preserved imported desktop UI guide/spec pack, including the JetBrains-style C# UI spec and HTML/React visual guides.
 - `DESKTOP-WORKSPACE-PLAN-2026-07-02.md`: staged plan for turning the imported UI specs into ADR, shared ResearchWorkspace services, read models, and a desktop preview.
+- `DESKTOP-WORKSPACE-PHASES-2026-07-02.md`: dependency-ordered desktop workspace phases from ADR review through shared services, read models, read-only preview, and later local workflow actions.
+- `../adr/0016-desktop-shell-and-researchworkspace-boundary.md`: proposed ADR for the shared ResearchWorkspace service boundary and first desktop preview scope.
 - `ROADMAP.md`: staged path from documentation to UI contracts, sample block plans, renderers, and later AI proposal support.
 - `OPEN-QUESTIONS.md`: product and technical questions that remain open.
 
