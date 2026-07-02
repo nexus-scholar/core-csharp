@@ -2,22 +2,62 @@
 
 This file keeps the historical gate map and points to the current operating plan.
 
-## Current Operating Plan
+## Completed
 
-The first public-feedback runway is now mostly in place:
+The public local CLI workflow is implemented and documented:
 
-- public-feedback issue templates and PR template are merged;
-- the deterministic local CLI `demo` is merged and documented;
-- the public getting-started walkthrough is merged on `gh-pages`;
-- the Avalonia sample host presentation and scrolling polish is merged.
+- local workspace initialization and status;
+- local Search export import;
+- workspace verification;
+- deterministic analysis over imported Search evidence;
+- APP-01 workspace plan composition;
+- read-only review queue display;
+- read-only dedup cluster inspection;
+- public tutorial on `gh-pages`.
 
-Current recommended work:
+The implemented command loop is:
 
-1. Refresh stale ops/review docs so they match `main` at `ac0307c` and `gh-pages` at `32475f4`.
-2. Finish public tester polish: sample-host screenshot/GIF, root contributor/license/security docs, README links to public tutorial and feedback templates.
-3. Add CI or script smoke for the public CLI path: `doctor`, `sample`, and `demo`.
-4. Plan APP-01 as a narrow read-only AppServices composition ADR before implementation.
-5. Keep provider work planning-only until a provider/network/legal ADR exists.
+```bash
+nexus init
+nexus status
+nexus import search
+nexus verify
+nexus analyze
+nexus review
+nexus clusters
+nexus clusters exact
+nexus clusters review
+nexus clusters show <id>
+```
+
+A Nexus research project is a local folder. `nexus.project.json` is a local project index, not a database and not canonical scientific authority.
+
+The CLI verifies local files, analyzes imported Search/Deduplication evidence, and shows records requiring human review. It does not query live providers or execute merge decisions.
+
+## Current Plan
+
+Pause feature expansion and collect first-tester feedback.
+
+Feedback should be triaged into:
+
+1. docs/site clarity fixes;
+2. CLI usability polish;
+3. later ADR candidates.
+
+## Explicitly Deferred
+
+- executable merge decisions;
+- actor identity and decision persistence;
+- provenance mutation for user decisions;
+- app database/persistence;
+- API/cloud;
+- live providers/scraping;
+- UI product shell;
+- PDF/OCR;
+- AI/model calls;
+- AppServices expansion beyond current APP-01 read-only projection.
+
+APP-01 merge-gate actions are placeholders only. They must not mutate Core records, execute commands, write files, call services, or imply that the CLI/UI can finalize a scientific decision.
 
 Do not implement providers, persistence, API/cloud behavior, PDF/OCR, live HTTP, or a UI product shell under the current plan.
 

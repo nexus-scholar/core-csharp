@@ -14,7 +14,7 @@ The only supported Phase 3 path is:
 4. Avalonia controls;
 5. no-op or caller-provided action callbacks.
 
-The reverse path is not implemented. Core state does not flow into app services, app services do not compose plans, and UI actions do not invoke Core mutation.
+The renderer path remains display-only. AppServices may compose `WorkspacePlan` data elsewhere, but this renderer does not load Core state, compose plans, persist decisions, execute commands, or invoke Core mutation.
 
 ## Project Boundary
 

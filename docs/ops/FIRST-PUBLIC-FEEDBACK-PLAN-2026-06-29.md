@@ -2,12 +2,12 @@
 
 Status: accepted historical task trace for the first public-readiness push.
 
-Current outcome:
+Current outcome after PR08:
 
-- PF-01, PF-02, CLI-01, CLI-02, CLI-03, WEB-01, and the UI presentation pass are complete on `main`/`gh-pages`.
-- `main` is now at `ac0307c` (`Polish Avalonia sample host presentation and scrolling`).
-- `gh-pages` is now at `32475f4` (`docs(site): add first tester getting started walkthrough`).
-- The remaining work from this plan is first-tester polish, CLI public-path smoke, APP-01 planning, and provider planning only.
+- PF-01, PF-02, CLI-01, CLI-02, CLI-03, WEB-01, UI presentation, APP-01, PR02-PR08 CLI workflow, and PR07 public CLI walkthrough work are complete on `main`/`gh-pages`.
+- `main` is now at `0d93bd9` (`polish(cli): improve workspace status and exit-code consistency`).
+- `gh-pages` is now at `589fc2e` (`docs(site): add research workspace CLI walkthrough`).
+- This file is now a historical task trace. Current active routing lives in `docs/ops/BRANCH-BOARD.md`, `docs/ops/MERGE-QUEUE.md`, `CODEX-START-HERE.md`, and `PLANS.md`.
 
 Historical baseline at plan acceptance:
 
