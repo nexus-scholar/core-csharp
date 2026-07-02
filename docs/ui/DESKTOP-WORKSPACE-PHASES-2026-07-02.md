@@ -1,6 +1,6 @@
 # Desktop Workspace Implementation Phases
 
-Status: Proposed
+Status: Accepted planning baseline
 Date: 2026-07-02
 Depends on: `docs/adr/0016-desktop-shell-and-researchworkspace-boundary.md`
 
@@ -47,7 +47,7 @@ docs/ui/ROADMAP.md
 
 ## Phase UI-ADR-01: Desktop Shell And ResearchWorkspace Boundary
 
-Status: next.
+Status: accepted.
 
 ### Goal
 
@@ -88,7 +88,7 @@ git diff --check
 
 ## Phase RW-01: Extract Shared ResearchWorkspace Services
 
-Status: after UI-ADR-01 acceptance.
+Status: current after UI-ADR-01 acceptance.
 
 ### Goal
 

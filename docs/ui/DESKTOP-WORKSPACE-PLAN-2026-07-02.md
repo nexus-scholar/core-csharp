@@ -78,7 +78,7 @@ git diff --check
 
 Owner: docs/adr.
 
-Status: proposed as `docs/adr/0016-desktop-shell-and-researchworkspace-boundary.md`.
+Status: accepted as `docs/adr/0016-desktop-shell-and-researchworkspace-boundary.md`.
 
 Goal: decide whether and how to introduce a durable desktop UI and a shared ResearchWorkspace application-service layer.
 

@@ -1,6 +1,6 @@
 # 0016: Desktop Shell And ResearchWorkspace Service Boundary
 
-Status: Proposed
+Status: Accepted
 Date: 2026-07-02
 Owner: docs/adr, application-services, desktop-ui
 Related plan: `docs/ui/DESKTOP-WORKSPACE-PLAN-2026-07-02.md`
@@ -348,7 +348,9 @@ Revisit this ADR if any of the following becomes true:
 
 ## Status Notes
 
-This ADR is proposed. It should be marked `Accepted` only after maintainers agree that:
+This ADR is accepted as of 2026-07-02 by maintainer direction in the UI planning session.
+
+Accepted points:
 
 - the shared ResearchWorkspace service boundary is the correct architecture;
 - the first desktop project should start as a preview sample;
