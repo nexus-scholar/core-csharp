@@ -1,10 +1,10 @@
 # Research Workspace CLI v0
 
-Status: Proposed
+Status: Implemented v0
 
 Date: 2026-07-01
 
-This document proposes the first researcher-facing Nexus CLI workflow. It is a product-surface plan, not an implementation record. The current CLI still exposes only the existing smoke commands until the follow-up PRs add the commands described here.
+This document records the first implemented researcher-facing Nexus CLI workflow. It is a local first-tester workflow, not production systematic-review conduct. The commands are implemented through local folder state and generated or researcher-supplied local files.
 
 ## User Story
 
@@ -20,9 +20,19 @@ nexus verify
 nexus analyze
 nexus review
 nexus clusters
+nexus clusters exact
 nexus clusters review
 nexus clusters show <id>
 ```
+
+Implemented through PR02-PR06:
+
+- `nexus init` / `nexus status`
+- `nexus import search`
+- `nexus verify`
+- `nexus analyze`
+- `nexus review`
+- `nexus clusters`, `clusters exact`, `clusters review`, and `clusters show <id>`
 
 The workflow is designed for first-tester feedback and local evidence inspection. It is not production systematic-review conduct, live provider access, a database, a cloud service, a PDF/OCR pipeline, an AI workflow, or a PHP compatibility claim.
 
@@ -177,6 +187,7 @@ Shows read-only Deduplication cluster information from generated analysis output
 Expected behavior:
 
 - `nexus clusters` summarizes known clusters;
+- `nexus clusters exact` lists exact duplicate clusters;
 - `nexus clusters review` lists clusters or candidate pairs requiring review;
 - `nexus clusters show <id>` displays one cluster or review candidate;
 - no command in v0 finalizes a merge decision.
@@ -220,9 +231,21 @@ nexus import search ../exports/openalex.ris --source openalex --format ris --que
 nexus verify
 nexus analyze
 nexus review
+nexus clusters
+nexus clusters exact
 nexus clusters review
 nexus clusters show dedup-candidate-0001
 ```
+
+For public first-tester demos, use the generated local APP-01 bundle in:
+
+```text
+tests/NexusScholar.AppServices.Tests/Fixtures/App01GeneratedLocalBundles/bundles/FB07-combined-app01-demo/
+```
+
+Those files are deterministic local fixtures. They are not Scopus exports, not Web of Science exports, not Google Scholar scrapes, not scientific authority, not conformance fixtures, and not PHP compatibility fixtures.
+
+The combined demo bundle intentionally includes parser warnings and skipped records. `nexus verify` surfaces those issues before `nexus analyze`; the workflow continues for first-tester inspection of warning, deduplication, and human-gate blocks.
 
 Expected researcher understanding:
 
@@ -237,7 +260,7 @@ Nexus did not query live providers or execute merge decisions.
 
 ## Non-goals
 
-This CLI proposal does not add:
+This CLI v0 does not add:
 
 - live provider search;
 - scraping or bulk Google Scholar collection;
@@ -257,6 +280,7 @@ Documentation-only fixtures for this proposal live under:
 
 ```text
 docs/cli/fixtures/PR01-docs-research-workspace-cli-v0/
+docs/cli/fixtures/PR07-public-cli-workflow-tutorial/
 ```
 
 They are examples for reviewers and future tests. They are not conformance fixtures, not scientific Core authority, and not PHP compatibility evidence.

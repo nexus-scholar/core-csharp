@@ -16,7 +16,7 @@ The pinned PHP package remains behavioral evidence for proven workflows. This re
 - shared scientific identity, Search traces, imported Search evidence, Deduplication, Screening, and Full Text;
 - plugin capability and governed-AI proposal contracts;
 - UI contracts, sample block plans, an Avalonia block renderer, and a sample visual host;
-- a small CLI with `doctor`, `sample`, and deterministic local `demo` commands.
+- a local CLI with `doctor`, `sample`, deterministic `demo`, and the first Research Workspace commands: `init`, `status`, `import search`, `verify`, `analyze`, `review`, and `clusters`.
 
 The Full Text slice is local and no-network. It accepts digest-bound user-supplied or deterministic artifact bytes, records acquisition/source-attempt evidence, validates PDF/XML/text shapes, detects duplicate artifacts by raw byte digest, and keeps extraction as derived evidence bound to the raw artifact. It does not download papers, call provider APIs, parse PDFs, run OCR, persist data, expose an API, or claim PHP compatibility.
 
@@ -74,7 +74,7 @@ dotnet run --project src/NexusScholar.Cli -- demo
 
 The `demo` command is for first-tester feedback, not researcher production use. It is local-only, deterministic, and non-authoritative: it uses embedded sample Search-import bytes, does not call live providers or provider SDKs, does not download or scrape, does not persist data, does not expose an API/cloud workflow, does not run PDF extraction/OCR, and does not claim PHP compatibility.
 
-The proposed researcher workspace CLI workflow is documented in `docs/cli/RESEARCH-WORKSPACE-CLI-v0.md`. It describes future `nexus init`, `status`, `import search`, `verify`, `analyze`, `review`, and `clusters` commands; those commands are not implemented in the current CLI surface.
+The local Research Workspace CLI workflow is documented in `docs/cli/RESEARCH-WORKSPACE-CLI-v0.md`. It is implemented for first-tester local inspection using researcher-supplied or generated local Search export files. It does not query live providers, scrape Google Scholar, persist to a database, expose an API/cloud workflow, run PDF/OCR, execute merge decisions, or claim PHP compatibility.
 
 Stable `demo` summary:
 
@@ -94,6 +94,36 @@ Dedup exact clusters: 1
 Dedup review-required pairs: 1
 Non-claims: no live providers; no provider SDKs; no persistence/API/cloud; no PDF/OCR; no PHP compatibility
 ```
+
+### Run the local Research Workspace workflow
+
+The commands below use generated local APP-01 fixture exports already in the repository. They are not real Scopus, Web of Science, or Google Scholar exports and are not scientific authority.
+
+```powershell
+Remove-Item -Recurse -Force .nexus-demo -ErrorAction SilentlyContinue
+New-Item -ItemType Directory -Force .nexus-demo/workspace | Out-Null
+Push-Location .nexus-demo/workspace
+
+dotnet run --project ../../src/NexusScholar.Cli -- init --title "APP-01 demo review"
+dotnet run --project ../../src/NexusScholar.Cli -- import search ../../tests/NexusScholar.AppServices.Tests/Fixtures/App01GeneratedLocalBundles/bundles/FB07-combined-app01-demo/combined_scopus_like.csv --source scopus --format csv --query-id search-001 --query "systematic review screening software"
+dotnet run --project ../../src/NexusScholar.Cli -- import search ../../tests/NexusScholar.AppServices.Tests/Fixtures/App01GeneratedLocalBundles/bundles/FB07-combined-app01-demo/combined_wos_like.ris --source web-of-science --format ris --query-id search-002 --query "systematic review screening software"
+dotnet run --project ../../src/NexusScholar.Cli -- import search ../../tests/NexusScholar.AppServices.Tests/Fixtures/App01GeneratedLocalBundles/bundles/FB07-combined-app01-demo/combined_scholar_style.bib --source google-scholar --format bibtex --query-id search-003 --query "systematic review screening software"
+dotnet run --project ../../src/NexusScholar.Cli -- import search ../../tests/NexusScholar.AppServices.Tests/Fixtures/App01GeneratedLocalBundles/bundles/FB07-combined-app01-demo/combined_wos_like_source_specific.csv --source web-of-science --format csv --query-id search-004 --query "systematic review screening software"
+
+dotnet run --project ../../src/NexusScholar.Cli -- verify
+dotnet run --project ../../src/NexusScholar.Cli -- analyze
+dotnet run --project ../../src/NexusScholar.Cli -- review
+dotnet run --project ../../src/NexusScholar.Cli -- clusters
+dotnet run --project ../../src/NexusScholar.Cli -- clusters exact
+dotnet run --project ../../src/NexusScholar.Cli -- clusters review
+dotnet run --project ../../src/NexusScholar.Cli -- clusters show dedup-candidate-0001
+
+Pop-Location
+```
+
+The review and cluster commands are read-only. They display APP-01 merge gates but do not accept, reject, mark unresolved, or execute merge decisions. The public walkthrough mirrors this local workflow for first-tester feedback.
+
+The combined demo bundle intentionally includes parser warnings and skipped records. `verify` surfaces those issues before `analyze`; the workflow continues so first testers can inspect warning, deduplication, and human-gate blocks.
 
 Launch the UI sample host:
 
