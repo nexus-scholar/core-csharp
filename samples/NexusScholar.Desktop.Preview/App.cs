@@ -9,7 +9,10 @@ public sealed class App : Application
     {
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
-            desktop.MainWindow = new MainWindow(new DesktopPreviewViewModel());
+            var initialWorkspacePath = desktop.Args is { Length: > 0 }
+                ? desktop.Args[0]
+                : null;
+            desktop.MainWindow = new MainWindow(new DesktopPreviewViewModel(), initialWorkspacePath);
         }
 
         base.OnFrameworkInitializationCompleted();

@@ -48,7 +48,7 @@ public sealed class DesktopPreviewViewModel
 
     public IReadOnlyList<string> BoundaryBadges { get; } = new[]
     {
-        "local-only",
+        "local folder",
         "researcher-supplied files",
         "no providers",
         "read-only review",
@@ -91,8 +91,8 @@ public sealed class DesktopPreviewViewModel
     private static string StatusFor(WorkspaceOverviewReadModel overview)
     {
         return overview.State == WorkspaceState.Missing
-            ? "No Nexus research workspace is loaded. Select an existing local workspace folder."
-            : $"Loaded {overview.ProjectTitle} ({overview.State}) from {overview.ProjectLocation}.";
+            ? "No local Nexus research workspace is loaded. Choose a folder that contains nexus.project.json."
+            : $"Read-only preview loaded: {overview.ProjectTitle} ({overview.State}). Location: {overview.ProjectLocation}.";
     }
 }
 

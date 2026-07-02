@@ -10,24 +10,33 @@ namespace NexusScholar.Desktop.Preview;
 
 public sealed class MainWindow : Window
 {
-    private static readonly SolidColorBrush BackgroundBrush = new(Color.Parse("#f4f2ea"));
-    private static readonly SolidColorBrush HeaderBrush = new(Color.Parse("#123b3a"));
-    private static readonly SolidColorBrush AccentBrush = new(Color.Parse("#1f6f68"));
+    private static readonly SolidColorBrush BackgroundBrush = new(Color.Parse("#f6f7f9"));
+    private static readonly SolidColorBrush PrimaryBrush = new(Color.Parse("#0f766e"));
+    private static readonly SolidColorBrush PrimaryDarkBrush = new(Color.Parse("#134e4a"));
+    private static readonly SolidColorBrush AccentBrush = new(Color.Parse("#2563eb"));
     private static readonly SolidColorBrush PanelBrush = new(Color.Parse("#ffffff"));
-    private static readonly SolidColorBrush MutedPanelBrush = new(Color.Parse("#ece8dd"));
-    private static readonly SolidColorBrush PanelBorderBrush = new(Color.Parse("#d8d2c4"));
-    private static readonly SolidColorBrush WarningBrush = new(Color.Parse("#b7791f"));
-    private static readonly SolidColorBrush TextBrush = new(Color.Parse("#1f2933"));
-    private static readonly SolidColorBrush MutedTextBrush = new(Color.Parse("#68727d"));
+    private static readonly SolidColorBrush MutedPanelBrush = new(Color.Parse("#eef2f6"));
+    private static readonly SolidColorBrush SubtlePanelBrush = new(Color.Parse("#f8fafc"));
+    private static readonly SolidColorBrush PanelBorderBrush = new(Color.Parse("#d8dee8"));
+    private static readonly SolidColorBrush WarningBrush = new(Color.Parse("#b45309"));
+    private static readonly SolidColorBrush TextBrush = new(Color.Parse("#111827"));
+    private static readonly SolidColorBrush MutedTextBrush = new(Color.Parse("#5f6b7a"));
+    private static readonly SolidColorBrush DisabledTextBrush = new(Color.Parse("#94a3b8"));
 
     private readonly DesktopPreviewViewModel _viewModel;
-    private readonly TextBox _pathBox = new()
+    private readonly Dictionary<string, Button> _navigationButtons = new(StringComparer.Ordinal);
+    private readonly TextBlock _pathText = new()
     {
-        PlaceholderText = "Select an existing local Nexus research workspace folder"
+        MinHeight = 38,
+        Foreground = TextBrush,
+        TextWrapping = TextWrapping.NoWrap,
+        TextTrimming = TextTrimming.CharacterEllipsis,
+        VerticalAlignment = VerticalAlignment.Center,
+        Margin = new Thickness(10, 0)
     };
     private readonly StackPanel _content = new()
     {
-        Spacing = 12,
+        Spacing = 16,
         HorizontalAlignment = HorizontalAlignment.Stretch
     };
     private readonly TextBlock _status = new()
@@ -35,30 +44,40 @@ public sealed class MainWindow : Window
         TextWrapping = TextWrapping.Wrap
     };
     private Border? _hostRoot;
+    private string _workspacePath = string.Empty;
 
     public MainWindow()
-        : this(new DesktopPreviewViewModel())
+        : this(new DesktopPreviewViewModel(), initialWorkspacePath: null)
     {
     }
 
-    public MainWindow(DesktopPreviewViewModel viewModel)
+    public MainWindow(DesktopPreviewViewModel viewModel, string? initialWorkspacePath = null)
     {
         _viewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
 
         Title = "Nexus Scholar Desktop Preview";
-        Width = 1220;
+        Width = 1280;
         Height = 860;
-        MinWidth = 860;
-        MinHeight = 560;
+        MinWidth = 940;
+        MinHeight = 600;
         WindowStartupLocation = WindowStartupLocation.CenterScreen;
         Background = BackgroundBrush;
 
-        _pathBox.Text = Environment.CurrentDirectory;
+        SetWorkspacePath(string.IsNullOrWhiteSpace(initialWorkspacePath)
+            ? Environment.CurrentDirectory
+            : initialWorkspacePath);
         Content = BuildContent();
         Opened += (_, _) => ApplyHostClientSize();
         SizeChanged += (_, _) => ApplyHostClientSize();
 
-        Render();
+        if (string.IsNullOrWhiteSpace(initialWorkspacePath))
+        {
+            Render();
+        }
+        else
+        {
+            LoadSelectedWorkspace();
+        }
     }
 
     internal static Border BuildHostLayout(Control header, Control navigation, Control workspaceView, Control statusBar)
@@ -70,7 +89,7 @@ public sealed class MainWindow : Window
 
         var layout = new Grid
         {
-            Margin = new Thickness(16),
+            Margin = new Thickness(18),
             HorizontalAlignment = HorizontalAlignment.Stretch,
             VerticalAlignment = VerticalAlignment.Stretch
         };
@@ -80,10 +99,11 @@ public sealed class MainWindow : Window
 
         var workspace = new Grid
         {
+            ColumnSpacing = 16,
             HorizontalAlignment = HorizontalAlignment.Stretch,
             VerticalAlignment = VerticalAlignment.Stretch
         };
-        workspace.ColumnDefinitions.Add(new ColumnDefinition(new GridLength(240)));
+        workspace.ColumnDefinitions.Add(new ColumnDefinition(new GridLength(260)));
         workspace.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
 
         var workspaceScroller = new ScrollViewer
@@ -92,7 +112,7 @@ public sealed class MainWindow : Window
             Content = workspaceView,
             Focusable = true,
             HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
-            VerticalScrollBarVisibility = ScrollBarVisibility.Visible
+            VerticalScrollBarVisibility = ScrollBarVisibility.Auto
         };
         workspaceScroller.HorizontalAlignment = HorizontalAlignment.Stretch;
         workspaceScroller.VerticalAlignment = VerticalAlignment.Stretch;
@@ -129,12 +149,12 @@ public sealed class MainWindow : Window
         var navigation = BuildNavigation();
         var statusBar = new Border
         {
-            Background = new SolidColorBrush(Color.Parse("#fff7df")),
-            BorderBrush = WarningBrush,
+            Background = new SolidColorBrush(Color.Parse("#fff8e7")),
+            BorderBrush = new SolidColorBrush(Color.Parse("#f2c97d")),
             BorderThickness = new Thickness(1),
-            CornerRadius = new CornerRadius(6),
-            Padding = new Thickness(10),
-            Margin = new Thickness(0, 12, 0, 0),
+            CornerRadius = new CornerRadius(8),
+            Padding = new Thickness(12, 10),
+            Margin = new Thickness(0, 14, 0, 0),
             Child = _status
         };
 
@@ -146,16 +166,17 @@ public sealed class MainWindow : Window
     {
         var title = new TextBlock
         {
-            Text = "Nexus Scholar desktop preview",
-            FontSize = 24,
-            FontWeight = FontWeight.Bold,
-            Foreground = Brushes.White,
+            Text = "Nexus Scholar Preview",
+            FontSize = 26,
+            FontWeight = FontWeight.SemiBold,
+            Foreground = TextBrush,
             TextWrapping = TextWrapping.Wrap
         };
         var subtitle = new TextBlock
         {
-            Text = "Read-only local workspace inspection. Review decisions remain locked APP-01 placeholders.",
-            Foreground = new SolidColorBrush(Color.Parse("#d7e7e2")),
+            Text = "Inspect a local Research Workspace. Evidence is read-only; APP-01 merge gates stay locked.",
+            FontSize = 14,
+            Foreground = MutedTextBrush,
             TextWrapping = TextWrapping.Wrap
         };
 
@@ -166,86 +187,110 @@ public sealed class MainWindow : Window
         };
         foreach (var badge in _viewModel.BoundaryBadges)
         {
-            badges.Children.Add(Badge(badge, new SolidColorBrush(Color.Parse("#d7e7e2")), new SolidColorBrush(Color.Parse("#0e2f2e"))));
+            badges.Children.Add(Badge(badge, new SolidColorBrush(Color.Parse("#e6f5f2")), PrimaryDarkBrush));
         }
 
-        var openButton = new Button
-        {
-            Content = "Open",
-            MinWidth = 84,
-            HorizontalAlignment = HorizontalAlignment.Left
-        };
-        openButton.Click += (_, _) => LoadWorkspaceFromTextBox();
+        var openButton = PrimaryButton("Load");
+        openButton.Click += (_, _) => LoadSelectedWorkspace();
 
-        var browseButton = new Button
+        var currentButton = SecondaryButton("Current folder");
+        currentButton.Click += (_, _) =>
         {
-            Content = "Browse",
-            MinWidth = 84,
-            HorizontalAlignment = HorizontalAlignment.Left
+            SetWorkspacePath(Environment.CurrentDirectory);
+            LoadWorkspaceFromPath(_workspacePath);
         };
+
+        var browseButton = SecondaryButton("Browse...");
         browseButton.Click += async (_, _) => await BrowseForWorkspaceAsync();
+
+        var pathLabel = new TextBlock
+        {
+            Text = "Workspace folder",
+            FontSize = 12,
+            FontWeight = FontWeight.SemiBold,
+            Foreground = MutedTextBrush
+        };
 
         var pathRow = new Grid
         {
-            ColumnSpacing = 8
+            ColumnSpacing = 10,
+            HorizontalAlignment = HorizontalAlignment.Stretch
         };
         pathRow.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
         pathRow.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Auto));
         pathRow.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Auto));
-        Grid.SetColumn(_pathBox, 0);
+        pathRow.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Auto));
+        var pathFrame = new Border
+        {
+            Background = new SolidColorBrush(Color.Parse("#edf2f7")),
+            BorderBrush = PanelBorderBrush,
+            BorderThickness = new Thickness(1),
+            CornerRadius = new CornerRadius(6),
+            Child = _pathText
+        };
+
+        Grid.SetColumn(pathFrame, 0);
         Grid.SetColumn(openButton, 1);
-        Grid.SetColumn(browseButton, 2);
-        pathRow.Children.Add(_pathBox);
+        Grid.SetColumn(currentButton, 2);
+        Grid.SetColumn(browseButton, 3);
+        pathRow.Children.Add(pathFrame);
         pathRow.Children.Add(openButton);
+        pathRow.Children.Add(currentButton);
         pathRow.Children.Add(browseButton);
 
         var stack = new StackPanel
         {
-            Spacing = 10
+            Spacing = 12
         };
         stack.Children.Add(title);
         stack.Children.Add(subtitle);
         stack.Children.Add(badges);
+        stack.Children.Add(pathLabel);
         stack.Children.Add(pathRow);
 
         return new Border
         {
-            Background = HeaderBrush,
+            Background = PanelBrush,
+            BorderBrush = PanelBorderBrush,
+            BorderThickness = new Thickness(1),
             CornerRadius = new CornerRadius(8),
-            Padding = new Thickness(18),
-            Margin = new Thickness(0, 0, 0, 12),
+            Padding = new Thickness(20),
+            Margin = new Thickness(0, 0, 0, 16),
             Child = stack
         };
     }
 
     private Control BuildNavigation()
     {
+        _navigationButtons.Clear();
         var list = new StackPanel
         {
-            Spacing = 6,
-            Margin = new Thickness(0, 0, 12, 0),
+            Spacing = 8,
             HorizontalAlignment = HorizontalAlignment.Stretch,
             VerticalAlignment = VerticalAlignment.Stretch
         };
 
+        list.Children.Add(new TextBlock
+        {
+            Text = "Workspace",
+            FontSize = 12,
+            FontWeight = FontWeight.SemiBold,
+            Foreground = MutedTextBrush,
+            Margin = new Thickness(4, 0, 0, 2)
+        });
+
         foreach (var section in DesktopPreviewViewModel.Sections)
         {
-            var button = new Button
+            var sectionId = section.Id;
+            var button = NavigationButton(section);
+            button.PointerPressed += (_, e) =>
             {
-                Content = section.Label,
-                HorizontalAlignment = HorizontalAlignment.Stretch,
-                HorizontalContentAlignment = HorizontalAlignment.Left,
-                Tag = section.Id,
-                IsEnabled = _viewModel.HasWorkspace || section.Id == "welcome"
+                SelectNavigationSection(sectionId);
+                e.Handled = true;
             };
-            button.Click += (_, _) =>
-            {
-                if (button.Tag is string id)
-                {
-                    _viewModel.SelectSection(id);
-                    Render();
-                }
-            };
+            button.Click += (_, _) => SelectNavigationSection(sectionId);
+            button.Tapped += (_, _) => SelectNavigationSection(sectionId);
+            _navigationButtons[sectionId] = button;
             list.Children.Add(button);
         }
 
@@ -254,9 +299,58 @@ public sealed class MainWindow : Window
             Background = PanelBrush,
             BorderBrush = PanelBorderBrush,
             BorderThickness = new Thickness(1),
-            CornerRadius = new CornerRadius(6),
-            Padding = new Thickness(10),
+            CornerRadius = new CornerRadius(8),
+            Padding = new Thickness(12),
             Child = list
+        };
+    }
+
+    private void SelectNavigationSection(string sectionId)
+    {
+        if (!_viewModel.HasWorkspace && !string.Equals(sectionId, "welcome", StringComparison.Ordinal))
+        {
+            _status.Text = "Load a local Nexus research workspace before opening this section.";
+            return;
+        }
+
+        _viewModel.SelectSection(sectionId);
+        Render();
+    }
+
+    private void UpdateNavigationState()
+    {
+        foreach (var section in DesktopPreviewViewModel.Sections)
+        {
+            if (!_navigationButtons.TryGetValue(section.Id, out var button))
+            {
+                continue;
+            }
+
+            var enabled = _viewModel.HasWorkspace || string.Equals(section.Id, "welcome", StringComparison.Ordinal);
+            var active = string.Equals(section.Id, _viewModel.SelectedSection.Id, StringComparison.Ordinal);
+            button.IsEnabled = enabled;
+            button.Background = active
+                ? PrimaryBrush
+                : enabled ? Brushes.Transparent : SubtlePanelBrush;
+            button.Foreground = active
+                ? Brushes.White
+                : enabled ? TextBrush : DisabledTextBrush;
+            button.BorderBrush = active ? PrimaryBrush : PanelBorderBrush;
+            button.BorderThickness = new Thickness(active ? 1 : 0);
+        }
+    }
+
+    private static Button NavigationButton(DesktopPreviewSection section)
+    {
+        return new Button
+        {
+            Content = section.Label,
+            HorizontalAlignment = HorizontalAlignment.Stretch,
+            HorizontalContentAlignment = HorizontalAlignment.Left,
+            MinHeight = 36,
+            Padding = new Thickness(10, 7),
+            FontSize = 13,
+            Tag = section.Id
         };
     }
 
@@ -274,13 +368,18 @@ public sealed class MainWindow : Window
             return;
         }
 
-        _pathBox.Text = selected.Path.LocalPath;
-        LoadWorkspaceFromTextBox();
+        SetWorkspacePath(selected.Path.LocalPath);
+        LoadWorkspaceFromPath(_workspacePath);
     }
 
-    private void LoadWorkspaceFromTextBox()
+    private void LoadSelectedWorkspace()
     {
-        var path = _pathBox.Text;
+        LoadWorkspaceFromPath(_workspacePath);
+    }
+
+    private void LoadWorkspaceFromPath(string path)
+    {
+        path = path.Trim();
         if (string.IsNullOrWhiteSpace(path))
         {
             _status.Text = "Enter or select an existing local workspace folder.";
@@ -290,6 +389,7 @@ public sealed class MainWindow : Window
         try
         {
             _viewModel.LoadWorkspace(path);
+            SetWorkspacePath(path);
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Text.Json.JsonException or InvalidOperationException)
         {
@@ -300,10 +400,19 @@ public sealed class MainWindow : Window
         Render();
     }
 
+    private void SetWorkspacePath(string path)
+    {
+        _workspacePath = path;
+        _pathText.Text = string.IsNullOrWhiteSpace(path)
+            ? "No folder selected"
+            : path;
+    }
+
     private void Render()
     {
         _content.Children.Clear();
         _status.Text = _viewModel.StatusMessage;
+        UpdateNavigationState();
 
         _content.Children.Add(BuildStateSummary());
         switch (_viewModel.SelectedSection.Id)
@@ -349,13 +458,13 @@ public sealed class MainWindow : Window
         var overview = _viewModel.Overview;
         var row = new WrapPanel
         {
-            ItemSpacing = 8,
-            LineSpacing = 8
+            ItemSpacing = 10,
+            LineSpacing = 10
         };
-        row.Children.Add(Badge($"State: {overview.State}", AccentBrush, Brushes.White));
-        row.Children.Add(Badge($"Project: {overview.ProjectTitle ?? "not loaded"}", MutedPanelBrush, TextBrush));
-        row.Children.Add(Badge($"Workspace: {overview.WorkspaceId ?? "missing"}", MutedPanelBrush, TextBrush));
-        row.Children.Add(Badge($"Location: {overview.ProjectLocation}", MutedPanelBrush, TextBrush));
+        row.Children.Add(Badge($"State: {overview.State}", StateBrush(overview.State), Brushes.White));
+        row.Children.Add(Badge($"Project: {overview.ProjectTitle ?? "not loaded"}", SubtlePanelBrush, TextBrush));
+        row.Children.Add(Badge($"Workspace: {overview.WorkspaceId ?? "missing"}", SubtlePanelBrush, TextBrush));
+        row.Children.Add(Badge($"Location: {overview.ProjectLocation}", SubtlePanelBrush, TextBrush));
 
         return Panel(row);
     }
@@ -364,9 +473,9 @@ public sealed class MainWindow : Window
     {
         _content.Children.Add(Panel(Stack(
             Heading("Open Workspace"),
-            Paragraph("Select an existing local Nexus research workspace. This preview reads generated local outputs and does not run init, import, verify, analyze, or merge decisions."),
+            Paragraph("Open a folder that contains nexus.project.json. The preview reads local outputs only and never runs init, import, verify, analyze, or merge decisions."),
             Paragraph(_viewModel.HasWorkspace
-                ? "Workspace loaded. Use the sidebar to inspect evidence records, review queue items, clusters, and locked decision gates."
+                ? "Workspace loaded. Use the sidebar to inspect evidence, imports, verification, analysis, review items, clusters, and locked decision gates."
                 : "No workspace is loaded yet."))));
     }
 
@@ -479,14 +588,15 @@ public sealed class MainWindow : Window
         foreach (var item in queue)
         {
             var actions = item.LockedActions.Count == 0
-                ? new[] { Paragraph("No locked action descriptors were attached to this item.") }
-                : item.LockedActions.Select(action => LockedActionButton(action.Label)).ToArray<Control>();
+                ? Paragraph("No locked action descriptors were attached to this item.")
+                : LockedActionList(item.LockedActions.Select(action => action.Label));
             _content.Children.Add(Panel(Stack(new Control[]
             {
                 Heading(item.Title),
                 Paragraph($"Candidate pair: {item.CandidatePairId}"),
-                Paragraph($"Title similarity: {item.TitleSimilarity:0.000} / threshold {item.ThresholdUsed:0.000}")
-            }.Concat(actions))));
+                Paragraph($"Title similarity: {item.TitleSimilarity:0.000} / threshold {item.ThresholdUsed:0.000}"),
+                actions
+            })));
         }
     }
 
@@ -503,7 +613,7 @@ public sealed class MainWindow : Window
                     cluster.RepresentativeTitle,
                     cluster.MemberCount.ToString(),
                     cluster.EvidenceCount.ToString(),
-                    Present(cluster.ReviewRequired)
+                    YesNo(cluster.ReviewRequired)
                 })))));
     }
 
@@ -533,11 +643,11 @@ public sealed class MainWindow : Window
             Heading("Duplicate Detail"),
             Paragraph($"Pair: {detail.CandidatePairId}"),
             Paragraph($"Title similarity: {detail.TitleSimilarity:0.000} / threshold {detail.ThresholdUsed:0.000}"),
+            Heading("Locked Actions"),
+            LockedActionList(detail.LockedActions.Select(action => action.Label)),
             split,
             Heading("Evidence Refs"),
-            ListLines(detail.EvidenceRefs.Select(evidence => $"{evidence.Kind}: {evidence.Value} {evidence.Scope}".Trim())),
-            Heading("Locked Actions"),
-            Stack(detail.LockedActions.Select(action => LockedActionButton(action.Label))))));
+            ListLines(detail.EvidenceRefs.Select(evidence => $"{evidence.Kind}: {evidence.Value} {evidence.Scope}".Trim())))));
     }
 
     private void RenderReports()
@@ -554,7 +664,7 @@ public sealed class MainWindow : Window
     {
         _content.Children.Add(Panel(Stack(
             Heading("Diagnostics"),
-            Paragraph("Desktop preview diagnostics are read-only in UI-01."),
+            Paragraph("Desktop preview diagnostics are read-only in UI-01. This is not a product desktop shell."),
             Paragraph("No providers, persistence, database, cloud/API, PDF/OCR, AI/model calls, Core mutation, or executable merge decisions are available."))));
     }
 
@@ -606,7 +716,7 @@ public sealed class MainWindow : Window
     {
         var stack = new StackPanel
         {
-            Spacing = 8,
+            Spacing = 10,
             HorizontalAlignment = HorizontalAlignment.Stretch
         };
         foreach (var control in controls)
@@ -622,8 +732,8 @@ public sealed class MainWindow : Window
         return new TextBlock
         {
             Text = text,
-            FontSize = 18,
-            FontWeight = FontWeight.Bold,
+            FontSize = 17,
+            FontWeight = FontWeight.SemiBold,
             Foreground = TextBrush,
             TextWrapping = TextWrapping.Wrap
         };
@@ -634,6 +744,7 @@ public sealed class MainWindow : Window
         return new TextBlock
         {
             Text = text,
+            FontSize = 13,
             Foreground = MutedTextBrush,
             TextWrapping = TextWrapping.Wrap
         };
@@ -646,8 +757,8 @@ public sealed class MainWindow : Window
             Background = PanelBrush,
             BorderBrush = PanelBorderBrush,
             BorderThickness = new Thickness(1),
-            CornerRadius = new CornerRadius(6),
-            Padding = new Thickness(14),
+            CornerRadius = new CornerRadius(8),
+            Padding = new Thickness(16),
             Child = child
         };
     }
@@ -657,12 +768,13 @@ public sealed class MainWindow : Window
         return new Border
         {
             Background = background,
-            CornerRadius = new CornerRadius(5),
-            Padding = new Thickness(8, 4, 8, 4),
+            CornerRadius = new CornerRadius(6),
+            Padding = new Thickness(9, 5),
             Child = new TextBlock
             {
                 Text = text,
                 Foreground = foreground,
+                FontSize = 12,
                 FontWeight = FontWeight.SemiBold,
                 TextWrapping = TextWrapping.Wrap
             }
@@ -673,31 +785,32 @@ public sealed class MainWindow : Window
     {
         var panel = new WrapPanel
         {
-            ItemSpacing = 8,
-            LineSpacing = 8
+            ItemSpacing = 10,
+            LineSpacing = 10
         };
         foreach (var metric in metrics)
         {
             panel.Children.Add(new Border
             {
-                Background = MutedPanelBrush,
+                Background = SubtlePanelBrush,
                 BorderBrush = PanelBorderBrush,
                 BorderThickness = new Thickness(1),
-                CornerRadius = new CornerRadius(5),
-                MinWidth = 150,
-                Padding = new Thickness(10),
+                CornerRadius = new CornerRadius(8),
+                MinWidth = 142,
+                Padding = new Thickness(12),
                 Child = Stack(
                     new TextBlock
                     {
                         Text = metric.Value,
-                        FontSize = 20,
-                        FontWeight = FontWeight.Bold,
+                        FontSize = 22,
+                        FontWeight = FontWeight.SemiBold,
                         Foreground = TextBrush,
                         TextWrapping = TextWrapping.Wrap
                     },
                     new TextBlock
                     {
                         Text = metric.Label,
+                        FontSize = 12,
                         Foreground = MutedTextBrush,
                         TextWrapping = TextWrapping.Wrap
                     })
@@ -730,75 +843,183 @@ public sealed class MainWindow : Window
 
     private static Control Table(IEnumerable<string> headers, IEnumerable<IReadOnlyList<string>> rows)
     {
-        var stack = new StackPanel
+        var headerArray = headers.ToArray();
+        var rowArray = rows.ToArray();
+        var grid = new Grid
         {
-            Spacing = 6,
             HorizontalAlignment = HorizontalAlignment.Stretch
         };
-        stack.Children.Add(new Border
-        {
-            Background = MutedPanelBrush,
-            CornerRadius = new CornerRadius(5),
-            Padding = new Thickness(8),
-            Child = TextRow(headers)
-        });
 
-        var rowCount = 0;
-        foreach (var row in rows)
+        for (var column = 0; column < headerArray.Length; column++)
         {
-            rowCount++;
-            stack.Children.Add(new Border
+            grid.ColumnDefinitions.Add(new ColumnDefinition(new GridLength(ColumnWeight(headerArray[column]), GridUnitType.Star)));
+        }
+
+        grid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
+        for (var column = 0; column < headerArray.Length; column++)
+        {
+            grid.Children.Add(TableCell(headerArray[column], row: 0, column, isHeader: true, isAlternate: false));
+        }
+
+        for (var rowIndex = 0; rowIndex < rowArray.Length; rowIndex++)
+        {
+            var row = rowArray[rowIndex];
+            grid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
+            for (var column = 0; column < headerArray.Length; column++)
             {
-                BorderBrush = PanelBorderBrush,
-                BorderThickness = new Thickness(1),
-                CornerRadius = new CornerRadius(5),
-                Padding = new Thickness(8),
-                Child = TextRow(row)
-            });
+                var value = column < row.Count ? row[column] : string.Empty;
+                grid.Children.Add(TableCell(
+                    value,
+                    row: rowIndex + 1,
+                    column,
+                    isHeader: false,
+                    isAlternate: rowIndex % 2 == 1));
+            }
         }
 
-        if (rowCount == 0)
+        if (rowArray.Length == 0)
         {
-            stack.Children.Add(Paragraph("None."));
+            return Paragraph("None.");
         }
 
-        return stack;
+        return grid;
     }
 
-    private static Control TextRow(IEnumerable<string> values)
+    private static Control TableCell(string value, int row, int column, bool isHeader, bool isAlternate)
     {
-        var row = new WrapPanel
+        var text = new TextBlock
         {
-            ItemSpacing = 12,
-            LineSpacing = 4
+            Text = value,
+            Foreground = isHeader ? TextBrush : MutedTextBrush,
+            FontSize = isHeader ? 12 : 12,
+            FontWeight = isHeader ? FontWeight.SemiBold : FontWeight.Normal,
+            TextWrapping = TextWrapping.Wrap,
+            TextTrimming = TextTrimming.None,
+            MinWidth = 72
         };
-        foreach (var value in values)
-        {
-            row.Children.Add(new TextBlock
-            {
-                Text = value,
-                Foreground = TextBrush,
-                TextWrapping = TextWrapping.Wrap,
-                MinWidth = 110,
-                MaxWidth = 280
-            });
-        }
 
-        return row;
+        var border = new Border
+        {
+            Background = isHeader
+                ? MutedPanelBrush
+                : isAlternate ? SubtlePanelBrush : PanelBrush,
+            BorderBrush = PanelBorderBrush,
+            BorderThickness = new Thickness(0, 0, 0, 1),
+            Padding = new Thickness(8, 7),
+            Child = text
+        };
+
+        Grid.SetRow(border, row);
+        Grid.SetColumn(border, column);
+        return border;
     }
 
-    private static Button LockedActionButton(string label)
+    private static double ColumnWeight(string header)
+    {
+        return header switch
+        {
+            "Title" or "Representative Title" or "Creators" => 2.1,
+            "Identifier" or "Relative Path" => 1.5,
+            "Duplicate State" or "Review Required" => 1.25,
+            "Year" or "Warnings" or "Skipped" or "Records" or "Imported" or "Members" or "Evidence" => 0.8,
+            _ => 1.0
+        };
+    }
+
+    private static Button PrimaryButton(string text)
     {
         return new Button
         {
-            Content = label,
-            IsEnabled = false,
-            HorizontalAlignment = HorizontalAlignment.Left
+            Content = text,
+            MinWidth = 88,
+            MinHeight = 38,
+            Padding = new Thickness(14, 8),
+            HorizontalAlignment = HorizontalAlignment.Left,
+            Background = PrimaryBrush,
+            BorderBrush = PrimaryBrush,
+            Foreground = Brushes.White,
+            FontWeight = FontWeight.SemiBold
         };
+    }
+
+    private static Button SecondaryButton(string text)
+    {
+        return new Button
+        {
+            Content = text,
+            MinWidth = 92,
+            MinHeight = 38,
+            Padding = new Thickness(14, 8),
+            HorizontalAlignment = HorizontalAlignment.Left,
+            Background = SubtlePanelBrush,
+            BorderBrush = PanelBorderBrush,
+            Foreground = TextBrush,
+            FontWeight = FontWeight.SemiBold
+        };
+    }
+
+    private static IBrush StateBrush(WorkspaceState state)
+    {
+        return state switch
+        {
+            WorkspaceState.Missing => WarningBrush,
+            WorkspaceState.NeedsAttention => new SolidColorBrush(Color.Parse("#dc2626")),
+            WorkspaceState.ImportedWithWarnings => WarningBrush,
+            WorkspaceState.ReviewReady => PrimaryBrush,
+            WorkspaceState.Analyzed => AccentBrush,
+            _ => PrimaryDarkBrush
+        };
+    }
+
+    private static Control LockedActionPill(string label)
+    {
+        return new Border
+        {
+            Background = new SolidColorBrush(Color.Parse("#fff7ed")),
+            BorderBrush = new SolidColorBrush(Color.Parse("#fdba74")),
+            BorderThickness = new Thickness(1),
+            CornerRadius = new CornerRadius(6),
+            Padding = new Thickness(10, 6),
+            HorizontalAlignment = HorizontalAlignment.Left,
+            Child = new TextBlock
+            {
+                Text = $"Locked: {label}",
+                FontSize = 12,
+                FontWeight = FontWeight.SemiBold,
+                Foreground = WarningBrush,
+                TextWrapping = TextWrapping.Wrap
+            }
+        };
+    }
+
+    private static Control LockedActionList(IEnumerable<string> labels)
+    {
+        var panel = new WrapPanel
+        {
+            ItemSpacing = 8,
+            LineSpacing = 8
+        };
+
+        foreach (var label in labels)
+        {
+            panel.Children.Add(LockedActionPill(label));
+        }
+
+        if (panel.Children.Count == 0)
+        {
+            panel.Children.Add(Paragraph("No locked actions."));
+        }
+
+        return panel;
     }
 
     private static string Present(bool value)
     {
         return value ? "present" : "missing";
+    }
+
+    private static string YesNo(bool value)
+    {
+        return value ? "yes" : "no";
     }
 }

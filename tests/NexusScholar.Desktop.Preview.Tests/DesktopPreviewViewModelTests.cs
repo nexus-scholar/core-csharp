@@ -23,7 +23,7 @@ public sealed class DesktopPreviewViewModelTests
 
         Assert.AreEqual(WorkspaceState.Missing, model.Overview.State);
         Assert.AreEqual("welcome", model.SelectedSection.Id);
-        Assert.IsTrue(model.StatusMessage.Contains("No Nexus research workspace", StringComparison.Ordinal));
+        Assert.IsTrue(model.StatusMessage.Contains("No local Nexus research workspace", StringComparison.Ordinal));
         Assert.IsFalse(model.StatusMessage.Contains(missingPath, StringComparison.OrdinalIgnoreCase));
     }
 
@@ -105,6 +105,23 @@ public sealed class DesktopPreviewViewModelTests
     }
 
     [TestMethod]
+    public void Boundary_badges_preserve_preview_non_claims()
+    {
+        var model = new DesktopPreviewViewModel();
+
+        CollectionAssert.AreEquivalent(
+            new[]
+            {
+                "local folder",
+                "researcher-supplied files",
+                "no providers",
+                "read-only review",
+                "locked merge gates"
+            },
+            model.BoundaryBadges.ToArray());
+    }
+
+    [TestMethod]
     public void Host_layout_keeps_status_bar_outside_scrollable_workspace()
     {
         var root = MainWindow.BuildHostLayout(new Border(), new Border(), new Border(), new Border());
@@ -119,7 +136,7 @@ public sealed class DesktopPreviewViewModelTests
         var workspaceScroller = Assert.IsInstanceOfType<ScrollViewer>(
             workspace.Children.Single(child => Grid.GetColumn(child) == 1));
         Assert.AreEqual(ScrollBarVisibility.Disabled, workspaceScroller.HorizontalScrollBarVisibility);
-        Assert.AreEqual(ScrollBarVisibility.Visible, workspaceScroller.VerticalScrollBarVisibility);
+        Assert.AreEqual(ScrollBarVisibility.Auto, workspaceScroller.VerticalScrollBarVisibility);
         Assert.AreEqual(VerticalAlignment.Stretch, workspaceScroller.VerticalAlignment);
 
         var statusChild = layout.Children.Single(child => Grid.GetRow(child) == 2);
