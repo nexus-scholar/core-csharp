@@ -92,11 +92,32 @@ Scope:
 
 Phase 3.5 deliberately does not add a product desktop shell, app services, Core calls, Core mutation, persistence, AI execution, or additional renderer targets.
 
+## Phase UI-01: Read-Only Desktop Preview
+
+Status: implemented as a sample preview over ResearchWorkspace read models.
+
+Created sample:
+
+- `samples/NexusScholar.Desktop.Preview`
+
+Created tests:
+
+- `tests/NexusScholar.Desktop.Preview.Tests`
+
+Scope:
+
+- open an existing local Research Workspace folder;
+- display project overview, evidence records, imports, verification, analysis, review queue, duplicate clusters, duplicate detail, report references, and diagnostics;
+- render APP-01 merge actions as locked/disabled;
+- keep status and generated-output references project-relative where read models provide them;
+- keep architecture guardrails around provider, persistence, cloud/API, model-client, and direct Core/AppServices dependency boundaries.
+
+UI-01 deliberately does not run `init`, `import`, `verify`, or `analyze`; does not write project files; does not store UI preferences; does not execute merge decisions; and does not add providers, PDF/OCR, AI/model calls, persistence, cloud/API, Core mutation, or PHP compatibility claims.
+
 ## Later Phases
 
-- Desktop workspace ADR and shared ResearchWorkspace service boundary, as proposed in `../adr/0016-desktop-shell-and-researchworkspace-boundary.md`.
-- Dependency-ordered desktop workspace phases, tracked in `DESKTOP-WORKSPACE-PHASES-2026-07-02.md`.
-- Import/Dedup desktop preview over existing local Research Workspace outputs, after shared read models exist.
+- Safe local verify/analyze actions only after UI-01 feedback and an explicit accepted task.
+- Safe local init/import actions only after a separate accepted task.
 - Screening workspace after Core Screening implementation and fixtures are ready.
 - CLI renderer for the same contracts.
 - Persistence and app state separation.

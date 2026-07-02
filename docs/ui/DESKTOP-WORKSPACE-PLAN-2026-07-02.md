@@ -227,7 +227,7 @@ Owner: desktop-ui.
 
 Prerequisite: UI-ADR-01 and RW-02.
 
-Status: current after RW-02.
+Status: complete in `cdx/ui01-desktop-preview-shell`.
 
 Goal: create a first desktop preview that opens a local workspace and displays state without executing workflow mutations.
 

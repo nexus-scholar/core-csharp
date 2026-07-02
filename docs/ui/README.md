@@ -2,7 +2,7 @@
 
 This folder tracks UI and UX work for Nexus Scholar without changing Core scientific authority. Authoritative scientific behavior remains in `specs/`, accepted ADRs, fixtures, observable pinned PHP behavior, and the current C# implementation.
 
-The current UI lane has moved past planning-only docs. `main` now includes renderer-neutral UI contracts, sample block plans, an Avalonia block renderer prototype, and a sample visual host. These pieces are still non-authoritative: they render workflow plans and sample evidence summaries, but they do not approve protocols, mutate Core records, persist app state, run AI, or claim product desktop behavior.
+The current UI lane has moved past planning-only docs. `main` now includes renderer-neutral UI contracts, sample block plans, an Avalonia block renderer prototype, a sample visual host, shared ResearchWorkspace read models, and a read-only desktop preview sample. These pieces are still non-authoritative: they render workflow plans and local workspace evidence summaries, but they do not approve protocols, mutate Core records, persist app state, run AI, execute merge decisions, or claim product desktop behavior.
 
 ## Documents
 
@@ -22,7 +22,7 @@ The current UI lane has moved past planning-only docs. `main` now includes rende
 - `imported/2026-07-02-ui-guides-and-specs/`: preserved imported desktop UI guide/spec pack, including the JetBrains-style C# UI spec and HTML/React visual guides.
 - `DESKTOP-WORKSPACE-PLAN-2026-07-02.md`: staged plan for turning the imported UI specs into ADR, shared ResearchWorkspace services, read models, and a desktop preview.
 - `DESKTOP-WORKSPACE-PHASES-2026-07-02.md`: dependency-ordered desktop workspace phases from ADR review through shared services, read models, read-only preview, and later local workflow actions.
-- `../adr/0016-desktop-shell-and-researchworkspace-boundary.md`: proposed ADR for the shared ResearchWorkspace service boundary and first desktop preview scope.
+- `../adr/0016-desktop-shell-and-researchworkspace-boundary.md`: accepted ADR for the shared ResearchWorkspace service boundary and first desktop preview scope.
 - `ROADMAP.md`: staged path from documentation to UI contracts, sample block plans, renderers, and later AI proposal support.
 - `OPEN-QUESTIONS.md`: product and technical questions that remain open.
 
@@ -30,14 +30,16 @@ The current UI lane has moved past planning-only docs. `main` now includes rende
 
 - `src/NexusScholar.UiContracts`: renderer-neutral `WorkspacePlan`, `ResearchBlockDescriptor`, evidence refs, validation refs, action descriptors, and display mode vocabulary.
 - `src/NexusScholar.Avalonia.Blocks`: Avalonia controls and view models that render `WorkspacePlan` data.
+- `src/NexusScholar.ResearchWorkspace`: shared non-UI local Research Workspace services and read models for CLI and desktop preview use.
 - `samples/block-plans`: sample-only workspace plan JSON files.
 - `samples/NexusScholar.Avalonia.Blocks.SampleHost`: local visual inspection host for those samples.
-- `tests/NexusScholar.UiContracts.Tests`, `tests/NexusScholar.Avalonia.Blocks.Tests`, and `tests/NexusScholar.Avalonia.Blocks.SampleHost.Tests`: serialization, view-model, architecture, and loader coverage.
+- `samples/NexusScholar.Desktop.Preview`: read-only Avalonia preview over existing local Research Workspace outputs.
+- `tests/NexusScholar.UiContracts.Tests`, `tests/NexusScholar.Avalonia.Blocks.Tests`, `tests/NexusScholar.Avalonia.Blocks.SampleHost.Tests`, `tests/NexusScholar.ResearchWorkspace.Tests`, and `tests/NexusScholar.Desktop.Preview.Tests`: serialization, view-model, architecture, loader, read-model, and preview coverage.
 
 ## Boundary
 
 Core projects must not reference `NexusScholar.UiContracts`, Avalonia, renderer packages, app services, persistence, or AI/model clients.
 
-`NexusScholar.UiContracts` must remain UI-framework-free. `NexusScholar.Avalonia.Blocks` may reference Avalonia and `NexusScholar.UiContracts`, but it must not reference Core domain packages. The sample host may load only sample plans and render placeholder actions.
+`NexusScholar.UiContracts` must remain UI-framework-free. `NexusScholar.Avalonia.Blocks` may reference Avalonia and `NexusScholar.UiContracts`, but it must not reference Core domain packages. The sample host may load only sample plans and render placeholder actions. The desktop preview may read existing local Research Workspace outputs through `NexusScholar.ResearchWorkspace`, but it must not run workflow actions or execute merge decisions.
 
 Any future UI work that affects scientific authority, record schemas, digest material, provenance, AI acceptance, app persistence, or PHP compatibility requires the normal ADR, fixture, and verification path.

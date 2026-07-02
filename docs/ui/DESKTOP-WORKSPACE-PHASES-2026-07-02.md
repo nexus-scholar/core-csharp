@@ -305,7 +305,7 @@ git diff --check
 
 ## Phase UI-01: Read-Only Desktop Preview Shell
 
-Status: current after RW-02.
+Status: complete in `cdx/ui01-desktop-preview-shell`.
 
 ### Goal
 
@@ -317,6 +317,17 @@ Create a first Avalonia desktop preview that opens a real local workspace and di
 samples/NexusScholar.Desktop.Preview/
 tests/NexusScholar.Desktop.Preview.Tests/
 ```
+
+### Outputs
+
+- Read-only Avalonia desktop preview sample.
+- Workspace folder picker and manual path load.
+- Stable left sidebar over RW-02 read models.
+- Top boundary/status area for local-only and locked-decision constraints.
+- Evidence records, imports, verification, analysis, review queue, duplicate clusters, duplicate detail, reports, and diagnostics screens.
+- Locked APP-01 merge actions rendered disabled.
+- View-model and layout smoke tests.
+- Architecture guardrails for desktop preview dependencies and forbidden source symbols.
 
 ### Screens
 

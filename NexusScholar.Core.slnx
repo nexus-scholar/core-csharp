@@ -21,6 +21,7 @@
   </Folder>
   <Folder Name="/samples/">
     <Project Path="samples/NexusScholar.Avalonia.Blocks.SampleHost/NexusScholar.Avalonia.Blocks.SampleHost.csproj" />
+    <Project Path="samples/NexusScholar.Desktop.Preview/NexusScholar.Desktop.Preview.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/NexusScholar.Core.Tests/NexusScholar.Core.Tests.csproj" />
@@ -32,5 +33,6 @@
     <Project Path="tests/NexusScholar.ResearchWorkspace.Tests/NexusScholar.ResearchWorkspace.Tests.csproj" />
     <Project Path="tests/NexusScholar.Avalonia.Blocks.Tests/NexusScholar.Avalonia.Blocks.Tests.csproj" />
     <Project Path="tests/NexusScholar.Avalonia.Blocks.SampleHost.Tests/NexusScholar.Avalonia.Blocks.SampleHost.Tests.csproj" />
+    <Project Path="tests/NexusScholar.Desktop.Preview.Tests/NexusScholar.Desktop.Preview.Tests.csproj" />
   </Folder>
 </Solution>

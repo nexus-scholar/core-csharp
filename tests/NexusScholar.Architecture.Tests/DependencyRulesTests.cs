@@ -6,6 +6,7 @@ using NexusScholar.Avalonia.Blocks;
 using NexusScholar.Avalonia.Blocks.SampleHost;
 using NexusScholar.Bundles;
 using NexusScholar.Deduplication;
+using NexusScholar.Desktop.Preview;
 using NexusScholar.Extensibility;
 using NexusScholar.FullText;
 using NexusScholar.Kernel;
@@ -485,6 +486,75 @@ public sealed class DependencyRulesTests
         {
             CollectionAssert.DoesNotContain(references, coreAssemblyName);
         }
+    }
+
+    [TestMethod]
+    public void Desktop_preview_references_researchworkspace_without_direct_core_domain_or_appservices_references()
+    {
+        var previewAssembly = typeof(DesktopPreviewViewModel).Assembly;
+        var references = previewAssembly.GetReferencedAssemblies()
+            .Select(reference => reference.Name ?? string.Empty)
+            .ToArray();
+        var forbiddenDirectAssemblyNames = new[]
+        {
+            typeof(IClock).Assembly.GetName().Name,
+            typeof(DeduplicationService).Assembly.GetName().Name,
+            typeof(ContentDigest).Assembly.GetName().Name,
+            typeof(ArtifactDescriptor).Assembly.GetName().Name,
+            typeof(ProtocolDraft).Assembly.GetName().Name,
+            typeof(WorkflowDefinition).Assembly.GetName().Name,
+            typeof(ResearchEvent).Assembly.GetName().Name,
+            typeof(WorkId).Assembly.GetName().Name,
+            typeof(SearchTrace).Assembly.GetName().Name,
+            typeof(ScreeningService).Assembly.GetName().Name,
+            typeof(FullTextInput).Assembly.GetName().Name,
+            typeof(ReviewBundleManifest).Assembly.GetName().Name,
+            typeof(ExtensionManifest).Assembly.GetName().Name,
+            typeof(AiTaskPolicy).Assembly.GetName().Name,
+            typeof(SearchDedupWorkspacePlanComposer).Assembly.GetName().Name
+        }.Where(name => name is not null).ToArray();
+
+        CollectionAssert.Contains(references, typeof(ResearchWorkspaceProject).Assembly.GetName().Name);
+        Assert.IsTrue(references.Any(name => name.StartsWith("Avalonia", StringComparison.Ordinal)));
+
+        foreach (var assemblyName in forbiddenDirectAssemblyNames)
+        {
+            CollectionAssert.DoesNotContain(references, assemblyName);
+        }
+    }
+
+    [TestMethod]
+    public void Desktop_preview_source_contains_no_provider_persistence_cloud_model_or_merge_execution_symbols()
+    {
+        var repositoryRoot = FindRepositoryRoot();
+        var sourceRoot = Path.Combine(repositoryRoot, "samples", "NexusScholar.Desktop.Preview");
+        var source = string.Join(
+            "\n",
+            Directory.GetFiles(sourceRoot, "*.cs", SearchOption.AllDirectories)
+                .Where(path => !path.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}", StringComparison.Ordinal) &&
+                    !path.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}", StringComparison.Ordinal))
+                .OrderBy(path => path, StringComparer.Ordinal)
+                .Select(File.ReadAllText));
+        var forbidden = new[]
+        {
+            string.Concat("Http", "Client"),
+            string.Concat("System.", "Net.", "Http"),
+            "DbContext",
+            "OpenAI",
+            "Anthropic",
+            "SemanticKernel",
+            "ProviderSdk",
+            "ProviderClient",
+            "AcceptMerge",
+            "RejectMerge",
+            "MarkUnresolved"
+        };
+
+        var matches = forbidden
+            .Where(symbol => source.Contains(symbol, StringComparison.Ordinal))
+            .ToArray();
+
+        Assert.AreEqual(0, matches.Length, $"Forbidden Desktop Preview source symbols: {string.Join(", ", matches)}");
     }
 
     [TestMethod]
