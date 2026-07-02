@@ -179,6 +179,7 @@ They must not execute commands, call services, write files, mutate Core records,
 May reference:
 
 - `NexusScholar.Kernel`
+- `NexusScholar.Shared`
 - `NexusScholar.Search`
 - `NexusScholar.Deduplication`
 - `NexusScholar.AppServices`

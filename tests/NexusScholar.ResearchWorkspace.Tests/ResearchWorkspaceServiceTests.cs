@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NexusScholar.ResearchWorkspace;
 using NexusScholar.UiContracts;
@@ -56,22 +57,7 @@ public sealed class ResearchWorkspaceServiceTests
     public void Analyzer_composes_workspace_plan_from_local_search_exports()
     {
         using var workspace = TemporaryWorkspace.Create();
-        var relativePath = $"{ResearchWorkspacePaths.SearchInputs}/search-001-scopus.csv";
-        var fullPath = ResearchWorkspacePaths.InProject(workspace.Root, relativePath);
-        Directory.CreateDirectory(Path.GetDirectoryName(fullPath)!);
-        File.WriteAllText(fullPath, ScopusCsv, Encoding.UTF8);
-        var sourceBytes = File.ReadAllBytes(fullPath);
-        var project = workspace.Project.WithInput(new ResearchWorkspaceInput
-        {
-            InputId = "search-001",
-            Kind = "search-export",
-            Source = "scopus",
-            Format = "csv",
-            RelativePath = relativePath,
-            Sha256 = Sha256(sourceBytes),
-            QueryId = "search-001",
-            QueryText = "systematic review software"
-        });
+        var project = AddSearchExport(workspace, workspace.Project, "search-001", "scopus", "csv", ScopusCsv);
 
         var result = ResearchWorkspaceAnalyzer.Analyze(workspace.Location, project);
 
@@ -82,6 +68,64 @@ public sealed class ResearchWorkspaceServiceTests
         Assert.IsTrue(result.WorkspacePlan.Blocks.Count > 0);
     }
 
+    [TestMethod]
+    public void Read_models_report_initialized_workspace_without_absolute_paths()
+    {
+        using var workspace = TemporaryWorkspace.Create();
+
+        var model = ResearchWorkspaceReadModelBuilder.Build(workspace.Root);
+
+        Assert.AreEqual(WorkspaceState.Initialized, model.State);
+        Assert.AreEqual("current folder", model.ProjectLocation);
+        Assert.AreEqual(0, model.Imports.Count);
+        Assert.IsTrue(model.WorkflowSteps.Any(step => step.StepId == "import" && step.State == "current"));
+        AssertDoesNotContainWorkspaceRoot(model, workspace.Root);
+    }
+
+    [TestMethod]
+    public void Read_models_report_digest_mismatch_with_project_relative_attention()
+    {
+        using var workspace = TemporaryWorkspace.Create();
+        var project = AddSearchExport(workspace, workspace.Project, "search-001", "scopus", "csv", ScopusCsv);
+        var relativePath = project.Inputs[0].EffectiveRelativePath;
+        File.WriteAllText(ResearchWorkspacePaths.InProject(workspace.Root, relativePath), "changed bytes", Encoding.UTF8);
+        ResearchWorkspaceStore.WriteProject(workspace.Location, project);
+
+        var model = ResearchWorkspaceReadModelBuilder.Build(workspace.Root);
+
+        Assert.AreEqual(WorkspaceState.NeedsAttention, model.State);
+        Assert.AreEqual(1, model.Verification.DigestMismatchCount);
+        Assert.IsTrue(model.AttentionItems.Any(item =>
+            item.Code == "digest-mismatch" &&
+            item.Target == relativePath));
+        AssertDoesNotContainWorkspaceRoot(model, workspace.Root);
+    }
+
+    [TestMethod]
+    public void Read_models_surface_review_ready_workspace_and_locked_actions()
+    {
+        using var workspace = TemporaryWorkspace.Create();
+        var project = workspace.Project;
+        project = AddBundleFile(workspace, project, "search-001", "scopus", "csv", "combined_scopus_like.csv");
+        project = AddBundleFile(workspace, project, "search-002", "web-of-science", "ris", "combined_wos_like.ris");
+        project = AddBundleFile(workspace, project, "search-003", "google-scholar", "bibtex", "combined_scholar_style.bib");
+        project = AddBundleFile(workspace, project, "search-004", "other", "csv", "combined_wos_like_source_specific.csv");
+        AnalyzeAndPersist(workspace, project);
+
+        var model = ResearchWorkspaceReadModelBuilder.Build(workspace.Root);
+
+        Assert.AreEqual(WorkspaceState.ReviewReady, model.State);
+        Assert.IsTrue(model.EvidenceRecords.Count >= 10);
+        Assert.IsTrue(model.DuplicateClusters.Count > 0);
+        Assert.IsTrue(model.ReviewQueue.Count > 0);
+        Assert.IsTrue(model.DuplicateCandidateDetails.Count > 0);
+        Assert.IsTrue(model.LockedDecisionActions.Count > 0);
+        Assert.IsTrue(model.LockedDecisionActions.All(action => !action.IsExecutable));
+        Assert.IsTrue(model.LockedDecisionActions.All(action => action.CommandKind is null));
+        Assert.IsTrue(model.LockedDecisionActions.All(action => action.Label.Contains("locked", StringComparison.OrdinalIgnoreCase)));
+        AssertDoesNotContainWorkspaceRoot(model, workspace.Root);
+    }
+
     private const string ScopusCsv = """
 eid,title,author names,year,source title,doi
 2-s2.0-pr03-001,"Rayyan: a web and mobile app for systematic reviews","Ouzzani M; Hammady H; Fedorowicz Z; Elmagarmid A",2016,Systematic Reviews,10.1186/s13643-016-0384-4
@@ -89,9 +133,125 @@ eid,title,author names,year,source title,doi
 
 """;
 
+    private static ResearchWorkspaceProject AddSearchExport(
+        TemporaryWorkspace workspace,
+        ResearchWorkspaceProject project,
+        string inputId,
+        string source,
+        string format,
+        string content)
+    {
+        var relativePath = $"{ResearchWorkspacePaths.SearchInputs}/{inputId}-{source}.{SearchImportAliases.ExtensionFor(format)}";
+        var fullPath = ResearchWorkspacePaths.InProject(workspace.Root, relativePath);
+        Directory.CreateDirectory(Path.GetDirectoryName(fullPath)!);
+        File.WriteAllText(fullPath, content, Encoding.UTF8);
+        return project.WithInput(InputFor(inputId, source, format, relativePath, File.ReadAllBytes(fullPath)));
+    }
+
+    private static ResearchWorkspaceProject AddBundleFile(
+        TemporaryWorkspace workspace,
+        ResearchWorkspaceProject project,
+        string inputId,
+        string source,
+        string format,
+        string fixtureFileName)
+    {
+        var fixturePath = Path.Combine(
+            RepositoryRoot(),
+            "tests",
+            "NexusScholar.AppServices.Tests",
+            "Fixtures",
+            "App01GeneratedLocalBundles",
+            "bundles",
+            "FB07-combined-app01-demo",
+            fixtureFileName);
+        var relativePath = $"{ResearchWorkspacePaths.SearchInputs}/{inputId}-{source}.{SearchImportAliases.ExtensionFor(format)}";
+        var fullPath = ResearchWorkspacePaths.InProject(workspace.Root, relativePath);
+        Directory.CreateDirectory(Path.GetDirectoryName(fullPath)!);
+        File.Copy(fixturePath, fullPath, overwrite: true);
+        return project.WithInput(InputFor(inputId, source, format, relativePath, File.ReadAllBytes(fullPath)));
+    }
+
+    private static ResearchWorkspaceInput InputFor(
+        string inputId,
+        string source,
+        string format,
+        string relativePath,
+        byte[] sourceBytes)
+    {
+        return new ResearchWorkspaceInput
+        {
+            InputId = inputId,
+            Kind = "search-export",
+            Source = source,
+            Format = format,
+            RelativePath = relativePath,
+            Sha256 = Sha256(sourceBytes),
+            QueryId = inputId,
+            QueryText = "read-model test",
+            ImportTracePath = $"{ResearchWorkspacePaths.ImportOutputs}/{inputId}.import-trace.json"
+        };
+    }
+
+    private static void AnalyzeAndPersist(TemporaryWorkspace workspace, ResearchWorkspaceProject project)
+    {
+        var result = ResearchWorkspaceAnalyzer.Analyze(workspace.Location, project);
+        foreach (var trace in result.ImportTraces)
+        {
+            var inputId = trace.TraceId.EndsWith(".import-trace", StringComparison.Ordinal)
+                ? trace.TraceId[..^".import-trace".Length]
+                : trace.TraceId;
+            ResearchWorkspaceJson.WriteJsonFile(
+                ResearchWorkspacePaths.InProject(workspace.Root, $"{ResearchWorkspacePaths.ImportOutputs}/{inputId}.import-trace.json"),
+                trace);
+        }
+
+        ResearchWorkspaceJson.WriteJsonFile(
+            ResearchWorkspacePaths.InProject(workspace.Root, ResearchWorkspaceAnalyzer.DeduplicationResultPath),
+            result.DeduplicationResult);
+        ResearchWorkspaceJson.WriteJsonFile(
+            ResearchWorkspacePaths.InProject(workspace.Root, ResearchWorkspaceAnalyzer.WorkspacePlanPath),
+            result.WorkspacePlan,
+            UiContractJson.SerializerOptions);
+        ResearchWorkspaceJson.WriteTextFile(
+            ResearchWorkspacePaths.InProject(workspace.Root, ResearchWorkspaceAnalyzer.ReviewReportPath),
+            WorkspacePlanReportWriter.Format(result));
+
+        ResearchWorkspaceStore.WriteProject(
+            workspace.Location,
+            project.WithOutputs(new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["deduplicationResult"] = ResearchWorkspaceAnalyzer.DeduplicationResultPath,
+                ["workspacePlan"] = ResearchWorkspaceAnalyzer.WorkspacePlanPath,
+                ["reviewReport"] = ResearchWorkspaceAnalyzer.ReviewReportPath
+            }));
+    }
+
+    private static void AssertDoesNotContainWorkspaceRoot(WorkspaceOverviewReadModel model, string workspaceRoot)
+    {
+        var json = JsonSerializer.Serialize(model);
+        Assert.IsFalse(json.Contains(workspaceRoot, StringComparison.OrdinalIgnoreCase), json);
+    }
+
     private static string Sha256(byte[] bytes)
     {
         return $"sha256:{Convert.ToHexString(SHA256.HashData(bytes)).ToLowerInvariant()}";
+    }
+
+    private static string RepositoryRoot()
+    {
+        var directory = new DirectoryInfo(AppContext.BaseDirectory);
+        while (directory is not null)
+        {
+            if (File.Exists(Path.Combine(directory.FullName, "NexusScholar.Core.slnx")))
+            {
+                return directory.FullName;
+            }
+
+            directory = directory.Parent;
+        }
+
+        throw new InvalidOperationException("Repository root could not be found.");
     }
 
     private sealed class TemporaryWorkspace : IDisposable

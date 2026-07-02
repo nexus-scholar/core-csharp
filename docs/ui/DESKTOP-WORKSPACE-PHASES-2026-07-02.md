@@ -182,7 +182,7 @@ git diff --check
 
 ## Phase RW-02: Add UI-Friendly Read Models
 
-Status: current after RW-01.
+Status: complete in `cdx/rw02-ui-read-models`.
 
 ### Goal
 
@@ -305,7 +305,7 @@ git diff --check
 
 ## Phase UI-01: Read-Only Desktop Preview Shell
 
-Status: after UI-ADR-01 and RW-02.
+Status: current after RW-02.
 
 ### Goal
 

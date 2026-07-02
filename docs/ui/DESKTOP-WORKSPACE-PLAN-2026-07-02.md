@@ -173,7 +173,7 @@ Owner: application-services.
 
 Prerequisite: RW-01.
 
-Status: current after RW-01.
+Status: complete in `cdx/rw02-ui-read-models`.
 
 Goal: expose structured read models that match the imported UI spec without parsing CLI console text.
 
@@ -226,6 +226,8 @@ git diff --check
 Owner: desktop-ui.
 
 Prerequisite: UI-ADR-01 and RW-02.
+
+Status: current after RW-02.
 
 Goal: create a first desktop preview that opens a local workspace and displays state without executing workflow mutations.
 

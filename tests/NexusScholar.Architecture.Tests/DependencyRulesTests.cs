@@ -334,7 +334,8 @@ public sealed class DependencyRulesTests
             typeof(SearchTrace).Assembly.GetName().Name,
             typeof(DeduplicationService).Assembly.GetName().Name,
             typeof(SearchDedupWorkspacePlanComposer).Assembly.GetName().Name,
-            typeof(WorkspacePlan).Assembly.GetName().Name
+            typeof(WorkspacePlan).Assembly.GetName().Name,
+            typeof(WorkId).Assembly.GetName().Name
         };
         var disallowed = researchWorkspaceAssembly.GetReferencedAssemblies()
             .Select(reference => reference.Name ?? string.Empty)
@@ -345,7 +346,7 @@ public sealed class DependencyRulesTests
         Assert.AreEqual(
             0,
             disallowed.Length,
-            $"NexusScholar.ResearchWorkspace must depend only on Kernel, Search, Deduplication, AppServices, and UiContracts inside Nexus. Found: {string.Join(", ", disallowed)}");
+            $"NexusScholar.ResearchWorkspace must depend only on Kernel, Shared, Search, Deduplication, AppServices, and UiContracts inside Nexus. Found: {string.Join(", ", disallowed)}");
     }
 
     [TestMethod]
