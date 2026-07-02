@@ -1,0 +1,54 @@
+:root {
+  --bg: #101114;
+  --panel: #17191e;
+  --panel2: #1f2229;
+  --border: #343945;
+  --text: #eef1f7;
+  --muted: #a9b0bf;
+  --faint: #747d8e;
+  --blue: #6ea8fe;
+  --green: #6fd39c;
+  --yellow: #f5c86a;
+  --orange: #ff9f5a;
+  --red: #ff7171;
+}
+.nexus-app { min-height: 100vh; display: grid; grid-template-columns: 260px minmax(0, 1fr); background: #101114; color: var(--text); font-family: Inter, system-ui, sans-serif; }
+.nx-sidebar { border-right: 1px solid var(--border); background: #14161c; padding: 18px 14px; }
+.nx-brand { font-weight: 800; margin-bottom: 18px; }
+.nx-nav-title { color: var(--faint); text-transform: uppercase; letter-spacing: .12em; font-size: 11px; margin: 18px 8px 6px; }
+.nx-nav { width: 100%; border: 0; background: transparent; color: var(--muted); text-align: left; padding: 9px 10px; border-radius: 10px; cursor: pointer; }
+.nx-nav.active, .nx-nav:hover { background: #263044; color: var(--text); }
+.nx-topbar { height: 64px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; padding: 0 24px; background: #17191e; }
+.nx-content { padding: 24px; max-width: 1420px; margin: 0 auto; }
+.nx-panel, .nx-card { border: 1px solid var(--border); background: linear-gradient(180deg, var(--panel2), var(--panel)); border-radius: 14px; padding: 20px; }
+.nx-grid { display: grid; gap: 14px; }
+.nx-two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.nx-three { grid-template-columns: 230px minmax(580px, 1fr) 340px; align-items: start; }
+.nx-summary { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.nx-stepper { grid-template-columns: repeat(5, minmax(120px, 1fr)); }
+.nx-step, .nx-summary-card, .nx-list-item { border: 1px solid #282d36; background: #181b22; border-radius: 12px; padding: 14px; }
+.nx-pill { display: inline-flex; align-items: center; border: 1px solid var(--border); border-radius: 999px; padding: 4px 9px; font-size: 12px; color: var(--muted); background: #181b22; }
+.nx-pill.green { color: var(--green); border-color: rgba(111,211,156,.45); }
+.nx-pill.blue { color: var(--blue); border-color: rgba(110,168,254,.45); }
+.nx-pill.yellow { color: var(--yellow); border-color: rgba(245,200,106,.45); }
+.nx-pill.orange { color: var(--orange); border-color: rgba(255,159,90,.45); }
+.nx-button { border: 1px solid var(--border); color: var(--text); background: #232833; border-radius: 10px; padding: 9px 13px; cursor: pointer; }
+.nx-button.primary { background: #2a568e; border-color: rgba(110,168,254,.5); }
+.nx-button.ghost { background: transparent; color: var(--muted); }
+.nx-button.locked { color: var(--faint); background: #191b21; cursor: not-allowed; }
+.nx-table-card { border: 1px solid var(--border); border-radius: 14px; overflow: hidden; background: #17191e; }
+.nx-table-toolbar { padding: 12px; border-bottom: 1px solid #282d36; display: flex; justify-content: space-between; gap: 12px; }
+.nx-table-scroll { max-height: 520px; overflow: auto; }
+.nx-table { width: 100%; border-collapse: collapse; }
+.nx-table th, .nx-table td { padding: 10px 12px; border-bottom: 1px solid #282d36; text-align: left; vertical-align: top; font-size: 13px; }
+.nx-table th { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .08em; background: #171a21; }
+.nx-table tr.selected td, .nx-table tr:hover td { background: rgba(110,168,254,.10); }
+.nx-filter, .nx-inspector { border: 1px solid var(--border); background: #181b22; border-radius: 14px; padding: 14px; }
+.nx-filter-row { display: flex; justify-content: space-between; padding: 8px 6px; color: var(--muted); border-radius: 8px; }
+.nx-filter-row.active { background: #293143; color: var(--text); }
+.nx-inspector dl { display: grid; grid-template-columns: 96px 1fr; gap: 8px 12px; }
+.nx-inspector dt { color: var(--faint); font-size: 12px; }
+.nx-inspector dd { margin: 0; overflow-wrap: anywhere; font-size: 12px; }
+.nx-muted { color: var(--muted); }
+.nx-mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+@media (max-width: 1100px) { .nexus-app, .nx-two, .nx-three { grid-template-columns: 1fr; } .nx-summary, .nx-stepper { grid-template-columns: repeat(2, minmax(0, 1fr)); } }

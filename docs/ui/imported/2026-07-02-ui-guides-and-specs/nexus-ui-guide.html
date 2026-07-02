@@ -1,0 +1,493 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Nexus Scholar UI Guide</title>
+  <style>
+    :root {
+      --bg: #101114;
+      --panel: #17191e;
+      --panel-2: #1f2229;
+      --panel-3: #252a33;
+      --border: #343945;
+      --border-soft: #282d36;
+      --text: #eef1f7;
+      --muted: #a9b0bf;
+      --faint: #747d8e;
+      --blue: #6ea8fe;
+      --green: #6fd39c;
+      --yellow: #f5c86a;
+      --orange: #ff9f5a;
+      --red: #ff7171;
+      --purple: #b79cff;
+      --shadow: rgba(0,0,0,.35);
+      --radius: 14px;
+      --radius-sm: 9px;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: radial-gradient(circle at top left, #202433 0, #101114 34%, #0d0e11 100%);
+      color: var(--text);
+      min-height: 100vh;
+    }
+    button, input, select, textarea { font: inherit; }
+    .app { display: grid; grid-template-columns: 260px minmax(0, 1fr); min-height: 100vh; }
+    .sidebar {
+      background: linear-gradient(180deg, #15171d 0, #101217 100%);
+      border-right: 1px solid var(--border);
+      padding: 18px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+    .brand { display: flex; align-items: center; gap: 12px; padding: 4px 8px 12px; }
+    .brand-mark { width: 34px; height: 34px; border-radius: 10px; background: linear-gradient(135deg, var(--blue), var(--purple)); display: grid; place-items: center; font-weight: 800; box-shadow: 0 10px 30px var(--shadow); }
+    .brand-title { font-weight: 760; letter-spacing: .2px; }
+    .brand-subtitle { color: var(--muted); font-size: 12px; margin-top: 2px; }
+    .nav-section-title { color: var(--faint); text-transform: uppercase; font-size: 11px; letter-spacing: .12em; padding: 0 10px; margin: 14px 0 6px; }
+    .nav-button {
+      width: 100%; border: 0; background: transparent; color: var(--muted); text-align: left;
+      border-radius: 10px; padding: 9px 10px; display: flex; gap: 10px; align-items: center; cursor: pointer;
+    }
+    .nav-button:hover { background: #20232b; color: var(--text); }
+    .nav-button.active { background: #283144; color: var(--text); box-shadow: inset 3px 0 0 var(--blue); }
+    .nav-icon { width: 18px; color: var(--faint); text-align: center; }
+    .sidebar-note {
+      margin-top: auto; border: 1px solid var(--border-soft); background: #151922; border-radius: var(--radius); padding: 12px; color: var(--muted); font-size: 12px; line-height: 1.4;
+    }
+    .main { min-width: 0; display: flex; flex-direction: column; }
+    .topbar {
+      height: 64px; display: flex; align-items: center; justify-content: space-between;
+      border-bottom: 1px solid var(--border); background: rgba(20, 22, 27, .72); backdrop-filter: blur(12px); padding: 0 24px;
+      position: sticky; top: 0; z-index: 5;
+    }
+    .project-title { font-size: 15px; font-weight: 760; }
+    .project-meta { display: flex; gap: 8px; margin-top: 4px; flex-wrap: wrap; }
+    .toolbar { display: flex; gap: 8px; align-items: center; }
+    .content { padding: 24px; max-width: 1420px; width: 100%; margin: 0 auto; }
+    .screen { display: none; animation: fade .15s ease-out; }
+    .screen.active { display: block; }
+    @keyframes fade { from { opacity: .6; transform: translateY(3px); } to { opacity: 1; transform: translateY(0); } }
+
+    .hero { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 18px; align-items: stretch; }
+    .panel, .card, .table-card {
+      background: linear-gradient(180deg, var(--panel-2) 0, var(--panel) 100%);
+      border: 1px solid var(--border); border-radius: var(--radius); box-shadow: 0 18px 50px rgba(0,0,0,.16);
+    }
+    .panel { padding: 22px; }
+    .panel-header { display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; margin-bottom: 16px; }
+    h1, h2, h3 { margin: 0; letter-spacing: -.02em; }
+    h1 { font-size: 28px; line-height: 1.15; }
+    h2 { font-size: 20px; line-height: 1.25; }
+    h3 { font-size: 15px; line-height: 1.3; }
+    p { color: var(--muted); line-height: 1.55; margin: 8px 0 0; }
+    .muted { color: var(--muted); }
+    .faint { color: var(--faint); }
+    .small { font-size: 12px; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    .pill { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--border); border-radius: 999px; padding: 4px 9px; font-size: 12px; color: var(--muted); background: #181b22; white-space: nowrap; }
+    .pill.green { color: var(--green); border-color: rgba(111,211,156,.4); background: rgba(111,211,156,.08); }
+    .pill.blue { color: var(--blue); border-color: rgba(110,168,254,.4); background: rgba(110,168,254,.08); }
+    .pill.yellow { color: var(--yellow); border-color: rgba(245,200,106,.4); background: rgba(245,200,106,.08); }
+    .pill.orange { color: var(--orange); border-color: rgba(255,159,90,.4); background: rgba(255,159,90,.08); }
+    .pill.red { color: var(--red); border-color: rgba(255,113,113,.45); background: rgba(255,113,113,.08); }
+    .pill.gray { color: var(--faint); }
+
+    .button { border: 1px solid var(--border); background: #232833; color: var(--text); border-radius: 10px; padding: 9px 13px; cursor: pointer; font-weight: 650; }
+    .button:hover { background: #2b3140; }
+    .button.primary { border-color: rgba(110,168,254,.45); background: linear-gradient(180deg, #3568ad, #2a568e); }
+    .button.ghost { background: transparent; color: var(--muted); }
+    .button.locked { color: var(--faint); background: #191b21; cursor: not-allowed; }
+
+    .workflow { display: grid; grid-template-columns: repeat(5, minmax(120px,1fr)); gap: 10px; margin: 16px 0; }
+    .step { border: 1px solid var(--border-soft); background: #181b22; padding: 12px; border-radius: 12px; min-height: 78px; }
+    .step .kicker { font-size: 11px; color: var(--faint); text-transform: uppercase; letter-spacing: .1em; }
+    .step .label { margin-top: 8px; font-weight: 700; }
+    .step.done { border-color: rgba(111,211,156,.35); }
+    .step.current { border-color: rgba(110,168,254,.5); background: rgba(110,168,254,.08); }
+    .step.warn { border-color: rgba(245,200,106,.35); }
+
+    .summary-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; }
+    .summary-card { background: #181b22; border: 1px solid var(--border-soft); border-radius: 13px; padding: 14px; }
+    .summary-card .value { font-size: 28px; line-height: 1; font-weight: 800; margin-top: 8px; }
+    .summary-card .label { color: var(--muted); font-size: 12px; margin-top: 6px; }
+
+    .split { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(320px, .8fr); gap: 16px; }
+    .three { display: grid; grid-template-columns: 230px minmax(580px, 1fr) 340px; gap: 14px; align-items: start; }
+    .two-col { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 14px; }
+    .list { display: grid; gap: 10px; }
+    .item { border: 1px solid var(--border-soft); border-radius: 12px; background: #181b22; padding: 14px; }
+    .item-header { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; }
+    .item-title { font-weight: 760; margin-top: 8px; }
+    .item-meta { color: var(--muted); font-size: 13px; margin-top: 6px; }
+    .banner { border: 1px solid rgba(110,168,254,.34); background: rgba(110,168,254,.08); border-radius: 13px; padding: 13px 14px; display: flex; gap: 10px; color: #cfe2ff; }
+    .warning-banner { border-color: rgba(245,200,106,.34); background: rgba(245,200,106,.08); color: #ffe2a1; }
+
+    .form-grid { display: grid; gap: 14px; }
+    label { display: grid; gap: 7px; color: var(--muted); font-size: 13px; }
+    input, select, textarea { width: 100%; background: #111319; color: var(--text); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; outline: none; }
+    input:focus, select:focus, textarea:focus { border-color: rgba(110,168,254,.7); box-shadow: 0 0 0 3px rgba(110,168,254,.12); }
+    textarea { min-height: 80px; resize: vertical; }
+    .dropzone { border: 1.5px dashed #4b5363; background: #151820; border-radius: var(--radius); min-height: 170px; display: grid; place-items: center; text-align: center; padding: 24px; }
+
+    table { border-collapse: collapse; width: 100%; }
+    .table-card { overflow: hidden; }
+    .table-toolbar { display: flex; justify-content: space-between; gap: 12px; padding: 12px; border-bottom: 1px solid var(--border-soft); background: #181b22; }
+    th, td { padding: 10px 12px; border-bottom: 1px solid var(--border-soft); text-align: left; vertical-align: top; }
+    th { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .08em; background: #171a21; position: sticky; top: 0; z-index: 1; }
+    td { color: #dfe4ee; font-size: 13px; }
+    tr:hover td { background: #20242d; }
+    tr.selected td { background: rgba(110,168,254,.10); }
+    .table-scroll { max-height: 500px; overflow: auto; }
+    .title-cell { min-width: 300px; }
+    .filter-tree { border: 1px solid var(--border); background: #181b22; border-radius: var(--radius); padding: 12px; }
+    .filter-row { display: flex; justify-content: space-between; gap: 8px; padding: 8px 6px; color: var(--muted); border-radius: 8px; cursor: default; }
+    .filter-row.active { background: #293143; color: var(--text); }
+    .filter-row span:last-child { color: var(--faint); }
+    .inspector { border: 1px solid var(--border); background: #181b22; border-radius: var(--radius); padding: 14px; position: sticky; top: 84px; }
+    .inspector dl { display: grid; grid-template-columns: 98px 1fr; gap: 8px 12px; margin: 14px 0 0; }
+    .inspector dt { color: var(--faint); font-size: 12px; }
+    .inspector dd { margin: 0; color: var(--text); font-size: 12px; overflow-wrap: anywhere; }
+
+    .compare-card { border: 1px solid var(--border); background: #181b22; border-radius: var(--radius); padding: 16px; }
+    .record-title { font-size: 18px; font-weight: 800; line-height: 1.25; margin-bottom: 14px; }
+    .field-grid { display: grid; grid-template-columns: 120px 1fr; gap: 8px 12px; margin-top: 12px; }
+    .field-grid .key { color: var(--faint); }
+    .reason-list { display: grid; gap: 10px; margin-top: 10px; }
+    .reason { border: 1px solid var(--border-soft); border-radius: 10px; background: #181b22; padding: 10px 12px; display: flex; gap: 10px; }
+    .cli { background: #111319; border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 14px; color: #d6e4ff; margin-top: 14px; }
+    .component-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+    .component-card { border: 1px solid var(--border-soft); border-radius: 12px; background: #181b22; padding: 14px; min-height: 120px; }
+    .footer-note { color: var(--faint); font-size: 12px; margin-top: 18px; }
+
+    @media (max-width: 1100px) {
+      .app { grid-template-columns: 1fr; }
+      .sidebar { position: static; }
+      .hero, .split, .three, .two-col { grid-template-columns: 1fr; }
+      .summary-grid, .workflow, .component-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .inspector { position: static; }
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark">N</div>
+      <div>
+        <div class="brand-title">Nexus Scholar</div>
+        <div class="brand-subtitle">Research evidence workspace</div>
+      </div>
+    </div>
+
+    <div>
+      <div class="nav-section-title">Start</div>
+      <button class="nav-button active" data-screen="welcome"><span class="nav-icon">⌂</span> Welcome</button>
+      <button class="nav-button" data-screen="new"><span class="nav-icon">＋</span> New Workspace</button>
+      <div class="nav-section-title">Project</div>
+      <button class="nav-button" data-screen="overview"><span class="nav-icon">◈</span> Overview</button>
+      <button class="nav-button" data-screen="imports"><span class="nav-icon">⇣</span> Imports</button>
+      <button class="nav-button" data-screen="records"><span class="nav-icon">▤</span> Evidence Records</button>
+      <button class="nav-button" data-screen="verify"><span class="nav-icon">✓</span> Verification</button>
+      <button class="nav-button" data-screen="analysis"><span class="nav-icon">◇</span> Analysis</button>
+      <button class="nav-button" data-screen="review"><span class="nav-icon">!</span> Review Queue</button>
+      <button class="nav-button" data-screen="clusters"><span class="nav-icon">◎</span> Duplicate Clusters</button>
+      <button class="nav-button" data-screen="duplicate"><span class="nav-icon">⇄</span> Duplicate Detail</button>
+      <div class="nav-section-title">Guide</div>
+      <button class="nav-button" data-screen="components"><span class="nav-icon">▧</span> Components</button>
+    </div>
+
+    <div class="sidebar-note">
+      <strong>Design rule:</strong><br>
+      Detection is visible. Decisions are locked. Local-only behavior is always explicit.
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div>
+        <div class="project-title">AI screening tools review</div>
+        <div class="project-meta">
+          <span class="pill orange">Review ready</span>
+          <span class="pill blue">Local-only</span>
+          <span class="pill gray">No providers</span>
+          <span class="pill gray">Decisions locked</span>
+        </div>
+      </div>
+      <div class="toolbar">
+        <button class="button ghost">CLI equivalent</button>
+        <button class="button ghost">Advanced details</button>
+        <button class="button primary">Open Review Queue</button>
+      </div>
+    </header>
+
+    <div class="content">
+      <section id="welcome" class="screen active">
+        <div class="hero">
+          <div class="panel">
+            <div class="panel-header">
+              <div>
+                <h1>Welcome to Nexus Scholar</h1>
+                <p>Open a local research workspace, create a new one, or run a deterministic local demo.</p>
+              </div>
+              <span class="pill blue">JetBrains-style shell</span>
+            </div>
+            <label>Search workspaces<input value="AI screening tools" /></label>
+            <div class="list" style="margin-top:16px">
+              <div class="item">
+                <div class="item-header"><span class="pill orange">Review ready</span><span class="small faint mono">C:/Users/.../AI-screening-tools</span></div>
+                <div class="item-title">AI screening tools review</div>
+                <div class="item-meta">4 search exports · 18 candidates need review · 5 parser warnings</div>
+              </div>
+              <div class="item">
+                <div class="item-header"><span class="pill yellow">Verify next</span><span class="small faint mono">C:/Users/.../Tomato-SLR</span></div>
+                <div class="item-title">Tomato disease segmentation review</div>
+                <div class="item-meta">2 search exports · imported with warnings</div>
+              </div>
+              <div class="item">
+                <div class="item-header"><span class="pill green">Analyzed</span><span class="small faint mono">C:/Users/.../Medical-imaging</span></div>
+                <div class="item-title">Medical imaging synthesis review</div>
+                <div class="item-meta">No review candidates · analysis complete</div>
+              </div>
+            </div>
+          </div>
+          <div class="panel">
+            <h2>Actions</h2>
+            <div class="list" style="margin-top:16px">
+              <button class="button primary" data-screen="new">New Research Workspace</button>
+              <button class="button">Open Existing Workspace</button>
+              <button class="button">Run Local Demo</button>
+              <button class="button ghost">View Tutorial</button>
+            </div>
+            <div class="banner" style="margin-top:16px">Nexus treats a project as a local folder. The UI should preserve that mental model.</div>
+          </div>
+        </div>
+      </section>
+
+      <section id="new" class="screen">
+        <div class="split">
+          <div class="panel">
+            <div class="panel-header"><div><h1>New Research Workspace</h1><p>Create the same local structure as <span class="mono">nexus init</span>.</p></div><span class="pill blue">Local folder only</span></div>
+            <div class="two-col">
+              <div class="filter-tree">
+                <div class="filter-row active"><strong>Evidence Review</strong><span>v0</span></div>
+                <div class="filter-row"><span>Systematic Review</span><span>later</span></div>
+                <div class="filter-row"><span>Scoping Review</span><span>later</span></div>
+                <div class="filter-row"><span>Dataset Audit</span><span>later</span></div>
+                <div class="filter-row"><span>Demo Workspace</span><span>local</span></div>
+              </div>
+              <div class="form-grid">
+                <label>Workspace name<input value="AI screening tools review" /></label>
+                <label>Location<input value="C:/Users/researcher/NexusWorkspaces/AI-screening-tools-review" /></label>
+                <label>Workspace mode<select><option>Local folder only</option><option>Advanced custom layout</option></select></label>
+                <div class="banner">Nexus will not query providers, upload files, or execute merge decisions.</div>
+              </div>
+            </div>
+          </div>
+          <div class="panel">
+            <h2>What Nexus will create</h2>
+            <div class="reason-list">
+              <div class="reason"><span>✓</span><span class="mono">nexus.project.json</span></div>
+              <div class="reason"><span>✓</span><span class="mono">inputs/search/</span></div>
+              <div class="reason"><span>✓</span><span class="mono">nexus-output/imports/</span></div>
+              <div class="reason"><span>✓</span><span class="mono">nexus-output/dedup/</span></div>
+              <div class="reason"><span>✓</span><span class="mono">nexus-output/workspace/</span></div>
+              <div class="reason"><span>✓</span><span class="mono">nexus-output/reports/</span></div>
+            </div>
+            <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:18px"><button class="button ghost">Cancel</button><button class="button primary">Create Workspace</button></div>
+          </div>
+        </div>
+        <div class="cli mono">CLI equivalent: nexus init --title "AI screening tools review"</div>
+      </section>
+
+      <section id="overview" class="screen">
+        <div class="panel">
+          <div class="panel-header">
+            <div><h1>Project Overview</h1><p>The home screen answers: what has happened, what needs attention, and what is safe next?</p></div>
+            <button class="button primary" data-screen="review">Open Review Queue</button>
+          </div>
+          <div class="workflow">
+            <div class="step done"><div class="kicker">Done</div><div class="label">Workspace</div><p>Project folder created</p></div>
+            <div class="step done"><div class="kicker">Done</div><div class="label">Import</div><p>4 local exports</p></div>
+            <div class="step done"><div class="kicker">Done</div><div class="label">Verify</div><p>Files unchanged</p></div>
+            <div class="step done"><div class="kicker">Done</div><div class="label">Analyze</div><p>Workspace plan exists</p></div>
+            <div class="step current warn"><div class="kicker">Current</div><div class="label">Review</div><p>Human review needed</p></div>
+          </div>
+          <div class="summary-grid">
+            <div class="summary-card"><div class="label">Search exports</div><div class="value">4</div></div>
+            <div class="summary-card"><div class="label">Imported records</div><div class="value">428</div></div>
+            <div class="summary-card"><div class="label">Parser warnings</div><div class="value">5</div></div>
+            <div class="summary-card"><div class="label">Exact clusters</div><div class="value">31</div></div>
+            <div class="summary-card"><div class="label">Review candidates</div><div class="value">18</div></div>
+          </div>
+        </div>
+        <div class="split" style="margin-top:16px">
+          <div class="panel"><h2>Recommended next action</h2><p>18 duplicate candidates require human inspection. Merge actions are display-only in this preview.</p><div style="margin-top:14px"><button class="button primary" data-screen="review">Open Review Queue</button></div></div>
+          <div class="panel"><h2>Project health</h2><div class="reason-list"><div class="reason"><span>✓</span><span>Files verified</span></div><div class="reason"><span>✓</span><span>Analysis complete</span></div><div class="reason"><span>!</span><span>Parser warnings present</span></div><div class="reason"><span>🔒</span><span>Decision execution unavailable in v0</span></div></div></div>
+        </div>
+      </section>
+
+      <section id="imports" class="screen">
+        <div class="split">
+          <div class="panel">
+            <div class="panel-header"><div><h1>Import Search Exports</h1><p>Drag files, assign source/format, and keep warnings non-fatal.</p></div><span class="pill blue">CSV · RIS · BibTeX</span></div>
+            <div class="dropzone"><div><h2>Drop files here</h2><p>or choose files from your local machine. No provider query is made.</p><button class="button" style="margin-top:12px">Choose files</button></div></div>
+            <div class="table-card" style="margin-top:16px">
+              <div class="table-toolbar"><strong>Files to import</strong><span class="small faint">Source and format can be corrected before import.</span></div>
+              <table><thead><tr><th>File</th><th>Source</th><th>Format</th><th>Query ID</th><th>Status</th></tr></thead><tbody>
+                <tr><td>scopus.csv</td><td>Scopus</td><td>CSV</td><td class="mono">search-001</td><td><span class="pill blue">Ready</span></td></tr>
+                <tr><td>wos.ris</td><td>Web of Science</td><td>RIS</td><td class="mono">search-002</td><td><span class="pill blue">Ready</span></td></tr>
+                <tr><td>scholar.bib</td><td>Google Scholar</td><td>BibTeX</td><td class="mono">search-003</td><td><span class="pill yellow">May warn</span></td></tr>
+              </tbody></table>
+            </div>
+          </div>
+          <div class="panel"><h2>Import result</h2><div class="list" style="margin-top:16px"><div class="item"><span class="pill yellow">Imported with warnings</span><div class="item-title">Scopus CSV</div><div class="item-meta">120 records · 2 parser warnings · 0 skipped</div></div><div class="item"><span class="pill green">Imported</span><div class="item-title">Web of Science RIS</div><div class="item-meta">96 records · 0 parser warnings</div></div><div class="item"><span class="pill yellow">Imported with warnings</span><div class="item-title">Google Scholar BibTeX</div><div class="item-meta">30 records · 4 parser warnings</div></div></div><button class="button primary" style="margin-top:16px" data-screen="verify">Verify Workspace</button></div>
+        </div>
+      </section>
+
+      <section id="records" class="screen">
+        <div class="panel-header">
+          <div><h1>Evidence Records</h1><p>Zotero-style record table for browsing imported evidence before and after analysis.</p></div>
+          <span class="pill blue">Avalonia guide: TreeView + DataGrid + Inspector</span>
+        </div>
+        <div class="three">
+          <aside class="filter-tree">
+            <h3>Library</h3>
+            <div class="filter-row active"><span>All records</span><span>428</span></div>
+            <div class="filter-row"><span>Needs duplicate review</span><span>18</span></div>
+            <div class="filter-row"><span>Exact clusters</span><span>31</span></div>
+            <div class="filter-row"><span>Parser warnings</span><span>5</span></div>
+            <div class="filter-row"><span>Skipped records</span><span>2</span></div>
+            <div class="nav-section-title">Sources</div>
+            <div class="filter-row"><span>Scopus</span><span>120</span></div>
+            <div class="filter-row"><span>Web of Science</span><span>96</span></div>
+            <div class="filter-row"><span>Google Scholar</span><span>30</span></div>
+            <div class="filter-row"><span>OpenAlex</span><span>182</span></div>
+          </aside>
+          <div class="table-card">
+            <div class="table-toolbar">
+              <input value="Rayyan OR ASReview" style="max-width:310px" />
+              <div style="display:flex; gap:8px"><button class="button ghost">Columns</button><button class="button ghost">Export view</button></div>
+            </div>
+            <div class="table-scroll">
+              <table class="records-table"><thead><tr><th></th><th>Title</th><th>Creators</th><th>Year</th><th>Venue</th><th>Source</th><th>Identifier</th><th>Warnings</th><th>Duplicate state</th></tr></thead><tbody>
+                <tr class="selected" data-title="Rayyan — a web and mobile app for systematic reviews" data-source="Scopus" data-doi="10.1186/s13643-016-0384-4" data-state="Review required"><td>▣</td><td class="title-cell">Rayyan — a web and mobile app for systematic reviews</td><td>Ouzzani; Hammady; Fedorowicz</td><td>2016</td><td>Systematic Reviews</td><td>Scopus</td><td>DOI present</td><td><span class="pill gray">0</span></td><td><span class="pill orange">Review required</span></td></tr>
+                <tr data-title="Rayyan: a web and mobile application for systematic reviews" data-source="Web of Science" data-doi="missing" data-state="Review required"><td>□</td><td class="title-cell">Rayyan: a web and mobile application for systematic reviews</td><td>Ouzzani et al.</td><td>2016</td><td>Systematic Reviews</td><td>WoS</td><td>DOI missing</td><td><span class="pill yellow">1</span></td><td><span class="pill orange">Review required</span></td></tr>
+                <tr data-title="ASReview: Active learning for systematic reviews" data-source="Scopus" data-doi="10.5281/zenodo.3345592" data-state="Exact cluster"><td>□</td><td class="title-cell">ASReview: Active learning for systematic reviews</td><td>van de Schoot et al.</td><td>2021</td><td>Nature Machine Intelligence</td><td>Scopus</td><td>DOI present</td><td><span class="pill gray">0</span></td><td><span class="pill green">Exact cluster</span></td></tr>
+                <tr data-title="Machine learning assisted title and abstract screening" data-source="OpenAlex" data-doi="missing" data-state="No duplicate evidence"><td>□</td><td class="title-cell">Machine learning assisted title and abstract screening</td><td>Marshall; Wallace</td><td>2019</td><td>Review Methods</td><td>OpenAlex</td><td>DOI missing</td><td><span class="pill yellow">2</span></td><td><span class="pill gray">No duplicate evidence</span></td></tr>
+                <tr data-title="Automated citation screening in systematic reviews" data-source="Google Scholar" data-doi="missing" data-state="Skipped metadata fields"><td>□</td><td class="title-cell">Automated citation screening in systematic reviews</td><td>Cohen et al.</td><td>2014</td><td>Unknown venue</td><td>Google Scholar</td><td>Source-specific ID</td><td><span class="pill yellow">2</span></td><td><span class="pill yellow">Needs metadata review</span></td></tr>
+                <tr data-title="A comparative evaluation of screening prioritization tools" data-source="Web of Science" data-doi="10.example/eval" data-state="Analyzed"><td>□</td><td class="title-cell">A comparative evaluation of screening prioritization tools</td><td>Smith; Lee</td><td>2020</td><td>Evidence Synthesis</td><td>WoS</td><td>DOI present</td><td><span class="pill gray">0</span></td><td><span class="pill blue">Analyzed</span></td></tr>
+              </tbody></table>
+            </div>
+          </div>
+          <aside class="inspector" id="recordInspector">
+            <span class="pill orange">Review required</span>
+            <h2 style="margin-top:12px">Rayyan — a web and mobile app for systematic reviews</h2>
+            <p>Selected record metadata, identifiers, import trace, and duplicate status. This inspector is read-only in v0.</p>
+            <dl>
+              <dt>Source</dt><dd id="iSource">Scopus</dd>
+              <dt>Identifier</dt><dd id="iDoi">10.1186/s13643-016-0384-4</dd>
+              <dt>State</dt><dd id="iState">Review required</dd>
+              <dt>Import ID</dt><dd class="mono">search-001</dd>
+              <dt>Trace</dt><dd class="mono">search-001.import-trace</dd>
+              <dt>Source digest</dt><dd class="mono">sha256:9c0f...</dd>
+              <dt>Raw digest</dt><dd class="mono">sha256:bb32...</dd>
+            </dl>
+            <div style="display:grid; gap:8px; margin-top:16px"><button class="button primary" data-screen="duplicate">Open comparison</button><button class="button ghost">View raw metadata</button><button class="button ghost">Copy digest</button></div>
+          </aside>
+        </div>
+      </section>
+
+      <section id="verify" class="screen">
+        <div class="split">
+          <div class="panel"><div class="panel-header"><div><h1>Workspace Verification</h1><p>Trust screen for local file integrity and reproducible import state.</p></div><span class="pill green">Valid</span></div><div class="reason-list"><div class="reason"><span>✓</span><span>4 files unchanged</span></div><div class="reason"><span>✓</span><span>0 missing files</span></div><div class="reason"><span>✓</span><span>0 digest mismatches</span></div><div class="reason"><span>!</span><span>5 parser warnings visible</span></div><div class="reason"><span>!</span><span>2 skipped records visible</span></div></div><button class="button primary" style="margin-top:16px" data-screen="analysis">Run Analysis</button></div>
+          <div class="panel"><h2>Needs attention state</h2><div class="warning-banner banner" style="margin-top:12px">File changed since import: inputs/search/search-001-scopus.csv</div><p>Use user-facing copy like “file changed since import,” then put hash details behind an expander.</p><div class="cli mono">CLI equivalent: nexus verify</div></div>
+        </div>
+      </section>
+
+      <section id="analysis" class="screen">
+        <div class="split">
+          <div class="panel"><div class="panel-header"><div><h1>Analyze Evidence</h1><p>Run deterministic local analysis over imported evidence.</p></div><span class="pill blue">No uploads</span></div><div class="banner">This creates generated outputs only. No merge decisions are executed.</div><div class="reason-list" style="margin-top:14px"><div class="reason"><span>✓</span><span>Read local project</span></div><div class="reason"><span>✓</span><span>Check imported files</span></div><div class="reason"><span>✓</span><span>Regenerate import traces</span></div><div class="reason"><span>✓</span><span>Run deduplication</span></div><div class="reason"><span>✓</span><span>Build review workspace</span></div></div><button class="button primary" style="margin-top:16px" data-screen="review">Open Review Queue</button></div>
+          <div class="panel"><h2>Analysis complete</h2><div class="summary-grid" style="grid-template-columns: repeat(2,1fr); margin-top:16px"><div class="summary-card"><div class="label">Mode</div><div class="value" style="font-size:24px">Review</div></div><div class="summary-card"><div class="label">Records</div><div class="value">428</div></div><div class="summary-card"><div class="label">Exact clusters</div><div class="value">31</div></div><div class="summary-card"><div class="label">Candidates</div><div class="value">18</div></div></div><div class="cli mono">CLI equivalent: nexus analyze</div></div>
+        </div>
+      </section>
+
+      <section id="review" class="screen">
+        <div class="panel">
+          <div class="panel-header"><div><h1>Review Queue</h1><p>Task-inbox view for blocking gates, review-required comparisons, and import warnings.</p></div><div class="project-meta"><span class="pill orange">4 blocking</span><span class="pill yellow">4 review required</span><span class="pill yellow">5 warnings</span></div></div>
+          <div class="toolbar" style="margin-bottom:14px"><button class="button primary">All</button><button class="button ghost">Blocking</button><button class="button ghost">Review required</button><button class="button ghost">Warnings</button></div>
+          <div class="list">
+            <div class="item"><div class="item-header"><span class="pill orange">Blocking</span><button class="button" data-screen="duplicate">View comparison</button></div><div class="item-title">Human merge decision required</div><div class="item-meta">Rayyan — a web and mobile app for systematic reviews · Similar record found across Scopus and Web of Science.</div><p><strong>Why this appears:</strong> title similarity crossed review threshold and one record is missing a stable identifier.</p></div>
+            <div class="item"><div class="item-header"><span class="pill orange">Blocking</span><button class="button" data-screen="duplicate">View comparison</button></div><div class="item-title">Human merge decision required</div><div class="item-meta">ASReview active learning · Possible duplicate pair needs review.</div></div>
+            <div class="item"><div class="item-header"><span class="pill yellow">Warning</span><button class="button" data-screen="records">View records</button></div><div class="item-title">Import warning: source-specific identifier</div><div class="item-meta">3 records include provider-specific identifiers. They remain imported, but should be inspected before relying on later workflow steps.</div></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="clusters" class="screen">
+        <div class="panel">
+          <div class="panel-header"><div><h1>Duplicate Clusters</h1><p>Human-readable overview of duplicate structure, not merge execution.</p></div><span class="pill orange">Needs review</span></div>
+          <div class="summary-grid" style="grid-template-columns: repeat(3,1fr)"><div class="summary-card"><div class="label">Exact clusters</div><div class="value">31</div></div><div class="summary-card"><div class="label">Need review</div><div class="value">18</div></div><div class="summary-card"><div class="label">Unresolved/no ID</div><div class="value">42</div></div></div>
+          <div class="toolbar" style="margin:18px 0"><button class="button primary">Exact clusters</button><button class="button ghost">Needs review</button><button class="button ghost">Unresolved</button></div>
+          <div class="table-card"><table><thead><tr><th>Cluster/Candidate</th><th>Representative</th><th>Members</th><th>Evidence</th><th>Sources</th><th></th></tr></thead><tbody>
+            <tr><td class="mono">cluster-0001</td><td>Rayyan — a web and mobile app</td><td>3 records</td><td>DOI match</td><td>Scopus + WoS + OpenAlex</td><td><button class="button">Open</button></td></tr>
+            <tr><td class="mono">dedup-candidate-0001</td><td>Rayyan web/mobile application pair</td><td>2 records</td><td>Title similarity 0.91</td><td>Scopus + WoS</td><td><button class="button" data-screen="duplicate">Compare</button></td></tr>
+          </tbody></table></div>
+        </div>
+      </section>
+
+      <section id="duplicate" class="screen">
+        <div class="panel">
+          <div class="panel-header"><div><h1>Duplicate comparison</h1><p>Most polished screen: compare evidence, explain why, and lock decisions.</p></div><span class="pill orange">Human review required</span></div>
+          <div class="two-col">
+            <div class="compare-card"><span class="pill blue">Left record</span><div class="record-title">Rayyan — a web and mobile app for systematic reviews</div><div class="field-grid"><span class="key">Year</span><span>2016</span><span class="key">Source</span><span>Scopus</span><span class="key">DOI</span><span>Present</span><span class="key">Source record</span><span class="mono">SCOPUS:849955</span></div><button class="button ghost" style="margin-top:14px">View raw metadata</button></div>
+            <div class="compare-card"><span class="pill blue">Right record</span><div class="record-title">Rayyan: a web and mobile application for systematic reviews</div><div class="field-grid"><span class="key">Year</span><span>2016</span><span class="key">Source</span><span>Web of Science</span><span class="key">DOI</span><span><span class="pill yellow">Missing</span></span><span class="key">Source record</span><span class="mono">WOS:000392</span></div><button class="button ghost" style="margin-top:14px">View raw metadata</button></div>
+          </div>
+          <div class="split" style="margin-top:16px"><div class="panel" style="box-shadow:none"><h2>Why Nexus flagged this</h2><div class="reason-list"><div class="reason"><span>✓</span><span>Title similarity crossed threshold</span></div><div class="reason"><span>!</span><span>Identifier missing on one side</span></div><div class="reason"><span>✓</span><span>Sources are different</span></div></div></div><div class="panel" style="box-shadow:none"><h2>Decision actions</h2><div class="reason-list"><button class="button locked">Accept merge — locked</button><button class="button locked">Reject merge — locked</button><button class="button locked">Mark unresolved — locked</button></div><p>Decision execution is not available in v0.</p></div></div>
+        </div>
+      </section>
+
+      <section id="components" class="screen">
+        <div class="panel">
+          <div class="panel-header"><div><h1>Reusable component guide</h1><p>Use these as Avalonia component targets rather than production web code.</p></div><span class="pill blue">HTML + React guide</span></div>
+          <div class="component-grid">
+            <div class="component-card"><h3>WorkspaceTopBar</h3><p>Project title, state, Local-only, No providers, Decisions locked.</p></div>
+            <div class="component-card"><h3>WorkflowStepper</h3><p>Workspace → Import → Verify → Analyze → Review with states.</p></div>
+            <div class="component-card"><h3>EvidenceRecordsTable</h3><p>Zotero-style library table with filters, DataGrid, and read-only inspector.</p></div>
+            <div class="component-card"><h3>ReviewQueueCard</h3><p>Inbox card for blocking, review-required, warning, and info items.</p></div>
+            <div class="component-card"><h3>DuplicateComparisonPane</h3><p>Split left/right record comparison with reason and evidence panels.</p></div>
+            <div class="component-card"><h3>LockedDecisionPanel</h3><p>Visible future actions; disabled until ADR for decision persistence.</p></div>
+          </div>
+          <div class="footer-note">Avalonia mapping: Shell = Grid/DockPanel, Sidebar = ListBox/TreeView, Tables = DataGrid, Details = ContentControl/ScrollViewer, filters = CollectionViewSource.</div>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+<script>
+  function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.toggle('active', s.id === id));
+    document.querySelectorAll('.nav-button').forEach(b => b.classList.toggle('active', b.dataset.screen === id));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+  document.querySelectorAll('[data-screen]').forEach(button => {
+    button.addEventListener('click', () => showScreen(button.dataset.screen));
+  });
+  document.querySelectorAll('.records-table tbody tr').forEach(row => {
+    row.addEventListener('click', () => {
+      document.querySelectorAll('.records-table tbody tr').forEach(r => r.classList.remove('selected'));
+      row.classList.add('selected');
+      const inspector = document.getElementById('recordInspector');
+      inspector.querySelector('h2').textContent = row.dataset.title;
+      document.getElementById('iSource').textContent = row.dataset.source;
+      document.getElementById('iDoi').textContent = row.dataset.doi;
+      document.getElementById('iState').textContent = row.dataset.state;
+    });
+  });
+</script>
+</body>
+</html>

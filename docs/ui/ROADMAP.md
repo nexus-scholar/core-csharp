@@ -94,7 +94,8 @@ Phase 3.5 deliberately does not add a product desktop shell, app services, Core 
 
 ## Later Phases
 
-- Import/Dedup workspace prototype.
+- Desktop workspace ADR and shared ResearchWorkspace service boundary, as planned in `DESKTOP-WORKSPACE-PLAN-2026-07-02.md`.
+- Import/Dedup desktop preview over existing local Research Workspace outputs.
 - Screening workspace after Core Screening implementation and fixtures are ready.
 - CLI renderer for the same contracts.
 - Persistence and app state separation.

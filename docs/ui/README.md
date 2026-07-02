@@ -19,6 +19,8 @@ The current UI lane has moved past planning-only docs. `main` now includes rende
 - `SCREENING-WORKSPACE-v0.md`: early screening workspace concept aligned with human decision authority.
 - `AVALONIA-RENDERER-PROTOTYPE-v0.md`: Phase 3 renderer-only Avalonia block prototype.
 - `AVALONIA-SAMPLE-HOST-v0.md`: Phase 3.5 sample host for manually inspecting the renderer.
+- `imported/2026-07-02-ui-guides-and-specs/`: preserved imported desktop UI guide/spec pack, including the JetBrains-style C# UI spec and HTML/React visual guides.
+- `DESKTOP-WORKSPACE-PLAN-2026-07-02.md`: staged plan for turning the imported UI specs into ADR, shared ResearchWorkspace services, read models, and a desktop preview.
 - `ROADMAP.md`: staged path from documentation to UI contracts, sample block plans, renderers, and later AI proposal support.
 - `OPEN-QUESTIONS.md`: product and technical questions that remain open.
 
