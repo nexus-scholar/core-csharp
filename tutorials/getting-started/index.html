@@ -31,7 +31,7 @@
         <section class="content-section" id="before-you-start">
           <h2>Before you start</h2>
           <p>You need Git, PowerShell or another terminal, and a .NET SDK that can build <code>net10.0</code>. The commands below use PowerShell syntax, but the same <code>dotnet</code> commands work from other shells.</p>
-          <p class="section-note">Use the repository's current <code>main</code> branch. The public feedback packet with issue templates and the deterministic local CLI demo is merged there.</p>
+          <p class="section-note">Use the repository's current <code>main</code> branch. The issue templates, deterministic local demo, and local Research Workspace CLI workflow are merged there.</p>
         </section>
 
         <section class="content-section" id="clone">
@@ -76,8 +76,63 @@ Dedup review-required pairs: 1
 Non-claims: no live providers; no provider SDKs; no persistence/API/cloud; no PDF/OCR; no PHP compatibility</code></pre>
         </section>
 
+        <section class="content-section" id="research-workspace-cli">
+          <h2>4. Run the local Research Workspace workflow</h2>
+          <p>This path creates a throwaway local Nexus project folder, imports generated local Search-export fixtures, verifies the files, analyzes Search and Deduplication evidence, then shows the read-only review queue and duplicate clusters.</p>
+          <p class="section-note">The fixture files are generated local test data. They are not Scopus exports, not Web of Science exports, not Google Scholar scrapes, not conformance fixtures, and not scientific authority.</p>
+          <pre><code>Remove-Item -Recurse -Force .nexus-demo -ErrorAction SilentlyContinue
+New-Item -ItemType Directory -Force .nexus-demo/workspace | Out-Null
+Push-Location .nexus-demo/workspace
+
+dotnet run --project ../../src/NexusScholar.Cli -- init --title "APP-01 demo review"
+
+dotnet run --project ../../src/NexusScholar.Cli -- import search ../../tests/NexusScholar.AppServices.Tests/Fixtures/App01GeneratedLocalBundles/bundles/FB07-combined-app01-demo/combined_scopus_like.csv --source scopus --format csv --query-id search-001 --query "systematic review screening software"
+
+dotnet run --project ../../src/NexusScholar.Cli -- import search ../../tests/NexusScholar.AppServices.Tests/Fixtures/App01GeneratedLocalBundles/bundles/FB07-combined-app01-demo/combined_wos_like.ris --source web-of-science --format ris --query-id search-002 --query "systematic review screening software"
+
+dotnet run --project ../../src/NexusScholar.Cli -- import search ../../tests/NexusScholar.AppServices.Tests/Fixtures/App01GeneratedLocalBundles/bundles/FB07-combined-app01-demo/combined_scholar_style.bib --source google-scholar --format bibtex --query-id search-003 --query "systematic review screening software"
+
+dotnet run --project ../../src/NexusScholar.Cli -- import search ../../tests/NexusScholar.AppServices.Tests/Fixtures/App01GeneratedLocalBundles/bundles/FB07-combined-app01-demo/combined_wos_like_source_specific.csv --source web-of-science --format csv --query-id search-004 --query "systematic review screening software"
+
+dotnet run --project ../../src/NexusScholar.Cli -- verify
+dotnet run --project ../../src/NexusScholar.Cli -- analyze
+dotnet run --project ../../src/NexusScholar.Cli -- review
+dotnet run --project ../../src/NexusScholar.Cli -- clusters
+dotnet run --project ../../src/NexusScholar.Cli -- clusters exact
+dotnet run --project ../../src/NexusScholar.Cli -- clusters review
+dotnet run --project ../../src/NexusScholar.Cli -- clusters show dedup-candidate-0001
+
+Pop-Location</code></pre>
+
+          <p>The combined demo bundle intentionally includes parser warnings and skipped records. <code>verify</code> surfaces those issues before <code>analyze</code>; continue so you can inspect warning, deduplication, and human-gate blocks.</p>
+
+          <pre><code>Workspace analysis complete
+Mode: Review
+WorkspacePlan: nexus-output/workspace/current.workspace-plan.json
+Deduplication result: nexus-output/dedup/current.deduplication-result.json
+Review report: nexus-output/reports/review.md
+Next: nexus review
+
+Review queue
+Mode: Review
+Blocking
+  4 human merge decisions require review
+
+Review-required duplicate candidates
+[dedup-candidate-0001]
+  Show: nexus clusters show dedup-candidate-0001
+
+Candidate: dedup-candidate-0001
+Status: review required
+APP-01 action
+  Human merge decision required.
+  This CLI version only displays the decision gate.</code></pre>
+
+          <p class="section-note">The review and cluster commands are read-only. They display APP-01 merge gates but do not accept, reject, mark unresolved, or execute merge decisions.</p>
+        </section>
+
         <section class="content-section" id="sample-host">
-          <h2>4. Inspect the sample host</h2>
+          <h2>5. Inspect the sample host</h2>
           <pre><code>dotnet run --project samples/NexusScholar.Avalonia.Blocks.SampleHost</code></pre>
           <p>The sample host is a visual inspection harness for non-authoritative <code>WorkspacePlan</code> JSON rendered through <code>NexusScholar.UiContracts</code> and <code>NexusScholar.Avalonia.Blocks</code>. It is not a product desktop app, not an app-service layer, and not a Core command surface.</p>
           <figure class="screenshot-frame">
@@ -92,7 +147,7 @@ Non-claims: no live providers; no provider SDKs; no persistence/API/cloud; no PD
           <ul class="check-list">
             <li>The repository builds and tests locally on your machine.</li>
             <li>The Core contracts can be exercised without network access.</li>
-            <li>The CLI can show environment policy, a small protocol/workflow/bundle path, and deterministic import/dedup evidence.</li>
+            <li>The CLI can show environment policy, a small protocol/workflow/bundle path, deterministic import/dedup evidence, and a read-only local Research Workspace review queue.</li>
             <li>The sample host can render contract-shaped workspace blocks without giving the renderer Core authority.</li>
             <li>The project is ready for architecture, onboarding, methodology, and workflow-boundary feedback.</li>
           </ul>
@@ -105,6 +160,7 @@ Non-claims: no live providers; no provider SDKs; no persistence/API/cloud; no PD
             <li>It does not prove live provider access, provider SDK support, Scopus or Web of Science API support, or Google Scholar scraping.</li>
             <li>It does not prove HTTP download, paywall bypass, shadow-library behavior, PDF extraction, or OCR.</li>
             <li>It does not prove persistence, API, cloud sync, collaboration, or a product desktop shell.</li>
+            <li>It does not execute merge accept, reject, or mark-unresolved decisions from APP-01 blocks.</li>
             <li>It does not prove PHP compatibility. That requires generated fixtures and semantic comparators.</li>
             <li>It does not make AI outputs scientifically authoritative. Suggestions remain proposals until an authorized human action accepts them.</li>
           </ul>
@@ -130,6 +186,7 @@ Non-claims: no live providers; no provider SDKs; no persistence/API/cloud; no PD
             <li><a href="#clone">Clone</a></li>
             <li><a href="#verify">Verify</a></li>
             <li><a href="#cli">Run CLI commands</a></li>
+            <li><a href="#research-workspace-cli">Research Workspace CLI</a></li>
             <li><a href="#sample-host">Inspect sample host</a></li>
             <li><a href="#feedback">File feedback</a></li>
           </ul>
