@@ -51,6 +51,7 @@ public sealed class DesktopPreviewViewModel
         "local folder",
         "researcher-supplied files",
         "no providers",
+        "safe verify/analyze",
         "read-only review",
         "locked merge gates"
     };
@@ -88,11 +89,43 @@ public sealed class DesktopPreviewViewModel
         return StatusMessage;
     }
 
+    public ResearchWorkspaceActionResult RunVerify()
+    {
+        var path = ActionWorkspacePath();
+        var result = ResearchWorkspaceWorkflowActions.Verify(path);
+        RefreshAfterAction(path, result, "verification");
+        return result;
+    }
+
+    public ResearchWorkspaceActionResult RunAnalyze()
+    {
+        var path = ActionWorkspacePath();
+        var result = ResearchWorkspaceWorkflowActions.Analyze(path);
+        RefreshAfterAction(path, result, "analysis");
+        return result;
+    }
+
+    private string ActionWorkspacePath()
+    {
+        return string.IsNullOrWhiteSpace(WorkspacePath)
+            ? Environment.CurrentDirectory
+            : WorkspacePath;
+    }
+
+    private void RefreshAfterAction(string workspacePath, ResearchWorkspaceActionResult result, string successSectionId)
+    {
+        Overview = _buildReadModel(workspacePath);
+        SelectedSection = result.Completed && HasWorkspace
+            ? Sections.Single(section => string.Equals(section.Id, successSectionId, StringComparison.Ordinal))
+            : Overview.State == WorkspaceState.Missing ? Sections[0] : SelectedSection;
+        StatusMessage = result.Message;
+    }
+
     private static string StatusFor(WorkspaceOverviewReadModel overview)
     {
         return overview.State == WorkspaceState.Missing
             ? "No local Nexus research workspace is loaded. Choose a folder that contains nexus.project.json."
-            : $"Read-only preview loaded: {overview.ProjectTitle} ({overview.State}). Location: {overview.ProjectLocation}.";
+            : $"Desktop preview loaded: {overview.ProjectTitle} ({overview.State}). Location: {overview.ProjectLocation}.";
     }
 }
 

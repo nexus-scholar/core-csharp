@@ -43,6 +43,8 @@ public sealed class MainWindow : Window
     {
         TextWrapping = TextWrapping.Wrap
     };
+    private Button? _verifyButton;
+    private Button? _analyzeButton;
     private Border? _hostRoot;
     private string _workspacePath = string.Empty;
 
@@ -174,7 +176,7 @@ public sealed class MainWindow : Window
         };
         var subtitle = new TextBlock
         {
-            Text = "Inspect a local Research Workspace. Evidence is read-only; APP-01 merge gates stay locked.",
+            Text = "Inspect a local Research Workspace, run safe local verify/analyze actions, and keep APP-01 merge gates locked.",
             FontSize = 14,
             Foreground = MutedTextBrush,
             TextWrapping = TextWrapping.Wrap
@@ -202,6 +204,12 @@ public sealed class MainWindow : Window
 
         var browseButton = SecondaryButton("Browse...");
         browseButton.Click += async (_, _) => await BrowseForWorkspaceAsync();
+
+        _verifyButton = SecondaryButton("Verify");
+        _verifyButton.Click += (_, _) => RunVerifyAction();
+
+        _analyzeButton = PrimaryButton("Analyze");
+        _analyzeButton.Click += (_, _) => RunAnalyzeAction();
 
         var pathLabel = new TextBlock
         {
@@ -238,6 +246,22 @@ public sealed class MainWindow : Window
         pathRow.Children.Add(currentButton);
         pathRow.Children.Add(browseButton);
 
+        var actionRow = new WrapPanel
+        {
+            ItemSpacing = 10,
+            LineSpacing = 10
+        };
+        actionRow.Children.Add(_verifyButton);
+        actionRow.Children.Add(_analyzeButton);
+        actionRow.Children.Add(new TextBlock
+        {
+            Text = "UI-02A: local verify/analyze only. Import, init, and merge decisions remain outside this preview.",
+            FontSize = 12,
+            Foreground = MutedTextBrush,
+            TextWrapping = TextWrapping.Wrap,
+            VerticalAlignment = VerticalAlignment.Center
+        });
+
         var stack = new StackPanel
         {
             Spacing = 12
@@ -247,6 +271,7 @@ public sealed class MainWindow : Window
         stack.Children.Add(badges);
         stack.Children.Add(pathLabel);
         stack.Children.Add(pathRow);
+        stack.Children.Add(actionRow);
 
         return new Border
         {
@@ -340,6 +365,20 @@ public sealed class MainWindow : Window
         }
     }
 
+    private void UpdateActionState()
+    {
+        var enabled = _viewModel.HasWorkspace;
+        if (_verifyButton is not null)
+        {
+            _verifyButton.IsEnabled = enabled;
+        }
+
+        if (_analyzeButton is not null)
+        {
+            _analyzeButton.IsEnabled = enabled;
+        }
+    }
+
     private static Button NavigationButton(DesktopPreviewSection section)
     {
         return new Button
@@ -400,6 +439,18 @@ public sealed class MainWindow : Window
         Render();
     }
 
+    private void RunVerifyAction()
+    {
+        _viewModel.RunVerify();
+        Render();
+    }
+
+    private void RunAnalyzeAction()
+    {
+        _viewModel.RunAnalyze();
+        Render();
+    }
+
     private void SetWorkspacePath(string path)
     {
         _workspacePath = path;
@@ -413,6 +464,7 @@ public sealed class MainWindow : Window
         _content.Children.Clear();
         _status.Text = _viewModel.StatusMessage;
         UpdateNavigationState();
+        UpdateActionState();
 
         _content.Children.Add(BuildStateSummary());
         switch (_viewModel.SelectedSection.Id)
@@ -473,7 +525,7 @@ public sealed class MainWindow : Window
     {
         _content.Children.Add(Panel(Stack(
             Heading("Open Workspace"),
-            Paragraph("Open a folder that contains nexus.project.json. The preview reads local outputs only and never runs init, import, verify, analyze, or merge decisions."),
+            Paragraph("Open a folder that contains nexus.project.json. The preview can run local verify/analyze actions, but it never runs init, import, or merge decisions."),
             Paragraph(_viewModel.HasWorkspace
                 ? "Workspace loaded. Use the sidebar to inspect evidence, imports, verification, analysis, review items, clusters, and locked decision gates."
                 : "No workspace is loaded yet."))));
@@ -563,6 +615,13 @@ public sealed class MainWindow : Window
                 Metric("Parser warnings", verification.ParserWarningCount.ToString()),
                 Metric("Skipped records", verification.SkippedRecordCount.ToString())
             }))));
+
+        if (_viewModel.Overview.AttentionItems.Count > 0)
+        {
+            _content.Children.Add(Panel(Stack(
+                Heading("Recovery"),
+                ListLines(_viewModel.Overview.AttentionItems.Select(RecoveryLine)))));
+        }
     }
 
     private void RenderAnalysis()
@@ -664,7 +723,8 @@ public sealed class MainWindow : Window
     {
         _content.Children.Add(Panel(Stack(
             Heading("Diagnostics"),
-            Paragraph("Desktop preview diagnostics are read-only in UI-01. This is not a product desktop shell."),
+            Paragraph("Desktop preview diagnostics are local-only in UI-02A. This is not a product desktop shell."),
+            Paragraph("Only verify/analyze workflow actions are available. Init, import, and merge decision actions remain unavailable."),
             Paragraph("No providers, persistence, database, cloud/API, PDF/OCR, AI/model calls, Core mutation, or executable merge decisions are available."))));
     }
 
@@ -1021,5 +1081,21 @@ public sealed class MainWindow : Window
     private static string YesNo(bool value)
     {
         return value ? "yes" : "no";
+    }
+
+    private static string RecoveryLine(WorkspaceAttentionItem item)
+    {
+        var target = string.IsNullOrWhiteSpace(item.Target)
+            ? string.Empty
+            : $" Target: {item.Target}.";
+        return item.Code switch
+        {
+            "missing-file" => $"Restore the missing local file or remove the input intentionally.{target}",
+            "digest-mismatch" => $"Restore the original bytes or re-import the file intentionally before analysis.{target}",
+            "invalid-path" => $"Fix the workspace-relative path before verification.{target}",
+            "missing-import-trace" => $"Recreate the missing import trace by re-importing the source export intentionally.{target}",
+            "missing-generated-output" => $"{item.Message} Run Analyze to regenerate local outputs.",
+            _ => $"{item.Message}{target}"
+        };
     }
 }

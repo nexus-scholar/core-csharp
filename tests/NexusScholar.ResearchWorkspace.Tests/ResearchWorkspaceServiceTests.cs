@@ -69,6 +69,49 @@ public sealed class ResearchWorkspaceServiceTests
     }
 
     [TestMethod]
+    public void Workflow_verify_action_does_not_write_generated_outputs()
+    {
+        using var workspace = TemporaryWorkspace.Create();
+        var project = AddSearchExport(workspace, workspace.Project, "search-001", "scopus", "csv", ScopusCsv);
+        ResearchWorkspaceStore.WriteProject(workspace.Location, project);
+        var beforeFiles = SnapshotFiles(workspace.Root);
+
+        var result = ResearchWorkspaceWorkflowActions.Verify(workspace.Root);
+        var afterFiles = SnapshotFiles(workspace.Root);
+
+        Assert.IsTrue(result.Completed);
+        Assert.IsTrue(result.RequiresAttention);
+        Assert.AreEqual(ResearchWorkspaceExitCodes.MissingProjectOrInput, result.ExitCode);
+        Assert.IsTrue(result.Message.Contains("Workspace verification", StringComparison.Ordinal));
+        Assert.IsFalse(File.Exists(ResearchWorkspacePaths.InProject(workspace.Root, ResearchWorkspaceAnalyzer.DeduplicationResultPath)));
+        Assert.IsFalse(File.Exists(ResearchWorkspacePaths.InProject(workspace.Root, ResearchWorkspaceAnalyzer.WorkspacePlanPath)));
+        Assert.IsFalse(File.Exists(ResearchWorkspacePaths.InProject(workspace.Root, ResearchWorkspaceAnalyzer.ReviewReportPath)));
+        CollectionAssert.AreEqual(beforeFiles, afterFiles);
+    }
+
+    [TestMethod]
+    public void Workflow_analyze_action_persists_outputs_and_project_references()
+    {
+        using var workspace = TemporaryWorkspace.Create();
+        var project = AddSearchExport(workspace, workspace.Project, "search-001", "scopus", "csv", ScopusCsv);
+        ResearchWorkspaceStore.WriteProject(workspace.Location, project);
+
+        var result = ResearchWorkspaceWorkflowActions.Analyze(workspace.Root);
+        var updatedProject = ResearchWorkspaceStore.ReadProject(workspace.Location.ProjectFilePath);
+
+        Assert.IsTrue(result.Completed);
+        Assert.IsFalse(result.RequiresAttention);
+        Assert.AreEqual(ResearchWorkspaceExitCodes.Success, result.ExitCode);
+        Assert.IsTrue(File.Exists(ResearchWorkspacePaths.InProject(workspace.Root, ResearchWorkspaceAnalyzer.DeduplicationResultPath)));
+        Assert.IsTrue(File.Exists(ResearchWorkspacePaths.InProject(workspace.Root, ResearchWorkspaceAnalyzer.WorkspacePlanPath)));
+        Assert.IsTrue(File.Exists(ResearchWorkspacePaths.InProject(workspace.Root, ResearchWorkspaceAnalyzer.ReviewReportPath)));
+        Assert.AreEqual(ResearchWorkspaceAnalyzer.DeduplicationResultPath, updatedProject.Outputs["deduplicationResult"]);
+        Assert.AreEqual(ResearchWorkspaceAnalyzer.WorkspacePlanPath, updatedProject.Outputs["workspacePlan"]);
+        Assert.AreEqual(ResearchWorkspaceAnalyzer.ReviewReportPath, updatedProject.Outputs["reviewReport"]);
+        Assert.IsFalse(result.Message.Contains(workspace.Root, StringComparison.OrdinalIgnoreCase));
+    }
+
+    [TestMethod]
     public void Read_models_report_initialized_workspace_without_absolute_paths()
     {
         using var workspace = TemporaryWorkspace.Create();
@@ -231,6 +274,14 @@ eid,title,author names,year,source title,doi
     {
         var json = JsonSerializer.Serialize(model);
         Assert.IsFalse(json.Contains(workspaceRoot, StringComparison.OrdinalIgnoreCase), json);
+    }
+
+    private static string[] SnapshotFiles(string root)
+    {
+        return Directory.GetFiles(root, "*", SearchOption.AllDirectories)
+            .Select(path => Path.GetRelativePath(root, path).Replace(Path.DirectorySeparatorChar, '/'))
+            .OrderBy(path => path, StringComparer.Ordinal)
+            .ToArray();
     }
 
     private static string Sha256(byte[] bytes)

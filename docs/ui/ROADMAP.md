@@ -114,9 +114,26 @@ Scope:
 
 UI-01 deliberately does not run `init`, `import`, `verify`, or `analyze`; does not write project files; does not store UI preferences; does not execute merge decisions; and does not add providers, PDF/OCR, AI/model calls, persistence, cloud/API, Core mutation, or PHP compatibility claims.
 
+## Phase UI-02A: Safe Local Verify/Analyze Actions
+
+Status: implemented as a preview-only local workflow action layer.
+
+Scope:
+
+- run local workspace verification through `NexusScholar.ResearchWorkspace`;
+- run local evidence analysis through `NexusScholar.ResearchWorkspace`;
+- write only the existing generated analysis outputs:
+  - `nexus-output/dedup/current.deduplication-result.json`;
+  - `nexus-output/workspace/current.workspace-plan.json`;
+  - `nexus-output/reports/review.md`;
+- refresh desktop read models after each action;
+- show recovery guidance for verification attention items;
+- keep APP-01 merge actions locked/display-only.
+
+UI-02A deliberately does not run `init` or `import`; does not copy user-selected files; does not store UI preferences; does not execute merge decisions; and does not add providers, PDF/OCR, AI/model calls, persistence, cloud/API, Core mutation beyond existing generated-output writes, or PHP compatibility claims.
+
 ## Later Phases
 
-- Safe local verify/analyze actions only after UI-01 feedback and an explicit accepted task.
 - Safe local init/import actions only after a separate accepted task.
 - Screening workspace after Core Screening implementation and fixtures are ready.
 - CLI renderer for the same contracts.

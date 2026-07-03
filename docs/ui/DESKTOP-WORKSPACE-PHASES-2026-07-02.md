@@ -433,7 +433,7 @@ git diff --check
 
 ## Phase UI-02A: Safe Local Verify/Analyze Actions
 
-Status: after UI-01 feedback and explicit accepted task.
+Status: implemented after UI-01 feedback and explicit accepted task.
 
 ### Goal
 
@@ -458,6 +458,14 @@ analyze local evidence
 - Refresh read models after success.
 - Add file-write tests for generated outputs.
 - Keep merge actions locked.
+
+### Implemented Surface
+
+- Desktop preview header buttons for `Verify` and `Analyze`.
+- Shared `ResearchWorkspaceWorkflowActions` result boundary.
+- `Verify` reads local files and refreshes verification state without writing generated outputs.
+- `Analyze` writes only existing generated output files and updates project output references.
+- Verification view shows recovery guidance from project-relative attention items.
 
 ### Forbidden
 

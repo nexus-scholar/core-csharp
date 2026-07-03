@@ -82,6 +82,78 @@ public sealed class DesktopPreviewViewModelTests
     }
 
     [TestMethod]
+    public void Verify_action_refreshes_status_without_writing_outputs()
+    {
+        using var workspace = TemporaryWorkspace.Create();
+        var project = workspace.Project;
+        project = AddBundleFile(workspace, project, "search-001", "scopus", "csv", "combined_scopus_like.csv");
+        ResearchWorkspaceStore.WriteProject(workspace.Location, project);
+        var beforeFiles = SnapshotFiles(workspace.Root);
+
+        var model = new DesktopPreviewViewModel();
+        model.LoadWorkspace(workspace.Root);
+        var result = model.RunVerify();
+        var afterFiles = SnapshotFiles(workspace.Root);
+
+        Assert.IsTrue(result.Completed);
+        Assert.AreEqual("verification", model.SelectedSection.Id);
+        Assert.IsTrue(model.StatusMessage.Contains("Workspace verification", StringComparison.Ordinal));
+        Assert.IsFalse(File.Exists(ResearchWorkspacePaths.InProject(workspace.Root, ResearchWorkspaceAnalyzer.DeduplicationResultPath)));
+        Assert.IsFalse(File.Exists(ResearchWorkspacePaths.InProject(workspace.Root, ResearchWorkspaceAnalyzer.WorkspacePlanPath)));
+        Assert.IsFalse(File.Exists(ResearchWorkspacePaths.InProject(workspace.Root, ResearchWorkspaceAnalyzer.ReviewReportPath)));
+        CollectionAssert.AreEqual(beforeFiles, afterFiles);
+        AssertDoesNotContainWorkspaceRoot(model.Overview, workspace.Root);
+    }
+
+    [TestMethod]
+    public void Analyze_action_writes_expected_generated_outputs_and_refreshes_read_model()
+    {
+        using var workspace = TemporaryWorkspace.Create();
+        var project = workspace.Project;
+        project = AddBundleFile(workspace, project, "search-001", "scopus", "csv", "combined_scopus_like.csv");
+        project = AddBundleFile(workspace, project, "search-002", "web-of-science", "ris", "combined_wos_like.ris");
+        project = AddBundleFile(workspace, project, "search-003", "google-scholar", "bibtex", "combined_scholar_style.bib");
+        project = AddBundleFile(workspace, project, "search-004", "other", "csv", "combined_wos_like_source_specific.csv");
+        WriteImportTraces(workspace, project);
+        ResearchWorkspaceStore.WriteProject(workspace.Location, project);
+
+        var model = new DesktopPreviewViewModel();
+        model.LoadWorkspace(workspace.Root);
+        var result = model.RunAnalyze();
+        var updatedProject = ResearchWorkspaceStore.ReadProject(workspace.Location.ProjectFilePath);
+
+        Assert.IsTrue(result.Completed);
+        Assert.AreEqual(ResearchWorkspaceExitCodes.Success, result.ExitCode);
+        Assert.AreEqual("analysis", model.SelectedSection.Id);
+        Assert.AreEqual(WorkspaceState.ReviewReady, model.Overview.State);
+        Assert.IsTrue(File.Exists(ResearchWorkspacePaths.InProject(workspace.Root, ResearchWorkspaceAnalyzer.DeduplicationResultPath)));
+        Assert.IsTrue(File.Exists(ResearchWorkspacePaths.InProject(workspace.Root, ResearchWorkspaceAnalyzer.WorkspacePlanPath)));
+        Assert.IsTrue(File.Exists(ResearchWorkspacePaths.InProject(workspace.Root, ResearchWorkspaceAnalyzer.ReviewReportPath)));
+        Assert.AreEqual(ResearchWorkspaceAnalyzer.DeduplicationResultPath, updatedProject.Outputs["deduplicationResult"]);
+        Assert.AreEqual(ResearchWorkspaceAnalyzer.WorkspacePlanPath, updatedProject.Outputs["workspacePlan"]);
+        Assert.AreEqual(ResearchWorkspaceAnalyzer.ReviewReportPath, updatedProject.Outputs["reviewReport"]);
+        Assert.IsTrue(model.StatusMessage.Contains("Workspace analysis complete", StringComparison.Ordinal));
+        Assert.IsFalse(model.StatusMessage.Contains(workspace.Root, StringComparison.OrdinalIgnoreCase));
+        AssertDoesNotContainWorkspaceRoot(model.Overview, workspace.Root);
+    }
+
+    [TestMethod]
+    public void Analyze_action_for_missing_workspace_does_not_claim_success_or_leak_path()
+    {
+        var missingPath = Path.Combine(Path.GetTempPath(), $"nexus-desktop-action-missing-{Guid.NewGuid():N}");
+        var model = new DesktopPreviewViewModel();
+        model.LoadWorkspace(missingPath);
+
+        var result = model.RunAnalyze();
+
+        Assert.IsFalse(result.Completed);
+        Assert.AreEqual(ResearchWorkspaceExitCodes.MissingProjectOrInput, result.ExitCode);
+        Assert.AreEqual("welcome", model.SelectedSection.Id);
+        Assert.IsTrue(model.StatusMessage.Contains("No Nexus research workspace", StringComparison.Ordinal));
+        Assert.IsFalse(model.StatusMessage.Contains(missingPath, StringComparison.OrdinalIgnoreCase));
+    }
+
+    [TestMethod]
     public void Sections_include_required_ui01_screens()
     {
         var sectionIds = DesktopPreviewViewModel.Sections.Select(section => section.Id).ToArray();
@@ -115,6 +187,7 @@ public sealed class DesktopPreviewViewModelTests
                 "local folder",
                 "researcher-supplied files",
                 "no providers",
+                "safe verify/analyze",
                 "read-only review",
                 "locked merge gates"
             },
@@ -191,15 +264,7 @@ public sealed class DesktopPreviewViewModelTests
     private static void AnalyzeAndPersist(TemporaryWorkspace workspace, ResearchWorkspaceProject project)
     {
         var result = ResearchWorkspaceAnalyzer.Analyze(workspace.Location, project);
-        foreach (var trace in result.ImportTraces)
-        {
-            var inputId = trace.TraceId.EndsWith(".import-trace", StringComparison.Ordinal)
-                ? trace.TraceId[..^".import-trace".Length]
-                : trace.TraceId;
-            ResearchWorkspaceJson.WriteJsonFile(
-                ResearchWorkspacePaths.InProject(workspace.Root, $"{ResearchWorkspacePaths.ImportOutputs}/{inputId}.import-trace.json"),
-                trace);
-        }
+        WriteImportTraces(workspace, result);
 
         ResearchWorkspaceJson.WriteJsonFile(
             ResearchWorkspacePaths.InProject(workspace.Root, ResearchWorkspaceAnalyzer.DeduplicationResultPath),
@@ -220,6 +285,32 @@ public sealed class DesktopPreviewViewModelTests
                 ["workspacePlan"] = ResearchWorkspaceAnalyzer.WorkspacePlanPath,
                 ["reviewReport"] = ResearchWorkspaceAnalyzer.ReviewReportPath
             }));
+    }
+
+    private static void WriteImportTraces(TemporaryWorkspace workspace, ResearchWorkspaceProject project)
+    {
+        WriteImportTraces(workspace, ResearchWorkspaceAnalyzer.Analyze(workspace.Location, project));
+    }
+
+    private static void WriteImportTraces(TemporaryWorkspace workspace, ResearchWorkspaceAnalysisResult result)
+    {
+        foreach (var trace in result.ImportTraces)
+        {
+            var inputId = trace.TraceId.EndsWith(".import-trace", StringComparison.Ordinal)
+                ? trace.TraceId[..^".import-trace".Length]
+                : trace.TraceId;
+            ResearchWorkspaceJson.WriteJsonFile(
+                ResearchWorkspacePaths.InProject(workspace.Root, $"{ResearchWorkspacePaths.ImportOutputs}/{inputId}.import-trace.json"),
+                trace);
+        }
+    }
+
+    private static string[] SnapshotFiles(string root)
+    {
+        return Directory.GetFiles(root, "*", SearchOption.AllDirectories)
+            .Select(path => Path.GetRelativePath(root, path).Replace(Path.DirectorySeparatorChar, '/'))
+            .OrderBy(path => path, StringComparer.Ordinal)
+            .ToArray();
     }
 
     private static void AssertDoesNotContainWorkspaceRoot(WorkspaceOverviewReadModel model, string workspaceRoot)
