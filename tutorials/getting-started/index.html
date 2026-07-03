@@ -144,18 +144,18 @@ APP-01 action
 
         <section class="content-section" id="desktop-preview">
           <h2>6. Inspect the desktop preview</h2>
-          <p>After the local Research Workspace workflow has produced <code>.nexus-demo/workspace</code>, you can inspect the same generated local outputs in the read-only desktop preview.</p>
+          <p>After the local Research Workspace workflow has produced <code>.nexus-demo/workspace</code>, you can inspect the same generated local outputs in the desktop preview and run the safe local UI-02A actions.</p>
           <pre><code>dotnet run --project samples/NexusScholar.Desktop.Preview -- ".nexus-demo/workspace"</code></pre>
-          <p class="section-note">The desktop preview is a local read-only inspector. It does not run <code>init</code>, <code>import</code>, <code>verify</code>, <code>analyze</code>, accept/reject merge decisions, mark records unresolved, mutate Core records, call providers, or create a product desktop shell.</p>
+          <p class="section-note">The desktop preview can run local <code>Verify</code> and <code>Analyze</code> actions through shared ResearchWorkspace services. It does not run <code>init</code>, run <code>import</code>, accept/reject merge decisions, mark records unresolved, mutate Core records beyond existing generated-output writes, call providers, or create a product desktop shell.</p>
 
           <figure class="screenshot-frame">
             <img src="../../assets/img/desktop-preview-overview.png" alt="Nexus Scholar desktop preview overview showing review-ready workspace state and local output summaries." loading="lazy">
-            <figcaption>Overview screen with local project state, output presence, review summary, and next action guidance derived from generated workspace files.</figcaption>
+            <figcaption>Overview screen with local project state, generated output summaries, and the UI-02A <code>Verify</code> / <code>Analyze</code> buttons visible.</figcaption>
           </figure>
 
           <figure class="screenshot-frame">
-            <img src="../../assets/img/desktop-preview-evidence-records.png" alt="Nexus Scholar desktop preview evidence records tab showing local records and warning state." loading="lazy">
-            <figcaption>Evidence records tab. It helps testers inspect imported local records, warning state, and duplicate status without treating UI state as scientific authority.</figcaption>
+            <img src="../../assets/img/desktop-preview-verification-actions.png" alt="Nexus Scholar desktop preview verification tab showing local verification metrics and UI-02A action buttons." loading="lazy">
+            <figcaption>Verification tab after local workspace verification. The action surface stays limited to local verify/analyze; import and merge decisions remain outside the preview.</figcaption>
           </figure>
 
           <figure class="screenshot-frame">
@@ -176,7 +176,7 @@ APP-01 action
             <li>The Core contracts can be exercised without network access.</li>
             <li>The CLI can show environment policy, a small protocol/workflow/bundle path, deterministic import/dedup evidence, and a read-only local Research Workspace review queue.</li>
             <li>The sample host can render contract-shaped workspace blocks without giving the renderer Core authority.</li>
-            <li>The desktop preview can inspect generated local Research Workspace outputs through UI-friendly read models without executing workflow actions.</li>
+            <li>The desktop preview can inspect generated local Research Workspace outputs and run safe local verify/analyze actions without executing merge decisions.</li>
             <li>The project is ready for architecture, onboarding, methodology, and workflow-boundary feedback.</li>
           </ul>
         </section>
@@ -188,6 +188,7 @@ APP-01 action
             <li>It does not prove live provider access, provider SDK support, Scopus or Web of Science API support, or Google Scholar scraping.</li>
             <li>It does not prove HTTP download, paywall bypass, shadow-library behavior, PDF extraction, or OCR.</li>
             <li>It does not prove persistence, API, cloud sync, collaboration, or a product desktop shell.</li>
+            <li>It does not make the desktop preview an init/import wizard.</li>
             <li>It does not execute merge accept, reject, or mark-unresolved decisions from APP-01 blocks.</li>
             <li>It does not make the desktop preview a source of scientific authority.</li>
             <li>It does not prove PHP compatibility. That requires generated fixtures and semantic comparators.</li>
