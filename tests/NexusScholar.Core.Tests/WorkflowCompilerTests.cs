@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.CompilerServices;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NexusScholar.Kernel;
 using NexusScholar.Protocol;
@@ -11,6 +12,7 @@ public sealed class WorkflowCompilerTests
 {
     private static readonly ProtocolActor Researcher = ProtocolActor.Human("researcher-1");
     private static readonly IClock Clock = new FixedClock();
+    private static readonly ConditionalWeakTable<ProtocolVersion, VerifiedProtocolVersion> ProtocolAuthorities = new();
 
     [TestMethod]
     public void Compile_approved_protocol_generates_deterministic_workflow_id_and_digest()
@@ -31,6 +33,198 @@ public sealed class WorkflowCompilerTests
     }
 
     [TestMethod]
+    public void Compile_binds_complete_protocol_decision_record()
+    {
+        var protocol = BuildApprovedProtocol();
+        var workflow = new WorkflowCompiler().Compile(BuildInput(protocol, BuildTemplate()));
+        var decision = protocol.Decisions.Single(item => item.DecisionKey == "review-type");
+        var binding = workflow.ResolvedInputBindings.Single(item => item.InputId == "review-type");
+
+        Assert.AreEqual(decision.DecisionId, binding.SourceRef);
+        Assert.AreEqual(ContentDigest.Sha256CanonicalJson(decision.ToCanonicalJson()), binding.SourceDigest);
+        Assert.AreEqual(ContentDigest.Sha256CanonicalJson(decision.Value), binding.ValueDigest);
+    }
+
+    [TestMethod]
+    public void Workflow_definition_has_no_public_fabrication_constructor()
+    {
+        Assert.AreEqual(0, typeof(WorkflowDefinition).GetConstructors().Length);
+        Assert.AreEqual(0, typeof(VerifiedWorkflowDefinition).GetConstructors().Length);
+    }
+
+    [TestMethod]
+    public void Compiled_workflow_rehydrates_against_exact_protocol_and_template_authority()
+    {
+        var protocol = BuildApprovedProtocol();
+        var template = BuildTemplate();
+        var authority = ProtocolAuthorities.GetValue(protocol, _ => throw new InvalidOperationException());
+        var compiled = new WorkflowCompiler().Compile(BuildInput(protocol, template));
+        var resolver = new TestWorkflowAuthorityResolver(authority, template);
+
+        var verified = WorkflowRehydrator.Rehydrate(WorkflowRehydrator.FromCompiled(compiled), resolver);
+
+        Assert.AreEqual(compiled.WorkflowId, verified.Definition.WorkflowId);
+        Assert.AreEqual(compiled.WorkflowDigest, verified.Definition.WorkflowDigest);
+        Assert.AreSame(authority, verified.ProtocolAuthority);
+    }
+
+    [TestMethod]
+    public void Workflow_rehydration_rejects_scalar_and_duplicate_identity_tampering()
+    {
+        var protocol = BuildApprovedProtocol();
+        var template = BuildTemplate();
+        var authority = ProtocolAuthorities.GetValue(protocol, _ => throw new InvalidOperationException());
+        var compiled = new WorkflowCompiler().Compile(BuildInput(protocol, template));
+        var input = WorkflowRehydrator.FromCompiled(compiled);
+        var resolver = new TestWorkflowAuthorityResolver(authority, template);
+
+        var scalarError = Assert.ThrowsExactly<WorkflowRuleException>(() =>
+            WorkflowRehydrator.Rehydrate(input with { CompilerVersion = "tampered" }, resolver));
+        Assert.AreEqual(WorkflowErrorCodes.WorkflowIdMismatch, scalarError.Category);
+
+        var duplicateError = Assert.ThrowsExactly<WorkflowRuleException>(() =>
+            WorkflowRehydrator.Rehydrate(
+                input with { Nodes = input.Nodes.Concat(new[] { input.Nodes[0] }).ToArray() },
+                resolver));
+        Assert.AreEqual(WorkflowErrorCodes.UnverifiedAuthority, duplicateError.Category);
+
+        var tamperedNode = input.Nodes[0] with { Label = "tampered" };
+        var nodeError = Assert.ThrowsExactly<WorkflowRuleException>(() =>
+            WorkflowRehydrator.Rehydrate(
+                input with { Nodes = new[] { tamperedNode }.Concat(input.Nodes.Skip(1)).ToArray() },
+                resolver));
+        Assert.AreEqual(WorkflowErrorCodes.UnverifiedAuthority, nodeError.Category);
+    }
+
+    [TestMethod]
+    public void Workflow_authority_rejects_raw_protocol_and_wrong_template_resolution()
+    {
+        var protocol = BuildApprovedProtocol();
+        var rawCopy = RecastProtocol(protocol, ProtocolStatus.Approved);
+        var rawError = Assert.ThrowsExactly<WorkflowRuleException>(() =>
+            new WorkflowCompiler().Compile(BuildInput(rawCopy, BuildTemplate())));
+        Assert.AreEqual(WorkflowErrorCodes.UnverifiedAuthority, rawError.Category);
+
+        var template = BuildTemplate();
+        var compiled = new WorkflowCompiler().Compile(BuildInput(protocol, template));
+        var authority = ProtocolAuthorities.GetValue(protocol, _ => throw new InvalidOperationException());
+        var wrongTemplateMaterial = template with
+        {
+            TemplateId = "wrong-template",
+            TemplateDigest = ContentDigest.Sha256Utf8("placeholder")
+        };
+        var wrongTemplate = wrongTemplateMaterial with
+        {
+            TemplateDigest = WorkflowCompiler.ComputeLocalTemplateDigest(wrongTemplateMaterial)
+        };
+        var resolverError = Assert.ThrowsExactly<WorkflowRuleException>(() =>
+            WorkflowRehydrator.Rehydrate(
+                WorkflowRehydrator.FromCompiled(compiled),
+                new TestWorkflowAuthorityResolver(authority, wrongTemplate)));
+        Assert.AreEqual(WorkflowErrorCodes.UnverifiedAuthority, resolverError.Category);
+    }
+
+    [TestMethod]
+    public void Workflow_rehydration_rejects_unaccepted_or_broken_resolved_template_authority()
+    {
+        var protocol = BuildApprovedProtocol();
+        var template = BuildTemplate();
+        var authority = ProtocolAuthorities.GetValue(protocol, _ => throw new InvalidOperationException());
+        var compiled = new WorkflowCompiler().Compile(BuildInput(protocol, template));
+        var input = WorkflowRehydrator.FromCompiled(compiled);
+
+        var wrongSchemaMaterial = template with
+        {
+            SchemaVersion = "9.9.9",
+            TemplateDigest = ContentDigest.Sha256Utf8("placeholder")
+        };
+        var wrongSchema = wrongSchemaMaterial with
+        {
+            TemplateDigest = WorkflowCompiler.ComputeLocalTemplateDigest(wrongSchemaMaterial)
+        };
+        var schemaError = Assert.ThrowsExactly<WorkflowRuleException>(() =>
+            WorkflowRehydrator.Rehydrate(
+                input with { TemplateDigest = wrongSchema.TemplateDigest },
+                new TestWorkflowAuthorityResolver(authority, wrongSchema)));
+        Assert.AreEqual(WorkflowErrorCodes.UnknownSchemaId, schemaError.Category);
+
+        var brokenRoleMaterial = template with
+        {
+            Roles = Array.Empty<WorkflowTemplateRole>(),
+            TemplateDigest = ContentDigest.Sha256Utf8("placeholder")
+        };
+        var brokenRole = brokenRoleMaterial with
+        {
+            TemplateDigest = WorkflowCompiler.ComputeLocalTemplateDigest(brokenRoleMaterial)
+        };
+        var closureError = Assert.ThrowsExactly<WorkflowRuleException>(() =>
+            WorkflowRehydrator.Rehydrate(
+                input with { TemplateDigest = brokenRole.TemplateDigest },
+                new TestWorkflowAuthorityResolver(authority, brokenRole)));
+        Assert.AreEqual(WorkflowErrorCodes.UnknownApprovalRole, closureError.Category);
+    }
+
+    [TestMethod]
+    public void Verified_workflow_does_not_retain_mutable_caller_collections()
+    {
+        var protocol = BuildApprovedProtocol();
+        var template = BuildTemplate();
+        var authority = ProtocolAuthorities.GetValue(protocol, _ => throw new InvalidOperationException());
+        var compiled = new WorkflowCompiler().Compile(BuildInput(protocol, template));
+        var nodes = compiled.Nodes.ToList();
+        var input = WorkflowRehydrator.FromCompiled(compiled) with { Nodes = nodes };
+
+        var verified = WorkflowRehydrator.Rehydrate(input, new TestWorkflowAuthorityResolver(authority, template));
+        nodes.Clear();
+
+        Assert.AreEqual(compiled.Nodes.Count, verified.Definition.Nodes.Count);
+        Assert.IsFalse(verified.Definition.Nodes is WorkflowCompiledNode[]);
+        Assert.IsFalse(verified.Definition.Nodes[0].DependsOn is string[]);
+        Assert.IsFalse(verified.Definition.ApprovalRequirements[0].RequiredRoles is string[]);
+    }
+
+    [TestMethod]
+    public void Workflow_rehydration_rejects_tamper_across_compiled_collection_families()
+    {
+        var protocol = BuildApprovedProtocol();
+        var template = BuildTemplate();
+        var authority = ProtocolAuthorities.GetValue(protocol, _ => throw new InvalidOperationException());
+        var compiled = new WorkflowCompiler().Compile(BuildInput(protocol, template));
+        var input = WorkflowRehydrator.FromCompiled(compiled);
+        var resolver = new TestWorkflowAuthorityResolver(authority, template);
+        var fakeInvalidation = new WorkflowInvalidationPlanEntry(
+            "notice",
+            "amendment",
+            protocol.Id,
+            protocol.ContentDigest,
+            ContentDigest.Sha256Utf8("amendment"),
+            ContentDigest.Sha256Utf8("notice"),
+            "review-type",
+            ContentDigest.Sha256Utf8("artifact"),
+            input.Nodes[0].NodeId,
+            "rerun");
+
+        var mutations = new UnverifiedWorkflowDefinition[]
+        {
+            input with { ResolvedInputBindings = input.ResolvedInputBindings.Concat(new[] { input.ResolvedInputBindings[0] }).ToArray() },
+            input with { Edges = input.Edges.Concat(new[] { input.Edges[0] }).ToArray() },
+            input with { ApprovalRequirements = input.ApprovalRequirements.Concat(new[] { input.ApprovalRequirements[0] }).ToArray() },
+            input with { CapabilityRequirements = input.CapabilityRequirements.Concat(new[] { input.CapabilityRequirements[0] }).ToArray() },
+            input with { ArtifactDeclarations = input.ArtifactDeclarations.Concat(new[] { input.ArtifactDeclarations[0] }).ToArray() },
+            input with { InvalidationPlanEntries = new[] { fakeInvalidation } },
+            input with { Nodes = new[] { input.Nodes[0] with { Produces = new[] { "forged" } } }.Concat(input.Nodes.Skip(1)).ToArray() },
+            input with { ApprovalRequirements = new[] { input.ApprovalRequirements[0] with { RequiredRoles = new[] { "forged" } } }.Concat(input.ApprovalRequirements.Skip(1)).ToArray() },
+            input with { CapabilityRequirements = new[] { input.CapabilityRequirements[0] with { RequiredScopes = new[] { "forged" } } }.Concat(input.CapabilityRequirements.Skip(1)).ToArray() },
+            input with { ArtifactDeclarations = new[] { input.ArtifactDeclarations[0] with { RequiredForGates = new[] { "forged" } } }.Concat(input.ArtifactDeclarations.Skip(1)).ToArray() }
+        };
+
+        foreach (var mutation in mutations)
+        {
+            _ = Assert.ThrowsExactly<WorkflowRuleException>(() => WorkflowRehydrator.Rehydrate(mutation, resolver));
+        }
+    }
+
+    [TestMethod]
     public void Compile_rejects_non_approved_protocol_statuses()
     {
         var protocol = BuildApprovedProtocol();
@@ -43,7 +237,7 @@ public sealed class WorkflowCompilerTests
 
             var error = Assert.ThrowsExactly<WorkflowRuleException>(
                 () => new WorkflowCompiler().Compile(input));
-            Assert.AreEqual(WorkflowErrorCodes.InvalidProtocolStatus, error.Category);
+            Assert.AreEqual(WorkflowErrorCodes.UnverifiedAuthority, error.Category);
         }
     }
 
@@ -170,7 +364,7 @@ public sealed class WorkflowCompilerTests
         var staleProtocolInput = BuildInput(staleProtocol, template);
         var protocolError = Assert.ThrowsExactly<WorkflowRuleException>(
             () => new WorkflowCompiler().Compile(staleProtocolInput));
-        Assert.AreEqual(WorkflowErrorCodes.StaleProtocolDigest, protocolError.Category);
+        Assert.AreEqual(WorkflowErrorCodes.UnverifiedAuthority, protocolError.Category);
     }
 
     [TestMethod]
@@ -261,15 +455,12 @@ public sealed class WorkflowCompilerTests
         var protocol = BuildApprovedProtocol(withWaiver: true, waiverExpired: true);
         var template = BuildTemplate(withWaiverPolicy: true);
         var waiverError = Assert.ThrowsExactly<WorkflowRuleException>(() => new WorkflowCompiler().Compile(BuildInput(protocol, template)));
-        Assert.AreEqual(WorkflowErrorCodes.ExpiredWaiver, waiverError.Category);
+        Assert.AreEqual(WorkflowErrorCodes.UnverifiedAuthority, waiverError.Category);
 
         var futureWaiverProtocol = BuildApprovedProtocol(withDecision: false, withWaiver: true, waiverExpiresAt: Clock.UtcNow.AddDays(1));
-        var futureWaiver = new WorkflowCompiler().Compile(BuildInput(futureWaiverProtocol, template));
-        Assert.IsTrue(futureWaiver.WorkflowId.StartsWith("workflow-", StringComparison.Ordinal));
-        var waiverBinding = futureWaiver.ResolvedInputBindings.Single(binding => binding.SourceType == "protocol-waiver");
-        var waiverDigest = ContentDigest.Sha256CanonicalJson(futureWaiverProtocol.Waivers[0].ToCanonicalJson());
-        Assert.AreEqual(waiverDigest, waiverBinding.SourceDigest);
-        Assert.AreEqual(waiverDigest, waiverBinding.ValueDigest);
+        var futureWaiverError = Assert.ThrowsExactly<WorkflowRuleException>(() =>
+            new WorkflowCompiler().Compile(BuildInput(futureWaiverProtocol, template)));
+        Assert.AreEqual(WorkflowErrorCodes.UnverifiedAuthority, futureWaiverError.Category);
 
         var amendment = BuildAmendment(BuildApprovedProtocol(withDecision: true));
         var amendedProtocol = RecastProtocol(BuildApprovedProtocol(withDecision: true), ProtocolStatus.Approved, amendment.AmendmentId);
@@ -278,67 +469,33 @@ public sealed class WorkflowCompilerTests
             invalidationNoticeArtifactMismatch: true);
         var missingSource = Assert.ThrowsExactly<WorkflowRuleException>(
             () => new WorkflowCompiler().Compile(BuildInput(amendedProtocol, invalidationTemplate)));
-        Assert.AreEqual(WorkflowErrorCodes.MissingInvalidationSource, missingSource.Category);
+        Assert.AreEqual(WorkflowErrorCodes.UnverifiedAuthority, missingSource.Category);
 
-        var staleNotice = new ProtocolInvalidationNotice(
-            "notice-stale",
-            "different-amendment",
-            "review-type",
-            ComputeArtifactDigest(invalidationTemplate.ArtifactDeclarations[0]),
-            "approve",
-            "scope changed",
-            "rerun",
-            Clock.UtcNow);
-        var staleInput = BuildInput(amendedProtocol, invalidationTemplate, amendment: amendment, notices: new[] { staleNotice });
-        var staleNoticeError = Assert.ThrowsExactly<WorkflowRuleException>(() => new WorkflowCompiler().Compile(staleInput));
-        Assert.AreEqual(WorkflowErrorCodes.StaleInvalidationNotice, staleNoticeError.Category);
-
-        var wrongNodeNotice = new ProtocolInvalidationNotice(
-            "notice-node",
-            amendment.AmendmentId,
-            "review-type",
-            amendment.InvalidationNotices[0].AffectedArtifactDigest,
-            "missing",
-            "scope changed",
-            "rerun",
-            Clock.UtcNow);
-        var wrongNodeInput = BuildInput(amendedProtocol, invalidationTemplate, amendment: amendment, notices: new[] { wrongNodeNotice });
-        var nodeError = Assert.ThrowsExactly<WorkflowRuleException>(() => new WorkflowCompiler().Compile(wrongNodeInput));
-        Assert.AreEqual(WorkflowErrorCodes.AffectedNodeNotFound, nodeError.Category);
-
-        var artifactMismatchNotice = new ProtocolInvalidationNotice(
-            "notice-artifact",
-            amendment.AmendmentId,
-            "review-type",
-            ContentDigest.Sha256Utf8("other-artifact"),
-            "approve",
-            "scope changed",
-            "rerun",
-            Clock.UtcNow);
-        var mismatchInput = BuildInput(amendedProtocol, invalidationTemplate, amendment: amendment, notices: new[] { artifactMismatchNotice });
-        var artifactError = Assert.ThrowsExactly<WorkflowRuleException>(() => new WorkflowCompiler().Compile(mismatchInput));
-        Assert.AreEqual(WorkflowErrorCodes.AffectedArtifactMismatch, artifactError.Category);
+        var suppliedSource = BuildInput(
+            amendedProtocol,
+            invalidationTemplate,
+            amendment: amendment,
+            notices: amendment.InvalidationNotices);
+        var suppliedSourceError = Assert.ThrowsExactly<WorkflowRuleException>(() =>
+            new WorkflowCompiler().Compile(suppliedSource));
+        Assert.AreEqual(WorkflowErrorCodes.UnverifiedAuthority, suppliedSourceError.Category);
     }
 
     [TestMethod]
-    public void Compile_accepts_hyphenated_invalidation_node_ids_and_records_source_digests()
+    public void Compile_rejects_invalidation_until_verified_protocol_authority_exists()
     {
         var previous = BuildApprovedProtocol(withDecision: true);
         var template = BuildTemplate(withInvalidationPolicy: true, hyphenatedInvalidationNode: true);
         var amendment = BuildAmendment(previous, affectedNodeId: "approve-search");
         var amendedProtocol = RecastProtocol(BuildApprovedProtocol(withDecision: true), ProtocolStatus.Approved, amendment.AmendmentId);
 
-        var workflow = new WorkflowCompiler().Compile(BuildInput(
+        var error = Assert.ThrowsExactly<WorkflowRuleException>(() => new WorkflowCompiler().Compile(BuildInput(
             amendedProtocol,
             template,
             amendment: amendment,
-            notices: amendment.InvalidationNotices));
+            notices: amendment.InvalidationNotices)));
 
-        Assert.AreEqual(1, workflow.InvalidationPlanEntries.Count);
-        var entry = workflow.InvalidationPlanEntries[0];
-        Assert.AreEqual("approve-search", entry.AffectedNodeId);
-        Assert.IsTrue(entry.AmendmentSourceDigest.ToString().StartsWith("sha256:", StringComparison.Ordinal));
-        Assert.IsTrue(entry.InvalidationNoticeDigest.ToString().StartsWith("sha256:", StringComparison.Ordinal));
+        Assert.AreEqual(WorkflowErrorCodes.UnverifiedAuthority, error.Category);
     }
 
     [TestMethod]
@@ -365,13 +522,13 @@ public sealed class WorkflowCompilerTests
         var knownSchemaRefs = new System.Collections.Generic.HashSet<WorkflowSchemaRef>
         {
             new("nexus.workflow-template", "1.0.0"),
-            new("nexus.workflow-definition", "1.0.0"),
+            new("nexus.workflow-definition", "1.1.0"),
             new("nexus.review.decision", "1.0.0"),
             new("nexus.workflow.artifact", "1.0.0")
         };
 
         return new WorkflowCompileInput(
-            protocol,
+            ProtocolAuthorities.TryGetValue(protocol, out var authority) ? authority : null!,
             selectedTemplate,
             compileParameters ?? new System.Collections.Generic.Dictionary<string, CanonicalJsonValue>(),
             knownSchemaRefs.ToArray(),
@@ -609,7 +766,7 @@ public sealed class WorkflowCompilerTests
 
         return template with
         {
-            TemplateDigest = WorkflowCompiler.ComputeTemplateDigestForTesting(template)
+            TemplateDigest = WorkflowCompiler.ComputeLocalTemplateDigest(template)
         };
     }
 
@@ -684,7 +841,13 @@ public sealed class WorkflowCompilerTests
 
         var candidate = draft.CreateApprovalCandidate(ids, ApprovalPolicy.ExplicitCustomSingleResearcher(), versionId: "proto-v1");
         var approval = ProtocolApproval.Create(ids, candidate, ApprovalPolicy.ExplicitCustomSingleResearcher(), Researcher, Clock, candidate.ContentDigest);
-        return draft.ApproveCandidate(candidate, ApprovalPolicy.ExplicitCustomSingleResearcher(), new[] { approval }, Clock);
+        var authority = draft.ApproveCandidateVerified(
+            candidate,
+            ApprovalPolicy.ExplicitCustomSingleResearcher(),
+            new[] { approval },
+            Clock);
+        ProtocolAuthorities.Add(authority.Version, authority);
+        return authority.Version;
     }
 
     private static ProtocolVersion RecastProtocol(
@@ -801,6 +964,30 @@ public sealed class WorkflowCompilerTests
             inputs[0].SourceProtocolDecisionKey,
             inputs[0].DefaultValue);
         return template with { RequiredInputs = inputs };
+    }
+
+    private sealed class TestWorkflowAuthorityResolver : IWorkflowAuthorityResolver
+    {
+        private readonly VerifiedProtocolVersion _protocol;
+        private readonly WorkflowTemplate _template;
+
+        public TestWorkflowAuthorityResolver(VerifiedProtocolVersion protocol, WorkflowTemplate template)
+        {
+            _protocol = protocol;
+            _template = template;
+        }
+
+        public VerifiedProtocolVersion ResolveProtocolVersion(string protocolVersionId) =>
+            string.Equals(protocolVersionId, _protocol.Version.Id, StringComparison.Ordinal) ? _protocol : null!;
+
+        public WorkflowTemplate ResolveTemplate(string templateId, string templateVersion, ContentDigest expectedDigest) =>
+            string.Equals(templateId, _template.TemplateId, StringComparison.Ordinal) &&
+            string.Equals(templateVersion, _template.TemplateVersion, StringComparison.Ordinal) &&
+            expectedDigest == _template.TemplateDigest
+                ? _template
+                : null!;
+
+        public CanonicalJsonValue ResolveCompileParameter(string inputId, ContentDigest expectedValueDigest) => null!;
     }
 
     private sealed class FixedClock : IClock

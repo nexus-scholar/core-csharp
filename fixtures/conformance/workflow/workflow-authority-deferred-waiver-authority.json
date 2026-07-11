@@ -1,0 +1,28 @@
+{
+  "fixtureId": "workflow-authority-deferred-waiver-authority",
+  "sourceKind": "local-hardening-contract",
+  "sourceRefs": [
+    "docs/gates/HARDENING-04-WORKFLOW-AUTHORITY.md",
+    "docs/adr/0018-workflow-authority-hardening-sequence.md",
+    "docs/adr/0005-workflow-template-contract.md",
+    "docs/adr/0006-workflow-compiler-semantics.md"
+  ],
+  "sourceCommit": "a68ff6da2acfa437b4c9671997441f0458e0d6eb",
+  "generatorCommand": "deterministic Hardening 04 replay recipe generator",
+  "generatorVersion": "hardening-04-v1",
+  "digestMeaning": "sha256 of compact JSON serialization of case",
+  "inputDigest": "sha256:5428b4505d1fe92d779fda86a47d9e186117253609a8422f79ad3ef052e6ad16",
+  "outputDigest": "sha256:5428b4505d1fe92d779fda86a47d9e186117253609a8422f79ad3ef052e6ad16",
+  "comparisonRules": [
+    "replay-workflow-authority-compile",
+    "no-php-compatibility-claim",
+    "no-blueprint-conformance-claim"
+  ],
+  "case": {
+    "recordType": "workflow-authority",
+    "operation": "compile",
+    "negative": true,
+    "scenario": "deferred-waiver-authority-rejected",
+    "errorCategory": "unverified-authority"
+  }
+}

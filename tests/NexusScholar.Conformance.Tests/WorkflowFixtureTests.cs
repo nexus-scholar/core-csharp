@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text.Json;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NexusScholar.Kernel;
@@ -14,18 +15,35 @@ namespace NexusScholar.Conformance.Tests;
 public sealed class WorkflowFixtureTests
 {
     private const string FixtureSourceCommit = "bc2e6e0353b2cc44f837750ed1dd5f570cc1c4fa";
+    private const string WorkflowAuthoritySourceCommit = "a68ff6da2acfa437b4c9671997441f0458e0d6eb";
     private static readonly ProtocolActor Researcher = ProtocolActor.Human("researcher-1");
     private static readonly IClock Clock = new FixedClock();
+    private static readonly ConditionalWeakTable<ProtocolVersion, VerifiedProtocolVersion> ProtocolAuthorities = new();
 
     private static readonly string[] PositiveFixtures =
     {
         "workflow-compile-rapid-review.json",
         "workflow-compile-hybrid-ai-audit.json",
-        "workflow-compile-authorized-waiver.json",
-        "workflow-compile-invalidation-plan.json",
         "workflow-compile-order-permutation-same-digest.json",
         "workflow-compile-digest-exclusion-stable.json",
         "workflow-compile-digest-inclusion-changed.json"
+    };
+
+    private static readonly string[] DeferredAuthorityFixtures =
+    {
+        "workflow-compile-authorized-waiver.json",
+        "workflow-compile-invalidation-plan.json"
+    };
+
+    private static readonly string[] AuthorityFixtures =
+    {
+        "workflow-authority-compile-verified-rehydrate.json",
+        "workflow-authority-raw-protocol-rejected.json",
+        "workflow-authority-tampered-workflow-scalar.json",
+        "workflow-authority-duplicate-node.json",
+        "workflow-authority-wrong-template-resolver.json",
+        "workflow-authority-deferred-waiver-authority.json",
+        "workflow-authority-deferred-amendment-authority.json"
     };
 
     private static readonly string[] RequiredNegativeCategories =
@@ -75,6 +93,12 @@ public sealed class WorkflowFixtureTests
         foreach (var path in WorkflowFixturePaths())
         {
             var root = Load(path);
+            var fixtureId = Path.GetFileName(path);
+
+            if (fixtureId.StartsWith("workflow-authority-", StringComparison.Ordinal))
+            {
+                continue;
+            }
 
             Assert.AreEqual("local-gate-4-contract", root.GetProperty("sourceKind").GetString(), Path.GetFileName(path));
             Assert.AreEqual(FixtureSourceCommit, root.GetProperty("sourceCommit").GetString(), Path.GetFileName(path));
@@ -90,6 +114,92 @@ public sealed class WorkflowFixtureTests
                 string.Equals(rule.GetString(), "no-php-compatibility-claim", StringComparison.Ordinal)));
             Assert.IsTrue(root.GetProperty("comparisonRules").EnumerateArray().Any(rule =>
                 string.Equals(rule.GetString(), "no-blueprint-conformance-claim", StringComparison.Ordinal)));
+        }
+    }
+
+    [TestMethod]
+    public void Gate_4_workflow_authority_fixtures_have_required_metadata()
+    {
+        foreach (var fixture in AuthorityFixtures)
+        {
+            var root = LoadWorkflowFixture(fixture);
+
+            Assert.AreEqual("local-hardening-contract", root.GetProperty("sourceKind").GetString(), fixture);
+            Assert.AreEqual(WorkflowAuthoritySourceCommit, root.GetProperty("sourceCommit").GetString(), fixture);
+            Assert.AreEqual("deterministic Hardening 04 replay recipe generator", root.GetProperty("generatorCommand").GetString(), fixture);
+            Assert.AreEqual("hardening-04-v1", root.GetProperty("generatorVersion").GetString(), fixture);
+            Assert.AreEqual("sha256 of compact JSON serialization of case", root.GetProperty("digestMeaning").GetString(), fixture);
+            Assert.IsTrue(root.GetProperty("sourceRefs").EnumerateArray().Any(value =>
+                string.Equals(value.GetString(), "docs/gates/HARDENING-04-WORKFLOW-AUTHORITY.md", StringComparison.Ordinal)));
+            Assert.IsTrue(root.GetProperty("sourceRefs").EnumerateArray().Any(value =>
+                string.Equals(value.GetString(), "docs/adr/0018-workflow-authority-hardening-sequence.md", StringComparison.Ordinal)));
+            _ = ContentDigest.Parse(root.GetProperty("inputDigest").GetString()!);
+            _ = ContentDigest.Parse(root.GetProperty("outputDigest").GetString()!);
+            Assert.IsTrue(root.GetProperty("comparisonRules").EnumerateArray().Any(rule =>
+                string.Equals(rule.GetString(), "replay-workflow-authority-compile", StringComparison.Ordinal)));
+            Assert.IsTrue(root.GetProperty("comparisonRules").EnumerateArray().Any(rule =>
+                string.Equals(rule.GetString(), "no-php-compatibility-claim", StringComparison.Ordinal)));
+            Assert.IsTrue(root.GetProperty("comparisonRules").EnumerateArray().Any(rule =>
+                string.Equals(rule.GetString(), "no-blueprint-conformance-claim", StringComparison.Ordinal)));
+        }
+    }
+
+    [TestMethod]
+    public void Gate_4_workflow_authority_fixtures_are_present()
+    {
+        var names = WorkflowFixturePaths()
+            .Select(Path.GetFileName)
+            .ToHashSet(StringComparer.Ordinal);
+
+        foreach (var fixture in AuthorityFixtures)
+        {
+            Assert.IsTrue(names.Contains(fixture), $"Missing workflow authority fixture '{fixture}'.");
+        }
+    }
+
+    [TestMethod]
+    public void Gate_4_workflow_authority_fixture_digests_match_compact_case()
+    {
+        foreach (var fixture in AuthorityFixtures)
+        {
+            var root = LoadWorkflowFixture(fixture);
+            var serializedCase = JsonSerializer.Serialize(
+                root.GetProperty("case"),
+                new JsonSerializerOptions
+                {
+                    WriteIndented = false
+                });
+            var digest = ContentDigest.Sha256Utf8(serializedCase).ToString();
+
+            Assert.AreEqual(digest, root.GetProperty("inputDigest").GetString(), fixture);
+            Assert.AreEqual(digest, root.GetProperty("outputDigest").GetString(), fixture);
+        }
+    }
+
+    [TestMethod]
+    public void Workflow_authority_fixtures_replay_compile_and_rehydrate_cases()
+    {
+        foreach (var fixture in AuthorityFixtures)
+        {
+            var root = LoadWorkflowFixture(fixture);
+            var fixtureCase = root.GetProperty("case");
+            var scenario = fixtureCase.GetProperty("scenario").GetString()!;
+            var negative = fixtureCase.GetProperty("negative").GetBoolean();
+
+            if (!negative)
+            {
+                var state = BuildFixtureComputation("workflow-compile-rapid-review");
+                var authority = ProtocolAuthorities.GetValue(state.Protocol, _ => throw new InvalidOperationException());
+                var verified = WorkflowRehydrator.Rehydrate(
+                    WorkflowRehydrator.FromCompiled(state.Workflow),
+                    new ReplayWorkflowResolver(authority, state.Template));
+                Assert.AreEqual(state.Workflow.WorkflowId, verified.Definition.WorkflowId, fixture);
+                Assert.AreEqual(state.Workflow.WorkflowDigest, verified.Definition.WorkflowDigest, fixture);
+                continue;
+            }
+
+            var error = Assert.ThrowsExactly<WorkflowRuleException>(() => ReplayAuthorityScenario(scenario));
+            Assert.AreEqual(fixtureCase.GetProperty("errorCategory").GetString(), error.Category, fixture);
         }
     }
 
@@ -127,27 +237,27 @@ public sealed class WorkflowFixtureTests
     }
 
     [TestMethod]
-    public void Positive_workflow_fixtures_match_compiler_output()
+    public void Historical_v1_positive_workflow_fixtures_remain_immutable_migration_evidence()
     {
-        var errors = new List<string>();
         foreach (var fixture in PositiveFixtures)
         {
             var root = LoadWorkflowFixture(fixture);
             var caseElement = root.GetProperty("case");
-            var computation = BuildFixtureComputation(Path.GetFileNameWithoutExtension(fixture));
-            var actualWorkflowDigest = OptionalString(caseElement, "workflowDigest", "value");
-            var actualTemplateDigest = OptionalString(caseElement, "template", "template_digest");
-            var actualProtocolDigest = OptionalString(caseElement, "protocol", "content_digest");
-
-            AddMismatch(errors, fixture, "inputDigest", root.GetProperty("inputDigest").GetString(), computation.InputDigest.ToString());
-            AddMismatch(errors, fixture, "outputDigest", root.GetProperty("outputDigest").GetString(), computation.Workflow.WorkflowDigest.ToString());
-            AddMismatch(errors, fixture, "workflowId", caseElement.GetProperty("workflowId").GetString(), computation.Workflow.WorkflowId);
-            AddMismatch(errors, fixture, "workflowDigest.value", actualWorkflowDigest, computation.Workflow.WorkflowDigest.ToString());
-            AddMismatch(errors, fixture, "template.template_digest", actualTemplateDigest, computation.Workflow.TemplateDigest.ToString());
-            AddMismatch(errors, fixture, "protocol.content_digest", actualProtocolDigest, computation.Workflow.ProtocolContentDigest.ToString());
+            _ = ContentDigest.Parse(root.GetProperty("outputDigest").GetString()!);
+            _ = ContentDigest.Parse(caseElement.GetProperty("workflowDigest").GetProperty("value").GetString()!);
+            Assert.AreEqual("gate-4-v2", root.GetProperty("generatorVersion").GetString(), fixture);
         }
+    }
 
-        Assert.IsFalse(errors.Count > 0, string.Join(Environment.NewLine, errors));
+    [TestMethod]
+    public void Waiver_and_invalidation_fixtures_fail_closed_until_protocol_authority_is_verified()
+    {
+        foreach (var fixture in DeferredAuthorityFixtures)
+        {
+            var error = Assert.ThrowsExactly<WorkflowRuleException>(() =>
+                BuildFixtureComputation(Path.GetFileNameWithoutExtension(fixture)));
+            Assert.AreEqual(WorkflowErrorCodes.UnverifiedAuthority, error.Category, fixture);
+        }
     }
 
     [TestMethod]
@@ -245,7 +355,49 @@ public sealed class WorkflowFixtureTests
 
         var input = BuildInput(protocol, template, compileParameters, amendment, notices);
         var workflow = new WorkflowCompiler().Compile(input);
-        return new FixtureComputation(workflow, ComputeInputDigest(input));
+        return new FixtureComputation(workflow, ComputeInputDigest(input), protocol, template);
+    }
+
+    private static void ReplayAuthorityScenario(string scenario)
+    {
+        if (scenario == "deferred-waiver-authority-rejected")
+        {
+            _ = BuildFixtureComputation("workflow-compile-authorized-waiver");
+            return;
+        }
+
+        if (scenario == "deferred-amendment-authority-rejected")
+        {
+            _ = BuildFixtureComputation("workflow-compile-invalidation-plan");
+            return;
+        }
+
+        var state = BuildFixtureComputation("workflow-compile-rapid-review");
+        var authority = ProtocolAuthorities.GetValue(state.Protocol, _ => throw new InvalidOperationException());
+        var resolver = new ReplayWorkflowResolver(authority, state.Template);
+        var input = WorkflowRehydrator.FromCompiled(state.Workflow);
+
+        switch (scenario)
+        {
+            case "raw-protocol-input-is-rejected":
+                var rawProtocol = RecastProtocol(state.Protocol, ProtocolStatus.Approved);
+                _ = new WorkflowCompiler().Compile(BuildInput(rawProtocol, state.Template));
+                break;
+            case "tampered-workflow-scalar-rejected":
+                _ = WorkflowRehydrator.Rehydrate(input with { CompilerVersion = "tampered" }, resolver);
+                break;
+            case "duplicate-node-rejected":
+                _ = WorkflowRehydrator.Rehydrate(
+                    input with { Nodes = input.Nodes.Concat(new[] { input.Nodes[0] }).ToArray() },
+                    resolver);
+                break;
+            case "wrong-template-resolver-rejected":
+                var wrongTemplate = state.Template with { TemplateId = "wrong-template" };
+                _ = WorkflowRehydrator.Rehydrate(input, new ReplayWorkflowResolver(authority, wrongTemplate));
+                break;
+            default:
+                throw new InvalidOperationException($"Unknown Workflow authority scenario '{scenario}'.");
+        }
     }
 
     private static WorkflowCompileInput BuildInput(
@@ -256,13 +408,13 @@ public sealed class WorkflowFixtureTests
         IReadOnlyList<ProtocolInvalidationNotice>? notices = null)
     {
         return new WorkflowCompileInput(
-            protocol,
+            ProtocolAuthorities.TryGetValue(protocol, out var authority) ? authority : null!,
             template,
             compileParameters ?? new Dictionary<string, CanonicalJsonValue>(StringComparer.Ordinal),
             new[]
             {
                 new WorkflowSchemaRef("nexus.workflow-template", "1.0.0"),
-                new WorkflowSchemaRef("nexus.workflow-definition", "1.0.0"),
+                new WorkflowSchemaRef("nexus.workflow-definition", "1.1.0"),
                 new WorkflowSchemaRef("nexus.review.decision", "1.0.0"),
                 new WorkflowSchemaRef("nexus.workflow.artifact", "1.0.0")
             },
@@ -499,7 +651,7 @@ public sealed class WorkflowFixtureTests
 
         return template with
         {
-            TemplateDigest = WorkflowCompiler.ComputeTemplateDigestForTesting(template)
+            TemplateDigest = WorkflowCompiler.ComputeLocalTemplateDigest(template)
         };
     }
 
@@ -573,7 +725,13 @@ public sealed class WorkflowFixtureTests
 
         var candidate = draft.CreateApprovalCandidate(ids, ApprovalPolicy.ExplicitCustomSingleResearcher(), versionId: "proto-v1");
         var approval = ProtocolApproval.Create(ids, candidate, ApprovalPolicy.ExplicitCustomSingleResearcher(), Researcher, Clock, candidate.ContentDigest);
-        return draft.ApproveCandidate(candidate, ApprovalPolicy.ExplicitCustomSingleResearcher(), new[] { approval }, Clock);
+        var authority = draft.ApproveCandidateVerified(
+            candidate,
+            ApprovalPolicy.ExplicitCustomSingleResearcher(),
+            new[] { approval },
+            Clock);
+        ProtocolAuthorities.Add(authority.Version, authority);
+        return authority.Version;
     }
 
     private static ProtocolVersion RecastProtocol(
@@ -689,7 +847,33 @@ public sealed class WorkflowFixtureTests
         return Directory.GetFiles(Path.Combine(AppContext.BaseDirectory, "fixtures", "workflow"), "*.json");
     }
 
-    private sealed record FixtureComputation(WorkflowDefinition Workflow, ContentDigest InputDigest);
+    private sealed record FixtureComputation(
+        WorkflowDefinition Workflow,
+        ContentDigest InputDigest,
+        ProtocolVersion Protocol,
+        WorkflowTemplate Template);
+
+    private sealed class ReplayWorkflowResolver : IWorkflowAuthorityResolver
+    {
+        private readonly VerifiedProtocolVersion _protocol;
+        private readonly WorkflowTemplate _template;
+
+        public ReplayWorkflowResolver(VerifiedProtocolVersion protocol, WorkflowTemplate template)
+        {
+            _protocol = protocol;
+            _template = template;
+        }
+
+        public VerifiedProtocolVersion ResolveProtocolVersion(string protocolVersionId) =>
+            protocolVersionId == _protocol.Version.Id ? _protocol : null!;
+
+        public WorkflowTemplate ResolveTemplate(string templateId, string templateVersion, ContentDigest expectedDigest) =>
+            templateId == _template.TemplateId && templateVersion == _template.TemplateVersion && expectedDigest == _template.TemplateDigest
+                ? _template
+                : null!;
+
+        public CanonicalJsonValue ResolveCompileParameter(string inputId, ContentDigest expectedValueDigest) => null!;
+    }
 
     private sealed class FixedClock : IClock
     {

@@ -366,6 +366,28 @@ public sealed class ProtocolDraft
         return candidate.WithApprovals(approved, clock.UtcNow);
     }
 
+    public VerifiedProtocolVersion ApproveCandidateVerified(
+        ProtocolVersion candidate,
+        ApprovalPolicy policy,
+        IEnumerable<ProtocolApproval> approvals,
+        IClock clock)
+    {
+        var suppliedApprovals = (approvals ?? throw new ArgumentNullException(nameof(approvals))).ToArray();
+        var version = ApproveCandidate(candidate, policy, suppliedApprovals, clock);
+        if (version.ApprovalIds.Count != policy.MinimumApprovals)
+        {
+            throw new ProtocolRuleException(
+                ProtocolErrorCodes.InsufficientApprovalPolicy,
+                "Verified Protocol authority requires exactly the approvals selected by its policy.");
+        }
+
+        var verifiedApprovals = suppliedApprovals
+            .Where(approval => version.ApprovalIds.Contains(approval.ApprovalId, StringComparer.Ordinal))
+            .Select(approval => new VerifiedProtocolApproval(approval))
+            .ToArray();
+        return new VerifiedProtocolVersion(version, policy, verifiedApprovals);
+    }
+
     public ProtocolVersion Approve(
         ActorId actor,
         IClock clock,

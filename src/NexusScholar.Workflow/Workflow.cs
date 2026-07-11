@@ -79,6 +79,7 @@ public static class WorkflowErrorCodes
     public const string WorkflowIdMismatch = "workflow-id-mismatch";
     public const string UnknownCompileParameter = "unknown-compile-parameter";
     public const string ExplicitCompileInputRequired = "explicit-compile-input-required";
+    public const string UnverifiedAuthority = "unverified-authority";
 }
 
 public sealed class WorkflowRuleException : DomainRuleException
@@ -188,7 +189,7 @@ public sealed record WorkflowTemplate(
     IReadOnlyList<WorkflowTemplateInvalidationPolicy> InvalidationPolicies);
 
 public sealed record WorkflowCompileInput(
-    ProtocolVersion ProtocolVersion,
+    VerifiedProtocolVersion ProtocolAuthority,
     WorkflowTemplate Template,
     IReadOnlyDictionary<string, CanonicalJsonValue> CompileParameters,
     IReadOnlyList<WorkflowSchemaRef> KnownSchemaRefs,
@@ -196,7 +197,13 @@ public sealed record WorkflowCompileInput(
     IReadOnlyList<ProtocolInvalidationNotice>? InvalidationNotices = null,
     string? ExpectedWorkflowId = null,
     string CompilerId = "nexus-workflow-compiler",
-    string CompilerVersion = "1.0.0");
+    string CompilerVersion = "1.0.0")
+{
+    public ProtocolVersion ProtocolVersion =>
+        ProtocolAuthority?.Version ?? throw new WorkflowRuleException(
+            WorkflowErrorCodes.UnverifiedAuthority,
+            "Workflow compilation requires verified Protocol authority.");
+}
 
 public sealed record WorkflowResolvedInputBinding(
     string InputId,
@@ -266,37 +273,111 @@ public sealed record WorkflowInvalidationPlanEntry(
     string AffectedNodeId,
     string RequiredAction);
 
-public sealed record WorkflowDefinition(
-    string WorkflowId,
-    ContentDigest WorkflowDigest,
-    string CompilerId,
-    string CompilerVersion,
-    string ProtocolId,
-    string ProtocolVersionId,
-    int ProtocolVersionNumber,
-    ContentDigest ProtocolContentDigest,
-    string TemplateId,
-    string TemplateVersion,
-    ContentDigest TemplateDigest,
-    IReadOnlyList<WorkflowResolvedInputBinding> ResolvedInputBindings,
-    IReadOnlyList<WorkflowCompiledNode> Nodes,
-    IReadOnlyList<WorkflowCompiledEdge> Edges,
-    IReadOnlyList<WorkflowCompiledApprovalRequirement> ApprovalRequirements,
-    IReadOnlyList<WorkflowCompiledCapabilityRequirement> CapabilityRequirements,
-    IReadOnlyList<WorkflowCompiledArtifactDeclaration> ArtifactDeclarations,
-    IReadOnlyList<WorkflowInvalidationPlanEntry> InvalidationPlanEntries)
+public sealed class WorkflowDefinition
 {
+    internal WorkflowDefinition(
+        string workflowId,
+        ContentDigest workflowDigest,
+        string compilerId,
+        string compilerVersion,
+        string protocolId,
+        string protocolVersionId,
+        int protocolVersionNumber,
+        ContentDigest protocolContentDigest,
+        string templateId,
+        string templateVersion,
+        ContentDigest templateDigest,
+        IEnumerable<WorkflowResolvedInputBinding> resolvedInputBindings,
+        IEnumerable<WorkflowCompiledNode> nodes,
+        IEnumerable<WorkflowCompiledEdge> edges,
+        IEnumerable<WorkflowCompiledApprovalRequirement> approvalRequirements,
+        IEnumerable<WorkflowCompiledCapabilityRequirement> capabilityRequirements,
+        IEnumerable<WorkflowCompiledArtifactDeclaration> artifactDeclarations,
+        IEnumerable<WorkflowInvalidationPlanEntry> invalidationPlanEntries)
+    {
+        WorkflowId = Guard.NotBlank(workflowId, nameof(workflowId));
+        WorkflowDigest = RequireDigest(workflowDigest, nameof(workflowDigest));
+        CompilerId = Guard.NotBlank(compilerId, nameof(compilerId));
+        CompilerVersion = Guard.NotBlank(compilerVersion, nameof(compilerVersion));
+        ProtocolId = Guard.NotBlank(protocolId, nameof(protocolId));
+        ProtocolVersionId = Guard.NotBlank(protocolVersionId, nameof(protocolVersionId));
+        ProtocolVersionNumber = protocolVersionNumber > 0
+            ? protocolVersionNumber
+            : throw new WorkflowRuleException(WorkflowErrorCodes.UnverifiedAuthority, "Protocol version number must be positive.");
+        ProtocolContentDigest = RequireDigest(protocolContentDigest, nameof(protocolContentDigest));
+        TemplateId = Guard.NotBlank(templateId, nameof(templateId));
+        TemplateVersion = Guard.NotBlank(templateVersion, nameof(templateVersion));
+        TemplateDigest = RequireDigest(templateDigest, nameof(templateDigest));
+        ResolvedInputBindings = Array.AsReadOnly((resolvedInputBindings ?? throw new ArgumentNullException(nameof(resolvedInputBindings)))
+            .Select(binding => binding with { }).ToArray());
+        Nodes = Array.AsReadOnly((nodes ?? throw new ArgumentNullException(nameof(nodes))).Select(CloneNode).ToArray());
+        Edges = Array.AsReadOnly((edges ?? throw new ArgumentNullException(nameof(edges))).Select(edge => edge with { }).ToArray());
+        ApprovalRequirements = Array.AsReadOnly((approvalRequirements ?? throw new ArgumentNullException(nameof(approvalRequirements)))
+            .Select(CloneApprovalRequirement).ToArray());
+        CapabilityRequirements = Array.AsReadOnly((capabilityRequirements ?? throw new ArgumentNullException(nameof(capabilityRequirements)))
+            .Select(CloneCapabilityRequirement).ToArray());
+        ArtifactDeclarations = Array.AsReadOnly((artifactDeclarations ?? throw new ArgumentNullException(nameof(artifactDeclarations)))
+            .Select(CloneArtifactDeclaration).ToArray());
+        InvalidationPlanEntries = Array.AsReadOnly((invalidationPlanEntries ?? throw new ArgumentNullException(nameof(invalidationPlanEntries)))
+            .Select(entry => entry with { }).ToArray());
+    }
+
+    public string WorkflowId { get; }
+    public ContentDigest WorkflowDigest { get; }
+    public string CompilerId { get; }
+    public string CompilerVersion { get; }
+    public string ProtocolId { get; }
+    public string ProtocolVersionId { get; }
+    public int ProtocolVersionNumber { get; }
+    public ContentDigest ProtocolContentDigest { get; }
+    public string TemplateId { get; }
+    public string TemplateVersion { get; }
+    public ContentDigest TemplateDigest { get; }
+    public IReadOnlyList<WorkflowResolvedInputBinding> ResolvedInputBindings { get; }
+    public IReadOnlyList<WorkflowCompiledNode> Nodes { get; }
+    public IReadOnlyList<WorkflowCompiledEdge> Edges { get; }
+    public IReadOnlyList<WorkflowCompiledApprovalRequirement> ApprovalRequirements { get; }
+    public IReadOnlyList<WorkflowCompiledCapabilityRequirement> CapabilityRequirements { get; }
+    public IReadOnlyList<WorkflowCompiledArtifactDeclaration> ArtifactDeclarations { get; }
+    public IReadOnlyList<WorkflowInvalidationPlanEntry> InvalidationPlanEntries { get; }
     public string Id => WorkflowId;
+
+    private static ContentDigest RequireDigest(ContentDigest digest, string name) => digest.IsValid
+        ? digest
+        : throw new WorkflowRuleException(WorkflowErrorCodes.UnverifiedAuthority, $"{name} must be a valid digest.");
+
+    private static WorkflowCompiledNode CloneNode(WorkflowCompiledNode node) => new(
+        node.NodeId,
+        node.Label,
+        node.Kind,
+        node.Mode,
+        Array.AsReadOnly((node.DependsOn ?? Array.Empty<string>()).ToArray()),
+        Array.AsReadOnly((node.Produces ?? Array.Empty<string>()).ToArray()),
+        Array.AsReadOnly((node.Requires ?? Array.Empty<string>()).ToArray()),
+        node.ApprovalRequirementRef,
+        Array.AsReadOnly((node.CapabilityRequirementRefs ?? Array.Empty<string>()).ToArray()),
+        node.WaiverPolicyRef,
+        node.InvalidationPolicyRef,
+        node.Condition);
+
+    private static WorkflowCompiledApprovalRequirement CloneApprovalRequirement(WorkflowCompiledApprovalRequirement requirement) =>
+        requirement with { RequiredRoles = Array.AsReadOnly((requirement.RequiredRoles ?? Array.Empty<string>()).ToArray()) };
+
+    private static WorkflowCompiledCapabilityRequirement CloneCapabilityRequirement(WorkflowCompiledCapabilityRequirement requirement) =>
+        requirement with { RequiredScopes = Array.AsReadOnly((requirement.RequiredScopes ?? Array.Empty<string>()).ToArray()) };
+
+    private static WorkflowCompiledArtifactDeclaration CloneArtifactDeclaration(WorkflowCompiledArtifactDeclaration declaration) =>
+        declaration with { RequiredForGates = Array.AsReadOnly((declaration.RequiredForGates ?? Array.Empty<string>()).ToArray()) };
 }
 
 public sealed class WorkflowCompiler
 {
     private const string WorkflowSchemaId = "nexus.workflow-definition";
-    private const string WorkflowSchemaVersion = "1.0.0";
+    private const string WorkflowSchemaVersion = "1.1.0";
     private const string TemplateSchemaId = "nexus.workflow-template";
     private const string TemplateSchemaVersion = "1.0.0";
 
-    public static ContentDigest ComputeTemplateDigestForTesting(WorkflowTemplate template)
+    public static ContentDigest ComputeLocalTemplateDigest(WorkflowTemplate template)
     {
         ArgumentNullException.ThrowIfNull(template);
         return ComputeTemplateDigest(template);
@@ -313,12 +394,24 @@ public sealed class WorkflowCompiler
     public WorkflowDefinition Compile(WorkflowCompileInput input)
     {
         ArgumentNullException.ThrowIfNull(input);
+        var protocolAuthority = input.ProtocolAuthority ?? throw new WorkflowRuleException(
+            WorkflowErrorCodes.UnverifiedAuthority,
+            "Workflow compilation requires verified Protocol authority.");
+        if (!ReferenceEquals(protocolAuthority.Version, input.ProtocolVersion))
+        {
+            throw new WorkflowRuleException(
+                WorkflowErrorCodes.UnverifiedAuthority,
+                "Workflow compilation Protocol state does not match its verified authority.");
+        }
+
         if (input.ProtocolVersion.Status != ProtocolStatus.Approved)
         {
             throw new WorkflowRuleException(
                 WorkflowErrorCodes.InvalidProtocolStatus,
                 "Workflow compilation requires an approved protocol version.");
         }
+
+        RejectDeferredProtocolAuthority(input);
 
         ValidateAmendmentSourcePresence(input);
         ValidateProtocolDigest(input);
@@ -459,6 +552,20 @@ public sealed class WorkflowCompiler
         if (!string.Equals(input.ProtocolVersion.ContentDigest.Value, expected.Value, StringComparison.Ordinal))
         {
             throw new WorkflowRuleException(WorkflowErrorCodes.StaleProtocolDigest, "Protocol content digest is stale.");
+        }
+    }
+
+    private static void RejectDeferredProtocolAuthority(WorkflowCompileInput input)
+    {
+        var protocol = input.ProtocolVersion;
+        if (protocol.Waivers.Count > 0 ||
+            !string.IsNullOrWhiteSpace(protocol.AmendmentId) ||
+            (input.Amendments?.Count ?? 0) > 0 ||
+            (input.InvalidationNotices?.Count ?? 0) > 0)
+        {
+            throw new WorkflowRuleException(
+                WorkflowErrorCodes.UnverifiedAuthority,
+                "Waiver and amendment workflow compilation requires verified Protocol authority records not yet defined by ADR 0018.");
         }
     }
 
@@ -897,7 +1004,7 @@ public sealed class WorkflowCompiler
 
         var byDecision = protocol.Decisions
             .GroupBy(decision => decision.DecisionKey, StringComparer.Ordinal)
-            .ToDictionary(group => group.Key, group => group.First().Value, StringComparer.Ordinal);
+            .ToDictionary(group => group.Key, group => group.First(), StringComparer.Ordinal);
 
         var waivers = protocol.Waivers
             .GroupBy(waiver => waiver.AffectedRequirementId, StringComparer.Ordinal)
@@ -921,8 +1028,9 @@ public sealed class WorkflowCompiler
                     }
 
                     if (!string.IsNullOrWhiteSpace(input.SourceProtocolDecisionKey) &&
-                        byDecision.TryGetValue(input.SourceProtocolDecisionKey, out var decisionValue))
+                        byDecision.TryGetValue(input.SourceProtocolDecisionKey, out var decision))
                     {
+                        var decisionDigest = ContentDigest.Sha256CanonicalJson(decision.ToCanonicalJson());
                         bindings.Add(
                             new WorkflowResolvedInputBinding(
                                 input.InputId,
@@ -930,9 +1038,9 @@ public sealed class WorkflowCompiler
                                 input.SchemaId,
                                 input.SchemaVersion,
                                 WorkflowResolvedInputSourceType.ProtocolDecision.ToWireValue(),
-                                input.SourceProtocolDecisionKey!,
-                                ContentDigest.Sha256CanonicalJson(CanonicalJsonValue.From(input.SourceProtocolDecisionKey)),
-                                ContentDigest.Sha256CanonicalJson(decisionValue),
+                                decision.DecisionId,
+                                decisionDigest,
+                                ContentDigest.Sha256CanonicalJson(decision.Value),
                                 null,
                                 null));
                         break;
@@ -1225,13 +1333,47 @@ public sealed class WorkflowCompiler
             .ToArray();
     }
 
-    private static ContentDigest ComputeTemplateDigest(WorkflowTemplate template)
+    internal static ContentDigest ComputeTemplateDigest(WorkflowTemplate template)
     {
         return new DigestEnvelope(
             DigestScope.CanonicalJsonRecord,
             TemplateSchemaId,
             TemplateSchemaVersion,
             BuildTemplateCanonicalJson(template)).ComputeDigest();
+    }
+
+    internal static void ValidateResolvedTemplateAuthority(WorkflowTemplate template)
+    {
+        ArgumentNullException.ThrowIfNull(template);
+        if (!string.Equals(template.SchemaId, TemplateSchemaId, StringComparison.Ordinal) ||
+            !string.Equals(template.SchemaVersion, TemplateSchemaVersion, StringComparison.Ordinal))
+        {
+            throw new WorkflowRuleException(
+                WorkflowErrorCodes.UnknownSchemaId,
+                "Resolved Workflow template must use the accepted template schema identity.");
+        }
+
+        var nodes = template.Nodes.Select(normalizeNode).ToArray();
+        var nodeIds = nodes.Select(node => node.NodeId).ToHashSet(StringComparer.Ordinal);
+        if (nodeIds.Count != nodes.Length)
+        {
+            throw new WorkflowRuleException(WorkflowErrorCodes.DuplicateNodeId, "Resolved Workflow template has duplicate node identities.");
+        }
+
+        ValidateArtifacts(template, nodeIds);
+        ValidateEdges(template.Edges, nodeIds);
+        _ = TopologicalSort(nodes, template.Edges, out _);
+        ValidateRoles(template);
+        ValidateCapabilityRefs(template);
+        ValidateGates(template, nodeIds);
+        ValidateNodeRequirements(template);
+
+        foreach (var input in template.RequiredInputs)
+        {
+            _ = Guard.NotBlank(input.InputId, nameof(input.InputId));
+            _ = Guard.NotBlank(input.SchemaId, nameof(input.SchemaId));
+            _ = Guard.NotBlank(input.SchemaVersion, nameof(input.SchemaVersion));
+        }
     }
 
     private static WorkflowCompiledArtifactDeclaration MapArtifactDeclaration(WorkflowTemplateArtifactDeclaration artifact)
@@ -1295,7 +1437,7 @@ public sealed class WorkflowCompiler
         return ContentDigest.Sha256CanonicalJson(canonical);
     }
 
-    private static ContentDigest ComputeWorkflowDigest(
+    internal static ContentDigest ComputeWorkflowDigest(
         string workflowId,
         string compilerId,
         string compilerVersion,
@@ -1329,7 +1471,7 @@ public sealed class WorkflowCompiler
         return envelope.ComputeDigest();
     }
 
-    private static string ComputeWorkflowId(
+    internal static string ComputeWorkflowId(
         ProtocolVersion protocol,
         WorkflowTemplate template,
         string compilerId,

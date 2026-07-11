@@ -65,8 +65,18 @@ public static class CliApplication
         var draft = ProtocolDraft.Create(ids, "Starter review", new[] { "review-type", "scope" });
         draft.RecordDecision("review-type", "scoping-review", researcher, clock);
         draft.RecordDecision("scope", "agricultural image segmentation", researcher, clock);
-        var version = draft.Approve(researcher, clock, ids);
-        var workflow = new WorkflowCompiler().Compile(BuildSampleWorkflowInput(version));
+        var policy = ApprovalPolicy.ExplicitCustomSingleResearcher();
+        var candidate = draft.CreateApprovalCandidate(ids, policy);
+        var approval = ProtocolApproval.Create(
+            ids,
+            candidate,
+            policy,
+            ProtocolActor.Human(researcher),
+            clock,
+            candidate.ContentDigest);
+        var protocolAuthority = draft.ApproveCandidateVerified(candidate, policy, new[] { approval }, clock);
+        var version = protocolAuthority.Version;
+        var workflow = new WorkflowCompiler().Compile(BuildSampleWorkflowInput(protocolAuthority));
 
         var provenance = new InMemoryProvenanceStore();
         provenance.Append(ResearchEventFactory.Create(
@@ -108,7 +118,7 @@ public static class CliApplication
         return 2;
     }
 
-    private static WorkflowCompileInput BuildSampleWorkflowInput(ProtocolVersion version)
+    private static WorkflowCompileInput BuildSampleWorkflowInput(VerifiedProtocolVersion protocolAuthority)
     {
         var template = new WorkflowTemplate(
             "local-sample-workflow-template",
@@ -256,17 +266,17 @@ public static class CliApplication
 
         var sealedTemplate = template with
         {
-            TemplateDigest = WorkflowCompiler.ComputeTemplateDigestForTesting(template)
+            TemplateDigest = WorkflowCompiler.ComputeLocalTemplateDigest(template)
         };
 
         return new WorkflowCompileInput(
-            version,
+            protocolAuthority,
             sealedTemplate,
             new Dictionary<string, CanonicalJsonValue>(StringComparer.Ordinal),
             new[]
             {
                 new WorkflowSchemaRef("nexus.workflow-template", "1.0.0"),
-                new WorkflowSchemaRef("nexus.workflow-definition", "1.0.0"),
+                new WorkflowSchemaRef("nexus.workflow-definition", "1.1.0"),
                 new WorkflowSchemaRef("nexus.review.decision", "1.0.0"),
                 new WorkflowSchemaRef("nexus.workflow.artifact", "1.0.0")
             });
