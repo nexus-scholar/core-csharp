@@ -1,0 +1,28 @@
+{
+  "fixtureId": "protocol-rehydration-invalid-duplicate-content-identity-v1",
+  "sourceKind": "local-hardening-contract",
+  "sourceRefs": [
+    "docs/adr/0003-protocol-record-contract.md",
+    "docs/adr/0004-protocol-approval-semantics.md",
+    "docs/gates/HARDENING-03-PROTOCOL-REHYDRATION.md"
+  ],
+  "sourceCommit": "81f7e7d46f44c9d108a0fa3772861610bbd65d0e",
+  "generatorCommand": "deterministic Hardening 03 replay recipe generator",
+  "generatorVersion": "hardening-03-v1",
+  "digestMeaning": "sha256 of compact JSON serialization of case",
+  "inputDigest": "sha256:e5f9d7c6795a4a4705b29c7c059e0c8124fb99ebb7560409734b26d46c1e25f1",
+  "outputDigest": "sha256:e5f9d7c6795a4a4705b29c7c059e0c8124fb99ebb7560409734b26d46c1e25f1",
+  "comparisonRules": [
+    "replay-case-through-protocol-rehydrator",
+    "no-php-compatibility-claim",
+    "no-blueprint-conformance-claim"
+  ],
+  "case": {
+    "recordType": "protocol-rehydration",
+    "operation": "rehydrate-version",
+    "negative": true,
+    "policyMode": "single_researcher",
+    "mutation": "duplicate_content_identity",
+    "errorCategory": "duplicate-content-identity"
+  }
+}

@@ -237,7 +237,8 @@ public sealed record ApprovalPolicy(
             false);
     }
 
-    public IReadOnlyList<string> RequiredRoles { get; } = (RequiredRoles ?? Array.Empty<string>()).ToArray();
+    public IReadOnlyList<string> RequiredRoles { get; } = Array.AsReadOnly(
+        (RequiredRoles ?? Array.Empty<string>()).ToArray());
 
     public string ModeWireValue => Mode switch
     {
@@ -531,7 +532,7 @@ public sealed class ProtocolApproval
 
 public sealed record ProtocolVersion
 {
-    public ProtocolVersion(
+    internal ProtocolVersion(
         string id,
         string protocolId,
         string projectId,
@@ -560,30 +561,30 @@ public sealed record ProtocolVersion
         Template = template ?? throw new ArgumentNullException(nameof(template));
         Intent = intent ?? throw new ArgumentNullException(nameof(intent));
         Values = ((CanonicalJsonObject)CanonicalJsonValue.DeepClone(values ?? throw new ArgumentNullException(nameof(values)))).Freeze();
-        RequiredDecisions = (requiredDecisions ?? throw new ArgumentNullException(nameof(requiredDecisions)))
+        RequiredDecisions = Array.AsReadOnly((requiredDecisions ?? throw new ArgumentNullException(nameof(requiredDecisions)))
             .Select(clone => new RequiredDecisionDefinition(
                 Guard.NotBlank(clone.DecisionKey, nameof(clone.DecisionKey)),
                 clone.Title ?? string.Empty,
                 clone.Description ?? string.Empty,
-                (CanonicalJsonValue)CanonicalJsonValue.DeepClone(clone.ValueSchema ?? throw new ArgumentNullException(nameof(clone.ValueSchema))),
+                CloneAndFreeze(clone.ValueSchema ?? throw new ArgumentNullException(nameof(clone.ValueSchema))),
                 Guard.NotBlank(clone.RequiredBefore, nameof(clone.RequiredBefore)),
                 Guard.NotBlank(clone.ApprovalGateId, nameof(clone.ApprovalGateId)),
                 Guard.NotBlank(clone.SourceRequirementId, nameof(clone.SourceRequirementId)),
                 clone.AllowsUnresolved,
                 clone.AllowsWaiver))
-            .ToArray();
-        Decisions = (decisions ?? throw new ArgumentNullException(nameof(decisions)))
+            .ToArray());
+        Decisions = Array.AsReadOnly((decisions ?? throw new ArgumentNullException(nameof(decisions)))
             .Select(decision => new ProtocolDecision(
                 Guard.NotBlank(decision.DecisionId, nameof(decision.DecisionId)),
                 Guard.NotBlank(decision.DecisionKey, nameof(decision.DecisionKey)),
-                (CanonicalJsonValue)CanonicalJsonValue.DeepClone(decision.Value ?? throw new ArgumentNullException(nameof(decision.Value))),
+                CloneAndFreeze(decision.Value ?? throw new ArgumentNullException(nameof(decision.Value))),
                 decision.Rationale,
                 decision.DecidedBy,
                 decision.DecidedAt,
                 decision.SourceProposalDigest,
                 decision.SupersedesDecisionId))
-            .ToArray();
-        Waivers = (waivers ?? throw new ArgumentNullException(nameof(waivers)))
+            .ToArray());
+        Waivers = Array.AsReadOnly((waivers ?? throw new ArgumentNullException(nameof(waivers)))
             .Select(waiver => new ProtocolWaiver(
                 Guard.NotBlank(waiver.WaiverId, nameof(waiver.WaiverId)),
                 Guard.NotBlank(waiver.AffectedRequirementId, nameof(waiver.AffectedRequirementId)),
@@ -596,8 +597,8 @@ public sealed record ProtocolVersion
                 waiver.RequestedAt,
                 Guard.NotBlank(waiver.ApprovalPolicyId, nameof(waiver.ApprovalPolicyId)),
                 (waiver.ApprovalIds ?? Array.Empty<string>()).Select(id => Guard.NotBlank(id, nameof(waiver.ApprovalIds))).ToArray()))
-            .ToArray();
-        UnresolvedDecisions = (unresolvedDecisions ?? Array.Empty<UnresolvedDecision>())
+            .ToArray());
+        UnresolvedDecisions = Array.AsReadOnly((unresolvedDecisions ?? Array.Empty<UnresolvedDecision>())
             .Select(unresolved => new UnresolvedDecision(
                 Guard.NotBlank(unresolved.UnresolvedId, nameof(unresolved)),
                 Guard.NotBlank(unresolved.DecisionKey, nameof(unresolved.DecisionKey)),
@@ -607,10 +608,12 @@ public sealed record ProtocolVersion
                 unresolved.CreatedBy,
                 unresolved.CreatedAt,
                 unresolved.BlocksProtocolApproval))
-            .ToArray();
+            .ToArray());
         ContentDigest = contentDigest;
         ApprovalPolicyId = Guard.NotBlank(approvalPolicyId, nameof(approvalPolicyId));
-        ApprovalIds = (approvalIds ?? Array.Empty<string>()).Select(id => Guard.NotBlank(id, nameof(approvalIds))).ToArray();
+        ApprovalIds = Array.AsReadOnly((approvalIds ?? Array.Empty<string>())
+            .Select(id => Guard.NotBlank(id, nameof(approvalIds)))
+            .ToArray());
         ApprovedAt = approvedAt;
         SupersedesVersionId = supersedesVersionId;
         SupersededByVersionId = supersededByVersionId;
@@ -688,7 +691,7 @@ public sealed record ProtocolVersion
 
     public string? AmendmentId { get; }
 
-    public ProtocolVersion WithApprovals(IEnumerable<ProtocolApproval> approvals, DateTimeOffset approvedAt)
+    internal ProtocolVersion WithApprovals(IEnumerable<ProtocolApproval> approvals, DateTimeOffset approvedAt)
     {
         var approvalIds = (approvals ?? throw new ArgumentNullException(nameof(approvals)))
             .Where(approval => approval.Decision == ProtocolApprovalDecision.Approved)
@@ -769,6 +772,22 @@ public sealed record ProtocolVersion
                 SupersedesVersionId,
                 AmendmentId));
     }
+
+    private static CanonicalJsonValue CloneAndFreeze(CanonicalJsonValue value)
+    {
+        var clone = CanonicalJsonValue.DeepClone(value);
+        switch (clone)
+        {
+            case CanonicalJsonObject objectValue:
+                objectValue.Freeze();
+                break;
+            case CanonicalJsonArray arrayValue:
+                arrayValue.Freeze();
+                break;
+        }
+
+        return clone;
+    }
 }
 
 public sealed record ProtocolWaiver(
@@ -784,7 +803,8 @@ public sealed record ProtocolWaiver(
     string ApprovalPolicyId,
     IReadOnlyList<string> ApprovalIds)
 {
-    public IReadOnlyList<string> ApprovalIds { get; } = (ApprovalIds ?? Array.Empty<string>()).ToArray();
+    public IReadOnlyList<string> ApprovalIds { get; } = Array.AsReadOnly(
+        (ApprovalIds ?? Array.Empty<string>()).ToArray());
 
     public CanonicalJsonObject ToCanonicalJson()
     {

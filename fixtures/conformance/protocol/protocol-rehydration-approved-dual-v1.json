@@ -1,0 +1,27 @@
+{
+  "fixtureId": "protocol-rehydration-approved-dual-v1",
+  "sourceKind": "local-hardening-contract",
+  "sourceRefs": [
+    "docs/adr/0003-protocol-record-contract.md",
+    "docs/adr/0004-protocol-approval-semantics.md",
+    "docs/gates/HARDENING-03-PROTOCOL-REHYDRATION.md"
+  ],
+  "sourceCommit": "81f7e7d46f44c9d108a0fa3772861610bbd65d0e",
+  "generatorCommand": "deterministic Hardening 03 replay recipe generator",
+  "generatorVersion": "hardening-03-v1",
+  "digestMeaning": "sha256 of compact JSON serialization of case",
+  "inputDigest": "sha256:d7d6bea5d912f26fb3b4e82f1fa902bbd4e4f9c0fbcac7f9ca385ca2d350c057",
+  "outputDigest": "sha256:d7d6bea5d912f26fb3b4e82f1fa902bbd4e4f9c0fbcac7f9ca385ca2d350c057",
+  "comparisonRules": [
+    "replay-case-through-protocol-rehydrator",
+    "no-php-compatibility-claim",
+    "no-blueprint-conformance-claim"
+  ],
+  "case": {
+    "recordType": "protocol-rehydration",
+    "operation": "rehydrate-version",
+    "negative": false,
+    "policyMode": "dual_independent",
+    "mutation": "none"
+  }
+}

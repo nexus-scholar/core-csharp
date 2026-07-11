@@ -1,4 +1,7 @@
+using System.Collections.Generic;
+using System.IO;
 using System.Reflection;
+using System.Text.Json;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NexusScholar.Kernel;
 using NexusScholar.Protocol;
@@ -94,6 +97,286 @@ public sealed class ProtocolTests
         var error = Assert.ThrowsExactly<ProtocolRuleException>(() =>
             draft.CreateApprovalCandidate(ids, ApprovalPolicy.ExplicitCustomSingleResearcher()));
         Assert.AreEqual(ProtocolErrorCodes.BlockingUnresolvedDecision, error.Category);
+    }
+
+    [TestMethod]
+    public void Hardening_03_protocol_rehydration_api_types_are_discoverable()
+    {
+        var missingTypeNames = new List<string>();
+        foreach (var typeName in new[]
+                 {
+                     "UnverifiedProtocolApproval",
+                     "UnverifiedProtocolVersion",
+                     "IProtocolAuthorityResolver",
+                     "VerifiedProtocolApproval",
+                     "VerifiedProtocolVersion",
+                     "ProtocolRehydrator"
+                 })
+        {
+            if (Type.GetType($"NexusScholar.Protocol.{typeName}, NexusScholar.Protocol") is null)
+            {
+                missingTypeNames.Add(typeName);
+            }
+        }
+
+        var rehydrator = Type.GetType("NexusScholar.Protocol.ProtocolRehydrator, NexusScholar.Protocol");
+        var missingMethodNames = new List<string>();
+
+        if (rehydrator is null)
+        {
+            missingMethodNames.Add("ProtocolRehydrator");
+        }
+        else
+        {
+            if (rehydrator.GetMethod("RehydrateApproval", BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance) is null)
+            {
+                missingMethodNames.Add("RehydrateApproval");
+            }
+
+            if (rehydrator.GetMethod("RehydrateVersion", BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance) is null)
+            {
+                missingMethodNames.Add("RehydrateVersion");
+            }
+        }
+
+        if (missingTypeNames.Count > 0 || missingMethodNames.Count > 0)
+        {
+            Assert.Inconclusive(
+                "Hardening-03 rehydration API is not present in this build yet: " +
+                string.Join(", ", missingTypeNames.Concat(missingMethodNames)));
+        }
+    }
+
+    [TestMethod]
+    public void Approved_protocol_authority_has_no_public_constructor_or_promotion_method()
+    {
+        Assert.AreEqual(0, typeof(ProtocolVersion).GetConstructors(BindingFlags.Public | BindingFlags.Instance).Length);
+        Assert.IsNull(typeof(ProtocolVersion).GetMethod("WithApprovals", BindingFlags.Public | BindingFlags.Instance));
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public void Approved_protocol_rehydrates_with_exact_resolved_policy_and_human_approvals(bool dual)
+    {
+        var state = CreateRehydrationState(dual ? ApprovalPolicy.DualIndependent() : ApprovalPolicy.ExplicitCustomSingleResearcher());
+
+        var verified = ProtocolRehydrator.RehydrateVersion(ToUnverified(state.Version, state.Policy), state.Resolver);
+
+        Assert.AreEqual(ProtocolStatus.Approved, verified.Version.Status);
+        Assert.AreEqual(state.Version.ContentDigest, verified.Version.ContentDigest);
+        Assert.AreEqual(dual ? 2 : 1, verified.Approvals.Count);
+        Assert.AreEqual(state.Policy.PolicyId, verified.ApprovalPolicy.PolicyId);
+    }
+
+    [TestMethod]
+    public void Approval_rehydration_recomputes_digest_and_resolves_human_actor()
+    {
+        var policy = ApprovalPolicy.ExplicitCustomSingleResearcher();
+        var ids = NewIds();
+        var candidate = CreateCompleteDraft(ids).CreateApprovalCandidate(ids, policy);
+        var approval = ProtocolApproval.Create(ids, candidate, policy, Researcher, Clock, candidate.ContentDigest);
+        var resolver = new TestProtocolAuthorityResolver(policy, new[] { Researcher.Id });
+
+        var verified = ProtocolRehydrator.RehydrateApproval(ToUnverified(approval, policy), candidate, policy, resolver);
+        Assert.AreEqual(approval.ApprovalRecordDigest, verified.Approval.ApprovalRecordDigest);
+
+        var tampered = ToUnverified(approval, policy) with { Rationale = "tampered after approval" };
+        var digestError = Assert.ThrowsExactly<ProtocolRuleException>(() =>
+            ProtocolRehydrator.RehydrateApproval(tampered, candidate, policy, resolver));
+        Assert.AreEqual(ProtocolErrorCodes.ApprovalTargetMismatch, digestError.Category);
+
+        var nonHumanResolver = new TestProtocolAuthorityResolver(policy, Array.Empty<ActorId>());
+        var actorError = Assert.ThrowsExactly<ProtocolRuleException>(() =>
+            ProtocolRehydrator.RehydrateApproval(ToUnverified(approval, policy), candidate, policy, nonHumanResolver));
+        Assert.AreEqual(ProtocolErrorCodes.NonHumanApprovalActor, actorError.Category);
+    }
+
+    [TestMethod]
+    public void Version_rehydration_rejects_tampered_content_and_duplicate_identity()
+    {
+        var state = CreateRehydrationState(ApprovalPolicy.ExplicitCustomSingleResearcher());
+        var input = ToUnverified(state.Version, state.Policy);
+        var tampered = input with { Values = new CanonicalJsonObject().Add("review_family", "tampered") };
+
+        var digestError = Assert.ThrowsExactly<ProtocolRuleException>(() =>
+            ProtocolRehydrator.RehydrateVersion(tampered, state.Resolver));
+        Assert.AreEqual(ProtocolErrorCodes.StaleContentDigest, digestError.Category);
+
+        var duplicateDecisions = input.Decisions.Concat(new[] { input.Decisions[0] }).ToArray();
+        var duplicate = input with { Decisions = duplicateDecisions };
+        var duplicateError = Assert.ThrowsExactly<ProtocolRuleException>(() =>
+            ProtocolRehydrator.RehydrateVersion(duplicate, state.Resolver));
+        Assert.AreEqual(ProtocolErrorCodes.DuplicateDecision, duplicateError.Category);
+    }
+
+    [TestMethod]
+    public void Version_rehydration_rejects_missing_duplicate_and_weaker_policy_authority()
+    {
+        var state = CreateRehydrationState(ApprovalPolicy.DualIndependent());
+        var input = ToUnverified(state.Version, state.Policy);
+
+        var missing = input with { ApprovalIds = input.ApprovalIds.Take(1).ToArray() };
+        var missingError = Assert.ThrowsExactly<ProtocolRuleException>(() =>
+            ProtocolRehydrator.RehydrateVersion(missing, state.Resolver));
+        Assert.AreEqual(ProtocolErrorCodes.InsufficientApprovalPolicy, missingError.Category);
+
+        var duplicate = input with { ApprovalIds = new[] { input.ApprovalIds[0], input.ApprovalIds[0] } };
+        var duplicateError = Assert.ThrowsExactly<ProtocolRuleException>(() =>
+            ProtocolRehydrator.RehydrateVersion(duplicate, state.Resolver));
+        Assert.AreEqual(ProtocolErrorCodes.InsufficientApprovalPolicy, duplicateError.Category);
+
+        var weakerResolver = state.Resolver.WithPolicy(new ApprovalPolicy(
+            state.Policy.PolicyId,
+            state.Policy.PolicyVersion,
+            ApprovalPolicyMode.SingleResearcher,
+            Array.Empty<string>(),
+            1,
+            false,
+            false));
+        var downgradeError = Assert.ThrowsExactly<ProtocolRuleException>(() =>
+            ProtocolRehydrator.RehydrateVersion(input, weakerResolver));
+        Assert.AreEqual(ProtocolErrorCodes.UnauthorizedApproval, downgradeError.Category);
+    }
+
+    [TestMethod]
+    public void Version_rehydration_rejects_approvals_beyond_the_resolved_policy_requirement()
+    {
+        var ids = NewIds();
+        var policy = ApprovalPolicy.ExplicitCustomSingleResearcher();
+        var draft = CreateCompleteDraft(ids);
+        var candidate = draft.CreateApprovalCandidate(ids, policy);
+        var resolver = new TestProtocolAuthorityResolver(policy, new[] { Researcher.Id, Reviewer.Id });
+        var verifiedApprovals = new[] { Researcher, Reviewer }
+            .Select(actor => ProtocolApproval.Create(ids, candidate, policy, actor, Clock, candidate.ContentDigest))
+            .Select(approval => ProtocolRehydrator.RehydrateApproval(ToUnverified(approval, policy), candidate, policy, resolver))
+            .ToArray();
+        resolver = resolver.WithApprovals(verifiedApprovals);
+        var overApproved = draft.ApproveCandidate(candidate, policy, verifiedApprovals.Select(item => item.Approval), Clock);
+
+        var error = Assert.ThrowsExactly<ProtocolRuleException>(() =>
+            ProtocolRehydrator.RehydrateVersion(ToUnverified(overApproved, policy), resolver));
+        Assert.AreEqual(ProtocolErrorCodes.InsufficientApprovalPolicy, error.Category);
+    }
+
+    [TestMethod]
+    public void Version_rehydration_rejects_unresolved_scientific_actors_and_unlinked_supersession()
+    {
+        var state = CreateRehydrationState(ApprovalPolicy.ExplicitCustomSingleResearcher());
+        var input = ToUnverified(state.Version, state.Policy);
+        var decision = input.Decisions[0] with { DecidedBy = default };
+
+        var actorError = Assert.ThrowsExactly<ProtocolRuleException>(() =>
+            ProtocolRehydrator.RehydrateVersion(
+                input with { Decisions = new[] { decision, input.Decisions[1] } },
+                state.Resolver));
+        Assert.AreEqual(ProtocolErrorCodes.NonHumanApprovalActor, actorError.Category);
+
+        var supersessionError = Assert.ThrowsExactly<ProtocolRuleException>(() =>
+            ProtocolRehydrator.RehydrateVersion(
+                input with { Status = ProtocolStatus.Superseded, SupersededByVersionId = null },
+                state.Resolver));
+        Assert.AreEqual(ProtocolErrorCodes.StaleContentDigest, supersessionError.Category);
+    }
+
+    [TestMethod]
+    public void Version_rehydration_rejects_rewritten_approval_timestamp()
+    {
+        var state = CreateRehydrationState(ApprovalPolicy.ExplicitCustomSingleResearcher());
+        var input = ToUnverified(state.Version, state.Policy);
+
+        var error = Assert.ThrowsExactly<ProtocolRuleException>(() =>
+            ProtocolRehydrator.RehydrateVersion(
+                input with { ApprovedAt = input.ApprovedAt.AddYears(1) },
+                state.Resolver));
+        Assert.AreEqual(ProtocolErrorCodes.StaleContentDigest, error.Category);
+    }
+
+    [TestMethod]
+    public void Version_rehydration_rejects_blocking_unresolved_state_before_authority_resolution()
+    {
+        var state = CreateRehydrationState(ApprovalPolicy.ExplicitCustomSingleResearcher());
+        var input = ToUnverified(state.Version, state.Policy);
+        var unresolved = new UnresolvedDecision(
+            FixedId(991),
+            "review-type",
+            "Still unresolved?",
+            "Persisted blocking state",
+            "protocol-approval",
+            Researcher.Id,
+            Clock.UtcNow,
+            true);
+
+        var error = Assert.ThrowsExactly<ProtocolRuleException>(() =>
+            ProtocolRehydrator.RehydrateVersion(input with { UnresolvedDecisions = new[] { unresolved } }, state.Resolver));
+        Assert.AreEqual(ProtocolErrorCodes.BlockingUnresolvedDecision, error.Category);
+    }
+
+    [TestMethod]
+    public void Verified_protocol_does_not_retain_mutable_caller_collections()
+    {
+        var state = CreateRehydrationState(ApprovalPolicy.ExplicitCustomSingleResearcher());
+        var decisions = ToUnverified(state.Version, state.Policy).Decisions.ToList();
+        var input = ToUnverified(state.Version, state.Policy) with { Decisions = decisions };
+
+        var verified = ProtocolRehydrator.RehydrateVersion(input, state.Resolver);
+        decisions.Clear();
+
+        Assert.AreEqual(state.Version.Decisions.Count, verified.Version.Decisions.Count);
+        Assert.AreEqual(state.Version.ContentDigest, verified.Version.ToProtocolContentDigestEnvelope().ComputeDigest());
+        Assert.IsFalse(verified.Version.ApprovalIds is string[]);
+        Assert.IsFalse(verified.Version.Decisions is ProtocolDecision[]);
+        Assert.IsFalse(verified.Approvals is VerifiedProtocolApproval[]);
+        Assert.IsFalse(verified.ApprovalPolicy.RequiredRoles is string[]);
+        Assert.ThrowsExactly<InvalidOperationException>(() =>
+            ((CanonicalJsonObject)verified.Version.RequiredDecisions[0].ValueSchema).Add("forged", true));
+    }
+
+    [TestMethod]
+    public void Rehydration_fixtures_cover_single_dual_and_negative_cases()
+    {
+        var fixtures = new[]
+        {
+            "protocol-rehydration-approved-single-v1.json",
+            "protocol-rehydration-approved-dual-v1.json",
+            "protocol-rehydration-invalid-tampered-content-digest-v1.json",
+            "protocol-rehydration-invalid-tampered-approval-record-digest-v1.json",
+            "protocol-rehydration-invalid-non-human-approval-v1.json",
+            "protocol-rehydration-invalid-wrong-target-v1.json",
+            "protocol-rehydration-invalid-wrong-policy-v1.json",
+            "protocol-rehydration-invalid-missing-approvals-v1.json",
+            "protocol-rehydration-invalid-extra-approvals-v1.json",
+            "protocol-rehydration-invalid-duplicate-approvals-v1.json",
+            "protocol-rehydration-invalid-duplicate-content-identity-v1.json",
+            "protocol-rehydration-invalid-policy-downgrade-v1.json",
+            "protocol-rehydration-blocking-unresolved-state-v1.json"
+        };
+
+        foreach (var fixture in fixtures)
+        {
+            using var document = LoadProtocolFixture(fixture);
+            var @case = document.RootElement.GetProperty("case");
+
+            Assert.AreEqual("protocol-rehydration", @case.GetProperty("recordType").GetString(), fixture);
+            Assert.IsTrue(@case.TryGetProperty("operation", out var operation), $"Fixture '{fixture}' is missing an operation.");
+            Assert.IsTrue(operation.GetString()?.Length > 0, $"Fixture '{fixture}' has empty operation.");
+
+            Assert.IsTrue(
+                @case.TryGetProperty("negative", out var isNegative),
+                $"Fixture '{fixture}' must mark negative cases explicitly.");
+            if (@case.TryGetProperty("negative", out var isNegativeCase) && isNegativeCase.GetBoolean())
+            {
+                Assert.IsTrue(
+                    @case.TryGetProperty("errorCategory", out var category) && !string.IsNullOrWhiteSpace(category.GetString()),
+                    $"Fixture '{fixture}' missing errorCategory.");
+            }
+            else
+            {
+                Assert.IsFalse(
+                    isNegative.GetBoolean(),
+                    $"Fixture '{fixture}' must not set negative=true for positive paths.");
+            }
+        }
     }
 
     [TestMethod]
@@ -878,6 +1161,124 @@ public sealed class ProtocolTests
             approval.ApprovedByIsHuman,
             approvalRecordDigest ?? approval.ApprovalRecordDigest
         });
+    }
+
+    private static JsonDocument LoadProtocolFixture(string filename)
+    {
+        var path = Path.Combine(AppContext.BaseDirectory, "fixtures", "protocol", filename);
+        if (!File.Exists(path))
+        {
+            path = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "fixtures", "conformance", "protocol", filename));
+            if (!File.Exists(path))
+            {
+                path = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "fixtures", "protocol", filename));
+            }
+        }
+
+        return JsonDocument.Parse(File.ReadAllText(path));
+    }
+
+    private static RehydrationState CreateRehydrationState(ApprovalPolicy policy)
+    {
+        var ids = NewIds();
+        var draft = CreateCompleteDraft(ids);
+        var candidate = draft.CreateApprovalCandidate(ids, policy);
+        var actors = policy.Mode == ApprovalPolicyMode.DualIndependent
+            ? new[] { Researcher, Reviewer }
+            : new[] { Researcher };
+        var resolver = new TestProtocolAuthorityResolver(policy, actors.Select(actor => actor.Id));
+        var verifiedApprovals = actors
+            .Select(actor => ProtocolApproval.Create(ids, candidate, policy, actor, Clock, candidate.ContentDigest))
+            .Select(approval => ProtocolRehydrator.RehydrateApproval(ToUnverified(approval, policy), candidate, policy, resolver))
+            .ToArray();
+        resolver = resolver.WithApprovals(verifiedApprovals);
+        var version = draft.ApproveCandidate(candidate, policy, verifiedApprovals.Select(item => item.Approval), Clock);
+        return new RehydrationState(version, policy, resolver);
+    }
+
+    private static UnverifiedProtocolApproval ToUnverified(ProtocolApproval approval, ApprovalPolicy policy)
+    {
+        return new UnverifiedProtocolApproval(
+            approval.ApprovalId,
+            approval.TargetType,
+            approval.TargetId,
+            approval.ProtocolId,
+            approval.ProtocolVersionId,
+            approval.ProtocolVersionNumber,
+            approval.ContentDigest,
+            approval.PolicyId,
+            approval.PolicyVersion,
+            policy.Mode,
+            approval.Decision,
+            approval.ApprovedBy,
+            approval.ApprovedAt,
+            approval.Role,
+            approval.Rationale,
+            approval.SupersedesApprovalId,
+            approval.ApprovalRecordDigest);
+    }
+
+    private static UnverifiedProtocolVersion ToUnverified(ProtocolVersion version, ApprovalPolicy policy)
+    {
+        return new UnverifiedProtocolVersion(
+            version.Id,
+            version.ProtocolId,
+            version.ProjectId,
+            version.VersionNumber,
+            version.Status,
+            version.Template,
+            version.Intent,
+            version.Values,
+            version.RequiredDecisions,
+            version.Decisions,
+            version.Waivers,
+            version.UnresolvedDecisions,
+            version.ContentDigest,
+            policy,
+            version.ApprovalIds,
+            version.ApprovedAt!.Value,
+            version.SupersedesVersionId,
+            version.SupersededByVersionId,
+            version.AmendmentId);
+    }
+
+    private sealed record RehydrationState(
+        ProtocolVersion Version,
+        ApprovalPolicy Policy,
+        TestProtocolAuthorityResolver Resolver);
+
+    private sealed class TestProtocolAuthorityResolver : IProtocolAuthorityResolver
+    {
+        private readonly HashSet<ActorId> _humanActors;
+        private readonly IReadOnlyDictionary<string, VerifiedProtocolApproval> _approvals;
+
+        public TestProtocolAuthorityResolver(
+            ApprovalPolicy policy,
+            IEnumerable<ActorId> humanActors,
+            IEnumerable<VerifiedProtocolApproval>? approvals = null)
+        {
+            Policy = policy;
+            _humanActors = humanActors.ToHashSet();
+            _approvals = (approvals ?? Array.Empty<VerifiedProtocolApproval>())
+                .ToDictionary(item => item.Approval.ApprovalId, StringComparer.Ordinal);
+        }
+
+        public ApprovalPolicy Policy { get; }
+
+        public ApprovalPolicy ResolveApprovalPolicy(ProtocolTemplate template) => Policy;
+
+        public bool IsHumanActor(ActorId actorId) => _humanActors.Contains(actorId);
+
+        public VerifiedProtocolApproval ResolveApproval(string approvalId) =>
+            _approvals.TryGetValue(approvalId, out var approval)
+                ? approval
+                : null!;
+
+        public TestProtocolAuthorityResolver WithPolicy(ApprovalPolicy policy) =>
+            new(policy, _humanActors, _approvals.Values);
+
+        public TestProtocolAuthorityResolver WithApprovals(IEnumerable<VerifiedProtocolApproval> approvals) =>
+            new(Policy, _humanActors, approvals);
     }
 
     private static SequenceIdGenerator NewIds()

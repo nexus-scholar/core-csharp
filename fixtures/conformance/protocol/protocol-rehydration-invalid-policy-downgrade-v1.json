@@ -1,0 +1,28 @@
+{
+  "fixtureId": "protocol-rehydration-invalid-policy-downgrade-v1",
+  "sourceKind": "local-hardening-contract",
+  "sourceRefs": [
+    "docs/adr/0003-protocol-record-contract.md",
+    "docs/adr/0004-protocol-approval-semantics.md",
+    "docs/gates/HARDENING-03-PROTOCOL-REHYDRATION.md"
+  ],
+  "sourceCommit": "81f7e7d46f44c9d108a0fa3772861610bbd65d0e",
+  "generatorCommand": "deterministic Hardening 03 replay recipe generator",
+  "generatorVersion": "hardening-03-v1",
+  "digestMeaning": "sha256 of compact JSON serialization of case",
+  "inputDigest": "sha256:83ebaa6bd8aa8397785cda49991d6b2caf139c577ba0d9438161a78e732ca11a",
+  "outputDigest": "sha256:83ebaa6bd8aa8397785cda49991d6b2caf139c577ba0d9438161a78e732ca11a",
+  "comparisonRules": [
+    "replay-case-through-protocol-rehydrator",
+    "no-php-compatibility-claim",
+    "no-blueprint-conformance-claim"
+  ],
+  "case": {
+    "recordType": "protocol-rehydration",
+    "operation": "rehydrate-version",
+    "negative": true,
+    "policyMode": "dual_independent",
+    "mutation": "policy_downgrade",
+    "errorCategory": "policy-downgrade"
+  }
+}

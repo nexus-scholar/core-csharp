@@ -1,0 +1,28 @@
+{
+  "fixtureId": "protocol-rehydration-blocking-unresolved-state-v1",
+  "sourceKind": "local-hardening-contract",
+  "sourceRefs": [
+    "docs/adr/0003-protocol-record-contract.md",
+    "docs/adr/0004-protocol-approval-semantics.md",
+    "docs/gates/HARDENING-03-PROTOCOL-REHYDRATION.md"
+  ],
+  "sourceCommit": "81f7e7d46f44c9d108a0fa3772861610bbd65d0e",
+  "generatorCommand": "deterministic Hardening 03 replay recipe generator",
+  "generatorVersion": "hardening-03-v1",
+  "digestMeaning": "sha256 of compact JSON serialization of case",
+  "inputDigest": "sha256:6cd2bf8ad0a15c6a9ff301f0f6e3d7551b768c1029208efd6a681e97177c6325",
+  "outputDigest": "sha256:6cd2bf8ad0a15c6a9ff301f0f6e3d7551b768c1029208efd6a681e97177c6325",
+  "comparisonRules": [
+    "replay-case-through-protocol-rehydrator",
+    "no-php-compatibility-claim",
+    "no-blueprint-conformance-claim"
+  ],
+  "case": {
+    "recordType": "protocol-rehydration",
+    "operation": "rehydrate-version",
+    "negative": true,
+    "policyMode": "single_researcher",
+    "mutation": "blocking_unresolved",
+    "errorCategory": "blocking-unresolved-decision"
+  }
+}

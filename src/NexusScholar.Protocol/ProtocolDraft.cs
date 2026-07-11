@@ -412,7 +412,7 @@ public sealed class ProtocolDraft
         }
     }
 
-    private static ProtocolApproval[] ValidateApprovalPolicy(
+    internal static ProtocolApproval[] ValidateApprovalPolicy(
         ProtocolVersion candidate,
         ApprovalPolicy policy,
         IReadOnlyList<ProtocolApproval> approvals)

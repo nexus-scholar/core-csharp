@@ -5,7 +5,7 @@ Status: active hardening plan.
 Implementation progress:
 
 - Phase 1 canonical foundation: complete through Hardening 01 and Hardening 02.
-- Phase 2 authority-safe rehydration: next; begin with authority-bearing module factories and resolvers.
+- Phase 2 authority-safe rehydration: active; Protocol approval/version rehydration completed in Hardening 03. Workflow authority binding is next.
 
 Source review: [full-technical-review.md](full-technical-review.md)
 
@@ -52,7 +52,7 @@ This plan supersedes the 2026-06-29 public-readiness plan as the current operati
 ## Current Blocker Themes
 
 - Canonical JSON number rendering and the Nexus NFC profile were corrected in Hardening 01; Kernel verified rehydration and default-value rejection were completed in Hardening 02.
-- Authority-bearing public constructors and rehydration paths can fabricate approved or digest-bearing state.
+- Protocol approval/version construction is hardened; equivalent authority-bearing paths remain in later Phase 2 modules.
 - Provenance append does not recompute and enforce event digest/invariants.
 - Shared identity can leave overlapping corpus members after bridge records.
 - Search import parsers mishandle ordinary RIS, multiline CSV, and common BibTeX shapes.
