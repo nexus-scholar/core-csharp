@@ -12,11 +12,11 @@
     "exact-canonical-json",
     "sha256-lowercase-rendering"
   ],
-  "inputDigest": "sha256:1f9e1c4f7dc0fbfdc7cbd7eb3a4dc71331e17b07e299e061016eb55df790a57e",
-  "outputDigest": "sha256:1f9e1c4f7dc0fbfdc7cbd7eb3a4dc71331e17b07e299e061016eb55df790a57e",
+  "inputDigest": "sha256:6f4249863972d781f8332726bb48812b45f6c854d5e07d3d94cfb4082022491f",
+  "outputDigest": "sha256:6f4249863972d781f8332726bb48812b45f6c854d5e07d3d94cfb4082022491f",
   "envelope": {
     "algorithm": "sha256",
-    "canonicalizationProfile": "rfc8785-jcs",
+    "canonicalizationProfile": "nexus-jcs-nfc-v1",
     "content": {
       "actors": [
         "researcher-1",
@@ -30,5 +30,5 @@
     "schema": "nexus.kernel.fixture",
     "schemaVersion": "1.0.0"
   },
-  "expectedCanonicalJson": "{\"algorithm\":\"sha256\",\"canonicalizationProfile\":\"rfc8785-jcs\",\"content\":{\"actors\":[\"researcher-1\",\"reviewer-2\"],\"note\":\"Résumé\",\"optional\":null,\"timestamp\":\"2026-06-26T10:15:30.1234567Z\"},\"schema\":\"nexus.kernel.fixture\",\"schemaVersion\":\"1.0.0\",\"scope\":\"canonical-json-record\"}"
+  "expectedCanonicalJson": "{\"algorithm\":\"sha256\",\"canonicalizationProfile\":\"nexus-jcs-nfc-v1\",\"content\":{\"actors\":[\"researcher-1\",\"reviewer-2\"],\"note\":\"Résumé\",\"optional\":null,\"timestamp\":\"2026-06-26T10:15:30.1234567Z\"},\"schema\":\"nexus.kernel.fixture\",\"schemaVersion\":\"1.0.0\",\"scope\":\"canonical-json-record\"}"
 }

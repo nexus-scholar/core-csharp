@@ -1,12 +1,12 @@
 # Chat Roster
 
-Branch-derived Codex lane roster from current git state after the public local Research Workspace CLI workflow landed.
+Branch-derived Codex lane roster from current git state after the 2026-07-11 hardening review baseline.
 
 ## Active Lanes
 
-- Lane `main`: current implementation baseline at `0d93bd9`.
+- Lane `main`: current implementation baseline at `7f9e285`.
 - Lane `gh-pages`: public documentation site at `589fc2e`.
-- Lane `cdx/ops-refresh-after-cli-workflow`: docs-only ops refresh branch.
+- Active hardening plan: `docs/reviews/2026-07-11-hardening-plan/README.md`.
 
 There are no active implementation `cdx/*` branches locally or remotely.
 
@@ -20,6 +20,8 @@ There are no active implementation `cdx/*` branches locally or remotely.
 
 ## Status Notes
 
+- Feature expansion is frozen; the next development phase is integrity hardening.
+- The persisted full technical review is `docs/reviews/2026-07-11-hardening-plan/full-technical-review.md`.
 - Public feedback onboarding is merged on `main`.
 - Public Research Workspace CLI workflow docs are merged on `main`.
 - Public Research Workspace CLI walkthrough is merged on `gh-pages`.
@@ -33,11 +35,12 @@ There are no active implementation `cdx/*` branches locally or remotely.
 
 ## Recommended Next Conversation
 
-Pause feature expansion and collect first-tester feedback on the public CLI workflow:
+Use the 2026-07-11 hardening plan as the active queue:
 
-1. classify feedback as docs/site polish, CLI usability polish, or later ADR candidate;
-2. keep review/cluster commands read-only until a later decision boundary exists;
-3. keep provider/network/legal work planning-only unless a later accepted ADR/task authorizes implementation.
+1. complete Phase 0 blocker recording, public maturity claim correction, `main` protection, and owner/test/dependency assignment;
+2. move next to canonical foundation work before authority, pipeline, workspace, release, or compatibility work;
+3. keep review/cluster commands read-only until a later decision boundary exists;
+4. keep provider/network/legal work planning-only unless a later accepted ADR/task authorizes implementation.
 
 Do not start merge-decision execution, persistence, providers, UI product shell, PDF/OCR, AI/model calls, or AppServices expansion without a specific accepted task/ADR.
 

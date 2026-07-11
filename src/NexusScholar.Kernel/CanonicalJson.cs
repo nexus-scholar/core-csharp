@@ -79,25 +79,12 @@ public abstract record CanonicalJsonValue
 
     private static CanonicalJsonValue ParseNumber(string rawText)
     {
-        if (rawText.IndexOfAny('.', 'e', 'E') >= 0)
+        if (!double.TryParse(rawText, NumberStyles.Float, CultureInfo.InvariantCulture, out var doubleValue))
         {
-            if (decimal.TryParse(rawText, CultureInfo.InvariantCulture, out var decimalValue))
-            {
-                return From(decimalValue);
-            }
-
-            if (double.TryParse(rawText, CultureInfo.InvariantCulture, out var doubleValue))
-            {
-                return From(doubleValue);
-            }
+            throw new InvalidOperationException($"JSON number '{rawText}' is not supported by the canonical parser.");
         }
 
-        if (long.TryParse(rawText, CultureInfo.InvariantCulture, out var longValue))
-        {
-            return From(longValue);
-        }
-
-        throw new InvalidOperationException($"JSON number '{rawText}' is not supported by the canonical parser.");
+        return From(doubleValue);
     }
 
     private static CanonicalJsonObject ParseObject(JsonElement element)
@@ -156,29 +143,53 @@ public sealed record CanonicalJsonNumber : CanonicalJsonValue
 
     public new static CanonicalJsonNumber From(int value) => new(value.ToString(CultureInfo.InvariantCulture));
 
-    public new static CanonicalJsonNumber From(long value) => new(value.ToString(CultureInfo.InvariantCulture));
-
     public new static CanonicalJsonNumber From(decimal value)
     {
-        return new(CanonicalizeExponent(value.ToString("G29", CultureInfo.InvariantCulture)));
+        var finiteDoubleValue = (double)value;
+        EnsureFinite(finiteDoubleValue);
+
+        decimal roundTrippedValue;
+        try
+        {
+            roundTrippedValue = (decimal)finiteDoubleValue;
+        }
+        catch (OverflowException exception)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(value),
+                exception,
+                "Decimal values that are not exactly representable as finite binary64 must be modeled as strings.");
+        }
+
+        if (value != roundTrippedValue)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(value),
+                "Decimal values that are not exactly representable as finite binary64 must be modeled as strings.");
+        }
+
+        return new(CanonicalizeNumber(finiteDoubleValue));
+    }
+
+    public new static CanonicalJsonNumber From(long value)
+    {
+        var finiteDoubleValue = (double)value;
+        EnsureFinite(finiteDoubleValue);
+
+        if ((long)finiteDoubleValue != value)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(value),
+                "Long values that cannot be represented exactly as finite binary64 must be modeled as strings.");
+        }
+
+        return From(finiteDoubleValue);
     }
 
     public new static CanonicalJsonNumber From(double value)
     {
         EnsureFinite(value);
-
-        if (value == 0d)
-        {
-            return new("0");
-        }
-
-        using var buffer = new MemoryStream();
-        using (var writer = new Utf8JsonWriter(buffer))
-        {
-            writer.WriteNumberValue(value);
-        }
-
-        return new(CanonicalizeExponent(Encoding.UTF8.GetString(buffer.ToArray())));
+        return new(CanonicalizeNumber(value));
     }
 
     public new static CanonicalJsonNumber From(float value) => From((double)value);
@@ -193,6 +204,34 @@ public sealed record CanonicalJsonNumber : CanonicalJsonValue
         }
     }
 
+    private static string CanonicalizeNumber(double value)
+    {
+        if (value == 0d)
+        {
+            return "0";
+        }
+
+        var text = value.ToString("R", CultureInfo.InvariantCulture);
+
+        if (RequiresScientificNotation(value))
+        {
+            return CanonicalizeExponent(text);
+        }
+
+        if (text.IndexOfAny(['e', 'E']) < 0)
+        {
+            return text;
+        }
+
+        return CanonicalizeToDecimalFromScientific(text);
+    }
+
+    private static bool RequiresScientificNotation(double value)
+    {
+        var absoluteValue = Math.Abs(value);
+        return absoluteValue < 1e-6 || absoluteValue >= 1e21;
+    }
+
     private static string CanonicalizeExponent(string text)
     {
         var exponentIndex = text.IndexOfAny(['E', 'e']);
@@ -202,22 +241,55 @@ public sealed record CanonicalJsonNumber : CanonicalJsonValue
         }
 
         var mantissa = text[..exponentIndex];
-        var exponent = text[(exponentIndex + 1)..];
-        var sign = string.Empty;
+        var exponent = int.Parse(text[(exponentIndex + 1)..], CultureInfo.InvariantCulture);
 
-        if (exponent.StartsWith('+') || exponent.StartsWith('-'))
+        return exponent >= 0
+            ? $"{mantissa}e+{exponent}"
+            : $"{mantissa}e{exponent}";
+    }
+
+    private static string CanonicalizeToDecimalFromScientific(string text)
+    {
+        var exponentIndex = text.IndexOfAny(['E', 'e']);
+        if (exponentIndex < 0)
         {
-            sign = exponent[..1];
-            exponent = exponent[1..];
+            return text;
         }
 
-        exponent = exponent.TrimStart('0');
-        if (exponent.Length == 0)
+        var negative = text[0] == '-';
+        var mantissa = negative ? text[1..exponentIndex] : text[..exponentIndex];
+        var exponent = int.Parse(text[(exponentIndex + 1)..], CultureInfo.InvariantCulture);
+
+        var pointIndex = mantissa.IndexOf('.');
+        var integerDigits = pointIndex < 0 ? mantissa : mantissa[..pointIndex];
+        var fractionalDigits = pointIndex < 0 ? string.Empty : mantissa[(pointIndex + 1)..];
+        var digits = integerDigits + fractionalDigits;
+        var decimalPoint = integerDigits.Length + exponent;
+
+        var normalized = decimalPoint <= 0
+            ? $"0.{new string('0', -decimalPoint)}{digits}"
+            : decimalPoint >= digits.Length
+                ? digits + new string('0', decimalPoint - digits.Length)
+                : digits.Insert(decimalPoint, ".");
+
+        normalized = TrimTrailingDecimalZeros(normalized);
+        return negative ? $"-{normalized}" : normalized;
+    }
+
+    private static string TrimTrailingDecimalZeros(string text)
+    {
+        if (!text.Contains('.'))
         {
-            exponent = "0";
+            return text;
         }
 
-        return $"{mantissa}e{sign}{exponent}";
+        var trimmed = text.TrimEnd('0');
+        if (trimmed.EndsWith('.'))
+        {
+            trimmed = trimmed[..^1];
+        }
+
+        return trimmed;
     }
 }
 
@@ -324,7 +396,7 @@ public sealed record CanonicalJsonObject : CanonicalJsonValue
 
 public static class CanonicalJsonSerializer
 {
-    public const string ProfileId = "rfc8785-jcs";
+    public const string ProfileId = "nexus-jcs-nfc-v1";
 
     public static byte[] SerializeToUtf8Bytes(CanonicalJsonValue value, CanonicalJsonSerializerOptions? options = null)
     {

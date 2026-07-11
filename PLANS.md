@@ -36,13 +36,27 @@ The CLI verifies local files, analyzes imported Search/Deduplication evidence, a
 
 ## Current Plan
 
-Pause feature expansion and collect first-tester feedback.
+Feature expansion is frozen. The current operating plan is integrity hardening from the 2026-07-11 full technical review:
 
-Feedback should be triaged into:
+- `docs/reviews/2026-07-11-hardening-plan/README.md`
+- `docs/reviews/2026-07-11-hardening-plan/full-technical-review.md`
 
-1. docs/site clarity fixes;
-2. CLI usability polish;
-3. later ADR candidates.
+Hardening starts with Phase 0:
+
+1. open one issue per confirmed blocker;
+2. correct public maturity claims;
+3. protect `main`;
+4. assign each blocker an owner, test case, and dependency order.
+
+The dependency order is:
+
+1. canonical foundation;
+2. authority-safe rehydration;
+3. scholarly pipeline correctness;
+4. transactional workspace;
+5. test strategy upgrade;
+6. release engineering;
+7. PHP compatibility evidence only after local correctness.
 
 ## Explicitly Deferred
 
@@ -63,10 +77,11 @@ Do not implement providers, persistence, API/cloud behavior, PDF/OCR, live HTTP,
 
 ## Current Detailed References
 
+- `docs/reviews/2026-07-11-hardening-plan/README.md`
+- `docs/reviews/2026-07-11-hardening-plan/full-technical-review.md`
 - `docs/ops/BRANCH-BOARD.md`
 - `docs/ops/MERGE-QUEUE.md`
-- `docs/ops/FIRST-PUBLIC-FEEDBACK-PLAN-2026-06-29.md`
-- `docs/reviews/2026-06-29-main-public-readiness/README.md`
+- `docs/reviews/2026-06-29-main-public-readiness/README.md` - historical public-readiness context only
 
 ## Historical Implementation Gates
 

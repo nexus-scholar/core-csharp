@@ -1,0 +1,157 @@
+{
+  "fixtureId": "kernel-rfc8785-number-vectors-v1",
+  "sourceKind": "rfc8785-appendix-b",
+  "sourceRefs": [
+    "RFC 8785 §3, Appendix B",
+    "docs/adr/0017-canonical-json-profile-correction.md"
+  ],
+  "sourceCommit": "8e1e252446b62ddd1825c4a535f0e2dc2fc9bbdc",
+  "generatorCommand": "dotnet test tests/NexusScholar.Conformance.Tests/NexusScholar.Conformance.Tests.csproj -c Release --filter KernelFixtureTests",
+  "generatorVersion": "gate2-local-v1",
+  "vectors": [
+    {
+      "label": "finite-zero",
+      "inputMode": "bit-pattern",
+      "inputHex": "0000000000000000",
+      "expectedCanonical": "0"
+    },
+    {
+      "label": "finite-negative-zero",
+      "inputMode": "bit-pattern",
+      "inputHex": "8000000000000000",
+      "expectedCanonical": "0"
+    },
+    {
+      "label": "finite-min-subnormal",
+      "inputMode": "bit-pattern",
+      "inputHex": "0000000000000001",
+      "expectedCanonical": "5e-324"
+    },
+    {
+      "label": "finite-negative-min-subnormal",
+      "inputMode": "bit-pattern",
+      "inputHex": "8000000000000001",
+      "expectedCanonical": "-5e-324"
+    },
+    {
+      "label": "finite-max-finite",
+      "inputMode": "bit-pattern",
+      "inputHex": "7fefffffffffffff",
+      "expectedCanonical": "1.7976931348623157e+308"
+    },
+    {
+      "label": "finite-max-negative-finite",
+      "inputMode": "bit-pattern",
+      "inputHex": "ffefffffffffffff",
+      "expectedCanonical": "-1.7976931348623157e+308"
+    },
+    {
+      "label": "finite-2^53",
+      "inputMode": "bit-pattern",
+      "inputHex": "4340000000000000",
+      "expectedCanonical": "9007199254740992"
+    },
+    {
+      "label": "finite-negative-2^53",
+      "inputMode": "bit-pattern",
+      "inputHex": "c340000000000000",
+      "expectedCanonical": "-9007199254740992"
+    },
+    {
+      "label": "finite-2^68",
+      "inputMode": "bit-pattern",
+      "inputHex": "4430000000000000",
+      "expectedCanonical": "295147905179352830000"
+    },
+    {
+      "label": "finite-999999999999999700000",
+      "inputMode": "bit-pattern",
+      "inputHex": "444b1ae4d6e2ef4e",
+      "expectedCanonical": "999999999999999700000"
+    },
+    {
+      "label": "finite-999999999999999900000",
+      "inputMode": "bit-pattern",
+      "inputHex": "444b1ae4d6e2ef4f",
+      "expectedCanonical": "999999999999999900000"
+    },
+    {
+      "label": "finite-1e21",
+      "inputMode": "bit-pattern",
+      "inputHex": "444b1ae4d6e2ef50",
+      "expectedCanonical": "1e+21"
+    },
+    {
+      "label": "finite-1e23-minus",
+      "inputMode": "bit-pattern",
+      "inputHex": "44b52d02c7e14af5",
+      "expectedCanonical": "9.999999999999997e+22"
+    },
+    {
+      "label": "finite-1e23",
+      "inputMode": "bit-pattern",
+      "inputHex": "44b52d02c7e14af6",
+      "expectedCanonical": "1e+23"
+    },
+    {
+      "label": "finite-1e23-plus",
+      "inputMode": "bit-pattern",
+      "inputHex": "44b52d02c7e14af7",
+      "expectedCanonical": "1.0000000000000001e+23"
+    },
+    {
+      "label": "finite-1e-6-minus",
+      "inputMode": "bit-pattern",
+      "inputHex": "3eb0c6f7a0b5ed8c",
+      "expectedCanonical": "9.999999999999997e-7"
+    },
+    {
+      "label": "finite-1e-6",
+      "inputMode": "bit-pattern",
+      "inputHex": "3eb0c6f7a0b5ed8d",
+      "expectedCanonical": "0.000001"
+    },
+    {
+      "label": "finite-333333333.3333332",
+      "inputMode": "bit-pattern",
+      "inputHex": "41b3de4355555553",
+      "expectedCanonical": "333333333.3333332"
+    },
+    {
+      "label": "finite-333333333.33333325",
+      "inputMode": "bit-pattern",
+      "inputHex": "41b3de4355555554",
+      "expectedCanonical": "333333333.33333325"
+    },
+    {
+      "label": "finite-333333333.3333333",
+      "inputMode": "bit-pattern",
+      "inputHex": "41b3de4355555555",
+      "expectedCanonical": "333333333.3333333"
+    },
+    {
+      "label": "finite-333333333.3333334",
+      "inputMode": "bit-pattern",
+      "inputHex": "41b3de4355555556",
+      "expectedCanonical": "333333333.3333334"
+    },
+    {
+      "label": "finite-333333333.33333343",
+      "inputMode": "bit-pattern",
+      "inputHex": "41b3de4355555557",
+      "expectedCanonical": "333333333.33333343"
+    },
+    {
+      "label": "finite-negative-small-decimal",
+      "inputMode": "bit-pattern",
+      "inputHex": "becbf647612f3696",
+      "expectedCanonical": "-0.0000033333333333333333"
+    },
+    {
+      "label": "finite-round-to-even",
+      "inputMode": "bit-pattern",
+      "inputHex": "43143ff3c1cb0959",
+      "expectedCanonical": "1424953923781206.2"
+    }
+  ]
+}

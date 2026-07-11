@@ -1,6 +1,6 @@
 # Merge Queue
 
-Status date: 2026-07-02
+Status date: 2026-07-11
 
 ## Current Queue
 
@@ -18,6 +18,12 @@ Recently completed:
 | PR07A | main docs workflow tutorial | Landed |
 | PR07B | gh-pages public workflow tutorial | Landed |
 | PR08 | CLI status/exit-code polish | Landed |
+
+Current operating plan:
+
+| Plan | Scope | Status |
+|---|---|---|
+| 2026-07-11 hardening plan | Freeze feature expansion and remediate integrity blockers in dependency order | Active |
 
 ## Do Not Queue Yet
 
@@ -37,10 +43,8 @@ APP-01 merge-gate actions are placeholders only. They must not mutate Core recor
 
 ## Next Queue Item
 
-PR09 only:
+Next queue items should come from the active hardening plan:
 
 ```text
-docs/ops: refresh project state after CLI workflow completion
+Phase 0: blocker issues, public maturity claim correction, main protection, owner/test/dependency assignment
 ```
-
-After PR09, pause and collect first-tester feedback.

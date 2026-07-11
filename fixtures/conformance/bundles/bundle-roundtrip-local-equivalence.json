@@ -14,8 +14,8 @@
     "no-blueprint-conformance-claim",
     "local-bundle-roundtrip-only"
   ],
-  "inputDigest": "sha256:586ec8f39fe438cdcbc4ac498634d6e468e22c543b8aea2f61f356d8e86a4b8b",
-  "outputDigest": "sha256:83b57e63d2c2ee0f53674f5c72e181ee29822e74f42fd97b485ee86315fc2b45",
+  "inputDigest": "sha256:90e80988572bfd3081ad7dac23a25e21e0beed90267dc1d57a912bfd25875c9a",
+  "outputDigest": "sha256:239fd2b9fd3735af7d184931bedfd6a530ae63f2ce8f468f26400402c82ab800",
   "case": {
     "negative": false,
     "schemaId": "nexus.review-bundle.manifest",
@@ -27,6 +27,6 @@
       "no-blueprint-conformance-claim",
       "no-general-corpus-snapshot-equality"
     ],
-    "expectedManifestDigest": "sha256:83b57e63d2c2ee0f53674f5c72e181ee29822e74f42fd97b485ee86315fc2b45"
+    "expectedManifestDigest": "sha256:239fd2b9fd3735af7d184931bedfd6a530ae63f2ce8f468f26400402c82ab800"
   }
 }

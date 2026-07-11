@@ -13,8 +13,8 @@
     "no-php-compatibility-claim",
     "no-blueprint-conformance-claim"
   ],
-  "inputDigest": "sha256:7cc83026c279ee376e5de9b1e9905bbbd57137237318131c7d8e2469e28ea300",
-  "outputDigest": "sha256:83b57e63d2c2ee0f53674f5c72e181ee29822e74f42fd97b485ee86315fc2b45",
+  "inputDigest": "sha256:237472ca88e75bc63123df24e915a6297ba959b86f202a107befb1de9e84b306",
+  "outputDigest": "sha256:239fd2b9fd3735af7d184931bedfd6a530ae63f2ce8f468f26400402c82ab800",
   "case": {
     "negative": false,
     "schemaId": "nexus.review-bundle.manifest",
@@ -24,6 +24,6 @@
       "no-php-compatibility-claim",
       "no-blueprint-conformance-claim"
     ],
-    "expectedManifestDigest": "sha256:83b57e63d2c2ee0f53674f5c72e181ee29822e74f42fd97b485ee86315fc2b45"
+    "expectedManifestDigest": "sha256:239fd2b9fd3735af7d184931bedfd6a530ae63f2ce8f468f26400402c82ab800"
   }
 }

@@ -1,0 +1,13 @@
+{
+  "fixtureId": "kernel-invalid-number-parse-v1",
+  "sourceKind": "rfc8785-parse-failures",
+  "sourceRefs": [
+    "RFC 8785",
+    "docs/adr/0017-canonical-json-profile-correction.md"
+  ],
+  "sourceCommit": "8e1e252446b62ddd1825c4a535f0e2dc2fc9bbdc",
+  "generatorCommand": "dotnet test tests/NexusScholar.Core.Tests/NexusScholar.Core.Tests.csproj -c Release --filter DeterministicKernelTests",
+  "generatorVersion": "gate2-local-v1",
+  "inputText": "1e309",
+  "expectedErrorContains": "forbidden"
+}

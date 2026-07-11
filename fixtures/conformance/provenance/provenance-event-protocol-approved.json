@@ -10,7 +10,7 @@
     "docs/gates/GATE-05.md"
   ],
   "inputDigest": "sha256:13a591220589adaa21fdf10384a79544b87dcb4f4bf95c5045d9b8b8b868e733",
-  "outputDigest": "sha256:649d0be26a81f37f52380139b62098d83434e5f661e0ab4be64bed75a5870d47",
+  "outputDigest": "sha256:f3dd81375a7819e06fa7648fe9e61d29a45421ab1abbe5b164bd00c52a7e0d98",
   "comparisonRules": [
     "local-csharp-contract-only",
     "no-php-compatibility-claim",
@@ -24,7 +24,7 @@
     "digestScope": "provenance-event",
     "event": {
       "event_id": "00000000-0000-0000-0000-000000000501",
-      "event_digest": "sha256:649d0be26a81f37f52380139b62098d83434e5f661e0ab4be64bed75a5870d47",
+      "event_digest": "sha256:f3dd81375a7819e06fa7648fe9e61d29a45421ab1abbe5b164bd00c52a7e0d98",
       "activity_id": "protocol-approved",
       "subject_kind": "protocol-version",
       "subject_id": "protocol-version-1",

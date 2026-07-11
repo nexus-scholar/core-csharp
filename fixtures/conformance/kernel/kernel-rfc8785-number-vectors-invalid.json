@@ -1,0 +1,31 @@
+{
+  "fixtureId": "kernel-rfc8785-number-vectors-invalid-v1",
+  "sourceKind": "rfc8785-appendix-b-nonfinite",
+  "sourceRefs": [
+    "RFC 8785 §3, Appendix B",
+    "docs/adr/0017-canonical-json-profile-correction.md"
+  ],
+  "sourceCommit": "8e1e252446b62ddd1825c4a535f0e2dc2fc9bbdc",
+  "generatorCommand": "dotnet test tests/NexusScholar.Conformance.Tests/NexusScholar.Conformance.Tests.csproj -c Release --filter KernelFixtureTests",
+  "generatorVersion": "gate2-local-v1",
+  "vectors": [
+    {
+      "label": "invalid-nan",
+      "inputMode": "bit-pattern",
+      "inputHex": "7fffffffffffffff",
+      "expectedErrorContains": "forbidden"
+    },
+    {
+      "label": "invalid-positive-infinity",
+      "inputMode": "bit-pattern",
+      "inputHex": "7ff0000000000000",
+      "expectedErrorContains": "forbidden"
+    },
+    {
+      "label": "invalid-negative-infinity",
+      "inputMode": "bit-pattern",
+      "inputHex": "fff0000000000000",
+      "expectedErrorContains": "forbidden"
+    }
+  ]
+}

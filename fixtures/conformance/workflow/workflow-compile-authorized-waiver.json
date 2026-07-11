@@ -9,8 +9,8 @@
   "sourceCommit": "bc2e6e0353b2cc44f837750ed1dd5f570cc1c4fa",
   "generatorCommand": "compiler-backed local Gate 4 contract fixture",
   "generatorVersion": "gate-4-v2",
-  "inputDigest": "sha256:5ffb1be7b02ea85f75f7cad64c3e64f9f56fd2af82724fe0c122af1cd8836c5d",
-  "outputDigest": "sha256:f7198eddfd2249763207b7139918e68b6411664958a607cf646fa4f61c92dcc4",
+  "inputDigest": "sha256:01b27548b585e1b591c0770212e010dec481e238cbe66381808b10a8d0819af7",
+  "outputDigest": "sha256:9156bf2384f5d45ef6623aead674652f5108378966ec22d51addbefbe08f1582",
   "comparisonRules": [
     "assert-gate-4-fields",
     "assert-local-schema-closure",
@@ -23,21 +23,21 @@
     "recordType": "workflow-compile",
     "negative": false,
     "outputKind": "planned-workflow-graph",
-    "workflowId": "workflow-2991f62678c64830",
+    "workflowId": "workflow-c880dd0bb043fd4f",
     "workflowDigest": {
       "scope": "canonical-json-record",
       "schema_id": "nexus.workflow-definition",
       "schema_version": "1.0.0",
-      "value": "sha256:f7198eddfd2249763207b7139918e68b6411664958a607cf646fa4f61c92dcc4"
+      "value": "sha256:9156bf2384f5d45ef6623aead674652f5108378966ec22d51addbefbe08f1582"
     },
     "template": {
       "template_id": "template-authorized-waiver",
       "template_version": "1.0.0",
-      "template_digest": "sha256:3a79214ab5501901e95398a73192dd1a90478c925ca56ff3301fbfd7c64f1680"
+      "template_digest": "sha256:8300579f6277ec15b9511d641b3c4ae902c0ba0a335f85ee35db994a5e3de95e"
     },
     "protocol": {
       "status": "approved",
-      "content_digest": "sha256:a3e34073007ee7d8cc9074089602d84200719413cb182141548eca59c19c3e33",
+      "content_digest": "sha256:2f4fe87a70a5b5635da980141ef030cfcf17ff28791b0ccc737c029a98c3ad49",
       "waivers": [
         {
           "waiver_id": "00000004-0000-0000-0000-000000000000",

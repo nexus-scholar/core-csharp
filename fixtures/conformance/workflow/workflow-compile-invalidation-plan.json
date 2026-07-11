@@ -9,8 +9,8 @@
   "sourceCommit": "bc2e6e0353b2cc44f837750ed1dd5f570cc1c4fa",
   "generatorCommand": "compiler-backed local Gate 4 contract fixture",
   "generatorVersion": "gate-4-v2",
-  "inputDigest": "sha256:4ebfb819821a270dc05b5d91913921e327345ff08924421ce709ee302361da58",
-  "outputDigest": "sha256:d7818d021006b3e67188b2e4a5f56222a831e96e242cf44f6716fc41a9529bd8",
+  "inputDigest": "sha256:b926c7f920cbefaa6a8bd8001be9490e61d567aabf53d5e683942cc307528c57",
+  "outputDigest": "sha256:908c3b1c98832dd9ac1c888b4398f3408a36e850827590258325854bab39a884",
   "comparisonRules": [
     "assert-gate-4-fields",
     "assert-local-schema-closure",
@@ -23,22 +23,22 @@
     "recordType": "workflow-compile",
     "negative": false,
     "outputKind": "planned-workflow-graph",
-    "workflowId": "workflow-2c52edadd6491814",
+    "workflowId": "workflow-3b736198c3422537",
     "workflowDigest": {
       "scope": "canonical-json-record",
       "schema_id": "nexus.workflow-definition",
       "schema_version": "1.0.0",
-      "value": "sha256:d7818d021006b3e67188b2e4a5f56222a831e96e242cf44f6716fc41a9529bd8"
+      "value": "sha256:908c3b1c98832dd9ac1c888b4398f3408a36e850827590258325854bab39a884"
     },
     "template": {
       "template_id": "template-invalidation-plan",
       "template_version": "1.0.0",
-      "template_digest": "sha256:c5e996a26026ea56e8e2772255da41f5ac8a3c14d446f12e7b4251202d479d36"
+      "template_digest": "sha256:bfa44fa7fcc4b63a1a5d20df602df43f6e1c6102bc0ad6166f036be52ebb1dce"
     },
     "protocol": {
       "status": "approved",
       "amendment_id": "00000001-0000-0000-0000-000000000000",
-      "content_digest": "sha256:64bb12894a08ba051940096a9d25ecdf9295b31ba2c425cdeeb03e6f5f756579"
+      "content_digest": "sha256:3ce49e8ca89c09719ade744f59721e4c08c0ff580eb034403d1b5d19d16f05da"
     },
     "schemaRefs": [
       {

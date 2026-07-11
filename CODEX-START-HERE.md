@@ -4,6 +4,8 @@ Launch Codex from this directory and read `AGENTS.md` first.
 
 ## Current State
 
+The active plan is integrity hardening, not feature expansion. Start with `docs/reviews/2026-07-11-hardening-plan/README.md`; the full persisted review is `docs/reviews/2026-07-11-hardening-plan/full-technical-review.md`.
+
 The public local Research Workspace CLI loop is implemented:
 
 ```bash
@@ -27,19 +29,21 @@ The CLI verifies local files, analyzes imported Search/Deduplication evidence, a
 
 ## Current Routing
 
-1. Read `README.md` for the current implementation surface and non-claims.
-2. Read `docs/ops/BRANCH-BOARD.md` and `docs/ops/MERGE-QUEUE.md` for live branch state and recommended next work.
-3. Read `docs/reviews/2026-06-29-main-public-readiness/README.md` only as historical public-readiness context.
-4. Use `docs/ops/FIRST-PUBLIC-FEEDBACK-PLAN-2026-06-29.md` as historical plan and task trace, not as a command to restart completed PF/CLI/WEB work.
-5. For implementation work, read the relevant accepted ADRs in `docs/adr/` and the target gate/evidence docs in `docs/gates/`.
-6. Preserve the non-claims in `README.md`, `AGENTS.md`, and active ops docs.
+1. Read `docs/reviews/2026-07-11-hardening-plan/README.md` for the active hardening plan.
+2. Read `docs/reviews/2026-07-11-hardening-plan/full-technical-review.md` before opening or implementing a hardening branch.
+3. Read `README.md` for the current implementation surface and non-claims.
+4. Read `docs/ops/BRANCH-BOARD.md` and `docs/ops/MERGE-QUEUE.md` for branch and queue state.
+5. Read `docs/reviews/2026-06-29-main-public-readiness/README.md` only as historical public-readiness context.
+6. For implementation work, read the relevant accepted ADRs in `docs/adr/` and the target gate/evidence docs in `docs/gates/`.
+7. Preserve the non-claims in `README.md`, `AGENTS.md`, and active ops docs.
 
 ## Start Here
 
 1. Run the existing validation commands.
-2. Review first-tester feedback if any exists.
-3. Classify feedback as docs polish, CLI usability polish, or later ADR candidate.
-4. Do not start merge-decision execution, persistence, providers, UI shell, PDF/OCR, AI/model calls, or AppServices expansion without a specific accepted task/ADR.
+2. Pick the next blocker from the hardening dependency order.
+3. Confirm the blocker against current code, ADRs, fixtures, and tests before editing.
+4. Add or preserve regression coverage for the reproduced defect.
+5. Do not start merge-decision execution, persistence, providers, UI shell, PDF/OCR, AI/model calls, AppServices expansion, or PHP compatibility claims without a specific accepted task/ADR.
 
 ## Verification
 

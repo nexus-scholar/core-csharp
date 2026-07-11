@@ -2,7 +2,9 @@
 
 ## Mission
 
-Build an audit-grade, local-first C# research workflow kernel. Research methods, human decisions, automation, evidence, amendments, deviations, and outputs must be reconstructable.
+Build toward an audit-grade, local-first C# research workflow kernel. Research methods, human decisions, automation, evidence, amendments, deviations, and outputs must be reconstructable.
+
+Current state is audit-oriented early alpha. The active operating plan is `docs/reviews/2026-07-11-hardening-plan/README.md`; feature expansion is frozen until the hardening blockers are addressed in dependency order.
 
 ## Source of truth
 

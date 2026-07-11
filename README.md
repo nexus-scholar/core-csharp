@@ -1,10 +1,12 @@
 # Nexus Scholar Core for .NET
 
-Nexus Scholar Core is an audit-grade, local-first C# research workflow kernel. Its purpose is to make research methods, human decisions, automation, evidence, amendments, deviations, and outputs reconstructable from durable records.
+Nexus Scholar Core is an audit-oriented, local-first early-alpha C# research workflow kernel. Its purpose is to make research methods, human decisions, automation, evidence, amendments, deviations, and outputs reconstructable from durable records.
 
 The pinned PHP package remains behavioral evidence for proven workflows. This repo ports observable behavior into stricter local contracts instead of translating PHP classes or app storage shapes directly.
 
 ## Current Status
+
+The current operating plan is integrity hardening, not feature expansion. See `docs/reviews/2026-07-11-hardening-plan/README.md`.
 
 `main` contains the local Core implementation through the first no-network Full Text slice, plus a contract-backed UI renderer prototype:
 

@@ -1,3 +1,5 @@
+using System.Globalization;
+using System.IO;
 using System.Text;
 using System.Text.Json;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -31,6 +33,55 @@ public sealed class KernelFixtureTests
         Assert.AreEqual(root.GetProperty("expectedCanonicalJson").GetString(), canonicalJson);
         Assert.AreEqual(root.GetProperty("outputDigest").GetString(), digest.ToString());
         Assert.AreEqual(root.GetProperty("inputDigest").GetString(), digest.ToString());
+    }
+
+    [TestMethod]
+    public void Kernel_rfc8785_number_vectors_match_expected_output()
+    {
+        using var document = LoadFixture("kernel-rfc8785-number-vectors.json");
+        var root = document.RootElement;
+
+        AssertHasGeneratorMetadata(root, "kernel-rfc8785-number-vectors-v1");
+
+        foreach (var vector in root.GetProperty("vectors").EnumerateArray())
+        {
+            CanonicalJsonValue value = vector.GetProperty("inputMode").GetString() switch
+            {
+                "bit-pattern" => CanonicalJsonValue.From(DoubleFromBitPattern(vector.GetProperty("inputHex").GetString()!)),
+                _ => throw new InvalidOperationException(
+                    $"Unknown inputMode for vector '{vector.GetProperty("label").GetString()}'.")
+            };
+
+            Assert.AreEqual(
+                vector.GetProperty("expectedCanonical").GetString(),
+                CanonicalJsonSerializer.Serialize(value),
+                vector.GetProperty("label").GetString());
+        }
+    }
+
+    [TestMethod]
+    public void Kernel_rfc8785_number_vectors_reject_non_finite_bit_patterns()
+    {
+        using var document = LoadFixture("kernel-rfc8785-number-vectors-invalid.json");
+        var root = document.RootElement;
+
+        AssertHasGeneratorMetadata(root, "kernel-rfc8785-number-vectors-invalid-v1");
+
+        foreach (var vector in root.GetProperty("vectors").EnumerateArray())
+        {
+            if (vector.GetProperty("inputMode").GetString() != "bit-pattern")
+            {
+                throw new InvalidOperationException(
+                    $"Unknown inputMode for vector '{vector.GetProperty("label").GetString()}'.");
+            }
+
+            var exception = Assert.ThrowsExactly<ArgumentOutOfRangeException>(() =>
+                CanonicalJsonValue.From(DoubleFromBitPattern(vector.GetProperty("inputHex").GetString()!)));
+            StringAssert.Contains(
+                exception.Message,
+                vector.GetProperty("expectedErrorContains").GetString()!,
+                StringComparison.OrdinalIgnoreCase);
+        }
     }
 
     [TestMethod]
@@ -114,6 +165,10 @@ public sealed class KernelFixtureTests
                     _ => throw new InvalidOperationException("Unknown non-finite test vector.")
                 };
             });
+        AssertFixtureThrowsArgumentOutOfRange(
+            "kernel-invalid-number-parse.json",
+            "kernel-invalid-number-parse-v1",
+            root => ParseJsonNumber(root.GetProperty("inputText").GetString()!));
     }
 
     [TestMethod]
@@ -137,10 +192,22 @@ public sealed class KernelFixtureTests
         return JsonDocument.Parse(File.ReadAllText(path));
     }
 
+    private static CanonicalJsonValue ParseJsonNumber(string text)
+    {
+        using var document = JsonDocument.Parse($"[{text}]");
+        return CanonicalJsonValue.FromJsonElement(document.RootElement[0]);
+    }
+
     private static byte[] LoadFixtureBytes(string fileName)
     {
         var path = Path.Combine(AppContext.BaseDirectory, "fixtures", "kernel", fileName);
         return File.ReadAllBytes(path);
+    }
+
+    private static double DoubleFromBitPattern(string inputHex)
+    {
+        var bits = Convert.ToUInt64(inputHex, 16);
+        return BitConverter.Int64BitsToDouble(unchecked((long)bits));
     }
 
     private static void AssertHasGeneratorMetadata(JsonElement root, string fixtureId)

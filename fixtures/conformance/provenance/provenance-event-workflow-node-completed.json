@@ -10,7 +10,7 @@
     "docs/gates/GATE-05.md"
   ],
   "inputDigest": "sha256:f4c80f2b25888c20a5cc0256cbeab0dc42495085dac3ac370690a684aa2e10bd",
-  "outputDigest": "sha256:86bf957439ea5b603afd81d6c72aeaf0b65260583596cc6cef6bc9759fcaa227",
+  "outputDigest": "sha256:67fcafb44448b34deabc12e56f07f8a1a95ae1029ebe048ce7613ce8c6177320",
   "comparisonRules": [
     "local-csharp-contract-only",
     "no-php-compatibility-claim",
@@ -24,7 +24,7 @@
     "digestScope": "provenance-event",
     "event": {
       "event_id": "00000000-0000-0000-0000-000000000502",
-      "event_digest": "sha256:86bf957439ea5b603afd81d6c72aeaf0b65260583596cc6cef6bc9759fcaa227",
+      "event_digest": "sha256:67fcafb44448b34deabc12e56f07f8a1a95ae1029ebe048ce7613ce8c6177320",
       "activity_id": "workflow-node-completed",
       "subject_kind": "workflow-node",
       "subject_id": "workflow-1:node-search",

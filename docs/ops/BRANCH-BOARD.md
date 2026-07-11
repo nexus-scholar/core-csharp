@@ -1,15 +1,15 @@
 # Branch Board
 
-Status date: 2026-07-02
+Status date: 2026-07-11
 
 ## Current Repository State
 
-- `main`: current after PR08 CLI polish.
-- Latest known main commit: `0d93bd9 polish(cli): improve workspace status and exit-code consistency`.
+- `main`: current after desktop verify/analyze actions and hardening review baseline.
+- Latest known main commit: `7f9e285 feat(ui): add desktop verify analyze actions`.
 - `gh-pages`: current after public CLI workflow walkthrough.
 - Latest known gh-pages commit: `589fc2e docs(site): add research workspace CLI walkthrough`.
 - Open PRs: none expected.
-- Active next branch: `cdx/ops-refresh-after-cli-workflow`.
+- Active next branch: none recorded. Next work should be a dependency-ordered hardening branch from `docs/reviews/2026-07-11-hardening-plan/README.md`.
 
 ## Completed Public CLI Workflow
 
@@ -52,13 +52,12 @@ APP-01 merge gates remain display-only placeholders. They must not accept, rejec
 
 ## Current Next Move
 
-Pause feature expansion and collect first-tester feedback on the public CLI workflow.
+Feature expansion is frozen. The next move is Phase 0 of the 2026-07-11 hardening plan:
 
-Triage feedback into:
-
-1. docs/site polish;
-2. CLI usability polish;
-3. later ADR candidates.
+1. open one issue per confirmed blocker;
+2. correct public maturity claims;
+3. protect `main`;
+4. assign each blocker an owner, test case, and dependency order.
 
 Do not start merge decisions, persistence, providers, UI product shell, PDF/OCR, AI/model calls, or AppServices expansion without a later explicit ADR/task.
 

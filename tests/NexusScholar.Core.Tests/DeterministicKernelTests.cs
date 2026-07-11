@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Text;
+using System.Text.Json;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NexusScholar.Kernel;
 
@@ -216,6 +217,13 @@ public sealed class DeterministicKernelTests
     }
 
     [TestMethod]
+    public void Canonical_json_rejects_non_exact_decimal_values()
+    {
+        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => CanonicalJsonValue.From(1m / 3m));
+        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => CanonicalJsonValue.From(decimal.MaxValue));
+    }
+
+    [TestMethod]
     public void Canonical_json_uses_jcs_number_rendering_for_gate_two_vectors()
     {
         var numbers = CanonicalJsonValue.Array(
@@ -229,13 +237,56 @@ public sealed class DeterministicKernelTests
     }
 
     [TestMethod]
-    public void Canonical_json_canonicalizes_decimal_exponents()
+    public void Canonical_json_accepts_exact_long_9007199254740992()
+    {
+        Assert.AreEqual("9007199254740992", CanonicalJsonSerializer.Serialize(CanonicalJsonValue.From(9007199254740992L)));
+    }
+
+    [TestMethod]
+    public void Canonical_json_rejects_non_exact_long_9007199254740993()
+    {
+        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => CanonicalJsonValue.From(9007199254740993L));
+    }
+
+    [TestMethod]
+    public void Canonical_json_uses_rfc8785_number_thresholds()
     {
         var numbers = CanonicalJsonValue.Array(
-            CanonicalJsonValue.From(0.0000001m),
-            CanonicalJsonValue.From(10000000000000000000000000000m));
+            CanonicalJsonValue.From(1e-6d),
+            CanonicalJsonValue.From(1e20d),
+            CanonicalJsonValue.From(1e-7d),
+            CanonicalJsonValue.From(1e21d),
+            CanonicalJsonValue.From(0d),
+            CanonicalJsonValue.From(-0d));
 
-        Assert.AreEqual("[1e-7,10000000000000000000000000000]", CanonicalJsonSerializer.Serialize(numbers));
+        Assert.AreEqual("[0.000001,100000000000000000000,1e-7,1e+21,0,0]", CanonicalJsonSerializer.Serialize(numbers));
+    }
+
+    [TestMethod]
+    public void Canonical_json_parsed_and_direct_numbers_recanonicalize_to_same_binary64_value()
+    {
+        using var parsedDocument = JsonDocument.Parse("{\"value\":333333333.33333329}");
+
+        var parsedValue = CanonicalJsonValue.FromJsonElement(parsedDocument.RootElement.GetProperty("value"));
+        var directValue = CanonicalJsonValue.From(333333333.33333329d);
+
+        var parsedJson = CanonicalJsonSerializer.Serialize(parsedValue);
+        var directJson = CanonicalJsonSerializer.Serialize(directValue);
+
+        Assert.AreEqual(directJson, parsedJson);
+        Assert.AreEqual("333333333.3333333", parsedJson);
+    }
+
+    [TestMethod]
+    public void Canonical_json_rejects_out_of_range_numeric_tokens()
+    {
+        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() =>
+            CanonicalJsonValue.FromJsonElement(
+                JsonDocument.Parse("{\"value\":1e309}").RootElement.GetProperty("value")));
+
+        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() =>
+            CanonicalJsonValue.FromJsonElement(
+                JsonDocument.Parse("{\"value\":-1e309}").RootElement.GetProperty("value")));
     }
 
     [TestMethod]
@@ -283,7 +334,7 @@ public sealed class DeterministicKernelTests
         Assert.AreEqual(secondJson, firstJson);
         Assert.AreEqual(secondDigest, firstDigest);
         Assert.AreEqual(
-            "{\"algorithm\":\"sha256\",\"canonicalizationProfile\":\"rfc8785-jcs\",\"content\":{\"actors\":[\"researcher-1\",\"reviewer-2\"],\"note\":\"Résumé\",\"optional\":null,\"timestamp\":\"2026-06-26T10:15:30.1234567Z\"},\"schema\":\"nexus.kernel.fixture\",\"schemaVersion\":\"1.0.0\",\"scope\":\"canonical-json-record\"}",
+            "{\"algorithm\":\"sha256\",\"canonicalizationProfile\":\"nexus-jcs-nfc-v1\",\"content\":{\"actors\":[\"researcher-1\",\"reviewer-2\"],\"note\":\"Résumé\",\"optional\":null,\"timestamp\":\"2026-06-26T10:15:30.1234567Z\"},\"schema\":\"nexus.kernel.fixture\",\"schemaVersion\":\"1.0.0\",\"scope\":\"canonical-json-record\"}",
             firstJson);
     }
 
@@ -312,7 +363,7 @@ public sealed class DeterministicKernelTests
         Assert.AreEqual(expectedDigest, actualDigest);
 
         Assert.AreEqual(
-            "{\"algorithm\":\"sha256\",\"canonicalizationProfile\":\"rfc8785-jcs\",\"content\":{\"nested\":{\"nested\":\"value\"},\"status\":\"known\"},\"schema\":\"nexus.kernel.fixture\",\"schemaVersion\":\"1.0.0\",\"scope\":\"canonical-json-record\"}",
+            "{\"algorithm\":\"sha256\",\"canonicalizationProfile\":\"nexus-jcs-nfc-v1\",\"content\":{\"nested\":{\"nested\":\"value\"},\"status\":\"known\"},\"schema\":\"nexus.kernel.fixture\",\"schemaVersion\":\"1.0.0\",\"scope\":\"canonical-json-record\"}",
             actualJson);
     }
 }
