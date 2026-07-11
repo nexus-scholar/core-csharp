@@ -186,6 +186,65 @@ public sealed class KernelFixtureTests
                 Encoding.UTF8.GetString(LoadFixtureBytes(root.GetProperty("path").GetString()!))));
     }
 
+    [TestMethod]
+    public void Kernel_rehydrate_valid_noncanonical_transport_rehydrates_to_expected_verified_state()
+    {
+        using var document = LoadFixture("kernel-rehydrate-valid-noncanonical-transport.json");
+        var root = document.RootElement;
+
+        AssertHasGeneratorMetadata(root, "kernel-rehydrate-valid-noncanonical-transport-v1");
+        var verified = RehydrateFromFixture(root);
+
+        Assert.AreEqual(root.GetProperty("expectedDigest").GetString(), verified.Digest.ToString());
+        Assert.AreEqual(root.GetProperty("expectedCanonicalJson").GetString(), verified.Envelope.ToCanonicalJson());
+        Assert.AreEqual(root.GetProperty("expectedDigest").GetString(), verified.Envelope.ComputeDigest().ToString());
+        Assert.ThrowsExactly<InvalidOperationException>(() => verified.Envelope.Content.Add("forbidden", "mutation"));
+    }
+
+    [TestMethod]
+    public void Kernel_rehydrate_invalid_cases_are_rejected()
+    {
+        AssertFixtureRehydrateThrowsInvalidOperation(
+            "kernel-rehydrate-invalid-wrong-digest.json",
+            "kernel-rehydrate-invalid-wrong-digest-v1");
+        AssertFixtureRehydrateThrowsInvalidOperation(
+            "kernel-rehydrate-invalid-wrong-scope.json",
+            "kernel-rehydrate-invalid-wrong-scope-v1");
+        AssertFixtureRehydrateThrowsInvalidOperation(
+            "kernel-rehydrate-invalid-wrong-schema-id.json",
+            "kernel-rehydrate-invalid-wrong-schema-id-v1");
+        AssertFixtureRehydrateThrowsInvalidOperation(
+            "kernel-rehydrate-invalid-wrong-schema-version.json",
+            "kernel-rehydrate-invalid-wrong-schema-version-v1");
+        AssertFixtureRehydrateThrowsInvalidOperation(
+            "kernel-rehydrate-invalid-wrong-algorithm.json",
+            "kernel-rehydrate-invalid-wrong-algorithm-v1");
+        AssertFixtureRehydrateThrowsInvalidOperation(
+            "kernel-rehydrate-invalid-wrong-profile.json",
+            "kernel-rehydrate-invalid-wrong-profile-v1");
+        AssertFixtureRehydrateThrowsInvalidOperation(
+            "kernel-rehydrate-invalid-missing-root-field.json",
+            "kernel-rehydrate-invalid-missing-root-field-v1");
+        AssertFixtureRehydrateThrowsInvalidOperation(
+            "kernel-rehydrate-invalid-duplicate-root-field.json",
+            "kernel-rehydrate-invalid-duplicate-root-field-v1");
+        AssertFixtureRehydrateThrowsInvalidOperation(
+            "kernel-rehydrate-invalid-unknown-root-field.json",
+            "kernel-rehydrate-invalid-unknown-root-field-v1");
+        AssertFixtureRehydrateThrowsInvalidOperation(
+            "kernel-rehydrate-invalid-null-root-field.json",
+            "kernel-rehydrate-invalid-null-root-field-v1");
+        AssertFixtureRehydrateThrowsInvalidOperation(
+            "kernel-rehydrate-invalid-typed-root-field.json",
+            "kernel-rehydrate-invalid-typed-root-field-v1");
+        AssertFixtureRehydrateThrowsInvalidOperation(
+            "kernel-rehydrate-invalid-non-object-content.json",
+            "kernel-rehydrate-invalid-non-object-content-v1");
+        AssertFixtureRehydrateThrowsInvalidOperation(
+            "kernel-rehydrate-invalid-tampered-content.json",
+            "kernel-rehydrate-invalid-tampered-content-v1");
+    }
+
     private static JsonDocument LoadFixture(string fileName)
     {
         var path = Path.Combine(AppContext.BaseDirectory, "fixtures", "kernel", fileName);
@@ -208,6 +267,21 @@ public sealed class KernelFixtureTests
     {
         var bits = Convert.ToUInt64(inputHex, 16);
         return BitConverter.Int64BitsToDouble(unchecked((long)bits));
+    }
+
+    private static VerifiedDigestEnvelope RehydrateFromFixture(JsonElement root)
+    {
+        var expectedDigest = ContentDigest.Parse(root.GetProperty("expectedDigest").GetString()!);
+        var expectedScope = DigestScope.Parse(root.GetProperty("expectedScope").GetString()!);
+        var expectedSchemaId = root.GetProperty("expectedSchemaId").GetString()!;
+        var expectedSchemaVersion = root.GetProperty("expectedSchemaVersion").GetString()!;
+
+        return DigestEnvelope.RehydrateAndVerify(
+            root.GetProperty("envelope"),
+            expectedDigest,
+            expectedScope,
+            expectedSchemaId,
+            expectedSchemaVersion);
     }
 
     private static void AssertHasGeneratorMetadata(JsonElement root, string fixtureId)
@@ -236,7 +310,10 @@ public sealed class KernelFixtureTests
         AssertHasGeneratorMetadata(root, fixtureId);
 
         var exception = Assert.ThrowsExactly<InvalidOperationException>(() => action(root));
-        StringAssert.Contains(exception.Message, root.GetProperty("expectedErrorContains").GetString()!, StringComparison.OrdinalIgnoreCase);
+        StringAssert.Contains(
+            exception.Message,
+            root.GetProperty("expectedErrorContains").GetString()!,
+            StringComparison.OrdinalIgnoreCase);
     }
 
     private static void AssertFixtureThrowsArgumentOutOfRange(string fileName, string fixtureId, Action<JsonElement> action)
@@ -246,6 +323,22 @@ public sealed class KernelFixtureTests
         AssertHasGeneratorMetadata(root, fixtureId);
 
         var exception = Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => action(root));
-        StringAssert.Contains(exception.Message, root.GetProperty("expectedErrorContains").GetString()!, StringComparison.OrdinalIgnoreCase);
+        StringAssert.Contains(
+            exception.Message,
+            root.GetProperty("expectedErrorContains").GetString()!,
+            StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static void AssertFixtureRehydrateThrowsInvalidOperation(string fileName, string fixtureId)
+    {
+        using var document = LoadFixture(fileName);
+        var root = document.RootElement;
+        AssertHasGeneratorMetadata(root, fixtureId);
+
+        var exception = Assert.ThrowsExactly<InvalidOperationException>(() => RehydrateFromFixture(root));
+        StringAssert.Contains(
+            exception.Message,
+            root.GetProperty("expectedErrorContains").GetString()!,
+            StringComparison.OrdinalIgnoreCase);
     }
 }

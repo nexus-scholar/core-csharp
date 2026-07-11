@@ -366,4 +366,95 @@ public sealed class DeterministicKernelTests
             "{\"algorithm\":\"sha256\",\"canonicalizationProfile\":\"nexus-jcs-nfc-v1\",\"content\":{\"nested\":{\"nested\":\"value\"},\"status\":\"known\"},\"schema\":\"nexus.kernel.fixture\",\"schemaVersion\":\"1.0.0\",\"scope\":\"canonical-json-record\"}",
             actualJson);
     }
+
+    [TestMethod]
+    public void Digest_authority_value_objects_reject_default_state()
+    {
+        var defaultDigest = default(ContentDigest);
+        var defaultAlgorithm = default(DigestAlgorithm);
+        var defaultScope = default(DigestScope);
+        var defaultEntityId = default(EntityId<string>);
+
+        Assert.ThrowsExactly<InvalidOperationException>(() => _ = defaultDigest.ToString());
+        Assert.ThrowsExactly<InvalidOperationException>(() => _ = defaultDigest.Algorithm);
+        Assert.ThrowsExactly<InvalidOperationException>(() => _ = defaultDigest.Value);
+        Assert.ThrowsExactly<InvalidOperationException>(() => _ = defaultAlgorithm.ToString());
+        Assert.ThrowsExactly<InvalidOperationException>(() => _ = defaultAlgorithm.Value);
+        Assert.ThrowsExactly<InvalidOperationException>(() => _ = defaultScope.ToString());
+        Assert.ThrowsExactly<InvalidOperationException>(() => _ = defaultScope.Value);
+        Assert.ThrowsExactly<InvalidOperationException>(() => _ = defaultEntityId.ToString());
+        Assert.ThrowsExactly<InvalidOperationException>(() => _ = defaultEntityId.Value);
+    }
+
+    [TestMethod]
+    public void Digest_rehydrate_and_verify_returns_verified_state_and_enforces_reconstructed_digest()
+    {
+        using var document = JsonDocument.Parse(
+            """
+            {
+              "algorithm": "sha256",
+              "canonicalizationProfile": "nexus-jcs-nfc-v1",
+              "content": {
+                "actors": ["researcher-1", "reviewer-2"],
+                "note": "Re\u0301sume\u0301",
+                "optional": null,
+                "timestamp": "2026-06-26T10:15:30.1234567Z"
+              },
+              "scope": "canonical-json-record",
+              "schema": "nexus.kernel.fixture",
+              "schemaVersion": "1.0.0"
+            }
+            """);
+        var root = document.RootElement;
+
+        var expectedDigest = ContentDigest.Parse("sha256:6f4249863972d781f8332726bb48812b45f6c854d5e07d3d94cfb4082022491f");
+
+        var verified = DigestEnvelope.RehydrateAndVerify(
+            root,
+            expectedDigest,
+            DigestScope.CanonicalJsonRecord,
+            "nexus.kernel.fixture",
+            "1.0.0");
+
+        Assert.AreEqual(expectedDigest, verified.Digest);
+        Assert.AreEqual(expectedDigest, verified.Envelope.ComputeDigest());
+        Assert.AreEqual("canonical-json-record", verified.Envelope.Scope.ToString());
+        Assert.AreEqual("nexus.kernel.fixture", verified.Envelope.SchemaId);
+        Assert.AreEqual("1.0.0", verified.Envelope.SchemaVersion);
+        Assert.ThrowsExactly<InvalidOperationException>(() => verified.Envelope.Content.Add("forbidden", "mutation"));
+        Assert.ThrowsExactly<ArgumentException>(() => DigestEnvelope.RehydrateAndVerify(
+            root,
+            default,
+            DigestScope.CanonicalJsonRecord,
+            "nexus.kernel.fixture",
+            "1.0.0"));
+        Assert.ThrowsExactly<ArgumentException>(() => DigestEnvelope.RehydrateAndVerify(
+            root,
+            expectedDigest,
+            default,
+            "nexus.kernel.fixture",
+            "1.0.0"));
+        Assert.ThrowsExactly<ArgumentException>(() => new DigestEnvelope(
+            default,
+            "nexus.kernel.fixture",
+            "1.0.0",
+            new CanonicalJsonObject()));
+    }
+
+    [TestMethod]
+    public void Entity_id_from_guid_rejects_empty()
+    {
+        Assert.ThrowsExactly<ArgumentException>(() => EntityId<string>.From(Guid.Empty));
+    }
+
+    [TestMethod]
+    public void Entity_id_new_rejects_empty_guid_generator()
+    {
+        Assert.ThrowsExactly<InvalidOperationException>(() => EntityId<string>.New(new EmptyGuidGenerator()));
+    }
+
+    private sealed class EmptyGuidGenerator : IIdGenerator
+    {
+        public Guid NewId() => Guid.Empty;
+    }
 }

@@ -19,9 +19,14 @@ public sealed class BundleVerifier
         ValidateWorkflowBinding(manifest, errors);
         ValidateRequiredSchemas(manifest, verificationOptions, errors);
         ValidateProvenanceBindings(manifest, verificationOptions, errors);
+        ValidateArtifacts(manifest, verificationOptions, errors, verifiedArtifacts);
+        ValidateDestructiveOverwrite(manifest, verificationOptions, errors);
 
-        var manifestDigest = manifest.ComputeManifestDigest();
-        if (verificationOptions.ExpectedManifestDigest is not null &&
+        var manifestDigest = CanComputeManifestDigest(manifest)
+            ? manifest.ComputeManifestDigest()
+            : default;
+        if (manifestDigest.IsValid &&
+            verificationOptions.ExpectedManifestDigest is not null &&
             !string.Equals(verificationOptions.ExpectedManifestDigest.Value.ToString(), manifestDigest.ToString(), StringComparison.Ordinal))
         {
             errors.Add(new BundleVerificationFinding(
@@ -29,9 +34,6 @@ public sealed class BundleVerifier
                 "Manifest digest does not match the expected manifest digest.",
                 manifest.BundleId));
         }
-
-        ValidateArtifacts(manifest, verificationOptions, errors, verifiedArtifacts);
-        ValidateDestructiveOverwrite(manifest, verificationOptions, errors);
 
         return new BundleVerification(
             errors.Count == 0,
@@ -140,6 +142,18 @@ public sealed class BundleVerifier
             return;
         }
 
+        if (!manifest.WorkflowBinding.WorkflowDefinitionDigest.IsValid ||
+            !manifest.WorkflowBinding.TemplateDigest.IsValid ||
+            !manifest.WorkflowBinding.BoundProtocolContentDigest.IsValid ||
+            !manifest.ProtocolBinding.ProtocolContentDigest.IsValid)
+        {
+            errors.Add(new BundleVerificationFinding(
+                BundleErrorCodes.InvalidWorkflowBinding,
+                "Workflow binding digests must be canonical content digests.",
+                manifest.WorkflowBinding.WorkflowId));
+            return;
+        }
+
         if (!string.Equals(
                 manifest.WorkflowBinding.BoundProtocolVersionId,
                 manifest.ProtocolBinding.ProtocolVersionId,
@@ -234,6 +248,8 @@ public sealed class BundleVerifier
 
         foreach (var artifact in manifest.Artifacts)
         {
+            var authorityDigestsValid = true;
+
             if (!seen.Add(artifact.LogicalPath))
             {
                 errors.Add(new BundleVerificationFinding(
@@ -260,15 +276,37 @@ public sealed class BundleVerifier
 
             if (!HasValidDigest(artifact.RawByteDigest))
             {
+                authorityDigestsValid = false;
                 errors.Add(new BundleVerificationFinding(
                     BundleErrorCodes.InvalidArtifactDigest,
                     "Artifact raw byte digest must be a canonical SHA-256 digest.",
                     artifact.LogicalPath));
             }
 
+            if (artifact.SourceRecordDigest is not null && !artifact.SourceRecordDigest.Value.IsValid)
+            {
+                authorityDigestsValid = false;
+                errors.Add(new BundleVerificationFinding(
+                    BundleErrorCodes.InvalidArtifactDigest,
+                    "Artifact source record digest must be a canonical SHA-256 digest.",
+                    artifact.LogicalPath));
+            }
+
             if (artifact.ProvenanceEventDigest is not null)
             {
+                var errorCount = errors.Count;
                 ValidateArtifactProvenanceDigest(artifact, options, errors);
+                authorityDigestsValid = authorityDigestsValid && errors.Count == errorCount;
+            }
+
+            if (options.ExistingArtifactDigests.TryGetValue(artifact.LogicalPath, out var existingDigest) &&
+                !existingDigest.IsValid)
+            {
+                authorityDigestsValid = false;
+                errors.Add(new BundleVerificationFinding(
+                    BundleErrorCodes.DestructiveOverwrite,
+                    "Existing artifact digest must be valid before overwrite safety can be verified.",
+                    artifact.LogicalPath));
             }
 
             if (!options.ArtifactBytes.TryGetValue(artifact.LogicalPath, out var bytes))
@@ -277,6 +315,11 @@ public sealed class BundleVerifier
                     BundleErrorCodes.MissingArtifact,
                     "Artifact bytes were not supplied for verification.",
                     artifact.LogicalPath));
+                continue;
+            }
+
+            if (!authorityDigestsValid)
+            {
                 continue;
             }
 
@@ -356,6 +399,11 @@ public sealed class BundleVerifier
                 continue;
             }
 
+            if (!existingDigest.IsValid || !artifact.RawByteDigest.IsValid)
+            {
+                continue;
+            }
+
             if (!string.Equals(existingDigest.ToString(), artifact.RawByteDigest.ToString(), StringComparison.Ordinal))
             {
                 errors.Add(new BundleVerificationFinding(
@@ -366,8 +414,19 @@ public sealed class BundleVerifier
         }
     }
 
-    private static bool HasValidDigest(ContentDigest digest) =>
-        digest.Algorithm == DigestAlgorithm.Sha256 &&
-        !string.IsNullOrWhiteSpace(digest.Value) &&
-        digest.Value.Length == 64;
+    private static bool HasValidDigest(ContentDigest digest) => digest.IsValid;
+
+    private static bool CanComputeManifestDigest(ReviewBundleManifest manifest)
+    {
+        return manifest.ProtocolBinding.ProtocolContentDigest.IsValid &&
+            (manifest.WorkflowBinding is null ||
+             (manifest.WorkflowBinding.WorkflowDefinitionDigest.IsValid &&
+              manifest.WorkflowBinding.BoundProtocolContentDigest.IsValid &&
+              manifest.WorkflowBinding.TemplateDigest.IsValid)) &&
+            manifest.ProvenanceBindings.All(binding => binding.EventDigest.IsValid) &&
+            manifest.Artifacts.All(artifact =>
+                artifact.RawByteDigest.IsValid &&
+                (artifact.SourceRecordDigest is null || artifact.SourceRecordDigest.Value.IsValid) &&
+                (artifact.ProvenanceEventDigest is null || artifact.ProvenanceEventDigest.Value.IsValid));
+    }
 }

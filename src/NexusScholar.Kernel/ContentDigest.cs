@@ -6,16 +6,26 @@ namespace NexusScholar.Kernel;
 public readonly record struct ContentDigest
 {
     private const int Sha256HexLength = 64;
+    private readonly DigestAlgorithm _algorithm;
+    private readonly string? _value;
 
     private ContentDigest(DigestAlgorithm algorithm, string value)
     {
-        Algorithm = algorithm;
-        Value = value;
+        _algorithm = algorithm;
+        _value = value;
     }
 
-    public DigestAlgorithm Algorithm { get; }
+    public bool IsValid => _algorithm.IsValid &&
+        _value is { Length: Sha256HexLength } &&
+        _value.All(character => char.IsAsciiDigit(character) || character is >= 'a' and <= 'f');
 
-    public string Value { get; }
+    public DigestAlgorithm Algorithm => IsValid
+        ? _algorithm
+        : throw new InvalidOperationException("Default content digests are invalid.");
+
+    public string Value => IsValid
+        ? _value!
+        : throw new InvalidOperationException("Default content digests are invalid.");
 
     public static ContentDigest Create(DigestAlgorithm algorithm, string value)
     {

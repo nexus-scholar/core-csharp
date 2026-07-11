@@ -2,12 +2,18 @@ namespace NexusScholar.Kernel;
 
 public readonly record struct DigestAlgorithm
 {
+    private readonly string? _value;
+
     private DigestAlgorithm(string value)
     {
-        Value = value;
+        _value = value;
     }
 
-    public string Value { get; }
+    public bool IsValid => string.Equals(_value, "sha256", StringComparison.Ordinal);
+
+    public string Value => IsValid
+        ? _value!
+        : throw new InvalidOperationException("Default digest algorithms are invalid.");
 
     public static DigestAlgorithm Sha256 { get; } = new("sha256");
 
@@ -49,12 +55,18 @@ public readonly record struct DigestScope
         "ndjson-stream"
     };
 
+    private readonly string? _value;
+
     private DigestScope(string value)
     {
-        Value = value;
+        _value = value;
     }
 
-    public string Value { get; }
+    public bool IsValid => _value is not null && ApprovedScopes.Contains(_value);
+
+    public string Value => IsValid
+        ? _value!
+        : throw new InvalidOperationException("Default digest scopes are invalid.");
 
     public static DigestScope RawArtifactBytes { get; } = new("raw-artifact-bytes");
 

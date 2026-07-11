@@ -2,6 +2,11 @@
 
 Status: active hardening plan.
 
+Implementation progress:
+
+- Phase 1 canonical foundation: complete through Hardening 01 and Hardening 02.
+- Phase 2 authority-safe rehydration: next; begin with authority-bearing module factories and resolvers.
+
 Source review: [full-technical-review.md](full-technical-review.md)
 
 Baseline:
@@ -46,7 +51,7 @@ This plan supersedes the 2026-06-29 public-readiness plan as the current operati
 
 ## Current Blocker Themes
 
-- Canonical JSON claims `rfc8785-jcs` but number rendering is not RFC 8785-compatible.
+- Canonical JSON number rendering and the Nexus NFC profile were corrected in Hardening 01; Kernel verified rehydration and default-value rejection were completed in Hardening 02.
 - Authority-bearing public constructors and rehydration paths can fabricate approved or digest-bearing state.
 - Provenance append does not recompute and enforce event digest/invariants.
 - Shared identity can leave overlapping corpus members after bridge records.

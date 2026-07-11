@@ -205,6 +205,133 @@ public sealed class BundleTests
     }
 
     [TestMethod]
+    public void Verifier_rejects_invalid_workflow_digests_without_valid_result()
+    {
+        var artifact = CreateArtifact();
+        var invalidDefinition = new BundleWorkflowBinding(
+            "workflow-1",
+            default,
+            "template-1",
+            "1.0.0",
+            ContentDigest.Sha256Utf8("template"),
+            ProtocolVersionId,
+            ProtocolDigest());
+        var invalidTemplate = new BundleWorkflowBinding(
+            "workflow-1",
+            ContentDigest.Sha256Utf8("workflow"),
+            "template-1",
+            "1.0.0",
+            default,
+            ProtocolVersionId,
+            ProtocolDigest());
+
+        foreach (var binding in new[] { invalidDefinition, invalidTemplate })
+        {
+            var result = new BundleVerifier().Verify(
+                CreateManifest(artifacts: new[] { artifact }, workflowBinding: binding),
+                CreateOptions(artifact, ArtifactBytes()));
+
+            Assert.IsFalse(result.IsValid);
+            Assert.IsFalse(result.ManifestDigest.IsValid);
+            AssertHasCategory(result, BundleErrorCodes.InvalidWorkflowBinding);
+        }
+    }
+
+    [TestMethod]
+    public void Verifier_invalid_bound_protocol_digest_returns_finding_not_exception()
+    {
+        var artifact = CreateArtifact();
+        var binding = new BundleWorkflowBinding(
+            "workflow-1",
+            ContentDigest.Sha256Utf8("workflow"),
+            "template-1",
+            "1.0.0",
+            ContentDigest.Sha256Utf8("template"),
+            ProtocolVersionId,
+            default);
+
+        var result = new BundleVerifier().Verify(
+            CreateManifest(artifacts: new[] { artifact }, workflowBinding: binding),
+            CreateOptions(artifact, ArtifactBytes()));
+
+        Assert.IsFalse(result.IsValid);
+        Assert.IsFalse(result.ManifestDigest.IsValid);
+        AssertHasCategory(result, BundleErrorCodes.InvalidWorkflowBinding);
+    }
+
+    [TestMethod]
+    public void Verifier_invalid_artifact_source_record_digest_returns_structured_finding()
+    {
+        var bytes = ArtifactBytes();
+        var artifact = new BundleArtifactEntry(
+            "search-plan",
+            "artifacts/search-plan.json",
+            "workflow-artifact",
+            "application/json",
+            bytes.Length,
+            BundleArtifactEntry.ComputeRawByteDigest(bytes),
+            "nexus.workflow.artifact",
+            "1.0.0",
+            sourceRecordDigest: default(ContentDigest));
+
+        var result = new BundleVerifier().Verify(
+            CreateManifest(artifacts: new[] { artifact }),
+            CreateOptions(artifact, bytes));
+
+        Assert.IsFalse(result.IsValid);
+        Assert.IsFalse(result.ManifestDigest.IsValid);
+        Assert.AreEqual(0, result.VerifiedArtifacts.Count);
+        AssertHasCategory(result, BundleErrorCodes.InvalidArtifactDigest);
+    }
+
+    [TestMethod]
+    public void Verifier_invalid_artifact_provenance_digest_does_not_verify_artifact()
+    {
+        var bytes = ArtifactBytes();
+        var artifact = new BundleArtifactEntry(
+            "search-plan",
+            "artifacts/search-plan.json",
+            "workflow-artifact",
+            "application/json",
+            bytes.Length,
+            BundleArtifactEntry.ComputeRawByteDigest(bytes),
+            "nexus.workflow.artifact",
+            "1.0.0",
+            provenanceEventId: "event-1",
+            provenanceEventDigest: default(ContentDigest));
+
+        var result = new BundleVerifier().Verify(
+            CreateManifest(artifacts: new[] { artifact }),
+            CreateOptions(artifact, bytes));
+
+        Assert.IsFalse(result.IsValid);
+        Assert.IsFalse(result.ManifestDigest.IsValid);
+        Assert.AreEqual(0, result.VerifiedArtifacts.Count);
+        AssertHasCategory(result, BundleErrorCodes.InvalidProvenanceBinding);
+    }
+
+    [TestMethod]
+    public void Verifier_invalid_existing_artifact_digest_blocks_overwrite_verification()
+    {
+        var artifact = CreateArtifact();
+        var options = CreateOptions(artifact, ArtifactBytes()) with
+        {
+            ExistingArtifactDigests = new Dictionary<string, ContentDigest>(StringComparer.Ordinal)
+            {
+                [artifact.LogicalPath] = default
+            }
+        };
+
+        var result = new BundleVerifier().Verify(
+            CreateManifest(artifacts: new[] { artifact }),
+            options);
+
+        Assert.IsFalse(result.IsValid);
+        Assert.AreEqual(0, result.VerifiedArtifacts.Count);
+        AssertHasCategory(result, BundleErrorCodes.DestructiveOverwrite);
+    }
+
+    [TestMethod]
     public void Verifier_rejects_invalid_path_missing_artifact_checksum_mismatch_and_size_mismatch()
     {
         var bytes = ArtifactBytes();

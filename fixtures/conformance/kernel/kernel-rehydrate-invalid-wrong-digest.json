@@ -1,0 +1,33 @@
+{
+  "fixtureId": "kernel-rehydrate-invalid-wrong-digest-v1",
+  "sourceKind": "kernel-rehydration",
+  "sourceRefs": [
+    "docs/gates/HARDENING-02-KERNEL-REHYDRATION.md",
+    "docs/adr/0002-canonical-json-and-digests.md",
+    "docs/adr/0017-canonical-json-profile-correction.md"
+  ],
+  "sourceCommit": "4e5c0d09e63bb57dbe4ea72f0654a8653bfb440e",
+  "generatorCommand": "dotnet test tests/NexusScholar.Conformance.Tests/NexusScholar.Conformance.Tests.csproj -c Release --filter KernelFixtureTests",
+  "generatorVersion": "gate2-local-v1",
+  "expectedDigest": "sha256:6f4249863972d781f8332726bb48812b45f6c854d5e07d3d94cfb4082022491e",
+  "expectedScope": "canonical-json-record",
+  "expectedSchemaId": "nexus.kernel.fixture",
+  "expectedSchemaVersion": "1.0.0",
+  "expectedErrorContains": "does not reproduce the expected digest",
+  "envelope": {
+    "algorithm": "sha256",
+    "canonicalizationProfile": "nexus-jcs-nfc-v1",
+    "content": {
+      "actors": [
+        "researcher-1",
+        "reviewer-2"
+      ],
+      "note": "Re\u0301sume\u0301",
+      "optional": null,
+      "timestamp": "2026-06-26T10:15:30.1234567Z"
+    },
+    "schema": "nexus.kernel.fixture",
+    "schemaVersion": "1.0.0",
+    "scope": "canonical-json-record"
+  }
+}
