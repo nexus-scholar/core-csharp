@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NexusScholar.Kernel;
 using NexusScholar.Provenance;
@@ -264,6 +265,112 @@ public sealed class ProvenanceTests
                 new ProvenanceAgent("automation-1", "automation")));
 
         Assert.AreEqual(ProvenanceErrorCodes.ProjectionNotCanonical, error.Category);
+    }
+
+    [TestMethod]
+    public void Research_event_has_no_public_constructor()
+    {
+        Assert.AreEqual(0, typeof(ResearchEvent).GetConstructors(BindingFlags.Public | BindingFlags.Instance).Length);
+    }
+
+    [TestMethod]
+    [DataRow("digest", ProvenanceErrorCodes.StaleEventDigest)]
+    [DataRow("agent-id", ProvenanceErrorCodes.InvalidAgent)]
+    [DataRow("agent-kind", ProvenanceErrorCodes.InvalidAgent)]
+    [DataRow("timestamp", ProvenanceErrorCodes.InvalidTimestamp)]
+    [DataRow("event-id", ProvenanceErrorCodes.InvalidEventId)]
+    [DataRow("entity-kind", ProvenanceErrorCodes.ProjectionNotCanonical)]
+    [DataRow("protocol-binding", ProvenanceErrorCodes.InvalidBinding)]
+    [DataRow("workflow-binding", ProvenanceErrorCodes.InvalidBinding)]
+    public void Append_rejects_forged_event_state(string mutation, string expectedCategory)
+    {
+        var valid = CreateEventRecord(Guid.Parse("00000000-0000-0000-0000-000000000020"), "protocol-approved");
+        var forged = CloneEvent(
+            valid,
+            eventId: mutation == "event-id" ? default : valid.EventId,
+            agent: mutation switch
+            {
+                "agent-id" => new ProvenanceAgent(string.Empty, ProvenanceAgent.HumanKind),
+                "agent-kind" => new ProvenanceAgent("agent-1", "unknown"),
+                _ => valid.Agent
+            },
+            occurredAt: mutation == "timestamp" ? valid.OccurredAt.ToOffset(TimeSpan.FromHours(1)) : valid.OccurredAt,
+            subject: mutation == "entity-kind" ? new ProvenanceEntityRef("cache", "cache-1") : valid.Subject,
+            eventDigest: mutation == "digest" ? ContentDigest.Sha256Utf8("forged") : valid.EventDigest,
+            protocolBinding: mutation == "protocol-binding"
+                ? new ProvenanceProtocolBinding("protocol-1", "version-1", 0, default)
+                : valid.ProtocolBinding,
+            workflowBinding: mutation == "workflow-binding"
+                ? new ProvenanceWorkflowBinding("workflow-1", default, " ")
+                : valid.WorkflowBinding);
+
+        var error = Assert.ThrowsExactly<ProvenanceRuleException>(() => new InMemoryProvenanceStore().Append(forged));
+        Assert.AreEqual(expectedCategory, error.Category);
+    }
+
+    [TestMethod]
+    public async Task Concurrent_distinct_event_appends_are_lossless()
+    {
+        var store = new InMemoryProvenanceStore();
+        var events = Enumerable.Range(1, 64)
+            .Select(value => CreateEventRecord(new Guid(value, 0, 0, new byte[8]), "protocol-approved", $"subject-{value:D2}"))
+            .ToArray();
+
+        await Task.WhenAll(events.Select(record => Task.Run(() => store.Append(record))));
+
+        Assert.AreEqual(events.Length, store.ReadAll().Count);
+        CollectionAssert.AreEquivalent(
+            events.Select(item => item.EventId.ToString()).ToArray(),
+            store.ReadAll().Select(item => item.EventId.ToString()).ToArray());
+    }
+
+    [TestMethod]
+    public async Task Concurrent_duplicate_event_appends_accept_exactly_one()
+    {
+        var store = new InMemoryProvenanceStore();
+        var record = CreateEventRecord(Guid.Parse("00000000-0000-0000-0000-000000000030"), "protocol-approved");
+        var results = await Task.WhenAll(Enumerable.Range(0, 32).Select(_ => Task.Run(() =>
+        {
+            try
+            {
+                store.Append(record);
+                return "accepted";
+            }
+            catch (ProvenanceRuleException error) when (error.Category == ProvenanceErrorCodes.DuplicateEventId)
+            {
+                return "duplicate";
+            }
+        })));
+
+        Assert.AreEqual(1, results.Count(value => value == "accepted"));
+        Assert.AreEqual(31, results.Count(value => value == "duplicate"));
+        Assert.AreEqual(1, store.ReadAll().Count);
+    }
+
+    private static ResearchEvent CloneEvent(
+        ResearchEvent source,
+        EntityId<ProvenanceEventTag>? eventId = null,
+        ProvenanceAgent? agent = null,
+        DateTimeOffset? occurredAt = null,
+        ProvenanceEntityRef? subject = null,
+        ContentDigest? eventDigest = null,
+        ProvenanceProtocolBinding? protocolBinding = null,
+        ProvenanceWorkflowBinding? workflowBinding = null)
+    {
+        var constructor = typeof(ResearchEvent).GetConstructors(BindingFlags.NonPublic | BindingFlags.Instance).Single();
+        return (ResearchEvent)constructor.Invoke(new object?[]
+        {
+            eventId ?? source.EventId,
+            agent ?? source.Agent,
+            source.Activity,
+            occurredAt ?? source.OccurredAt,
+            subject ?? source.Subject,
+            source.Inputs,
+            source.Outputs,
+            eventDigest ?? source.EventDigest,
+            protocolBinding ?? source.ProtocolBinding,
+            workflowBinding ?? source.WorkflowBinding
+        });
     }
 
     private static ResearchEvent CreateEventRecord(Guid eventId, string subjectType, string subjectId = "subject-1")

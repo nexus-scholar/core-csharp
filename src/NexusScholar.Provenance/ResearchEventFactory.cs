@@ -51,48 +51,10 @@ public static class ResearchEventFactory
         var normalizedInputs = (inputs ?? Array.Empty<ProvenanceEntityRef>()).ToArray();
         var normalizedOutputs = (outputs ?? Array.Empty<ProvenanceEntityRef>()).ToArray();
 
-        ValidateEntityKind(subject);
-        foreach (var input in normalizedInputs)
-        {
-            ValidateEntityKind(input);
-        }
-
-        foreach (var output in normalizedOutputs)
-        {
-            ValidateEntityKind(output);
-        }
-
-        if (activity.RequiresActor && string.IsNullOrWhiteSpace(agent.AgentId))
-        {
-            throw new ProvenanceRuleException(ProvenanceErrorCodes.MissingActor, "Activity requires an actor.");
-        }
-
-        if (activity.RequiresInput)
-        {
-            if (normalizedInputs.Length == 0 ||
-                normalizedInputs.Any(input => input.Digest is null))
-            {
-                throw new ProvenanceRuleException(
-                    ProvenanceErrorCodes.MissingRequiredInput,
-                    "Required inputs must include content digests.");
-            }
-        }
-
-        if (activity.RequiresOutput)
-        {
-            if (normalizedOutputs.Length == 0 ||
-                normalizedOutputs.Any(output => output.Digest is null))
-            {
-                throw new ProvenanceRuleException(
-                    ProvenanceErrorCodes.MissingRequiredOutput,
-                    "Required outputs must include content digests.");
-            }
-        }
-
         var eventId = EntityId<ProvenanceEventTag>.New(ids);
         var occurredAt = clock.UtcNow;
 
-        var eventDigest = new ResearchEvent(
+        var unsigned = new ResearchEvent(
             eventId,
             agent,
             activity,
@@ -102,7 +64,9 @@ public static class ResearchEventFactory
             normalizedOutputs,
             default,
             protocolBinding,
-            workflowBinding).ToDigestEnvelope().ComputeDigest();
+            workflowBinding);
+        ProvenanceEventValidator.Validate(unsigned, verifyDigest: false);
+        var eventDigest = unsigned.ToDigestEnvelope().ComputeDigest();
 
         return new ResearchEvent(
             eventId,
@@ -115,15 +79,5 @@ public static class ResearchEventFactory
             eventDigest,
             protocolBinding,
             workflowBinding);
-    }
-
-    private static void ValidateEntityKind(ProvenanceEntityRef reference)
-    {
-        if (!ProvenanceEntityRef.IsCanonicalKind(reference.EntityKind))
-        {
-            throw new ProvenanceRuleException(
-                ProvenanceErrorCodes.ProjectionNotCanonical,
-                $"Entity kind '{reference.EntityKind}' is not canonical provenance.");
-        }
     }
 }

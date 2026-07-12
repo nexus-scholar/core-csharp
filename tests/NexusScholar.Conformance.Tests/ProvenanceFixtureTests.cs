@@ -24,6 +24,15 @@ public sealed class ProvenanceFixtureTests
         "provenance-invalid-projection-as-canonical"
     };
 
+    private static readonly string[] AppendAuthorityFixtures =
+    {
+        "provenance-append-authority-valid-v1.json",
+        "provenance-append-authority-invalid-digest-v1.json",
+        "provenance-append-authority-invalid-agent-v1.json",
+        "provenance-append-authority-invalid-binding-v1.json",
+        "provenance-append-authority-concurrent-v1.json"
+    };
+
     [TestMethod]
     public void Gate_5_provenance_fixtures_are_present()
     {
@@ -43,6 +52,10 @@ public sealed class ProvenanceFixtureTests
     {
         foreach (var path in Directory.GetFiles(ProvenanceFixtureDirectory(), "*.json"))
         {
+            if (Path.GetFileName(path).StartsWith("provenance-append-authority-", StringComparison.Ordinal))
+            {
+                continue;
+            }
             using var document = JsonDocument.Parse(File.ReadAllText(path));
             var root = document.RootElement;
             var fixtureId = root.GetProperty("fixtureId").GetString();
@@ -83,6 +96,35 @@ public sealed class ProvenanceFixtureTests
                 string.Equals(value.GetString(), "no-php-compatibility-claim", StringComparison.Ordinal)), fixtureId);
             Assert.IsTrue(fixtureCase.GetProperty("nonClaims").EnumerateArray().Any(value =>
                 string.Equals(value.GetString(), "no-blueprint-conformance-claim", StringComparison.Ordinal)), fixtureId);
+        }
+    }
+
+    [TestMethod]
+    public void Hardening_07_append_authority_recipes_are_complete_and_digest_replayable()
+    {
+        var names = Directory.GetFiles(ProvenanceFixtureDirectory(), "*.json")
+            .Select(Path.GetFileName)
+            .ToHashSet(StringComparer.Ordinal);
+        var mutations = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var fixture in AppendAuthorityFixtures)
+        {
+            Assert.IsTrue(names.Contains(fixture), $"Missing Provenance append authority recipe '{fixture}'.");
+            using var document = LoadJsonFixture(fixture);
+            var root = document.RootElement;
+            Assert.AreEqual("local-hardening-contract", root.GetProperty("sourceKind").GetString(), fixture);
+            Assert.AreEqual("hardening-07-v1", root.GetProperty("generatorVersion").GetString(), fixture);
+            Assert.IsTrue(root.GetProperty("sourceRefs").EnumerateArray().Any(value =>
+                string.Equals(value.GetString(), "docs/gates/HARDENING-07-PROVENANCE-APPEND-AUTHORITY.md", StringComparison.Ordinal)), fixture);
+            var @case = root.GetProperty("case");
+            var compact = JsonSerializer.Serialize(@case, new JsonSerializerOptions { WriteIndented = false });
+            var digest = ContentDigest.Sha256Utf8(compact).ToString();
+            Assert.AreEqual(digest, root.GetProperty("inputDigest").GetString(), fixture);
+            Assert.AreEqual(digest, root.GetProperty("outputDigest").GetString(), fixture);
+            mutations.Add(@case.GetProperty("mutation").GetString()!);
+        }
+        foreach (var mutation in new[] { "none", "forged-digest", "unsupported-agent", "invalid-binding", "duplicate-id" })
+        {
+            Assert.IsTrue(mutations.Contains(mutation), $"Missing Provenance append mutation recipe '{mutation}'.");
         }
     }
 
