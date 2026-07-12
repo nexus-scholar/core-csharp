@@ -34,6 +34,20 @@ public static class ResearchWorkspaceJson
         File.WriteAllText(path, Serialize(project) + "\n", Utf8NoBom);
     }
 
+    public static void WriteProjectFileAtomic(string path, ResearchWorkspaceProject project)
+    {
+        var temporaryPath = $"{path}.{Guid.NewGuid():N}.tmp";
+        try
+        {
+            WriteProjectFile(temporaryPath, project);
+            File.Move(temporaryPath, path, overwrite: true);
+        }
+        finally
+        {
+            File.Delete(temporaryPath);
+        }
+    }
+
     public static void WriteJsonFile<T>(string path, T value)
     {
         var json = JsonSerializer.Serialize(value, TraceSerializerOptions).ReplaceLineEndings("\n");

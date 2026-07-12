@@ -127,10 +127,11 @@ internal static class ResearchWorkspaceStatusCommand
             string workingDirectory)
         {
             var searchExports = CountSearchExports(project);
-            var planPath = ResearchWorkspacePaths.InProject(location.RootDirectory, ResearchWorkspacePaths.CurrentWorkspacePlan);
-            var deduplicationResultPresent = File.Exists(ResearchWorkspacePaths.InProject(location.RootDirectory, ResearchWorkspacePaths.CurrentDeduplicationResult));
+            _ = ResearchWorkspaceGenerationVerifier.VerifyCurrent(location, project);
+            var planPath = ResearchWorkspacePaths.InProject(location.RootDirectory, project.Outputs.GetValueOrDefault("workspacePlan") ?? ResearchWorkspacePaths.CurrentWorkspacePlan);
+            var deduplicationResultPresent = File.Exists(ResearchWorkspacePaths.InProject(location.RootDirectory, project.Outputs.GetValueOrDefault("deduplicationResult") ?? ResearchWorkspacePaths.CurrentDeduplicationResult));
             var workspacePlanPresent = File.Exists(planPath);
-            var reviewReportPresent = File.Exists(ResearchWorkspacePaths.InProject(location.RootDirectory, ResearchWorkspaceAnalyzer.ReviewReportPath));
+            var reviewReportPresent = File.Exists(ResearchWorkspacePaths.InProject(location.RootDirectory, project.Outputs.GetValueOrDefault("reviewReport") ?? ResearchWorkspaceAnalyzer.ReviewReportPath));
             var plan = workspacePlanPresent ? ReadWorkspacePlan(planPath) : null;
             var missingGeneratedOutputs = CountMissingGeneratedOutputs(location, project);
             var state = StateFor(report, searchExports, workspacePlanPresent, plan, missingGeneratedOutputs);

@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 
 namespace NexusScholar.ResearchWorkspace;
@@ -10,7 +11,10 @@ public sealed record ResearchWorkspaceProject(
     string CreatedAt,
     IReadOnlyList<ResearchWorkspaceInput> Inputs,
     IReadOnlyDictionary<string, string> Outputs,
-    IReadOnlyList<string> NonClaims)
+    IReadOnlyList<string> NonClaims,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)] long Revision = 0,
+    string? CurrentGenerationId = null,
+    string? GenerationManifestPath = null)
 {
     public const string CurrentSchema = "nexus.project.v0";
 
@@ -50,6 +54,17 @@ public sealed record ResearchWorkspaceProject(
         ArgumentNullException.ThrowIfNull(outputs);
         return this with { Outputs = new Dictionary<string, string>(outputs, StringComparer.Ordinal) };
     }
+
+    public ResearchWorkspaceProject CommitGeneration(
+        IReadOnlyDictionary<string, string> outputs,
+        string generationId,
+        string manifestPath) => this with
+        {
+            Outputs = new Dictionary<string, string>(outputs, StringComparer.Ordinal),
+            Revision = checked(Revision + 1),
+            CurrentGenerationId = generationId,
+            GenerationManifestPath = manifestPath
+        };
 
     private static string CreateWorkspaceId(string title)
     {

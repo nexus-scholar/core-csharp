@@ -23,21 +23,31 @@ public static class WorkspacePlanReader
                 ResearchWorkspaceExitCodes.UnsupportedSchemaOrFormat);
         }
 
-        var planPath = ResearchWorkspacePaths.InProject(location.RootDirectory, ResearchWorkspacePaths.CurrentWorkspacePlan);
+        try
+        {
+            _ = ResearchWorkspaceGenerationVerifier.VerifyCurrent(location, project);
+        }
+        catch (InvalidOperationException exception)
+        {
+            throw new WorkspacePlanReadException(exception.Message, ResearchWorkspaceExitCodes.MissingProjectOrInput);
+        }
+        var planRelativePath = project.Outputs.GetValueOrDefault("workspacePlan") ?? ResearchWorkspacePaths.CurrentWorkspacePlan;
+        var planPath = ResearchWorkspacePaths.InProject(location.RootDirectory, planRelativePath);
         if (!File.Exists(planPath))
         {
             throw new WorkspacePlanReadException(
-                $"Generated workspace plan not found: {ResearchWorkspacePaths.CurrentWorkspacePlan}",
+                $"Generated workspace plan not found: {planRelativePath}",
                 ResearchWorkspaceExitCodes.MissingProjectOrInput);
         }
 
         if (requireDeduplicationResult)
         {
-            var deduplicationResultPath = ResearchWorkspacePaths.InProject(location.RootDirectory, ResearchWorkspacePaths.CurrentDeduplicationResult);
+            var deduplicationResultRelativePath = project.Outputs.GetValueOrDefault("deduplicationResult") ?? ResearchWorkspacePaths.CurrentDeduplicationResult;
+            var deduplicationResultPath = ResearchWorkspacePaths.InProject(location.RootDirectory, deduplicationResultRelativePath);
             if (!File.Exists(deduplicationResultPath))
             {
                 throw new WorkspacePlanReadException(
-                    $"Generated deduplication result not found: {ResearchWorkspacePaths.CurrentDeduplicationResult}",
+                    $"Generated deduplication result not found: {deduplicationResultRelativePath}",
                     ResearchWorkspaceExitCodes.MissingProjectOrInput);
             }
         }

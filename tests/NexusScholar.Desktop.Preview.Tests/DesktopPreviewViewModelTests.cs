@@ -126,12 +126,9 @@ public sealed class DesktopPreviewViewModelTests
         Assert.AreEqual(ResearchWorkspaceExitCodes.Success, result.ExitCode);
         Assert.AreEqual("analysis", model.SelectedSection.Id);
         Assert.AreEqual(WorkspaceState.ReviewReady, model.Overview.State);
-        Assert.IsTrue(File.Exists(ResearchWorkspacePaths.InProject(workspace.Root, ResearchWorkspaceAnalyzer.DeduplicationResultPath)));
-        Assert.IsTrue(File.Exists(ResearchWorkspacePaths.InProject(workspace.Root, ResearchWorkspaceAnalyzer.WorkspacePlanPath)));
-        Assert.IsTrue(File.Exists(ResearchWorkspacePaths.InProject(workspace.Root, ResearchWorkspaceAnalyzer.ReviewReportPath)));
-        Assert.AreEqual(ResearchWorkspaceAnalyzer.DeduplicationResultPath, updatedProject.Outputs["deduplicationResult"]);
-        Assert.AreEqual(ResearchWorkspaceAnalyzer.WorkspacePlanPath, updatedProject.Outputs["workspacePlan"]);
-        Assert.AreEqual(ResearchWorkspaceAnalyzer.ReviewReportPath, updatedProject.Outputs["reviewReport"]);
+        Assert.IsTrue(updatedProject.Outputs.Values.All(path => File.Exists(ResearchWorkspacePaths.InProject(workspace.Root, path))));
+        Assert.IsNotNull(updatedProject.CurrentGenerationId);
+        Assert.IsNotNull(ResearchWorkspaceGenerationVerifier.VerifyCurrent(workspace.Location, updatedProject));
         Assert.IsTrue(model.StatusMessage.Contains("Workspace analysis complete", StringComparison.Ordinal));
         Assert.IsFalse(model.StatusMessage.Contains(workspace.Root, StringComparison.OrdinalIgnoreCase));
         AssertDoesNotContainWorkspaceRoot(model.Overview, workspace.Root);

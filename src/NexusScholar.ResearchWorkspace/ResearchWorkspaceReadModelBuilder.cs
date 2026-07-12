@@ -31,10 +31,12 @@ public static class ResearchWorkspaceReadModelBuilder
         }
 
         var verification = ResearchWorkspaceVerifier.Verify(location, project);
+        _ = ResearchWorkspaceGenerationVerifier.VerifyCurrent(location, project);
         var traces = LoadImportTraces(location, project);
         var deduplicationResult = TryReadDeduplicationResult(location, project);
         var workspacePlan = TryReadWorkspacePlan(location, project);
-        var reviewReportPresent = File.Exists(ResearchWorkspacePaths.InProject(location.RootDirectory, ResearchWorkspaceAnalyzer.ReviewReportPath));
+        var reviewReportPresent = project.Outputs.TryGetValue("reviewReport", out var reviewReportPath) &&
+            File.Exists(ResearchWorkspacePaths.InProject(location.RootDirectory, reviewReportPath));
         var missingGeneratedOutputs = CountMissingGeneratedOutputs(location, project);
         var analysis = BuildAnalysis(workspacePlan, deduplicationResult, reviewReportPresent);
         var attention = BuildAttention(verification, missingGeneratedOutputs);

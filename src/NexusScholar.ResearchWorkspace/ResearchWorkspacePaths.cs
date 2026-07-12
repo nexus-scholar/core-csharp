@@ -8,6 +8,10 @@ public static class ResearchWorkspacePaths
     public const string DedupOutputs = "nexus-output/dedup";
     public const string WorkspaceOutputs = "nexus-output/workspace";
     public const string ReportOutputs = "nexus-output/reports";
+    public const string Generations = "nexus-output/generations";
+    public const string GenerationStaging = "nexus-output/.staging";
+    public const string GenerationQuarantine = "nexus-output/quarantine";
+    public const string ProjectLockFileName = "nexus.project.lock";
     public const string CurrentDeduplicationResult = "nexus-output/dedup/current.deduplication-result.json";
     public const string CurrentWorkspacePlan = "nexus-output/workspace/current.workspace-plan.json";
 
@@ -26,4 +30,6 @@ public static class ResearchWorkspacePaths
     {
         return Path.Combine(workingDirectory, relativePath.Replace('/', Path.DirectorySeparatorChar));
     }
+
+    public static string GenerationRoot(string generationId) => $"{Generations}/{generationId}";
 }

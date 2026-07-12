@@ -76,18 +76,6 @@ internal static class SearchImportWorkspaceCommand
             }
 
             var sourceBytes = File.ReadAllBytes(sourcePath);
-            var relativeSourcePath = $"{ResearchWorkspacePaths.SearchInputs}/{inputId}-{source}.{SearchImportAliases.ExtensionFor(format)}";
-            var targetSourcePath = ResearchWorkspacePaths.InProject(location.RootDirectory, relativeSourcePath);
-            if (File.Exists(targetSourcePath))
-            {
-                error.WriteLine($"Target search input already exists: {relativeSourcePath}");
-                return ResearchWorkspaceExitCodes.UsageOrValidationFailure;
-            }
-
-            Directory.CreateDirectory(ResearchWorkspacePaths.InProject(location.RootDirectory, ResearchWorkspacePaths.SearchInputs));
-            Directory.CreateDirectory(ResearchWorkspacePaths.InProject(location.RootDirectory, ResearchWorkspacePaths.ImportOutputs));
-            File.WriteAllBytes(targetSourcePath, sourceBytes);
-
             var traceId = $"{inputId}.import-trace";
             var trace = new SearchImportService().Parse(
                 traceId,
@@ -101,23 +89,19 @@ internal static class SearchImportWorkspaceCommand
                     options.Query),
                 sourceBytes);
 
-            var traceRelativePath = $"{ResearchWorkspacePaths.ImportOutputs}/{inputId}.import-trace.json";
-            var tracePath = ResearchWorkspacePaths.InProject(location.RootDirectory, traceRelativePath);
-            ResearchWorkspaceJson.WriteJsonFile(tracePath, trace);
-
-            var updatedProject = project.WithInput(new ResearchWorkspaceInput
+            var updatedProject = ResearchWorkspaceTransaction.CommitImport(location, project, new ResearchWorkspaceInput
             {
                 InputId = inputId,
                 Kind = "search-export",
                 Source = source,
                 Format = format,
-                RelativePath = relativeSourcePath,
                 Sha256 = ContentDigest.Sha256(sourceBytes).ToString(),
                 QueryId = inputId,
                 QueryText = string.IsNullOrWhiteSpace(options.Query) ? null : options.Query.Trim(),
-                ImportTracePath = traceRelativePath
-            });
-            ResearchWorkspaceStore.WriteProject(location, updatedProject);
+            }, sourceBytes, trace, SearchImportAliases.ExtensionFor(format));
+            var committedInput = updatedProject.Inputs.Single(input => string.Equals(input.EffectiveInputId, inputId, StringComparison.Ordinal));
+            var relativeSourcePath = committedInput.EffectiveRelativePath;
+            var traceRelativePath = committedInput.ImportTracePath!;
 
             output.WriteLine($"Imported search export: {inputId}");
             output.WriteLine($"Source: {source}");

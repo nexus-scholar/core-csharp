@@ -1,7 +1,6 @@
 using System.Text.Json;
 using NexusScholar.ResearchWorkspace;
 using NexusScholar.Search;
-using NexusScholar.UiContracts;
 
 namespace NexusScholar.Cli.ResearchWorkspace;
 
@@ -34,10 +33,8 @@ internal static class ResearchWorkspaceAnalyzeCommand
                 return ResearchWorkspaceExitCodes.UnsupportedSchemaOrFormat;
             }
 
-            var result = ResearchWorkspaceAnalyzer.Analyze(location, project);
-            WriteOutputs(location, result);
-            UpdateProjectOutputs(location, project);
-            WriteSummary(output, result);
+            var commit = ResearchWorkspaceTransaction.AnalyzeAndCommit(location, project);
+            WriteSummary(output, commit);
             return ResearchWorkspaceExitCodes.Success;
         }
         catch (JsonException exception)
@@ -74,37 +71,9 @@ internal static class ResearchWorkspaceAnalyzeCommand
         }
     }
 
-    private static void WriteOutputs(ResearchWorkspaceLocation location, ResearchWorkspaceAnalysisResult result)
+    private static void WriteSummary(TextWriter output, ResearchWorkspaceAnalysisCommit commit)
     {
-        Directory.CreateDirectory(ResearchWorkspacePaths.InProject(location.RootDirectory, ResearchWorkspacePaths.DedupOutputs));
-        Directory.CreateDirectory(ResearchWorkspacePaths.InProject(location.RootDirectory, ResearchWorkspacePaths.WorkspaceOutputs));
-        Directory.CreateDirectory(ResearchWorkspacePaths.InProject(location.RootDirectory, ResearchWorkspacePaths.ReportOutputs));
-
-        ResearchWorkspaceJson.WriteJsonFile(
-            ResearchWorkspacePaths.InProject(location.RootDirectory, ResearchWorkspaceAnalyzer.DeduplicationResultPath),
-            result.DeduplicationResult);
-        ResearchWorkspaceJson.WriteJsonFile(
-            ResearchWorkspacePaths.InProject(location.RootDirectory, ResearchWorkspaceAnalyzer.WorkspacePlanPath),
-            result.WorkspacePlan,
-            UiContractJson.SerializerOptions);
-        ResearchWorkspaceJson.WriteTextFile(
-            ResearchWorkspacePaths.InProject(location.RootDirectory, ResearchWorkspaceAnalyzer.ReviewReportPath),
-            WorkspacePlanReportWriter.Format(result));
-    }
-
-    private static void UpdateProjectOutputs(ResearchWorkspaceLocation location, ResearchWorkspaceProject project)
-    {
-        var outputs = new Dictionary<string, string>(project.Outputs, StringComparer.Ordinal)
-        {
-            ["deduplicationResult"] = ResearchWorkspaceAnalyzer.DeduplicationResultPath,
-            ["workspacePlan"] = ResearchWorkspaceAnalyzer.WorkspacePlanPath,
-            ["reviewReport"] = ResearchWorkspaceAnalyzer.ReviewReportPath
-        };
-        ResearchWorkspaceStore.WriteProject(location, project.WithOutputs(outputs));
-    }
-
-    private static void WriteSummary(TextWriter output, ResearchWorkspaceAnalysisResult result)
-    {
+        var result = commit.Analysis;
         output.WriteLine("Workspace analysis complete");
         output.WriteLine($"Mode: {result.WorkspacePlan.Mode}");
         output.WriteLine($"Import traces: {result.ImportTraces.Count}");
@@ -112,9 +81,10 @@ internal static class ResearchWorkspaceAnalyzeCommand
         output.WriteLine($"Parser warnings: {result.ParserWarningCount}");
         output.WriteLine($"Exact duplicate clusters: {result.DeduplicationResult.Clusters.Count}");
         output.WriteLine($"Review-required duplicate candidates: {result.DeduplicationResult.ReviewRequiredCandidates.Count}");
-        output.WriteLine($"WorkspacePlan: {ResearchWorkspaceAnalyzer.WorkspacePlanPath}");
-        output.WriteLine($"Deduplication result: {ResearchWorkspaceAnalyzer.DeduplicationResultPath}");
-        output.WriteLine($"Review report: {ResearchWorkspaceAnalyzer.ReviewReportPath}");
+        output.WriteLine($"Generation: {commit.Manifest.GenerationId}");
+        output.WriteLine($"WorkspacePlan: {commit.Project.Outputs["workspacePlan"]}");
+        output.WriteLine($"Deduplication result: {commit.Project.Outputs["deduplicationResult"]}");
+        output.WriteLine($"Review report: {commit.Project.Outputs["reviewReport"]}");
         output.WriteLine("Next: nexus review");
     }
 

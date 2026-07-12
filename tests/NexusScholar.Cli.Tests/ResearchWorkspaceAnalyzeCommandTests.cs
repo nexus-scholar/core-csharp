@@ -51,14 +51,13 @@ public sealed class ResearchWorkspaceAnalyzeCommandTests
         StringAssert.Contains(output, "Review-required duplicate candidates: 0");
         Assert.AreEqual(string.Empty, error);
 
-        Assert.IsTrue(File.Exists(Path.Combine(workspace.Root, "nexus-output", "dedup", "current.deduplication-result.json")));
-        Assert.IsTrue(File.Exists(Path.Combine(workspace.Root, "nexus-output", "workspace", "current.workspace-plan.json")));
-        Assert.IsTrue(File.Exists(Path.Combine(workspace.Root, "nexus-output", "reports", "review.md")));
+        Assert.IsTrue(File.Exists(OutputPath(workspace.Root, "deduplicationResult")));
+        Assert.IsTrue(File.Exists(OutputPath(workspace.Root, "workspacePlan")));
+        Assert.IsTrue(File.Exists(OutputPath(workspace.Root, "reviewReport")));
 
         var projectJson = File.ReadAllText(Path.Combine(workspace.Root, "nexus.project.json"));
-        StringAssert.Contains(projectJson, "\"deduplicationResult\": \"nexus-output/dedup/current.deduplication-result.json\"");
-        StringAssert.Contains(projectJson, "\"workspacePlan\": \"nexus-output/workspace/current.workspace-plan.json\"");
-        StringAssert.Contains(projectJson, "\"reviewReport\": \"nexus-output/reports/review.md\"");
+        StringAssert.Contains(projectJson, "\"currentGenerationId\": \"gen-");
+        StringAssert.Contains(projectJson, "\"generationManifestPath\": \"nexus-output/generations/gen-");
     }
 
     [TestMethod]
@@ -77,9 +76,9 @@ public sealed class ResearchWorkspaceAnalyzeCommandTests
         AssertSummaryAtLeast(output, "Parser warnings:", 1);
         AssertSummaryAtLeast(output, "Exact duplicate clusters:", 1);
         AssertSummaryAtLeast(output, "Review-required duplicate candidates:", 1);
-        StringAssert.Contains(output, "WorkspacePlan: nexus-output/workspace/current.workspace-plan.json");
-        StringAssert.Contains(output, "Deduplication result: nexus-output/dedup/current.deduplication-result.json");
-        StringAssert.Contains(output, "Review report: nexus-output/reports/review.md");
+        StringAssert.Contains(output, "WorkspacePlan: nexus-output/generations/gen-");
+        StringAssert.Contains(output, "Deduplication result: nexus-output/generations/gen-");
+        StringAssert.Contains(output, "Review report: nexus-output/generations/gen-");
     }
 
     [TestMethod]
@@ -89,7 +88,7 @@ public sealed class ResearchWorkspaceAnalyzeCommandTests
         ImportCombinedBundle(workspace.Root);
         Assert.AreEqual(0, RunCli(workspace.Root, new[] { "analyze" }, out _, out var error), error);
 
-        var planJson = File.ReadAllText(Path.Combine(workspace.Root, "nexus-output", "workspace", "current.workspace-plan.json"));
+        var planJson = File.ReadAllText(OutputPath(workspace.Root, "workspacePlan"));
         var plan = JsonSerializer.Deserialize<WorkspacePlan>(planJson, UiContractJson.SerializerOptions);
 
         Assert.IsNotNull(plan);
@@ -114,9 +113,9 @@ public sealed class ResearchWorkspaceAnalyzeCommandTests
         ImportCombinedBundle(workspace.Root);
         Assert.AreEqual(0, RunCli(workspace.Root, new[] { "analyze" }, out var output, out var error), error);
 
-        var workspacePlanJson = File.ReadAllText(Path.Combine(workspace.Root, "nexus-output", "workspace", "current.workspace-plan.json"));
-        var dedupJson = File.ReadAllText(Path.Combine(workspace.Root, "nexus-output", "dedup", "current.deduplication-result.json"));
-        var report = File.ReadAllText(Path.Combine(workspace.Root, "nexus-output", "reports", "review.md"));
+        var workspacePlanJson = File.ReadAllText(OutputPath(workspace.Root, "workspacePlan"));
+        var dedupJson = File.ReadAllText(OutputPath(workspace.Root, "deduplicationResult"));
+        var report = File.ReadAllText(OutputPath(workspace.Root, "reviewReport"));
         var combined = string.Join("\n", output, workspacePlanJson, dedupJson, report);
 
         Assert.IsFalse(combined.Contains(workspace.Root, StringComparison.OrdinalIgnoreCase));
@@ -130,6 +129,14 @@ public sealed class ResearchWorkspaceAnalyzeCommandTests
     public void Usage_includes_analyze()
     {
         StringAssert.Contains(CliApplication.Usage, "analyze");
+    }
+
+    private static string OutputPath(string workspaceRoot, string name)
+    {
+        using var document = JsonDocument.Parse(File.ReadAllText(Path.Combine(workspaceRoot, "nexus.project.json")));
+        var relativePath = document.RootElement.GetProperty("outputs").GetProperty(name).GetString();
+        Assert.IsNotNull(relativePath);
+        return Path.Combine(workspaceRoot, relativePath.Replace('/', Path.DirectorySeparatorChar));
     }
 
     private static void ImportCombinedBundle(string workspaceRoot)

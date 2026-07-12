@@ -1,6 +1,5 @@
 using System.Text.Json;
 using NexusScholar.Search;
-using NexusScholar.UiContracts;
 
 namespace NexusScholar.ResearchWorkspace;
 
@@ -67,16 +66,14 @@ public static class ResearchWorkspaceWorkflowActions
                     "No Nexus research workspace was found. Open a folder that contains nexus.project.json.");
             }
 
-            var result = ResearchWorkspaceAnalyzer.Analyze(context.Location, context.Project);
-            WriteOutputs(context.Location, result);
-            UpdateProjectOutputs(context.Location, context.Project);
+            var commit = ResearchWorkspaceTransaction.AnalyzeAndCommit(context.Location, context.Project);
 
             return new ResearchWorkspaceActionResult(
                 Completed: true,
                 RequiresAttention: false,
                 ExitCode: ResearchWorkspaceExitCodes.Success,
                 Message:
-                    $"Workspace analysis complete. WorkspacePlan: {ResearchWorkspaceAnalyzer.WorkspacePlanPath}; Deduplication result: {ResearchWorkspaceAnalyzer.DeduplicationResultPath}; Review report: {ResearchWorkspaceAnalyzer.ReviewReportPath}. Next: Review queue.");
+                    $"Workspace analysis complete. Generation: {commit.Manifest.GenerationId}. Next: Review queue.");
         }
         catch (JsonException exception)
         {
@@ -133,35 +130,6 @@ public static class ResearchWorkspaceWorkflowActions
         }
 
         return new ResearchWorkspaceActionContext(location, project);
-    }
-
-    private static void WriteOutputs(ResearchWorkspaceLocation location, ResearchWorkspaceAnalysisResult result)
-    {
-        Directory.CreateDirectory(ResearchWorkspacePaths.InProject(location.RootDirectory, ResearchWorkspacePaths.DedupOutputs));
-        Directory.CreateDirectory(ResearchWorkspacePaths.InProject(location.RootDirectory, ResearchWorkspacePaths.WorkspaceOutputs));
-        Directory.CreateDirectory(ResearchWorkspacePaths.InProject(location.RootDirectory, ResearchWorkspacePaths.ReportOutputs));
-
-        ResearchWorkspaceJson.WriteJsonFile(
-            ResearchWorkspacePaths.InProject(location.RootDirectory, ResearchWorkspaceAnalyzer.DeduplicationResultPath),
-            result.DeduplicationResult);
-        ResearchWorkspaceJson.WriteJsonFile(
-            ResearchWorkspacePaths.InProject(location.RootDirectory, ResearchWorkspaceAnalyzer.WorkspacePlanPath),
-            result.WorkspacePlan,
-            UiContractJson.SerializerOptions);
-        ResearchWorkspaceJson.WriteTextFile(
-            ResearchWorkspacePaths.InProject(location.RootDirectory, ResearchWorkspaceAnalyzer.ReviewReportPath),
-            WorkspacePlanReportWriter.Format(result));
-    }
-
-    private static void UpdateProjectOutputs(ResearchWorkspaceLocation location, ResearchWorkspaceProject project)
-    {
-        var outputs = new Dictionary<string, string>(project.Outputs, StringComparer.Ordinal)
-        {
-            ["deduplicationResult"] = ResearchWorkspaceAnalyzer.DeduplicationResultPath,
-            ["workspacePlan"] = ResearchWorkspaceAnalyzer.WorkspacePlanPath,
-            ["reviewReport"] = ResearchWorkspaceAnalyzer.ReviewReportPath
-        };
-        ResearchWorkspaceStore.WriteProject(location, project.WithOutputs(outputs));
     }
 
     private static int ExitCodeFor(ResearchWorkspaceVerificationReport report)

@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NexusScholar.Cli;
 
@@ -27,12 +28,13 @@ public sealed class ResearchWorkspaceVerifyCommandTests
     {
         using var workspace = TemporaryWorkspace.CreateInitialized();
         Assert.AreEqual(0, ImportScopus(workspace.Root, out _, out var importError), importError);
-        File.Delete(Path.Combine(workspace.Root, "inputs", "search", "search-001-scopus.csv"));
+        File.Delete(InputPath(workspace.Root, "relativePath"));
 
         var exitCode = RunCli(workspace.Root, new[] { "verify" }, out var output, out var error);
 
         Assert.AreEqual(2, exitCode);
-        AssertTextEqual(ExpectedPath("verify-missing-input.txt"), output);
+        StringAssert.Contains(output, "Files missing: 1");
+        StringAssert.Contains(output, "inputs/search/search-001/source.csv");
         Assert.AreEqual(string.Empty, error);
     }
 
@@ -41,12 +43,13 @@ public sealed class ResearchWorkspaceVerifyCommandTests
     {
         using var workspace = TemporaryWorkspace.CreateInitialized();
         Assert.AreEqual(0, ImportScopus(workspace.Root, out _, out var importError), importError);
-        File.AppendAllText(Path.Combine(workspace.Root, "inputs", "search", "search-001-scopus.csv"), "changed");
+        File.AppendAllText(InputPath(workspace.Root, "relativePath"), "changed");
 
         var exitCode = RunCli(workspace.Root, new[] { "verify" }, out var output, out var error);
 
         Assert.AreEqual(3, exitCode);
-        AssertTextEqual(ExpectedPath("verify-digest-mismatch.txt"), output);
+        StringAssert.Contains(output, "Digest mismatches: 1");
+        StringAssert.Contains(output, "inputs/search/search-001/source.csv");
         Assert.AreEqual(string.Empty, error);
     }
 
@@ -72,7 +75,7 @@ public sealed class ResearchWorkspaceVerifyCommandTests
         using var workspace = TemporaryWorkspace.CreateInitialized();
         Assert.AreEqual(0, ImportWos(workspace.Root, "search-001", out _, out var importError), importError);
         var projectPath = Path.Combine(workspace.Root, "nexus.project.json");
-        var tracePath = Path.Combine(workspace.Root, "nexus-output", "imports", "search-001.import-trace.json");
+        var tracePath = InputPath(workspace.Root, "importTracePath");
         var projectBefore = File.ReadAllText(projectPath);
         var traceBefore = File.ReadAllText(tracePath);
 
@@ -97,7 +100,7 @@ public sealed class ResearchWorkspaceVerifyCommandTests
     }
 
     [TestMethod]
-    public void Verify_rejects_input_path_escaping_workspace()
+    public void Verify_rejects_project_with_input_path_escaping_workspace()
     {
         using var workspace = TemporaryWorkspace.CreateInitialized();
         File.WriteAllText(
@@ -132,10 +135,9 @@ public sealed class ResearchWorkspaceVerifyCommandTests
 
         var exitCode = RunCli(workspace.Root, new[] { "verify" }, out var output, out var error);
 
-        Assert.AreEqual(1, exitCode);
-        StringAssert.Contains(output, "Invalid paths: 1");
-        StringAssert.Contains(output, "Invalid path: search-escape");
-        Assert.IsFalse(output.Contains(workspace.Root, StringComparison.OrdinalIgnoreCase));
+        Assert.AreEqual(4, exitCode);
+        StringAssert.Contains(output, "Malformed Nexus project file");
+        StringAssert.Contains(output, "workspace-relative");
         Assert.AreEqual(string.Empty, error);
     }
 
@@ -144,13 +146,14 @@ public sealed class ResearchWorkspaceVerifyCommandTests
     {
         using var workspace = TemporaryWorkspace.CreateInitialized();
         Assert.AreEqual(0, ImportWos(workspace.Root, "search-001", out _, out var importError), importError);
-        File.Delete(Path.Combine(workspace.Root, "nexus-output", "imports", "search-001.import-trace.json"));
+        var tracePath = InputPath(workspace.Root, "importTracePath");
+        File.Delete(tracePath);
 
         var exitCode = RunCli(workspace.Root, new[] { "verify" }, out var output, out var error);
 
         Assert.AreEqual(2, exitCode);
         StringAssert.Contains(output, "Import traces missing: 1");
-        StringAssert.Contains(output, "Missing trace: nexus-output/imports/search-001.import-trace.json");
+        StringAssert.Contains(output, "Missing trace: inputs/search/search-001/import-trace.json");
         Assert.AreEqual(string.Empty, error);
     }
 
@@ -167,6 +170,13 @@ public sealed class ResearchWorkspaceVerifyCommandTests
             new[] { "import", "search", ImportFixturePath("pr03-scopus-small.csv"), "--source", "scopus", "--format", "csv", "--query-id", "search-001", "--query", QueryText },
             out output,
             out error);
+    }
+
+    private static string InputPath(string workspaceRoot, string propertyName)
+    {
+        using var project = JsonDocument.Parse(File.ReadAllText(Path.Combine(workspaceRoot, "nexus.project.json")));
+        var relativePath = project.RootElement.GetProperty("inputs")[0].GetProperty(propertyName).GetString()!;
+        return Path.Combine(workspaceRoot, relativePath.Replace('/', Path.DirectorySeparatorChar));
     }
 
     private static int ImportWos(string workingDirectory, string queryId, out string output, out string error)

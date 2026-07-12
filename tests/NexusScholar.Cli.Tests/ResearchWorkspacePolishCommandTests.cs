@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NexusScholar.Cli;
 
@@ -99,7 +100,7 @@ public sealed class ResearchWorkspacePolishCommandTests
     {
         using var workspace = TemporaryWorkspace.CreateInitialized();
         ImportScopus(workspace.Root);
-        File.AppendAllText(Path.Combine(workspace.Root, "inputs", "search", "search-001-scopus.csv"), "changed");
+        File.AppendAllText(FirstInputPath(workspace.Root), "changed");
 
         var exitCode = RunCli(workspace.Root, new[] { "status" }, out var output, out var error);
 
@@ -116,13 +117,13 @@ public sealed class ResearchWorkspacePolishCommandTests
     {
         using var workspace = TemporaryWorkspace.CreateInitialized();
         ImportScopus(workspace.Root);
-        File.AppendAllText(Path.Combine(workspace.Root, "inputs", "search", "search-001-scopus.csv"), "changed");
+        File.AppendAllText(FirstInputPath(workspace.Root), "changed");
 
         var exitCode = RunCli(workspace.Root, new[] { "analyze" }, out var output, out var error);
 
         Assert.AreEqual(3, exitCode);
         Assert.AreEqual(string.Empty, output);
-        StringAssert.Contains(error, "Input digest mismatch: inputs/search/search-001-scopus.csv");
+        StringAssert.Contains(error, "Input digest mismatch: inputs/search/search-001/source.csv");
         AssertNoAbsoluteWorkspacePath(workspace.Root, output, error);
     }
 
@@ -132,13 +133,17 @@ public sealed class ResearchWorkspacePolishCommandTests
         using var workspace = TemporaryWorkspace.CreateInitialized();
         ImportCombinedBundle(workspace.Root);
         Assert.AreEqual(0, RunCli(workspace.Root, new[] { "analyze" }, out _, out var analyzeError), analyzeError);
-        File.Delete(Path.Combine(workspace.Root, "nexus-output", "dedup", "current.deduplication-result.json"));
+        using (var document = JsonDocument.Parse(File.ReadAllText(Path.Combine(workspace.Root, "nexus.project.json"))))
+        {
+            var relativePath = document.RootElement.GetProperty("outputs").GetProperty("deduplicationResult").GetString()!;
+            File.Delete(Path.Combine(workspace.Root, relativePath.Replace('/', Path.DirectorySeparatorChar)));
+        }
 
         var exitCode = RunCli(workspace.Root, new[] { "clusters" }, out var output, out var error);
 
         Assert.AreEqual(2, exitCode);
         Assert.AreEqual(string.Empty, output);
-        StringAssert.Contains(error, "Generated deduplication result not found: nexus-output/dedup/current.deduplication-result.json");
+        StringAssert.Contains(error, "Generation artifact 'deduplicationResult'");
         StringAssert.Contains(error, "Run: nexus analyze");
         AssertNoAbsoluteWorkspacePath(workspace.Root, output, error);
     }
@@ -149,6 +154,13 @@ public sealed class ResearchWorkspacePolishCommandTests
         ImportSearch(workspaceRoot, "search-002", "web-of-science", "ris", CombinedBundlePath("combined_wos_like.ris"));
         ImportSearch(workspaceRoot, "search-003", "google-scholar", "bibtex", CombinedBundlePath("combined_scholar_style.bib"));
         ImportSearch(workspaceRoot, "search-004", "web-of-science", "csv", CombinedBundlePath("combined_wos_like_source_specific.csv"));
+    }
+
+    private static string FirstInputPath(string workspaceRoot)
+    {
+        using var project = JsonDocument.Parse(File.ReadAllText(Path.Combine(workspaceRoot, "nexus.project.json")));
+        var relativePath = project.RootElement.GetProperty("inputs")[0].GetProperty("relativePath").GetString()!;
+        return Path.Combine(workspaceRoot, relativePath.Replace('/', Path.DirectorySeparatorChar));
     }
 
     private static void ImportScopus(string workspaceRoot)

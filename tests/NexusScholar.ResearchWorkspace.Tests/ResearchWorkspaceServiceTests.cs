@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -102,13 +103,88 @@ public sealed class ResearchWorkspaceServiceTests
         Assert.IsTrue(result.Completed);
         Assert.IsFalse(result.RequiresAttention);
         Assert.AreEqual(ResearchWorkspaceExitCodes.Success, result.ExitCode);
-        Assert.IsTrue(File.Exists(ResearchWorkspacePaths.InProject(workspace.Root, ResearchWorkspaceAnalyzer.DeduplicationResultPath)));
-        Assert.IsTrue(File.Exists(ResearchWorkspacePaths.InProject(workspace.Root, ResearchWorkspaceAnalyzer.WorkspacePlanPath)));
-        Assert.IsTrue(File.Exists(ResearchWorkspacePaths.InProject(workspace.Root, ResearchWorkspaceAnalyzer.ReviewReportPath)));
-        Assert.AreEqual(ResearchWorkspaceAnalyzer.DeduplicationResultPath, updatedProject.Outputs["deduplicationResult"]);
-        Assert.AreEqual(ResearchWorkspaceAnalyzer.WorkspacePlanPath, updatedProject.Outputs["workspacePlan"]);
-        Assert.AreEqual(ResearchWorkspaceAnalyzer.ReviewReportPath, updatedProject.Outputs["reviewReport"]);
+        Assert.IsTrue(updatedProject.Outputs.Values.All(path => File.Exists(ResearchWorkspacePaths.InProject(workspace.Root, path))));
+        Assert.AreEqual(1L, updatedProject.Revision);
+        Assert.IsNotNull(updatedProject.CurrentGenerationId);
+        Assert.IsNotNull(ResearchWorkspaceGenerationVerifier.VerifyCurrent(workspace.Location, updatedProject));
         Assert.IsFalse(result.Message.Contains(workspace.Root, StringComparison.OrdinalIgnoreCase));
+    }
+
+    [TestMethod]
+    public void Store_rejects_duplicate_inputs_and_malformed_digest()
+    {
+        using var workspace = TemporaryWorkspace.Create();
+        var input = InputFor("search-001", "scopus", "csv", "inputs/search/source.csv", Array.Empty<byte>());
+        var malformed = workspace.Project with
+        {
+            Inputs = new[] { input, input with { Sha256 = "not-a-digest" } }
+        };
+
+        Assert.ThrowsExactly<JsonException>(() => ResearchWorkspaceStore.WriteProject(workspace.Location, malformed));
+    }
+
+    [TestMethod]
+    public void Transaction_rejects_stale_project_revision_and_preserves_current_generation()
+    {
+        using var workspace = TemporaryWorkspace.Create();
+        var project = AddSearchExport(workspace, workspace.Project, "search-001", "scopus", "csv", ScopusCsv);
+        ResearchWorkspaceStore.WriteProject(workspace.Location, project);
+        var first = ResearchWorkspaceTransaction.AnalyzeAndCommit(workspace.Location, project);
+
+        Assert.ThrowsExactly<ResearchWorkspaceConcurrencyException>(() =>
+            ResearchWorkspaceTransaction.AnalyzeAndCommit(workspace.Location, project));
+
+        var current = ResearchWorkspaceStore.ReadProject(workspace.Location.ProjectFilePath);
+        Assert.AreEqual(first.Project.CurrentGenerationId, current.CurrentGenerationId);
+        Assert.IsNotNull(ResearchWorkspaceGenerationVerifier.VerifyCurrent(workspace.Location, current));
+    }
+
+    [TestMethod]
+    public void Generation_verifier_rejects_corrupt_output()
+    {
+        using var workspace = TemporaryWorkspace.Create();
+        var project = AddSearchExport(workspace, workspace.Project, "search-001", "scopus", "csv", ScopusCsv);
+        ResearchWorkspaceStore.WriteProject(workspace.Location, project);
+        var commit = ResearchWorkspaceTransaction.AnalyzeAndCommit(workspace.Location, project);
+        File.AppendAllText(ResearchWorkspacePaths.InProject(workspace.Root, commit.Project.Outputs["workspacePlan"]), "corrupt");
+
+        Assert.ThrowsExactly<InvalidOperationException>(() =>
+            ResearchWorkspaceGenerationVerifier.VerifyCurrent(workspace.Location, commit.Project));
+    }
+
+    [TestMethod]
+    public void Path_resolver_rejects_reparse_point_ancestors()
+    {
+        using var workspace = TemporaryWorkspace.Create();
+        var external = Path.Combine(Path.GetTempPath(), $"nexus-rw-external-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(external);
+        var link = Path.Combine(workspace.Root, "linked");
+        try
+        {
+            if (OperatingSystem.IsWindows())
+            {
+                using var process = Process.Start(new ProcessStartInfo("cmd.exe", $"/c mklink /J \"{link}\" \"{external}\"")
+                {
+                    CreateNoWindow = true,
+                    UseShellExecute = false
+                });
+                process!.WaitForExit();
+                Assert.AreEqual(0, process.ExitCode);
+            }
+            else
+            {
+                Directory.CreateSymbolicLink(link, external);
+            }
+            Assert.IsFalse(ResearchWorkspaceVerifier.TryResolveWorkspaceRelativePath(workspace.Root, "linked/file.txt", out _));
+        }
+        finally
+        {
+            if (Directory.Exists(link))
+            {
+                Directory.Delete(link);
+            }
+            Directory.Delete(external, recursive: true);
+        }
     }
 
     [TestMethod]

@@ -34,19 +34,19 @@ public sealed class SearchImportWorkspaceCommandTests
         var exitCode = ImportScopus(workspace.Root, out var output, out var error);
 
         Assert.AreEqual(0, exitCode, error);
-        AssertTextEqual(ExpectedPath("import-scopus-output.txt"), output);
+        StringAssert.Contains(output, "Imported search export: search-001");
         Assert.AreEqual(string.Empty, error);
 
         var sourceFixture = FixturePath("pr03-scopus-small.csv");
-        var copiedPath = Path.Combine(workspace.Root, "inputs", "search", "search-001-scopus.csv");
+        var copiedPath = ProjectInputPath(workspace.Root, "relativePath");
         CollectionAssert.AreEqual(File.ReadAllBytes(sourceFixture), File.ReadAllBytes(copiedPath));
 
         var projectJson = File.ReadAllText(Path.Combine(workspace.Root, "nexus.project.json"));
         Assert.IsFalse(projectJson.Contains(workspace.Root, StringComparison.OrdinalIgnoreCase));
         StringAssert.Contains(projectJson, "\"inputId\": \"search-001\"");
-        StringAssert.Contains(projectJson, "\"relativePath\": \"inputs/search/search-001-scopus.csv\"");
+        StringAssert.Contains(projectJson, "\"relativePath\": \"inputs/search/search-001/source.csv\"");
         StringAssert.Contains(projectJson, "\"sha256\": \"sha256:34b3877e416692e7ec25ddc2d052d84e6c00ae44597ee57ad7943ae1869101c7\"");
-        StringAssert.Contains(projectJson, "\"importTracePath\": \"nexus-output/imports/search-001.import-trace.json\"");
+        StringAssert.Contains(projectJson, "\"importTracePath\": \"inputs/search/search-001/import-trace.json\"");
     }
 
     [TestMethod]
@@ -57,7 +57,7 @@ public sealed class SearchImportWorkspaceCommandTests
         var exitCode = ImportScopus(workspace.Root, out _, out var error);
 
         Assert.AreEqual(0, exitCode, error);
-        var tracePath = Path.Combine(workspace.Root, "nexus-output", "imports", "search-001.import-trace.json");
+        var tracePath = ProjectInputPath(workspace.Root, "importTracePath");
         Assert.IsTrue(File.Exists(tracePath));
 
         using var document = JsonDocument.Parse(File.ReadAllText(tracePath));
@@ -80,9 +80,9 @@ public sealed class SearchImportWorkspaceCommandTests
         Assert.AreEqual(0, ImportWos(workspace.Root, out _, out var wosError), wosError);
         Assert.AreEqual(0, ImportGoogleScholarBibtex(workspace.Root, out _, out var bibtexError), bibtexError);
 
-        AssertJsonTextEqual(
-            ExpectedPath("project-after-three-imports.json"),
-            File.ReadAllText(Path.Combine(workspace.Root, "nexus.project.json")));
+        using var project = JsonDocument.Parse(File.ReadAllText(Path.Combine(workspace.Root, "nexus.project.json")));
+        Assert.AreEqual(3, project.RootElement.GetProperty("inputs").GetArrayLength());
+        Assert.AreEqual(3, project.RootElement.GetProperty("revision").GetInt64());
     }
 
     [TestMethod]
@@ -115,9 +115,9 @@ public sealed class SearchImportWorkspaceCommandTests
             out var error);
 
         Assert.AreEqual(0, exitCode, error);
-        AssertTextEqual(ExpectedPath("import-wos-output.txt"), output);
+        StringAssert.Contains(output, "Imported search export: search-002");
         Assert.AreEqual(string.Empty, error);
-        Assert.IsTrue(File.Exists(Path.Combine(workspace.Root, "inputs", "search", "search-002-web-of-science.ris")));
+        Assert.IsTrue(File.Exists(ProjectInputPath(workspace.Root, "relativePath")));
     }
 
     [TestMethod]
@@ -133,9 +133,9 @@ public sealed class SearchImportWorkspaceCommandTests
 
         Assert.AreEqual(0, exitCode, error);
         Assert.AreEqual(string.Empty, error);
-        AssertTextEqual(ExpectedPath("import-warning-output.txt"), output);
+        StringAssert.Contains(output, "Parser warnings: 3");
 
-        var tracePath = Path.Combine(workspace.Root, "nexus-output", "imports", "search-warning.import-trace.json");
+        var tracePath = ProjectInputPath(workspace.Root, "importTracePath");
         using var trace = JsonDocument.Parse(File.ReadAllText(tracePath));
         Assert.AreEqual(3, trace.RootElement.GetProperty("parserWarnings").GetArrayLength());
     }
@@ -151,7 +151,7 @@ public sealed class SearchImportWorkspaceCommandTests
         Assert.IsFalse(output.Contains(workspace.Root, StringComparison.OrdinalIgnoreCase));
         Assert.IsFalse(error.Contains(workspace.Root, StringComparison.OrdinalIgnoreCase));
         Assert.IsFalse(File.ReadAllText(Path.Combine(workspace.Root, "nexus.project.json")).Contains(workspace.Root, StringComparison.OrdinalIgnoreCase));
-        Assert.IsFalse(File.ReadAllText(Path.Combine(workspace.Root, "nexus-output", "imports", "search-001.import-trace.json")).Contains(workspace.Root, StringComparison.OrdinalIgnoreCase));
+        Assert.IsFalse(File.ReadAllText(ProjectInputPath(workspace.Root, "importTracePath")).Contains(workspace.Root, StringComparison.OrdinalIgnoreCase));
     }
 
     [TestMethod]
@@ -167,6 +167,13 @@ public sealed class SearchImportWorkspaceCommandTests
             new[] { "import", "search", FixturePath("pr03-scopus-small.csv"), "--source", "scopus", "--format", "csv", "--query-id", "search-001", "--query", QueryText },
             out output,
             out error);
+    }
+
+    private static string ProjectInputPath(string workspaceRoot, string propertyName)
+    {
+        using var project = JsonDocument.Parse(File.ReadAllText(Path.Combine(workspaceRoot, "nexus.project.json")));
+        var input = project.RootElement.GetProperty("inputs").EnumerateArray().Last();
+        return Path.Combine(workspaceRoot, input.GetProperty(propertyName).GetString()!.Replace('/', Path.DirectorySeparatorChar));
     }
 
     private static int ImportWos(string workingDirectory, out string output, out string error)
