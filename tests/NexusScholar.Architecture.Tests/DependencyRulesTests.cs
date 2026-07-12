@@ -234,13 +234,14 @@ public sealed class DependencyRulesTests
     }
 
     [TestMethod]
-    public void Screening_project_depends_only_on_kernel_and_deduplication_inside_nexus_domain()
+    public void Screening_project_depends_inward_on_kernel_deduplication_and_protocol()
     {
         var screeningAssembly = typeof(ScreeningService).Assembly;
         var allowed = new[]
         {
             typeof(IClock).Assembly.GetName().Name,
-            typeof(DeduplicationService).Assembly.GetName().Name
+            typeof(DeduplicationService).Assembly.GetName().Name,
+            "NexusScholar.Protocol"
         };
         var disallowed = screeningAssembly.GetReferencedAssemblies()
             .Select(reference => reference.Name ?? string.Empty)
@@ -251,7 +252,7 @@ public sealed class DependencyRulesTests
         Assert.AreEqual(
             0,
             disallowed.Length,
-            $"NexusScholar.Screening must depend only on Kernel and Deduplication inside the domain. Found: {string.Join(", ", disallowed)}");
+            $"NexusScholar.Screening may depend only on Kernel, Deduplication, and Protocol. Found: {string.Join(", ", disallowed)}");
     }
 
     [TestMethod]

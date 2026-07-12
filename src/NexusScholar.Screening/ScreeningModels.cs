@@ -15,6 +15,7 @@ public static class ScreeningErrorCodes
     public const string AutomationCannotFinalize = "automation-cannot-finalize";
     public const string MissingRationale = "missing-rationale";
     public const string InvalidConfidence = "invalid-confidence";
+    public const string InvalidProtocolBinding = "invalid-protocol-binding";
     public const string MissingCriteriaDigest = "missing-criteria-digest";
     public const string InvalidCriteriaDigestScope = "invalid-criteria-digest-scope";
     public const string CriteriaDigestMismatch = "criteria-digest-mismatch";
@@ -116,8 +117,16 @@ public enum ScreeningDecisionKind
     Adjudication
 }
 
-public sealed record ScreeningActor(string ActorId, bool IsHuman)
+public sealed class ScreeningActor
 {
+    private ScreeningActor(string actorId, bool isHuman)
+    {
+        ActorId = Guard.NotBlank(actorId, nameof(actorId));
+        IsHuman = isHuman;
+    }
+
+    public string ActorId { get; }
+    public bool IsHuman { get; }
     public static ScreeningActor Human(string actorId) => new(Guard.NotBlank(actorId, nameof(actorId)), true);
     public static ScreeningActor Automation(string actorId) => new(Guard.NotBlank(actorId, nameof(actorId)), false);
 }

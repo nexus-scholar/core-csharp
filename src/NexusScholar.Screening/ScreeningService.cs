@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using NexusScholar.Deduplication;
 using NexusScholar.Kernel;
+using NexusScholar.Protocol;
 
 namespace NexusScholar.Screening;
 
@@ -12,9 +13,36 @@ public sealed class ScreeningService
     private readonly List<ScreeningSuggestion> _suggestions = [];
     private readonly Dictionary<string, ScreeningConflict> _conflicts = new(StringComparer.Ordinal);
 
-    public ScreeningService(
+    internal ScreeningService(
         ScreeningCandidateSet candidateSet,
         IEnumerable<ScreeningCriteria> criteria)
+        : this(candidateSet, criteria, null)
+    {
+    }
+
+    public ScreeningService(
+        VerifiedProtocolVersion protocolAuthority,
+        VerifiedDeduplicationResult deduplicationAuthority,
+        string candidateSetId,
+        IEnumerable<ScreeningCriteria> criteria)
+        : this(
+            ScreeningCandidateSet.CreateFromDedupResult(
+                Guard.NotBlank(candidateSetId, nameof(candidateSetId)),
+                (deduplicationAuthority ?? throw new ArgumentNullException(nameof(deduplicationAuthority))).Result,
+                true,
+                ScreeningSourceKinds.DeduplicationResult,
+                new[] { deduplicationAuthority.Result.ResultId },
+                null,
+                deduplicationAuthority.Result.NonClaims),
+            criteria,
+            protocolAuthority ?? throw new ArgumentNullException(nameof(protocolAuthority)))
+    {
+    }
+
+    private ScreeningService(
+        ScreeningCandidateSet candidateSet,
+        IEnumerable<ScreeningCriteria> criteria,
+        VerifiedProtocolVersion? protocolAuthority)
     {
         _candidateSet = candidateSet ?? throw new ArgumentNullException(nameof(candidateSet));
 
@@ -24,6 +52,17 @@ public sealed class ScreeningService
             foreach (var item in criteria)
             {
                 _criteriaById[BuildCriteriaKey(item.CriteriaId, item.Stage)] = item;
+                if (protocolAuthority is not null && item.RequiresProtocolBinding)
+                {
+                    var version = protocolAuthority.Version;
+                    if (!string.Equals(item.ApprovedProtocolBinding, version.Id, StringComparison.Ordinal) ||
+                        !string.Equals(item.ApprovedProtocolDigest, version.ContentDigest.ToString(), StringComparison.Ordinal) ||
+                        !string.Equals(item.ApprovedProtocolDigestScope, DigestScope.ProtocolContent.ToString(), StringComparison.Ordinal) ||
+                        !ScreeningProtocolBindingStatus.IsApproved(item.ApprovedProtocolStatus))
+                    {
+                        throw new ScreeningRuleException(ScreeningErrorCodes.InvalidProtocolBinding, "Screening criteria do not match verified Protocol authority.");
+                    }
+                }
             }
         }
     }
@@ -225,7 +264,7 @@ public sealed class ScreeningService
             return;
         }
 
-        if (confidence < 0d || confidence > 1d)
+        if (!double.IsFinite(confidence.Value) || confidence < 0d || confidence > 1d)
         {
             throw new ScreeningRuleException(ScreeningErrorCodes.InvalidConfidence, "Confidence must be within [0, 1] when present.");
         }

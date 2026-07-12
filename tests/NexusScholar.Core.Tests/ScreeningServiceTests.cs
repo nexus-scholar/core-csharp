@@ -1,9 +1,11 @@
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Reflection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NexusScholar.Deduplication;
 using NexusScholar.Kernel;
+using NexusScholar.Protocol;
 using NexusScholar.Screening;
 using NexusScholar.Search;
 
@@ -13,6 +15,42 @@ namespace NexusScholar.Core.Tests;
 public sealed class ScreeningServiceTests
 {
     private const string ApprovedProtocolDigest = "sha256:c0cbe3ed40c4781508733a846848ab015ea7f6f95a5a4ff0c2f86907c90e9600";
+
+    [TestMethod]
+    public void Public_service_construction_requires_verified_protocol_and_deduplication_authority()
+    {
+        var protocol = BuildVerifiedProtocol();
+        var dedup = BuildDedupResult("dedup-authority", ["candidate-1"], []) with
+        {
+            PolicyId = DeduplicationService.PolicyId,
+            PolicyVersion = DeduplicationService.PolicyVersion
+        };
+        var verifiedDedup = DeduplicationRehydrator.Rehydrate(new UnverifiedDeduplicationResult(dedup));
+        var criteria = BuildAuthorityCriteria(protocol);
+
+        var service = new ScreeningService(protocol, verifiedDedup, "verified-screening-set", new[] { criteria });
+
+        Assert.IsTrue(service.CandidateSet.Locked);
+        Assert.AreEqual(dedup.ResultId, service.CandidateSet.CreatedFromDedupResultId);
+        Assert.AreEqual(1, service.CandidateSet.Candidates.Count);
+    }
+
+    [TestMethod]
+    public void Screening_actor_cannot_be_publicly_fabricated_and_confidence_must_be_finite()
+    {
+        Assert.AreEqual(0, typeof(ScreeningActor).GetConstructors(BindingFlags.Public | BindingFlags.Instance).Length);
+        var candidateSet = ScreeningCandidateSet.CreateLockedReviewableCandidateSet("set", new[] { BuildCandidate("candidate", true) });
+        var criteria = BuildCriteria("criteria", ScreeningStages.TitleAbstract);
+        var service = new ScreeningService(candidateSet, new[] { criteria });
+
+        foreach (var confidence in new[] { double.NaN, double.PositiveInfinity, double.NegativeInfinity })
+        {
+            var decision = BuildHumanDecisionWithConfidence(
+                "decision-" + confidence, "set", "candidate", criteria, confidence);
+            var error = Assert.ThrowsExactly<ScreeningRuleException>(() => service.AddDecision(decision));
+            Assert.AreEqual(ScreeningErrorCodes.InvalidConfidence, error.Category);
+        }
+    }
 
     [TestMethod]
     public void Candidate_set_from_dedup_result_is_accepted_for_screening_service()
@@ -754,6 +792,36 @@ public sealed class ScreeningServiceTests
             Array.Empty<DedupMessage>(),
             new[] { "no-php-compatibility-claim" });
     }
+
+    private static VerifiedProtocolVersion BuildVerifiedProtocol()
+    {
+        var seed = new ProtocolVersion(
+            "protocol-screening-v1", "protocol-screening", "project-1", 1, ProtocolStatus.Approved,
+            new ProtocolTemplate("template", "1.0.0", ContentDigest.Sha256Utf8("template")),
+            new ProtocolIntent("screening", "screen records"), new CanonicalJsonObject(),
+            Array.Empty<RequiredDecisionDefinition>(), Array.Empty<ProtocolDecision>(), Array.Empty<ProtocolWaiver>(),
+            ContentDigest.Sha256Utf8("placeholder"), ApprovalPolicy.ExplicitCustomSingleResearcher().PolicyId,
+            new[] { "approval-1" }, DateTimeOffset.UtcNow);
+        var version = new ProtocolVersion(
+            seed.Id, seed.ProtocolId, seed.ProjectId, seed.VersionNumber, seed.Status, seed.Template, seed.Intent,
+            seed.Values, seed.RequiredDecisions, seed.Decisions, seed.Waivers,
+            seed.ToProtocolContentDigestEnvelope().ComputeDigest(), seed.ApprovalPolicyId, seed.ApprovalIds, seed.ApprovedAt);
+        return new VerifiedProtocolVersion(version, ApprovalPolicy.ExplicitCustomSingleResearcher(), Array.Empty<VerifiedProtocolApproval>());
+    }
+
+    private static ScreeningCriteria BuildAuthorityCriteria(VerifiedProtocolVersion protocol) => new(
+        "criteria-authority", "1.0.0", ScreeningStages.TitleAbstract,
+        CanonicalJsonValue.From("include"), CanonicalJsonValue.From("exclude"), true,
+        protocol.Version.Id, protocol.Version.ContentDigest.ToString(),
+        approvedProtocolDigestScope: DigestScope.ProtocolContent.ToString(),
+        approvedProtocolStatus: ScreeningProtocolBindingStatus.Approved,
+        currentProtocolContentDigest: protocol.Version.ContentDigest.ToString());
+
+    private static ScreeningDecision BuildHumanDecisionWithConfidence(
+        string decisionId, string candidateSetId, string candidateId, ScreeningCriteria criteria, double confidence) => new(
+        decisionId, candidateSetId, candidateId, null, null, ScreeningStages.TitleAbstract, ScreeningVerdicts.Include,
+        ScreeningActor.Human("human"), DateTimeOffset.UtcNow, "Rationale", confidence,
+        criteria.CriteriaId, criteria.ComputeDigest().ToString(), Array.Empty<string>(), Array.Empty<string>(), Array.Empty<string>());
 
     private static DedupCandidateRecord BuildCandidate(string candidateId, bool stableIdentifier)
     {

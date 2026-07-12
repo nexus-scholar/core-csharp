@@ -2,5 +2,10 @@
   <ItemGroup>
     <ProjectReference Include="../NexusScholar.Kernel/NexusScholar.Kernel.csproj" />
     <ProjectReference Include="../NexusScholar.Deduplication/NexusScholar.Deduplication.csproj" />
+    <ProjectReference Include="../NexusScholar.Protocol/NexusScholar.Protocol.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="NexusScholar.Core.Tests" />
+    <InternalsVisibleTo Include="NexusScholar.Conformance.Tests" />
   </ItemGroup>
 </Project>
