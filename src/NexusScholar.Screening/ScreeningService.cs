@@ -240,7 +240,7 @@ public sealed class ScreeningService
 
         if (decision.DecisionKind is ScreeningDecisionKind.Human)
         {
-            UpsertConflictForKey(decision);
+            RebuildConflictForKey(decision);
         }
     }
 
@@ -554,26 +554,34 @@ public sealed class ScreeningService
         }
     }
 
-    private void UpsertConflictForKey(ScreeningDecision decision)
+    private void RebuildConflictForKey(ScreeningDecision decision)
     {
-        if (_conflicts.Values.Any(existing =>
-            existing.Resolved &&
-            string.Equals(existing.CandidateSetId, decision.CandidateSetId, StringComparison.Ordinal) &&
-            string.Equals(existing.CandidateId, decision.CandidateId, StringComparison.Ordinal) &&
-            string.Equals(existing.Stage, decision.Stage, StringComparison.Ordinal) &&
-            string.Equals(existing.CriteriaDigest, decision.CriteriaDigest, StringComparison.Ordinal)))
-        {
-            return;
-        }
-
-        var sourceDecisions = _decisions
+        var scopedDecisions = _decisions
             .Where(item =>
-                item.DecisionKind is ScreeningDecisionKind.Human &&
+                item.IsFinal &&
                 string.Equals(item.CandidateSetId, _candidateSet.CandidateSetId, StringComparison.Ordinal) &&
                 string.Equals(item.CandidateId, decision.CandidateId, StringComparison.Ordinal) &&
                 string.Equals(item.Stage, decision.Stage, StringComparison.Ordinal) &&
                 string.Equals(item.CriteriaDigest, decision.CriteriaDigest, StringComparison.Ordinal))
             .ToArray();
+        var latestAdjudicationIndex = Array.FindLastIndex(
+            scopedDecisions,
+            item => item.DecisionKind == ScreeningDecisionKind.Adjudication);
+        var sourceDecisions = latestAdjudicationIndex >= 0
+            ? scopedDecisions[latestAdjudicationIndex..]
+            : scopedDecisions.Where(item => item.DecisionKind == ScreeningDecisionKind.Human).ToArray();
+
+        var conflictKey = BuildConflictKey(
+            _candidateSet.CandidateSetId,
+            decision.CandidateId,
+            decision.Stage,
+            decision.CriteriaDigest);
+        var existingOpen = _conflicts.Values.FirstOrDefault(existing =>
+            !existing.Resolved && string.Equals(existing.ConflictKey ?? BuildConflictKey(
+                existing.CandidateSetId,
+                existing.CandidateId,
+                existing.Stage,
+                existing.CriteriaDigest), conflictKey, StringComparison.Ordinal));
 
         var distinctVerdicts = sourceDecisions.Select(item => item.Verdict)
             .Distinct(StringComparer.Ordinal)
@@ -581,6 +589,11 @@ public sealed class ScreeningService
 
         if (sourceDecisions.Length < 2 || distinctVerdicts.Length <= 1)
         {
+            if (existingOpen is not null)
+            {
+                _conflicts.Remove(existingOpen.ConflictId);
+            }
+
             return;
         }
 
@@ -590,37 +603,32 @@ public sealed class ScreeningService
             .OrderBy(value => value, StringComparer.Ordinal)
             .ToArray();
 
-        var existingOpen = _conflicts.Values.FirstOrDefault(
-            existing => !existing.Resolved &&
-                string.Equals(existing.CandidateSetId, decision.CandidateSetId, StringComparison.Ordinal) &&
-                string.Equals(existing.CandidateId, decision.CandidateId, StringComparison.Ordinal) &&
-                string.Equals(existing.Stage, decision.Stage, StringComparison.Ordinal) &&
-                string.Equals(existing.CriteriaDigest, decision.CriteriaDigest, StringComparison.Ordinal));
-
+        var generation = _conflicts.Values.Count(existing =>
+            string.Equals(existing.ConflictKey ?? BuildConflictKey(
+                existing.CandidateSetId,
+                existing.CandidateId,
+                existing.Stage,
+                existing.CriteriaDigest), conflictKey, StringComparison.Ordinal) && existing.Resolved) + 1;
         var conflictId = BuildConflictId(
+            conflictKey,
+            generation,
+            sourceDecisionIds);
+
+        if (existingOpen is not null)
+        {
+            _conflicts.Remove(existingOpen.ConflictId);
+        }
+
+        _conflicts[conflictId] = new ScreeningConflict(
+            conflictId,
             _candidateSet.CandidateSetId,
             decision.CandidateId,
             decision.Stage,
             decision.CriteriaDigest,
-            sourceDecisionIds);
-
-        if (existingOpen is null)
-        {
-            _conflicts[conflictId] = new ScreeningConflict(
-                conflictId,
-                _candidateSet.CandidateSetId,
-                decision.CandidateId,
-                decision.Stage,
-                decision.CriteriaDigest,
-                sourceDecisionIds,
-                Resolved: false);
-            return;
-        }
-
-        if (_conflicts.ContainsKey(existingOpen.ConflictId))
-        {
-            _conflicts[existingOpen.ConflictId] = existingOpen with { SourceDecisionIds = sourceDecisionIds };
-        }
+            sourceDecisionIds,
+            Resolved: false,
+            ConflictKey: conflictKey,
+            Generation: generation);
     }
 
     private void ResolveConflict(ScreeningDecision decision)
@@ -681,16 +689,24 @@ public sealed class ScreeningService
         return false;
     }
 
-    private static string BuildConflictId(
+    private static string BuildConflictKey(
         string candidateSetId,
         string candidateId,
         string stage,
-        string criteriaDigest,
+        string criteriaDigest)
+    {
+        var digest = ContentDigest.Sha256Utf8($"{candidateSetId}|{candidateId}|{stage}|{criteriaDigest}");
+        return $"conflict-key:{digest}";
+    }
+
+    private static string BuildConflictId(
+        string conflictKey,
+        int generation,
         IReadOnlyList<string> sourceDecisionIds)
     {
-        var payload = $"{candidateSetId}|{candidateId}|{stage}|{criteriaDigest}|{string.Join('|', sourceDecisionIds)}";
+        var payload = $"{conflictKey}|{generation}|{string.Join('|', sourceDecisionIds)}";
         var digest = ContentDigest.Sha256Utf8(payload);
-        return $"conflict:{digest}";
+        return $"conflict:{generation}:{digest}";
     }
 
     private const string ScreeningRuleConstantsNoPhpCompat = "no-php-compatibility-claim";

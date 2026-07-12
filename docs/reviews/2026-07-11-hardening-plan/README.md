@@ -6,7 +6,7 @@ Implementation progress:
 
 - Phase 1 canonical foundation: complete through Hardening 01 and Hardening 02.
 - Phase 2 authority-safe rehydration: complete through Hardening 11 across Kernel, Protocol, Workflow, Provenance, Bundle, Deduplication, Screening, and Full Text.
-- Phase 3 scholarly pipeline correctness: active; Shared identity, Search parsers, and Deduplication representative metadata completed in Hardening 12 through 14. Screening conflict consistency is next.
+- Phase 3 scholarly pipeline correctness: active; Shared identity, Search parsers, Deduplication metadata, and Screening conflict consistency completed in Hardening 12 through 15. Full Text residual contracts are next.
 
 Source review: [full-technical-review.md](full-technical-review.md)
 

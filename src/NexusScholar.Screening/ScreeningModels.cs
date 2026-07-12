@@ -626,4 +626,6 @@ public sealed record ScreeningConflict(
     bool Resolved,
     string? ResolvedByDecisionId = null,
     string? ResolutionRationale = null,
-    DateTimeOffset? ResolvedAt = null);
+    DateTimeOffset? ResolvedAt = null,
+    string? ConflictKey = null,
+    int Generation = 1);
