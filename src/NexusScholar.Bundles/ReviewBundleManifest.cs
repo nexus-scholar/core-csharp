@@ -848,6 +848,15 @@ public sealed class BundleVerification
     public ContentDigest ManifestDigest { get; }
 }
 
+public interface IBundleAuthorityResolver
+{
+    NexusScholar.Protocol.VerifiedProtocolVersion ResolveProtocolVersion(string protocolVersionId);
+
+    NexusScholar.Workflow.WorkflowDefinition ResolveWorkflowDefinition(string workflowId);
+
+    NexusScholar.Provenance.ResearchEvent ResolveProvenanceEvent(string eventId);
+}
+
 public sealed record BundleVerificationOptions
 {
     public bool RequireSupportedSchemas { get; init; } = true;
@@ -868,4 +877,6 @@ public sealed record BundleVerificationOptions
 
     public IReadOnlyDictionary<string, ContentDigest> KnownProvenanceEventDigests { get; init; } =
         new ReadOnlyDictionary<string, ContentDigest>(new Dictionary<string, ContentDigest>(StringComparer.Ordinal));
+
+    public IBundleAuthorityResolver? AuthorityResolver { get; init; }
 }

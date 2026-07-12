@@ -79,30 +79,50 @@ public static class CliApplication
         var workflow = new WorkflowCompiler().Compile(BuildSampleWorkflowInput(protocolAuthority));
 
         var provenance = new InMemoryProvenanceStore();
-        provenance.Append(ResearchEventFactory.Create(
+        var provenanceEvent = ResearchEventFactory.Create(
             ids,
             clock,
             "protocol-approved",
             "protocol-version",
             version.Id.ToString(),
             researcher,
-            outputs: new[] { version.Digest }));
+            outputs: new[] { version.Digest });
+        provenance.Append(provenanceEvent);
 
         var manifest = new ReviewBundleManifest(
-            "nexus.review-bundle/v1",
-            "sample-project",
-            version.Digest,
-            workflow.Id,
+            "sample-bundle",
+            researcher.ToString(),
+            new BundleProtocolBinding(
+                version.ProtocolId,
+                version.Id,
+                version.VersionNumber,
+                BundleConstants.ApprovedProtocolStatus,
+                version.ContentDigest),
+            Array.Empty<BundleArtifactEntry>(),
+            Array.Empty<BundleSchemaRef>(),
             clock.UtcNow,
-            Array.Empty<BundleArtifact>());
+            new BundleWorkflowBinding(
+                workflow.WorkflowId,
+                workflow.WorkflowDigest,
+                workflow.TemplateId,
+                workflow.TemplateVersion,
+                workflow.TemplateDigest,
+                workflow.ProtocolVersionId,
+                workflow.ProtocolContentDigest),
+            new[]
+            {
+                new BundleProvenanceBinding(
+                    provenanceEvent.EventId.ToString(),
+                    provenanceEvent.EventDigest,
+                    provenanceEvent.Activity.ActivityId,
+                    provenanceEvent.OccurredAt,
+                    provenanceEvent.Agent.AgentId)
+            });
         var verification = new BundleVerifier().Verify(
             manifest,
             new BundleVerificationOptions
             {
-                KnownProtocolContentDigests = new Dictionary<string, ContentDigest>(StringComparer.Ordinal)
-                {
-                    ["sample-project-version"] = version.Digest
-                }
+                AuthorityResolver = new SampleBundleAuthorityResolver(protocolAuthority, workflow, provenanceEvent)
             });
 
         output.WriteLine($"Protocol digest: {version.Digest}");
@@ -116,6 +136,27 @@ public static class CliApplication
     {
         error.WriteLine(Usage);
         return 2;
+    }
+
+    private sealed class SampleBundleAuthorityResolver : IBundleAuthorityResolver
+    {
+        private readonly VerifiedProtocolVersion _protocol;
+        private readonly WorkflowDefinition _workflow;
+        private readonly ResearchEvent _event;
+
+        public SampleBundleAuthorityResolver(
+            VerifiedProtocolVersion protocol,
+            WorkflowDefinition workflow,
+            ResearchEvent @event)
+        {
+            _protocol = protocol;
+            _workflow = workflow;
+            _event = @event;
+        }
+
+        public VerifiedProtocolVersion ResolveProtocolVersion(string id) => id == _protocol.Version.Id ? _protocol : null!;
+        public WorkflowDefinition ResolveWorkflowDefinition(string id) => id == _workflow.WorkflowId ? _workflow : null!;
+        public ResearchEvent ResolveProvenanceEvent(string id) => id == _event.EventId.ToString() ? _event : null!;
     }
 
     private static WorkflowCompileInput BuildSampleWorkflowInput(VerifiedProtocolVersion protocolAuthority)

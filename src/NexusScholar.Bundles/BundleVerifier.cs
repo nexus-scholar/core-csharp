@@ -1,4 +1,7 @@
 using NexusScholar.Kernel;
+using NexusScholar.Protocol;
+using NexusScholar.Provenance;
+using NexusScholar.Workflow;
 
 namespace NexusScholar.Bundles;
 
@@ -16,7 +19,7 @@ public sealed class BundleVerifier
 
         ValidateManifestIdentity(manifest, errors);
         ValidateProtocolBinding(manifest, verificationOptions, errors);
-        ValidateWorkflowBinding(manifest, errors);
+        ValidateWorkflowBinding(manifest, verificationOptions, errors);
         ValidateRequiredSchemas(manifest, verificationOptions, errors);
         ValidateProvenanceBindings(manifest, verificationOptions, errors);
         ValidateArtifacts(manifest, verificationOptions, errors, verifiedArtifacts);
@@ -110,9 +113,8 @@ public sealed class BundleVerifier
             return;
         }
 
-        if (!options.KnownProtocolContentDigests.TryGetValue(
-                manifest.ProtocolBinding.ProtocolVersionId,
-                out var knownProtocolDigest))
+        var authority = options.AuthorityResolver?.ResolveProtocolVersion(manifest.ProtocolBinding.ProtocolVersionId);
+        if (authority is null)
         {
             errors.Add(new BundleVerificationFinding(
                 BundleErrorCodes.InvalidProtocolBinding,
@@ -121,10 +123,11 @@ public sealed class BundleVerifier
             return;
         }
 
-        if (!string.Equals(
-                knownProtocolDigest.ToString(),
-                manifest.ProtocolBinding.ProtocolContentDigest.ToString(),
-                StringComparison.Ordinal))
+        var protocol = authority.Version;
+        if (protocol.Status != ProtocolStatus.Approved ||
+            !string.Equals(protocol.ProtocolId, manifest.ProtocolBinding.ProtocolId, StringComparison.Ordinal) ||
+            protocol.VersionNumber != manifest.ProtocolBinding.VersionNumber ||
+            protocol.ContentDigest != manifest.ProtocolBinding.ProtocolContentDigest)
         {
             errors.Add(new BundleVerificationFinding(
                 BundleErrorCodes.InvalidProtocolBinding,
@@ -135,6 +138,7 @@ public sealed class BundleVerifier
 
     private static void ValidateWorkflowBinding(
         ReviewBundleManifest manifest,
+        BundleVerificationOptions options,
         ICollection<BundleVerificationFinding> errors)
     {
         if (manifest.WorkflowBinding is null)
@@ -162,6 +166,22 @@ public sealed class BundleVerifier
             errors.Add(new BundleVerificationFinding(
                 BundleErrorCodes.InvalidWorkflowBinding,
                 "Workflow binding protocol version does not match manifest protocol binding.",
+                manifest.WorkflowBinding.WorkflowId));
+        }
+
+        var authority = options.AuthorityResolver?.ResolveWorkflowDefinition(manifest.WorkflowBinding.WorkflowId);
+        var definition = authority;
+        if (definition is null ||
+            definition.WorkflowDigest != manifest.WorkflowBinding.WorkflowDefinitionDigest ||
+            !string.Equals(definition.TemplateId, manifest.WorkflowBinding.TemplateId, StringComparison.Ordinal) ||
+            !string.Equals(definition.TemplateVersion, manifest.WorkflowBinding.TemplateVersion, StringComparison.Ordinal) ||
+            definition.TemplateDigest != manifest.WorkflowBinding.TemplateDigest ||
+            !string.Equals(definition.ProtocolVersionId, manifest.WorkflowBinding.BoundProtocolVersionId, StringComparison.Ordinal) ||
+            definition.ProtocolContentDigest != manifest.WorkflowBinding.BoundProtocolContentDigest)
+        {
+            errors.Add(new BundleVerificationFinding(
+                BundleErrorCodes.InvalidWorkflowBinding,
+                "Workflow binding does not match a resolved verified Workflow definition.",
                 manifest.WorkflowBinding.WorkflowId));
         }
 
@@ -201,6 +221,21 @@ public sealed class BundleVerifier
                     $"{requiredSchema.SchemaId}/{requiredSchema.SchemaVersion}"));
             }
         }
+
+
+        var required = manifest.RequiredSchemas
+            .Select(schema => $"{schema.SchemaId}\n{schema.SchemaVersion}")
+            .ToHashSet(StringComparer.Ordinal);
+        foreach (var artifact in manifest.Artifacts)
+        {
+            if (!required.Contains($"{artifact.SchemaId}\n{artifact.SchemaVersion}"))
+            {
+                errors.Add(new BundleVerificationFinding(
+                    BundleErrorCodes.UnsupportedRequiredSchema,
+                    "Artifact schema is not declared in required schemas.",
+                    artifact.LogicalPath));
+            }
+        }
     }
 
     private static void ValidateProvenanceBindings(
@@ -219,7 +254,8 @@ public sealed class BundleVerifier
                 continue;
             }
 
-            if (!options.KnownProvenanceEventDigests.TryGetValue(binding.EventId, out var knownDigest))
+            var authority = options.AuthorityResolver?.ResolveProvenanceEvent(binding.EventId);
+            if (authority is null)
             {
                 errors.Add(new BundleVerificationFinding(
                     BundleErrorCodes.InvalidProvenanceBinding,
@@ -228,7 +264,11 @@ public sealed class BundleVerifier
                 continue;
             }
 
-            if (!string.Equals(knownDigest.ToString(), binding.EventDigest.ToString(), StringComparison.Ordinal))
+            if (authority.EventDigest != binding.EventDigest ||
+                authority.ToDigestEnvelope().ComputeDigest() != authority.EventDigest ||
+                !string.Equals(authority.Activity.ActivityId, binding.ActivityKind, StringComparison.Ordinal) ||
+                authority.OccurredAt != binding.RecordedAt ||
+                !string.Equals(authority.Agent.AgentId, binding.ActorId, StringComparison.Ordinal))
             {
                 errors.Add(new BundleVerificationFinding(
                     BundleErrorCodes.InvalidProvenanceBinding,
@@ -249,6 +289,15 @@ public sealed class BundleVerifier
         foreach (var artifact in manifest.Artifacts)
         {
             var authorityDigestsValid = true;
+
+            if ((artifact.ProvenanceEventId is null) != (artifact.ProvenanceEventDigest is null))
+            {
+                authorityDigestsValid = false;
+                errors.Add(new BundleVerificationFinding(
+                    BundleErrorCodes.InvalidProvenanceBinding,
+                    "Artifact provenance event id and digest must be supplied together.",
+                    artifact.LogicalPath));
+            }
 
             if (!seen.Add(artifact.LogicalPath))
             {
@@ -369,7 +418,8 @@ public sealed class BundleVerifier
             return;
         }
 
-        if (!options.KnownProvenanceEventDigests.TryGetValue(artifact.ProvenanceEventId, out var knownDigest))
+        var authority = options.AuthorityResolver?.ResolveProvenanceEvent(artifact.ProvenanceEventId);
+        if (authority is null)
         {
             errors.Add(new BundleVerificationFinding(
                 BundleErrorCodes.InvalidProvenanceBinding,
@@ -378,7 +428,8 @@ public sealed class BundleVerifier
             return;
         }
 
-        if (!string.Equals(knownDigest.ToString(), artifact.ProvenanceEventDigest.Value.ToString(), StringComparison.Ordinal))
+        if (authority.EventDigest != artifact.ProvenanceEventDigest.Value ||
+            authority.ToDigestEnvelope().ComputeDigest() != authority.EventDigest)
         {
             errors.Add(new BundleVerificationFinding(
                 BundleErrorCodes.InvalidProvenanceBinding,

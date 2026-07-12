@@ -1,3 +1,4 @@
+using System.Reflection;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NexusScholar.Bundles;
@@ -5,6 +6,7 @@ using NexusScholar.Kernel;
 using NexusScholar.Protocol;
 using NexusScholar.Provenance;
 using NexusScholar.Shared;
+using NexusScholar.Workflow;
 
 namespace NexusScholar.Core.Tests;
 
@@ -165,7 +167,7 @@ public sealed class BundleTests
             CreateManifest(),
             CreateOptions(CreateArtifact(), ArtifactBytes()) with
             {
-                KnownProtocolContentDigests = new Dictionary<string, ContentDigest>(StringComparer.Ordinal)
+                AuthorityResolver = new TestBundleAuthorityResolver()
             });
         var stale = new BundleVerifier().Verify(
             CreateManifest(protocolContentDigest: ContentDigest.Sha256Utf8("unscoped-protocol-payload")),
@@ -467,6 +469,50 @@ public sealed class BundleTests
         Assert.ThrowsExactly<ArgumentException>(() => new BundleSharedIdentityMembership(candidate));
     }
 
+    [TestMethod]
+    public void Verifier_requires_resolved_full_authority_and_artifact_schema_closure()
+    {
+        var artifact = CreateArtifact();
+        var protocolAuthority = VerifiedProtocolAuthority();
+        var eventRecord = CreateProvenanceEvent();
+        var workflowBinding = new BundleWorkflowBinding(
+            "workflow-1", ContentDigest.Sha256Utf8("workflow-definition"), "template-1", "1.0.0",
+            ContentDigest.Sha256Utf8("template"), ProtocolVersionId, ProtocolDigest());
+        var workflowAuthority = CreateVerifiedWorkflowAuthority(workflowBinding, protocolAuthority);
+        var resolver = new TestBundleAuthorityResolver(protocolAuthority, workflowAuthority, eventRecord);
+        var manifest = CreateManifest(
+            artifacts: new[] { artifact },
+            workflowBinding: workflowBinding,
+            provenanceBindings: new[] { CreateProvenanceBinding(eventRecord) });
+        var options = CreateOptions(artifact, ArtifactBytes()) with { AuthorityResolver = resolver };
+
+        Assert.IsTrue(new BundleVerifier().Verify(manifest, options).IsValid);
+
+        var wrongProtocol = new ReviewBundleManifest(
+            manifest.BundleId, manifest.CreatedBy,
+            new BundleProtocolBinding("other-protocol", ProtocolVersionId, 1, BundleConstants.ApprovedProtocolStatus, ProtocolDigest()),
+            manifest.Artifacts, manifest.RequiredSchemas, manifest.CreatedAt, manifest.WorkflowBinding, manifest.ProvenanceBindings);
+        AssertHasCategory(new BundleVerifier().Verify(wrongProtocol, options), BundleErrorCodes.InvalidProtocolBinding);
+
+        var undeclaredSchema = CreateManifest(artifacts: new[] { artifact }, requiredSchemas: Array.Empty<BundleSchemaRef>());
+        AssertHasCategory(new BundleVerifier().Verify(undeclaredSchema, options), BundleErrorCodes.UnsupportedRequiredSchema);
+    }
+
+    [TestMethod]
+    public void Verifier_rejects_incomplete_artifact_provenance_pair()
+    {
+        var bytes = ArtifactBytes();
+        var artifact = new BundleArtifactEntry(
+            "search-plan", "artifacts/search-plan.json", "workflow-artifact", "application/json", bytes.Length,
+            BundleArtifactEntry.ComputeRawByteDigest(bytes), "nexus.workflow.artifact", "1.0.0",
+            provenanceEventId: "event-without-digest");
+
+        var result = new BundleVerifier().Verify(CreateManifest(artifacts: new[] { artifact }), CreateOptions(artifact, bytes));
+
+        AssertHasCategory(result, BundleErrorCodes.InvalidProvenanceBinding);
+        Assert.AreEqual(0, result.VerifiedArtifacts.Count);
+    }
+
     private static byte[] ArtifactBytes(string value = "{\"query\":\"nexus scholar\"}\n") =>
         Encoding.UTF8.GetBytes(value);
 
@@ -534,6 +580,7 @@ public sealed class BundleTests
         {
             SupportedRequiredSchemas = new[] { new BundleSchemaRef("nexus.workflow.artifact", "1.0.0") },
             KnownProtocolContentDigests = KnownProtocolContentDigests(),
+            AuthorityResolver = new TestBundleAuthorityResolver(VerifiedProtocolAuthority()),
             ArtifactBytes = new Dictionary<string, byte[]>(StringComparer.Ordinal)
             {
                 [logicalPath] = bytes
@@ -555,6 +602,32 @@ public sealed class BundleTests
     {
         var seed = CreateProtocolVersion(ContentDigest.Sha256Utf8("placeholder-protocol-content"));
         return CreateProtocolVersion(seed.ToProtocolContentDigestEnvelope().ComputeDigest());
+    }
+
+    private static VerifiedProtocolVersion VerifiedProtocolAuthority()
+    {
+        var version = ApprovedProtocolVersion();
+        return new VerifiedProtocolVersion(
+            version,
+            ApprovalPolicy.ExplicitCustomSingleResearcher(),
+            Array.Empty<VerifiedProtocolApproval>());
+    }
+
+    private static WorkflowDefinition CreateVerifiedWorkflowAuthority(
+        BundleWorkflowBinding binding,
+        VerifiedProtocolVersion protocol)
+    {
+        var definitionConstructor = typeof(WorkflowDefinition).GetConstructors(BindingFlags.NonPublic | BindingFlags.Instance).Single();
+        var definition = (WorkflowDefinition)definitionConstructor.Invoke(new object[]
+        {
+            binding.WorkflowId, binding.WorkflowDefinitionDigest, "compiler", "1.0.0", protocol.Version.ProtocolId,
+            protocol.Version.Id, protocol.Version.VersionNumber, protocol.Version.ContentDigest,
+            binding.TemplateId, binding.TemplateVersion, binding.TemplateDigest,
+            Array.Empty<WorkflowResolvedInputBinding>(), Array.Empty<WorkflowCompiledNode>(), Array.Empty<WorkflowCompiledEdge>(),
+            Array.Empty<WorkflowCompiledApprovalRequirement>(), Array.Empty<WorkflowCompiledCapabilityRequirement>(),
+            Array.Empty<WorkflowCompiledArtifactDeclaration>(), Array.Empty<WorkflowInvalidationPlanEntry>()
+        });
+        return definition;
     }
 
     private static ProtocolVersion CreateProtocolVersion(ContentDigest contentDigest)
@@ -609,6 +682,32 @@ public sealed class BundleTests
         Assert.IsTrue(
             verification.Errors.Any(error => string.Equals(error.Category, category, StringComparison.Ordinal)),
             $"Expected error category '{category}' but saw: {string.Join(", ", verification.Errors.Select(error => error.Category))}");
+    }
+
+    private sealed class TestBundleAuthorityResolver : IBundleAuthorityResolver
+    {
+        private readonly VerifiedProtocolVersion? _protocol;
+        private readonly WorkflowDefinition? _workflow;
+        private readonly ResearchEvent? _event;
+
+        public TestBundleAuthorityResolver(
+            VerifiedProtocolVersion? protocol = null,
+            WorkflowDefinition? workflow = null,
+            ResearchEvent? @event = null)
+        {
+            _protocol = protocol;
+            _workflow = workflow;
+            _event = @event;
+        }
+
+        public VerifiedProtocolVersion ResolveProtocolVersion(string protocolVersionId) =>
+            string.Equals(protocolVersionId, _protocol?.Version.Id, StringComparison.Ordinal) ? _protocol! : null!;
+
+        public WorkflowDefinition ResolveWorkflowDefinition(string workflowId) =>
+            string.Equals(workflowId, _workflow?.WorkflowId, StringComparison.Ordinal) ? _workflow! : null!;
+
+        public ResearchEvent ResolveProvenanceEvent(string eventId) =>
+            string.Equals(eventId, _event?.EventId.ToString(), StringComparison.Ordinal) ? _event! : null!;
     }
 
     private sealed class FixedIdGenerator : IIdGenerator
