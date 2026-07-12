@@ -334,6 +334,45 @@ public sealed class ScreeningFixtureTests
     }
 
     [TestMethod]
+    public void Screening_post_adjudication_disagreement_creates_next_conflict_generation()
+    {
+        using var document = LoadFixture("screening-conflict-resolved-by-human.json");
+        var (@case, service, criteria, candidateSet) = BuildServiceCaseWithConflictingDecisionSet(document.RootElement.GetProperty("case"));
+        var digest = criteria.ComputeDigest().ToString();
+        var first = BuildDecision(@case.GetProperty("sourceDecisions")[0], criteria.CriteriaId, digest, candidateSet.CandidateSetId);
+        var second = BuildDecision(@case.GetProperty("sourceDecisions")[1], criteria.CriteriaId, digest, candidateSet.CandidateSetId);
+        service.AddDecision(first);
+        service.AddDecision(second);
+        var firstConflict = service.Conflicts.Single();
+        var adjudication = BuildAdjudicationWithSourceLinks(
+            BuildDecision(@case.GetProperty("adjudication"), criteria.CriteriaId, digest, candidateSet.CandidateSetId, decisionKind: ScreeningDecisionKind.Adjudication),
+            new[] { first.DecisionId, second.DecisionId },
+            firstConflict.ConflictId);
+        service.AddDecision(adjudication);
+
+        service.AddDecision(new ScreeningDecision(
+            "decision-post-adjudication-disagreement",
+            candidateSet.CandidateSetId,
+            first.CandidateId,
+            null,
+            null,
+            first.Stage,
+            ScreeningVerdicts.Include,
+            ScreeningActor.Human("human-post-adjudication"),
+            DateTimeOffset.Parse("2026-06-27T02:50:30Z"),
+            "New evidence changes the human decision.",
+            null,
+            criteria.CriteriaId,
+            digest,
+            Array.Empty<string>(),
+            Array.Empty<string>(),
+            Array.Empty<string>()));
+
+        Assert.AreEqual(2, service.Conflicts.Count);
+        Assert.AreEqual(2, service.Conflicts.Single(conflict => !conflict.Resolved).Generation);
+    }
+
+    [TestMethod]
     public void Screening_unresolved_conflict_blocks_downstream_stage_handoff()
     {
         using var document = LoadFixture("screening-unresolved-conflict-blocks-handoff.json");

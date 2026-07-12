@@ -703,7 +703,7 @@ public sealed class ScreeningServiceTests
     }
 
     [TestMethod]
-    public void Resolved_conflict_is_not_resurrected_by_later_human_vote_and_downstream_handoff_can_continue()
+    public void Post_adjudication_disagreement_creates_new_conflict_generation_and_blocks_handoff()
     {
         var dedup = BuildDedupResult("dedup-result-screening-resolved", ["candidate-1"], []);
         var candidateSet = ScreeningService.CreateCandidateSetFromDedupResult(
@@ -740,8 +740,13 @@ public sealed class ScreeningServiceTests
         service.AddDecision(adjudication);
 
         service.AddDecision(BuildHumanDecision("decision-resolved-d", candidateSet.CandidateSetId, "candidate-1", titleCriteria.CriteriaId, titleDigest, ScreeningActor.Human("human-d"), ScreeningVerdicts.Exclude));
-        Assert.AreEqual(1, service.Conflicts.Count);
-        Assert.IsTrue(service.Conflicts.Single().Resolved);
+        Assert.AreEqual(2, service.Conflicts.Count);
+        Assert.AreEqual(1, service.Conflicts.Count(item => item.Resolved));
+        var regenerated = service.Conflicts.Single(item => !item.Resolved);
+        Assert.AreEqual(2, regenerated.Generation);
+        CollectionAssert.AreEquivalent(
+            new[] { adjudication.DecisionId, "decision-resolved-d" },
+            regenerated.SourceDecisionIds.ToArray());
 
         var fullTextDecision = new ScreeningDecision(
             "decision-resolved-fulltext",
@@ -760,9 +765,8 @@ public sealed class ScreeningServiceTests
             [$"raw-artifact-bytes:{ContentDigest.Sha256Utf8("full-text").ToString()}"],
             Array.Empty<string>(),
             Array.Empty<string>());
-        service.AddDecision(fullTextDecision);
-
-        Assert.AreEqual(5, service.Decisions.Count);
+        var error = Assert.ThrowsExactly<ScreeningRuleException>(() => service.AddDecision(fullTextDecision));
+        Assert.AreEqual(ScreeningErrorCodes.UnresolvedConflict, error.Category);
     }
 
     private static DeduplicationResult BuildDedupResult(
