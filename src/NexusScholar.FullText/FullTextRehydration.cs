@@ -24,6 +24,18 @@ public sealed class VerifiedFullTextChain
     public FullTextArtifactEvidence Artifact { get; }
 }
 
+public sealed class VerifiedFullTextExtraction
+{
+    internal VerifiedFullTextExtraction(VerifiedFullTextChain source, FullTextExtractionRecord record)
+    {
+        Source = source;
+        Record = record;
+    }
+
+    public VerifiedFullTextChain Source { get; }
+    public FullTextExtractionRecord Record { get; }
+}
+
 public static class FullTextRehydrator
 {
     public static VerifiedFullTextChain Rehydrate(UnverifiedFullTextChain chain)
@@ -118,4 +130,25 @@ internal static class FullTextAuthorityValidator
         string.Equals(left.CandidateSetId, right.CandidateSetId, StringComparison.Ordinal) &&
         string.Equals(left.CandidateId, right.CandidateId, StringComparison.Ordinal) &&
         string.Equals(left.ScreeningDecisionId, right.ScreeningDecisionId, StringComparison.Ordinal);
+}
+
+public static class FullTextExtractionRehydrator
+{
+    public static VerifiedFullTextExtraction Rehydrate(
+        VerifiedFullTextChain source,
+        FullTextExtractionRecord record)
+    {
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(record);
+        if (!string.Equals(record.SourceArtifactId, source.Artifact.ArtifactId, StringComparison.Ordinal) ||
+            !string.Equals(record.SourceRawByteDigest, source.Artifact.RawByteDigest, StringComparison.Ordinal) ||
+            !string.Equals(record.SourceRawByteDigestScope, source.Artifact.RawByteDigestScope, StringComparison.Ordinal))
+        {
+            throw new FullTextRuleException(
+                FullTextErrorCodes.ExtractionSourceMismatch,
+                "Extraction record does not bind the verified source artifact.");
+        }
+
+        return new VerifiedFullTextExtraction(source, record);
+    }
 }

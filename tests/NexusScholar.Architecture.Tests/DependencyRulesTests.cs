@@ -102,8 +102,7 @@ public sealed class DependencyRulesTests
             typeof(WorkflowDefinition).Assembly,
             typeof(WorkId).Assembly,
             typeof(SearchTrace).Assembly,
-            typeof(ScreeningService).Assembly,
-            typeof(FullTextInput).Assembly
+            typeof(ScreeningService).Assembly
         };
 
         foreach (var assembly in digestConsumerAssemblies)
@@ -113,6 +112,7 @@ public sealed class DependencyRulesTests
 
             Assert.IsFalse(referencesArtifacts, $"{assembly.GetName().Name} must not depend on NexusScholar.Artifacts for digest vocabulary.");
         }
+
     }
 
     [TestMethod]
@@ -256,20 +256,22 @@ public sealed class DependencyRulesTests
     }
 
     [TestMethod]
-    public void FullText_project_depends_only_on_kernel_inside_nexus_domain()
+    public void FullText_project_depends_inward_on_kernel_and_artifacts()
     {
         var fullTextAssembly = typeof(FullTextInput).Assembly;
         var kernelAssemblyName = typeof(IClock).Assembly.GetName().Name;
+        var artifactsAssemblyName = typeof(NexusScholar.Artifacts.ArtifactDescriptor).Assembly.GetName().Name;
         var disallowed = fullTextAssembly.GetReferencedAssemblies()
             .Select(reference => reference.Name ?? string.Empty)
             .Where(name => name.StartsWith("NexusScholar.", StringComparison.Ordinal))
-            .Where(name => !string.Equals(name, kernelAssemblyName, StringComparison.Ordinal))
+            .Where(name => !string.Equals(name, kernelAssemblyName, StringComparison.Ordinal) &&
+                !string.Equals(name, artifactsAssemblyName, StringComparison.Ordinal))
             .ToArray();
 
         Assert.AreEqual(
             0,
             disallowed.Length,
-            $"NexusScholar.FullText must depend only on Kernel inside the domain. Found: {string.Join(", ", disallowed)}");
+            $"NexusScholar.FullText may depend only on Kernel and Artifacts inside the domain. Found: {string.Join(", ", disallowed)}");
     }
 
     [TestMethod]

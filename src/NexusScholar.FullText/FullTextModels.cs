@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Text;
 using System.Xml;
+using NexusScholar.Artifacts;
 using NexusScholar.Kernel;
 
 namespace NexusScholar.FullText;
@@ -127,6 +128,16 @@ public static class FullTextExtractionStatuses
     public static bool IsAllowed(string status) => Allowed.Contains(status);
 }
 
+public static class FullTextExtractionRepresentations
+{
+    public const string PageText = "page-text";
+    public const string Sections = "sections";
+
+    public static bool IsAllowed(string? value) =>
+        string.Equals(value, PageText, StringComparison.Ordinal) ||
+        string.Equals(value, Sections, StringComparison.Ordinal);
+}
+
 public static class FullTextErrorCodes
 {
     public const string MissingFullText = "missing-full-text";
@@ -160,6 +171,9 @@ public static class FullTextErrorCodes
     public const string DerivedTextMissingSourceDigest = "derived-text-missing-source-digest";
     public const string InvalidAuthorityChain = "invalid-fulltext-authority-chain";
     public const string InvalidAcquisitionState = "invalid-fulltext-acquisition-state";
+    public const string InvalidLogicalPath = "invalid-fulltext-logical-path";
+    public const string InvalidExtractionRepresentation = "invalid-extraction-representation";
+    public const string ExtractionSourceMismatch = "extraction-source-mismatch";
 }
 
 public sealed class FullTextRuleException : InvalidOperationException
@@ -571,7 +585,14 @@ public sealed class FullTextArtifactEvidence
         SizeBytes = sizeBytes;
         RawByteDigest = rawByteDigest ?? string.Empty;
         RawByteDigestScope = Guard.NotBlank(rawByteDigestScope, nameof(rawByteDigestScope));
-        LogicalPath = string.IsNullOrWhiteSpace(logicalPath) ? null : logicalPath.Trim();
+        try
+        {
+            LogicalPath = string.IsNullOrWhiteSpace(logicalPath) ? null : ArtifactDescriptor.NormalizeLogicalPath(logicalPath);
+        }
+        catch (ArgumentException exception)
+        {
+            throw new FullTextRuleException(FullTextErrorCodes.InvalidLogicalPath, exception.Message);
+        }
         OriginalFileName = string.IsNullOrWhiteSpace(originalFileName) ? null : originalFileName.Trim();
         ValidationStatus = Guard.NotBlank(validationStatus, nameof(validationStatus));
         Warnings = Array.AsReadOnly((warnings ?? Array.Empty<string>()).ToArray());
@@ -902,7 +923,7 @@ public static class FullTextDuplicatePolicy
 
 public sealed class FullTextExtractionRecord
 {
-    public FullTextExtractionRecord(
+    internal FullTextExtractionRecord(
         string extractionId,
         string sourceArtifactId,
         string sourceRawByteDigest,
@@ -918,7 +939,8 @@ public sealed class FullTextExtractionRecord
         IReadOnlyList<string>? sections = null,
         IReadOnlyList<string>? warnings = null,
         IReadOnlyList<string>? errors = null,
-        IReadOnlyList<string>? nonClaims = null)
+        IReadOnlyList<string>? nonClaims = null,
+        string? representationKind = null)
     {
         ExtractionId = Guard.NotBlank(extractionId, nameof(extractionId));
         SchemaId = FullTextSchemas.ExtractionRecordSchemaId;
@@ -938,6 +960,7 @@ public sealed class FullTextExtractionRecord
         Warnings = Array.AsReadOnly((warnings ?? Array.Empty<string>()).ToArray());
         Errors = Array.AsReadOnly((errors ?? Array.Empty<string>()).ToArray());
         NonClaims = Array.AsReadOnly((nonClaims ?? FullTextInput.DefaultNonClaims).ToArray());
+        RepresentationKind = string.IsNullOrWhiteSpace(representationKind) ? null : representationKind.Trim();
 
         Validate();
     }
@@ -977,6 +1000,25 @@ public sealed class FullTextExtractionRecord
     public ReadOnlyCollection<string> Errors { get; }
 
     public ReadOnlyCollection<string> NonClaims { get; }
+
+    public string? RepresentationKind { get; }
+
+    public static ContentDigest ComputeRepresentationDigest(
+        string representationKind,
+        IReadOnlyList<string> values)
+    {
+        if (!FullTextExtractionRepresentations.IsAllowed(representationKind))
+        {
+            throw new FullTextRuleException(
+                FullTextErrorCodes.InvalidExtractionRepresentation,
+                "Extraction representation kind is unsupported.");
+        }
+
+        var canonical = new CanonicalJsonObject()
+            .Add("representation_kind", representationKind)
+            .Add("values", new CanonicalJsonArray(values.Select(CanonicalJsonValue.From)));
+        return ContentDigest.Sha256CanonicalJson(canonical);
+    }
 
     private void Validate()
     {
@@ -1023,6 +1065,39 @@ public sealed class FullTextExtractionRecord
                 throw new FullTextRuleException(
                     FullTextErrorCodes.ExtractionFailure,
                     "Extracted text digest scope is required when extracted text digest is supplied.");
+            }
+        }
+
+        var hasPageText = PageText.Count > 0;
+        var hasSections = Sections.Count > 0;
+        var hasSuccessfulContent = string.Equals(Status, FullTextExtractionStatuses.Success, StringComparison.Ordinal) ||
+            string.Equals(Status, FullTextExtractionStatuses.Partial, StringComparison.Ordinal);
+        if (hasSuccessfulContent &&
+            (!FullTextExtractionRepresentations.IsAllowed(RepresentationKind) || hasPageText == hasSections ||
+                (string.Equals(RepresentationKind, FullTextExtractionRepresentations.PageText, StringComparison.Ordinal) != hasPageText)))
+        {
+            throw new FullTextRuleException(
+                FullTextErrorCodes.InvalidExtractionRepresentation,
+                "Successful extraction records require exactly one matching text representation.");
+        }
+
+        if (!hasSuccessfulContent && (hasPageText || hasSections || RepresentationKind is not null))
+        {
+            throw new FullTextRuleException(
+                FullTextErrorCodes.InvalidExtractionRepresentation,
+                "Failed or skipped extraction records cannot carry extracted text representation.");
+        }
+
+        if (hasSuccessfulContent)
+        {
+            var values = hasPageText ? PageText : Sections;
+            var expectedDigest = ComputeRepresentationDigest(RepresentationKind!, values).ToString();
+            if (!string.Equals(ExtractedTextDigestScope, DigestScope.CanonicalJsonRecord.ToString(), StringComparison.Ordinal) ||
+                !string.Equals(ExtractedTextDigest, expectedDigest, StringComparison.Ordinal))
+            {
+                throw new FullTextRuleException(
+                    FullTextErrorCodes.InvalidExtractionRepresentation,
+                    "Extraction digest must bind the exact canonical representation.");
             }
         }
     }

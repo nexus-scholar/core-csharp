@@ -274,6 +274,7 @@ public sealed class FullTextTests
     public void Derived_extraction_binds_to_source_artifact_id_and_raw_digest()
     {
         var sourceDigest = ContentDigest.Sha256Utf8("source-pdf").ToString();
+        var pageText = new[] { "extracted text" };
         var extraction = new FullTextExtractionRecord(
             "extraction-001",
             "artifact-source-001",
@@ -284,9 +285,10 @@ public sealed class FullTextTests
             FixedTime,
             "user-supplied-derived-text",
             FullTextExtractionStatuses.Success,
-            extractedTextDigest: ContentDigest.Sha256Utf8("extracted text").ToString(),
-            extractedTextDigestScope: DigestScope.RawArtifactBytes.ToString(),
-            pageText: ["extracted text"]);
+            extractedTextDigest: FullTextExtractionRecord.ComputeRepresentationDigest(FullTextExtractionRepresentations.PageText, pageText).ToString(),
+            extractedTextDigestScope: DigestScope.CanonicalJsonRecord.ToString(),
+            pageText: pageText,
+            representationKind: FullTextExtractionRepresentations.PageText);
 
         Assert.AreEqual("artifact-source-001", extraction.SourceArtifactId);
         Assert.AreEqual(sourceDigest, extraction.SourceRawByteDigest);
@@ -311,6 +313,7 @@ public sealed class FullTextTests
     public void Partial_extraction_requires_warning_category()
     {
         var sourceDigest = ContentDigest.Sha256Utf8("source-pdf").ToString();
+        var partialText = new[] { "partial text" };
         var extraction = new FullTextExtractionRecord(
             "extraction-partial",
             "artifact-source-001",
@@ -321,7 +324,11 @@ public sealed class FullTextTests
             FixedTime,
             "user-supplied-derived-text",
             FullTextExtractionStatuses.Partial,
-            warnings: [FullTextErrorCodes.PartialExtraction]);
+            extractedTextDigest: FullTextExtractionRecord.ComputeRepresentationDigest(FullTextExtractionRepresentations.PageText, partialText).ToString(),
+            extractedTextDigestScope: DigestScope.CanonicalJsonRecord.ToString(),
+            pageText: partialText,
+            warnings: [FullTextErrorCodes.PartialExtraction],
+            representationKind: FullTextExtractionRepresentations.PageText);
 
         Assert.IsTrue(extraction.Warnings.Contains(FullTextErrorCodes.PartialExtraction));
 
@@ -338,6 +345,50 @@ public sealed class FullTextTests
                     FixedTime,
                     "user-supplied-derived-text",
                     FullTextExtractionStatuses.Partial)).Category);
+    }
+
+    [TestMethod]
+    public void Full_text_paths_and_extraction_source_representation_are_verified()
+    {
+        var input = BuildInput("candidate-extraction-chain");
+        var acquisition = BuildAcquisition(input, FullTextAcquisitionKinds.ManualAcquisition);
+        var bytes = Encoding.UTF8.GetBytes("source artifact text");
+        Assert.AreEqual(
+            FullTextErrorCodes.InvalidLogicalPath,
+            Assert.ThrowsExactly<FullTextRuleException>(() => FullTextArtifactEvidence.FromBytes(
+                "artifact-bad-path", input, acquisition, FullTextArtifactKinds.Text, "text/plain", bytes, 1024,
+                logicalPath: "../outside.txt")).Category);
+
+        var artifact = FullTextArtifactEvidence.FromBytes(
+            "artifact-extraction-chain", input, acquisition, FullTextArtifactKinds.Text, "text/plain", bytes, 1024,
+            logicalPath: "fulltext/source.txt");
+        var chain = FullTextRehydrator.Rehydrate(new UnverifiedFullTextChain(input, acquisition, artifact, bytes, 1024));
+        var pageText = new[] { "page one" };
+        var extraction = new FullTextExtractionRecord(
+            "extraction-chain", artifact.ArtifactId, artifact.RawByteDigest, artifact.RawByteDigestScope,
+            "extractor", "1.0.0", FixedTime, "derived-text", FullTextExtractionStatuses.Success,
+            FullTextExtractionRecord.ComputeRepresentationDigest(FullTextExtractionRepresentations.PageText, pageText).ToString(),
+            DigestScope.CanonicalJsonRecord.ToString(), pageText: pageText,
+            representationKind: FullTextExtractionRepresentations.PageText);
+
+        Assert.AreSame(extraction, FullTextExtractionRehydrator.Rehydrate(chain, extraction).Record);
+        var mismatch = new FullTextExtractionRecord(
+            "extraction-mismatch", "other-artifact", artifact.RawByteDigest, artifact.RawByteDigestScope,
+            "extractor", "1.0.0", FixedTime, "derived-text", FullTextExtractionStatuses.Success,
+            extraction.ExtractedTextDigest, extraction.ExtractedTextDigestScope, pageText: pageText,
+            representationKind: FullTextExtractionRepresentations.PageText);
+        Assert.AreEqual(
+            FullTextErrorCodes.ExtractionSourceMismatch,
+            Assert.ThrowsExactly<FullTextRuleException>(() => FullTextExtractionRehydrator.Rehydrate(chain, mismatch)).Category);
+
+        Assert.AreEqual(
+            FullTextErrorCodes.InvalidExtractionRepresentation,
+            Assert.ThrowsExactly<FullTextRuleException>(() => new FullTextExtractionRecord(
+                "extraction-dual", artifact.ArtifactId, artifact.RawByteDigest, artifact.RawByteDigestScope,
+                "extractor", "1.0.0", FixedTime, "derived-text", FullTextExtractionStatuses.Success,
+                extraction.ExtractedTextDigest, extraction.ExtractedTextDigestScope,
+                pageText: pageText, sections: new[] { "section one" },
+                representationKind: FullTextExtractionRepresentations.PageText)).Category);
     }
 
     private static FullTextInput BuildInput(string candidateId)

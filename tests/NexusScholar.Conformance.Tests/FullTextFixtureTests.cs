@@ -196,6 +196,7 @@ public sealed class FullTextFixtureTests
         using var bindingDocument = LoadFixture("fulltext-derived-extraction-binds-source-artifact.json");
         var binding = bindingDocument.RootElement.GetProperty("case");
         var sourceDigest = ContentDigest.Sha256Utf8("source raw bytes").ToString();
+        var pageText = new[] { "extracted text" };
         var extraction = new FullTextExtractionRecord(
             "extraction-binding",
             binding.GetProperty("sourceArtifactId").GetString()!,
@@ -206,8 +207,10 @@ public sealed class FullTextFixtureTests
             FixedTime,
             "user-supplied-derived-text",
             FullTextExtractionStatuses.Success,
-            extractedTextDigest: ContentDigest.Sha256Utf8("extracted text").ToString(),
-            extractedTextDigestScope: DigestScope.RawArtifactBytes.ToString());
+            extractedTextDigest: FullTextExtractionRecord.ComputeRepresentationDigest(FullTextExtractionRepresentations.PageText, pageText).ToString(),
+            extractedTextDigestScope: DigestScope.CanonicalJsonRecord.ToString(),
+            pageText: pageText,
+            representationKind: FullTextExtractionRepresentations.PageText);
 
         Assert.AreEqual(binding.GetProperty("sourceArtifactId").GetString(), extraction.SourceArtifactId);
         Assert.AreEqual(DigestScope.RawArtifactBytes.ToString(), extraction.SourceRawByteDigestScope);
@@ -215,6 +218,7 @@ public sealed class FullTextFixtureTests
         using var partialDocument = LoadFixture("fulltext-partial-extraction-warning.json");
         var partialCase = partialDocument.RootElement.GetProperty("case");
         var warnings = partialCase.GetProperty("warnings").EnumerateArray().Select(item => item.GetString()!).ToArray();
+        var partialText = new[] { "partial text" };
         var partial = new FullTextExtractionRecord(
             "extraction-partial",
             "artifact-source-001",
@@ -225,7 +229,11 @@ public sealed class FullTextFixtureTests
             FixedTime,
             "user-supplied-derived-text",
             partialCase.GetProperty("status").GetString()!,
-            warnings: warnings);
+            extractedTextDigest: FullTextExtractionRecord.ComputeRepresentationDigest(FullTextExtractionRepresentations.PageText, partialText).ToString(),
+            extractedTextDigestScope: DigestScope.CanonicalJsonRecord.ToString(),
+            pageText: partialText,
+            warnings: warnings,
+            representationKind: FullTextExtractionRepresentations.PageText);
 
         Assert.IsTrue(partial.Warnings.Contains(partialCase.GetProperty("expected").GetProperty("category").GetString()!));
     }
