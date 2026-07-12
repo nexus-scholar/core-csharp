@@ -193,8 +193,8 @@ public sealed record WorkflowCompileInput(
     WorkflowTemplate Template,
     IReadOnlyDictionary<string, CanonicalJsonValue> CompileParameters,
     IReadOnlyList<WorkflowSchemaRef> KnownSchemaRefs,
-    IReadOnlyList<ProtocolAmendment>? Amendments = null,
-    IReadOnlyList<ProtocolInvalidationNotice>? InvalidationNotices = null,
+    IReadOnlyList<VerifiedProtocolWaiver>? WaiverAuthorities = null,
+    VerifiedProtocolAmendment? AmendmentAuthority = null,
     string? ExpectedWorkflowId = null,
     string CompilerId = "nexus-workflow-compiler",
     string CompilerVersion = "1.0.0")
@@ -411,9 +411,7 @@ public sealed class WorkflowCompiler
                 "Workflow compilation requires an approved protocol version.");
         }
 
-        RejectDeferredProtocolAuthority(input);
-
-        ValidateAmendmentSourcePresence(input);
+        ValidateSupplementalAuthority(input);
         ValidateProtocolDigest(input);
         ValidateTemplateSchemaClosure(input);
         ValidateTemplateDigest(input);
@@ -444,7 +442,7 @@ public sealed class WorkflowCompiler
         var approvalRequirements = ResolveApprovalRequirements(template);
         var capabilityRequirements = ResolveCapabilityRequirements(template);
 
-        var boundInputs = ResolveInputs(protocol, template, input.CompileParameters);
+        var boundInputs = ResolveInputs(protocol, template, input.CompileParameters, input.WaiverAuthorities);
 
         var workflowId = ComputeWorkflowId(
             protocol,
@@ -555,34 +553,44 @@ public sealed class WorkflowCompiler
         }
     }
 
-    private static void RejectDeferredProtocolAuthority(WorkflowCompileInput input)
+    private static void ValidateSupplementalAuthority(WorkflowCompileInput input)
     {
         var protocol = input.ProtocolVersion;
-        if (protocol.Waivers.Count > 0 ||
-            !string.IsNullOrWhiteSpace(protocol.AmendmentId) ||
-            (input.Amendments?.Count ?? 0) > 0 ||
-            (input.InvalidationNotices?.Count ?? 0) > 0)
+        var authorities = (input.WaiverAuthorities ?? Array.Empty<VerifiedProtocolWaiver>()).ToArray();
+        if (authorities.Select(item => item.Waiver.WaiverId).Distinct(StringComparer.Ordinal).Count() != authorities.Length ||
+            authorities.Length != protocol.Waivers.Count)
         {
             throw new WorkflowRuleException(
                 WorkflowErrorCodes.UnverifiedAuthority,
-                "Waiver and amendment workflow compilation requires verified Protocol authority records not yet defined by ADR 0018.");
+                "Workflow compilation requires the exact verified waiver authority set.");
         }
-    }
+        foreach (var waiver in protocol.Waivers)
+        {
+            var authority = authorities.SingleOrDefault(item =>
+                string.Equals(item.Waiver.WaiverId, waiver.WaiverId, StringComparison.Ordinal));
+            if (authority is null || authority.WaiverDigest != ContentDigest.Sha256CanonicalJson(waiver.ToCanonicalJson()))
+            {
+                throw new WorkflowRuleException(WorkflowErrorCodes.UnverifiedAuthority, "Verified waiver authority does not match approved Protocol content.");
+            }
+        }
 
-    private static void ValidateAmendmentSourcePresence(WorkflowCompileInput input)
-    {
-        var amendmentId = input.ProtocolVersion.AmendmentId;
+        var amendmentId = protocol.AmendmentId;
         if (string.IsNullOrWhiteSpace(amendmentId))
         {
+            if (input.AmendmentAuthority is not null)
+            {
+                throw new WorkflowRuleException(WorkflowErrorCodes.UnverifiedAuthority, "Unamended Protocol cannot accept amendment authority.");
+            }
             return;
         }
 
-        if (input.Amendments is null ||
-            !input.Amendments.Any(amendment => string.Equals(amendment.AmendmentId, amendmentId, StringComparison.Ordinal)))
+        var amendment = input.AmendmentAuthority;
+        if (amendment is null ||
+            !string.Equals(amendment.Amendment.AmendmentId, amendmentId, StringComparison.Ordinal) ||
+            !string.Equals(amendment.ProducedVersion.Version.Id, protocol.Id, StringComparison.Ordinal) ||
+            amendment.ProducedVersion.Version.ContentDigest != protocol.ContentDigest)
         {
-            throw new WorkflowRuleException(
-                WorkflowErrorCodes.MissingInvalidationSource,
-                "Amendment source is required for amended protocol workflow compilation.");
+            throw new WorkflowRuleException(WorkflowErrorCodes.UnverifiedAuthority, "Verified amendment authority does not bind the compiled Protocol version.");
         }
     }
 
@@ -986,7 +994,8 @@ public sealed class WorkflowCompiler
     private static IReadOnlyList<WorkflowResolvedInputBinding> ResolveInputs(
         ProtocolVersion protocol,
         WorkflowTemplate template,
-        IReadOnlyDictionary<string, CanonicalJsonValue> compileParameters)
+        IReadOnlyDictionary<string, CanonicalJsonValue> compileParameters,
+        IReadOnlyList<VerifiedProtocolWaiver>? waiverAuthorities)
     {
         compileParameters ??= new Dictionary<string, CanonicalJsonValue>(StringComparer.Ordinal);
 
@@ -1049,7 +1058,9 @@ public sealed class WorkflowCompiler
                     if (waivers.TryGetValue(input.InputId, out var waiver))
                     {
                         ValidateProtocolWaiver(protocol, input, waiver);
-                        var waiverDigest = ContentDigest.Sha256CanonicalJson(waiver.ToCanonicalJson());
+                        var authority = (waiverAuthorities ?? Array.Empty<VerifiedProtocolWaiver>()).Single(item =>
+                            string.Equals(item.Waiver.WaiverId, waiver.WaiverId, StringComparison.Ordinal));
+                        var waiverDigest = authority.WaiverDigest;
                         bindings.Add(
                             new WorkflowResolvedInputBinding(
                                 input.InputId,
@@ -1236,19 +1247,16 @@ public sealed class WorkflowCompiler
             return Array.Empty<WorkflowInvalidationPlanEntry>();
         }
 
-        var amendment = input.Amendments?.FirstOrDefault(item => string.Equals(item.AmendmentId, amendmentId, StringComparison.Ordinal));
-        if (amendment is null)
+        var authority = input.AmendmentAuthority;
+        if (authority is null || !string.Equals(authority.Amendment.AmendmentId, amendmentId, StringComparison.Ordinal))
         {
             throw new WorkflowRuleException(
                 WorkflowErrorCodes.MissingInvalidationSource,
                 "Amendment source is required for amended protocol compilation.");
         }
 
-        var notices = amendment.InvalidationNotices.ToList();
-        if ((input.InvalidationNotices?.Count ?? 0) > 0)
-        {
-            notices = input.InvalidationNotices!.ToList();
-        }
+        var amendment = authority.Amendment;
+        var notices = authority.InvalidationNotices;
 
         if (notices.Count == 0)
         {
@@ -1318,7 +1326,7 @@ public sealed class WorkflowCompiler
                     amendment.AmendmentId,
                     amendment.ProducesVersionId,
                     amendment.PreviousContentDigest,
-                    ComputeAmendmentSourceDigest(amendment),
+                    authority.AmendmentDigest,
                     ContentDigest.Sha256CanonicalJson(notice.ToCanonicalJson()),
                     notice.AffectedRequirementId,
                     notice.AffectedArtifactDigest,
@@ -1396,43 +1404,6 @@ public sealed class WorkflowCompiler
             .Add("schema_id", artifact.SchemaId)
             .Add("schema_version", artifact.SchemaVersion)
             .Add("produced_by_node_id", artifact.ProducedByNodeId);
-
-        return ContentDigest.Sha256CanonicalJson(canonical);
-    }
-
-    private static ContentDigest ComputeAmendmentSourceDigest(ProtocolAmendment amendment)
-    {
-        var canonical = new CanonicalJsonObject()
-            .Add("amendment_id", amendment.AmendmentId)
-            .Add("protocol_id", amendment.ProtocolId)
-            .Add("amends_version_id", amendment.AmendsVersionId)
-            .Add("produces_version_id", amendment.ProducesVersionId)
-            .Add("previous_content_digest", amendment.PreviousContentDigest.ToString())
-            .Add("requested_by", amendment.RequestedBy.ToString())
-            .AddTimestamp("requested_at", amendment.RequestedAt)
-            .Add("rationale", amendment.Rationale)
-            .Add("changed_decision_keys", CanonicalJsonValue.Array(
-                amendment.ChangedDecisionKeys
-                    .OrderBy(key => key, StringComparer.Ordinal)
-                    .Select(CanonicalJsonValue.From)
-                    .ToArray()))
-            .Add("invalidation_notice_digests", CanonicalJsonValue.Array(
-                amendment.InvalidationNotices
-                    .OrderBy(notice => notice.NoticeId, StringComparer.Ordinal)
-                    .Select(notice => ContentDigest.Sha256CanonicalJson(notice.ToCanonicalJson()).ToString())
-                    .Select(CanonicalJsonValue.From)
-                    .ToArray()))
-            .Add("approval_policy_id", amendment.ApprovalPolicyId)
-            .Add("approval_ids", CanonicalJsonValue.Array(
-                amendment.ApprovalIds
-                    .OrderBy(id => id, StringComparer.Ordinal)
-                    .Select(CanonicalJsonValue.From)
-                    .ToArray()));
-
-        if (amendment.InvalidationPlanDigest is not null)
-        {
-            canonical.Add("invalidation_plan_digest", amendment.InvalidationPlanDigest.Value.ToString());
-        }
 
         return ContentDigest.Sha256CanonicalJson(canonical);
     }

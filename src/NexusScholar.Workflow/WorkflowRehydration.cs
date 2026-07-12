@@ -27,6 +27,10 @@ public interface IWorkflowAuthorityResolver
 {
     VerifiedProtocolVersion ResolveProtocolVersion(string protocolVersionId);
 
+    VerifiedProtocolWaiver ResolveProtocolWaiver(string waiverId);
+
+    VerifiedProtocolAmendment ResolveProtocolAmendment(string amendmentId);
+
     WorkflowTemplate ResolveTemplate(string templateId, string templateVersion, ContentDigest expectedDigest);
 
     CanonicalJsonValue ResolveCompileParameter(string inputId, ContentDigest expectedValueDigest);
@@ -61,6 +65,7 @@ public static class WorkflowRehydrator
             ?? throw Unverified("The referenced Protocol version could not be resolved.");
         var protocol = protocolAuthority.Version;
         ValidateProtocolBinding(input, protocol);
+        ValidateSupplementalAuthority(protocol, resolver);
 
         var template = resolver.ResolveTemplate(
             Guard.NotBlank(input.TemplateId, nameof(input.TemplateId)),
@@ -70,6 +75,7 @@ public static class WorkflowRehydrator
         ValidateTemplateBinding(input, template);
         ValidateDefinitionShape(input, template);
         ValidateInputBindings(input, template, protocol, resolver);
+        ValidateInvalidationAuthority(input, template, protocol, resolver);
 
         var expectedWorkflowId = WorkflowCompiler.ComputeWorkflowId(
             protocol,
@@ -158,9 +164,32 @@ public static class WorkflowRehydrator
             throw Unverified("Workflow Protocol binding does not match the resolved approved Protocol version.");
         }
 
-        if (protocol.Waivers.Count > 0 || !string.IsNullOrWhiteSpace(protocol.AmendmentId))
+    }
+
+    private static void ValidateSupplementalAuthority(ProtocolVersion protocol, IWorkflowAuthorityResolver resolver)
+    {
+        foreach (var waiver in protocol.Waivers)
         {
-            throw Unverified("Workflow rehydration cannot accept waiver or amendment authority before the ADR 0018 prerequisites exist.");
+            var authority = resolver.ResolveProtocolWaiver(waiver.WaiverId)
+                ?? throw Unverified("Verified Protocol waiver authority could not be resolved.");
+            if (!string.Equals(authority.Waiver.WaiverId, waiver.WaiverId, StringComparison.Ordinal) ||
+                authority.WaiverDigest != ContentDigest.Sha256CanonicalJson(waiver.ToCanonicalJson()))
+            {
+                throw Unverified("Resolved Protocol waiver authority does not match approved Protocol content.");
+            }
+        }
+
+        if (string.IsNullOrWhiteSpace(protocol.AmendmentId))
+        {
+            return;
+        }
+        var amendment = resolver.ResolveProtocolAmendment(protocol.AmendmentId)
+            ?? throw Unverified("Verified Protocol amendment authority could not be resolved.");
+        if (!string.Equals(amendment.Amendment.AmendmentId, protocol.AmendmentId, StringComparison.Ordinal) ||
+            !string.Equals(amendment.ProducedVersion.Version.Id, protocol.Id, StringComparison.Ordinal) ||
+            amendment.ProducedVersion.Version.ContentDigest != protocol.ContentDigest)
+        {
+            throw Unverified("Resolved Protocol amendment authority does not bind the Workflow Protocol version.");
         }
     }
 
@@ -180,11 +209,6 @@ public static class WorkflowRehydrator
 
     private static void ValidateDefinitionShape(UnverifiedWorkflowDefinition input, WorkflowTemplate template)
     {
-        if ((input.InvalidationPlanEntries?.Count ?? 0) > 0)
-        {
-            throw Unverified("Invalidation authority is unavailable under ADR 0018.");
-        }
-
         EnsureUnique(input.ResolvedInputBindings, item => item.InputId, "resolved input bindings");
         EnsureUnique(input.Nodes, item => item.NodeId, "compiled nodes");
         EnsureUnique(input.Edges, item => $"{item.FromNodeId}\u001f{item.ToNodeId}\u001f{item.Condition}", "compiled edges");
@@ -323,6 +347,19 @@ public static class WorkflowRehydrator
                         throw Unverified("Resolved Workflow decision binding does not match the complete Protocol decision record.");
                     }
                     break;
+                case "protocol-waiver":
+                    var waiver = protocol.Waivers.SingleOrDefault(item =>
+                        string.Equals(item.WaiverId, binding.SourceRef, StringComparison.Ordinal));
+                    var waiverAuthority = waiver is null ? null : resolver.ResolveProtocolWaiver(waiver.WaiverId);
+                    if (waiver is null || waiverAuthority is null ||
+                        !string.Equals(waiver.AffectedRequirementId, declaration.SourceProtocolDecisionKey, StringComparison.Ordinal) ||
+                        !string.Equals(binding.WaiverId, waiver.WaiverId, StringComparison.Ordinal) ||
+                        binding.SourceDigest != waiverAuthority.WaiverDigest ||
+                        binding.ValueDigest != waiverAuthority.WaiverDigest)
+                    {
+                        throw Unverified("Resolved Workflow waiver binding does not match verified Protocol waiver authority.");
+                    }
+                    break;
                 case "template-default":
                     if (declaration.DefaultValue is null ||
                         binding.SourceDigest != ContentDigest.Sha256CanonicalJson(declaration.DefaultValue) ||
@@ -349,6 +386,50 @@ public static class WorkflowRehydrator
         if (!requiredIds.All(id => input.ResolvedInputBindings.Any(binding => binding.InputId == id)))
         {
             throw Unverified("A required Workflow input binding is missing.");
+        }
+    }
+
+    private static void ValidateInvalidationAuthority(
+        UnverifiedWorkflowDefinition input,
+        WorkflowTemplate template,
+        ProtocolVersion protocol,
+        IWorkflowAuthorityResolver resolver)
+    {
+        if (string.IsNullOrWhiteSpace(protocol.AmendmentId))
+        {
+            if (input.InvalidationPlanEntries.Count > 0)
+            {
+                throw Unverified("Unamended Protocol cannot carry a Workflow invalidation plan.");
+            }
+            return;
+        }
+
+        var authority = resolver.ResolveProtocolAmendment(protocol.AmendmentId)
+            ?? throw Unverified("Verified Protocol amendment authority could not be resolved for invalidation.");
+        if (input.InvalidationPlanEntries.Count != authority.InvalidationNotices.Count)
+        {
+            throw Unverified("Workflow invalidation plan membership does not match verified amendment notices.");
+        }
+
+        foreach (var notice in authority.InvalidationNotices)
+        {
+            var entry = input.InvalidationPlanEntries.SingleOrDefault(item =>
+                string.Equals(item.NoticeId, notice.NoticeId, StringComparison.Ordinal));
+            var policy = template.InvalidationPolicies.SingleOrDefault(item =>
+                item.AffectedRequirementRefs.Contains(notice.AffectedRequirementId, StringComparer.Ordinal));
+            if (entry is null || policy is null ||
+                !string.Equals(entry.AmendmentId, authority.Amendment.AmendmentId, StringComparison.Ordinal) ||
+                !string.Equals(entry.ProducesVersionId, authority.Amendment.ProducesVersionId, StringComparison.Ordinal) ||
+                entry.PreviousContentDigest != authority.Amendment.PreviousContentDigest ||
+                entry.AmendmentSourceDigest != authority.AmendmentDigest ||
+                entry.InvalidationNoticeDigest != ContentDigest.Sha256CanonicalJson(notice.ToCanonicalJson()) ||
+                !string.Equals(entry.AffectedRequirementId, notice.AffectedRequirementId, StringComparison.Ordinal) ||
+                entry.AffectedArtifactDigest != notice.AffectedArtifactDigest ||
+                !string.Equals(entry.AffectedNodeId, notice.AffectedWorkflowNodeId, StringComparison.Ordinal) ||
+                !string.Equals(entry.RequiredAction, policy.RequiredAction, StringComparison.Ordinal))
+            {
+                throw Unverified("Workflow invalidation entry does not reproduce from verified amendment authority.");
+            }
         }
     }
 
