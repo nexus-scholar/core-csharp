@@ -1,0 +1,60 @@
+{
+  "fixtureId": "dedup-representative-metadata-completeness",
+  "sourceKind": "local-gate-9-dedup-implementation",
+  "sourceCommit": "local-gate-9-dedup-local",
+  "generatorCommand": "hand-authored local Gate 9 Dedup fixture",
+  "generatorVersion": "gate-9-dedup-v1",
+  "sourceRefs": [
+    "docs/adr/0007-shared-scientific-identity.md",
+    "docs/adr/0012-deduplication-evidence-and-cluster-contract.md"
+  ],
+  "comparisonRules": [
+    "no-php-compatibility-claim",
+    "no-generated-php-fixture",
+    "no-screening",
+    "no-app-projection-authority"
+  ],
+  "inputDigest": "sha256:8516d1d2bc030a3804427f39a783063e85f8f8c50be70404809e87715de6fccd",
+  "outputDigest": "sha256:61c1020db047ba21c76c13a237e5b632c8ec68155972644b90e615356df3fd23",
+  "case": {
+    "scenario": "representative-metadata-completeness",
+    "importTraces": [
+      {
+        "traceId": "import-trace-metadata",
+        "records": [
+          {
+            "sourceDatabaseOrTool": "scopus-csv",
+            "sourceRecordId": "sparse",
+            "title": "Sparse record",
+            "workIds": ["doi:10.1000/metadata-fixture"],
+            "authors": ["Sparse Author"]
+          },
+          {
+            "sourceDatabaseOrTool": "ris",
+            "sourceRecordId": "rich",
+            "title": "Rich record",
+            "workIds": ["doi:10.1000/metadata-fixture"],
+            "authors": ["Rich Author", "Second Author"],
+            "year": 2025,
+            "venue": "Journal of Evidence",
+            "abstract": "Complete abstract",
+            "keywords": ["evidence", "metadata"]
+          }
+        ]
+      }
+    ],
+    "expected": {
+      "clusters": 1,
+      "members": 2,
+      "reviewRequired": 0,
+      "unresolved": 0,
+      "representativeMetadata": {
+        "authors": ["Rich Author", "Second Author"],
+        "year": 2025,
+        "venue": "Journal of Evidence",
+        "abstract": "Complete abstract",
+        "keywords": ["evidence", "metadata"]
+      }
+    }
+  }
+}

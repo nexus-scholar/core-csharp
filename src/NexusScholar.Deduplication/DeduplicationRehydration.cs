@@ -46,7 +46,8 @@ public static class DeduplicationRehydrator
         foreach (var candidate in result.RawCandidates)
         {
             if (string.IsNullOrWhiteSpace(candidate.Title) || candidate.Source is null ||
-                candidate.WorkIds.Any(string.IsNullOrWhiteSpace) || candidate.SourceSpecificIds.Any(string.IsNullOrWhiteSpace))
+                candidate.WorkIds.Any(string.IsNullOrWhiteSpace) || candidate.SourceSpecificIds.Any(string.IsNullOrWhiteSpace) ||
+                candidate.Authors.Any(string.IsNullOrWhiteSpace) || candidate.Keywords.Any(string.IsNullOrWhiteSpace))
             {
                 throw Invalid(DeduplicationAuthorityErrorCodes.InvalidCandidate, "Deduplication candidate is malformed.");
             }
@@ -73,6 +74,7 @@ public static class DeduplicationRehydrator
             var members = Unique(cluster.Members, item => item.CandidateId, DeduplicationAuthorityErrorCodes.InvalidCluster);
             if (members.Count == 0 || members.Any(id => !candidateIds.Contains(id)) || members.Any(id => !clustered.Add(id)) ||
                 !members.Contains(cluster.Representative.CandidateId) || !double.IsFinite(cluster.Representative.CompletenessScore) ||
+                cluster.Representative.Authors.Any(string.IsNullOrWhiteSpace) || cluster.Representative.Keywords.Any(string.IsNullOrWhiteSpace) ||
                 cluster.Evidence.Any(item => !members.Contains(item.SubjectCandidateId) ||
                     (item.ObjectCandidateId is not null && !members.Contains(item.ObjectCandidateId))))
             {
@@ -133,6 +135,8 @@ public static class DeduplicationRehydrator
     {
         WorkIds = Array.AsReadOnly(item.WorkIds.ToArray()),
         SourceSpecificIds = Array.AsReadOnly(item.SourceSpecificIds.ToArray()),
+        Authors = Array.AsReadOnly(item.Authors.ToArray()),
+        Keywords = Array.AsReadOnly(item.Keywords.ToArray()),
         Source = item.Source with { }
     };
 

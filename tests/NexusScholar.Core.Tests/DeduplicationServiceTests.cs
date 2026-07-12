@@ -554,6 +554,54 @@ public sealed class DeduplicationServiceTests
     }
 
     [TestMethod]
+    public void Representative_election_and_fill_preserve_imported_scholarly_metadata()
+    {
+        var identifier = WorkId.From("doi", "10.1000/metadata");
+        var sparse = BuildImportRecord(
+            "scopus-csv", "Metadata paper", "sparse", identifier,
+            authors: new[] { "Elected Author" });
+        var rich = BuildImportRecord(
+            "ris", "Metadata paper alternate", "rich", identifier,
+            authors: new[] { "Rich Author", "Second Author" }, year: 2025,
+            venue: "Journal of Evidence", abstractText: "Complete abstract", keywords: new[] { "evidence", "metadata" });
+        var result = new DeduplicationService().Execute(
+            "dedup-metadata", [], [BuildImportTrace("import-metadata", sparse, rich)]);
+
+        var representative = result.Clusters.Single().Representative;
+
+        Assert.AreEqual("import:import-metadata:2:rich", representative.CandidateId);
+        CollectionAssert.AreEqual(new[] { "Rich Author", "Second Author" }, representative.Authors.ToArray());
+        Assert.AreEqual(2025, representative.Year);
+        Assert.AreEqual("Journal of Evidence", representative.Venue);
+        Assert.AreEqual("Complete abstract", representative.Abstract);
+        CollectionAssert.AreEqual(new[] { "evidence", "metadata" }, representative.Keywords.ToArray());
+        CollectionAssert.Contains(representative.ReasonCodes.ToArray(), "scholarly-metadata-completeness");
+    }
+
+    [TestMethod]
+    public void Representative_fill_does_not_overwrite_populated_elected_metadata()
+    {
+        var identifier = WorkId.From("doi", "10.1000/fill");
+        var elected = BuildImportRecord(
+            "scopus-csv", "Elected title", "elected", identifier,
+            authors: new[] { "Elected Author" }, year: 2024, venue: "Elected Venue", keywords: new[] { "elected" });
+        var supplement = BuildImportRecord(
+            "ris", "Supplement title", "supplement", identifier,
+            abstractText: "Supplement abstract");
+        var result = new DeduplicationService().Execute(
+            "dedup-fill", [], [BuildImportTrace("import-fill", elected, supplement)]);
+
+        var representative = result.Clusters.Single().Representative;
+
+        Assert.AreEqual("Elected title", representative.Title);
+        CollectionAssert.AreEqual(new[] { "Elected Author" }, representative.Authors.ToArray());
+        Assert.AreEqual(2024, representative.Year);
+        Assert.AreEqual("Elected Venue", representative.Venue);
+        Assert.AreEqual("Supplement abstract", representative.Abstract);
+        CollectionAssert.AreEqual(new[] { "elected" }, representative.Keywords.ToArray());
+    }
+
+    [TestMethod]
     public void Representative_election_final_tie_breaker_is_candidate_id()
     {
         var trace = BuildSearchTrace(
@@ -664,7 +712,12 @@ public sealed class DeduplicationServiceTests
         IReadOnlyList<string>? sourceIdentifiers = null,
         bool unresolved = false,
         string? rawRecordDigest = null,
-        IReadOnlyList<SearchImportParserNotice>? notices = null)
+        IReadOnlyList<SearchImportParserNotice>? notices = null,
+        IReadOnlyList<string>? authors = null,
+        int? year = null,
+        string? venue = null,
+        string? abstractText = null,
+        IReadOnlyList<string>? keywords = null)
     {
         if (unresolved)
         {
@@ -674,11 +727,11 @@ public sealed class DeduplicationServiceTests
                 null,
                 sourceIdentifiers ?? Array.Empty<string>(),
                 ScholarlyWork.UnresolvedCandidate(title, $"import:{sourceRecordId}"),
-                Array.Empty<string>(),
-                null,
-                null,
-                null,
-                Array.Empty<string>(),
+                authors ?? Array.Empty<string>(),
+                year,
+                venue,
+                abstractText,
+                keywords ?? Array.Empty<string>(),
                 rawRecordDigest,
                 null,
                 false,
@@ -696,11 +749,11 @@ public sealed class DeduplicationServiceTests
             null,
             sourceIdentifiers ?? Array.Empty<string>(),
             work,
-            Array.Empty<string>(),
-            null,
-            null,
-            null,
-            Array.Empty<string>(),
+            authors ?? Array.Empty<string>(),
+            year,
+            venue,
+            abstractText,
+            keywords ?? Array.Empty<string>(),
             rawRecordDigest,
             null,
             false,

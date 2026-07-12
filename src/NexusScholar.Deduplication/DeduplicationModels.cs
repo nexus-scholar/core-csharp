@@ -42,7 +42,19 @@ public sealed record DedupCandidateRecord(
     string? PrimaryWorkId,
     IReadOnlyList<string> WorkIds,
     IReadOnlyList<string> SourceSpecificIds,
-    DedupSightingRef Source);
+    DedupSightingRef Source,
+    IReadOnlyList<string>? Authors = null,
+    int? Year = null,
+    string? Venue = null,
+    string? Abstract = null,
+    IReadOnlyList<string>? Keywords = null)
+{
+    public IReadOnlyList<string> Authors { get; init; } = Freeze(Authors);
+    public IReadOnlyList<string> Keywords { get; init; } = Freeze(Keywords);
+
+    private static IReadOnlyList<string> Freeze(IReadOnlyList<string>? values) =>
+        new ReadOnlyCollection<string>((values ?? Array.Empty<string>()).ToArray());
+}
 
 public sealed record DedupEvidence(
     string EvidenceId,
@@ -67,7 +79,12 @@ public sealed record DedupRepresentativeResult(
     IReadOnlyList<string>? SourceFileDigestScopes = null,
     IReadOnlyList<string>? RawRecordDigests = null,
     IReadOnlyList<DedupParserNotice>? ParserWarnings = null,
-    IReadOnlyList<DedupParserNotice>? RecordNotices = null)
+    IReadOnlyList<DedupParserNotice>? RecordNotices = null,
+    IReadOnlyList<string>? Authors = null,
+    int? Year = null,
+    string? Venue = null,
+    string? Abstract = null,
+    IReadOnlyList<string>? Keywords = null)
 {
     public IReadOnlyList<string> SourceFileDigests { get; init; } =
         Freeze(SourceFileDigests);
@@ -83,6 +100,10 @@ public sealed record DedupRepresentativeResult(
 
     public IReadOnlyList<DedupParserNotice> RecordNotices { get; init; } =
         Freeze(RecordNotices);
+
+    public IReadOnlyList<string> Authors { get; init; } = Freeze(Authors);
+
+    public IReadOnlyList<string> Keywords { get; init; } = Freeze(Keywords);
 
     private static IReadOnlyList<string> Freeze(IReadOnlyList<string>? values)
     {

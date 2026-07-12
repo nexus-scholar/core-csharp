@@ -356,7 +356,12 @@ public sealed class DeduplicationService
                 RawRecordDigest: record.RawRecordDigest,
                 SourceContext: work.SourceContext,
                 ParserWarnings: ConvertNotices(metadata.ParserWarnings.Concat(traceParserWarnings)),
-                RecordNotices: ConvertNotices(record.Notices)));
+                RecordNotices: ConvertNotices(record.Notices)),
+            record.Authors,
+            record.Year,
+            record.Venue,
+            record.Abstract,
+            record.Keywords);
     }
 
     private static bool HasExactWorkIdOverlap(DedupCandidateRecord left, DedupCandidateRecord right)
@@ -371,7 +376,7 @@ public sealed class DeduplicationService
 
     private static DedupRepresentativeResult ElectRepresentative(DedupCandidateRecord[] members)
     {
-        var elected = members
+        var ranked = members
             .Select(member => new
             {
                 Candidate = member,
@@ -388,7 +393,8 @@ public sealed class DeduplicationService
             .ThenByDescending(item => item.HasDoiId)
             .ThenBy(item => item.NormalizedPrimaryIdentifier, StringComparer.Ordinal)
             .ThenBy(item => item.Candidate.CandidateId, StringComparer.Ordinal)
-            .First();
+            .ToArray();
+        var elected = ranked[0];
 
         var unionWorkIds = members
             .SelectMany(member => member.WorkIds)
@@ -410,6 +416,14 @@ public sealed class DeduplicationService
             ? elected.Candidate.PrimaryWorkId
             : unionWorkIds.FirstOrDefault(value => !string.IsNullOrWhiteSpace(value));
 
+        var representativeAuthors = ranked.Select(item => item.Candidate.Authors).FirstOrDefault(values => values.Count > 0)
+            ?? Array.Empty<string>();
+        var representativeYear = ranked.Select(item => item.Candidate.Year).FirstOrDefault(value => value.HasValue);
+        var representativeVenue = ranked.Select(item => item.Candidate.Venue).FirstOrDefault(value => !string.IsNullOrWhiteSpace(value));
+        var representativeAbstract = ranked.Select(item => item.Candidate.Abstract).FirstOrDefault(value => !string.IsNullOrWhiteSpace(value));
+        var representativeKeywords = ranked.Select(item => item.Candidate.Keywords).FirstOrDefault(values => values.Count > 0)
+            ?? Array.Empty<string>();
+
         var reasonCodes = new List<string>
         {
             "completeness-score",
@@ -418,7 +432,9 @@ public sealed class DeduplicationService
             "doi-preference",
             "primary-identifier",
             "candidate-id",
-            "workid-union"
+            "workid-union",
+            "scholarly-metadata-completeness",
+            "missing-field-fill"
         };
 
         if (sourceFileDigests.Length > 0 ||
@@ -444,7 +460,12 @@ public sealed class DeduplicationService
             new ReadOnlyCollection<string>(sourceFileDigestScopes),
             new ReadOnlyCollection<string>(rawRecordDigests),
             parserWarnings,
-            recordNotices);
+            recordNotices,
+            representativeAuthors,
+            representativeYear,
+            representativeVenue,
+            representativeAbstract,
+            representativeKeywords);
     }
 
     private static int GetProviderPriority(DedupSightingRef source)
@@ -476,6 +497,36 @@ public sealed class DeduplicationService
         }
 
         score += candidate.WorkIds.Count * 0.25;
+
+        if (!string.IsNullOrWhiteSpace(candidate.Title))
+        {
+            score += 1.0;
+        }
+
+        if (candidate.Authors.Count > 0)
+        {
+            score += 1.5;
+        }
+
+        if (candidate.Year.HasValue)
+        {
+            score += 0.75;
+        }
+
+        if (!string.IsNullOrWhiteSpace(candidate.Venue))
+        {
+            score += 0.75;
+        }
+
+        if (!string.IsNullOrWhiteSpace(candidate.Abstract))
+        {
+            score += 1.0;
+        }
+
+        if (candidate.Keywords.Count > 0)
+        {
+            score += 0.5;
+        }
 
         return Math.Round(score, 4, MidpointRounding.AwayFromZero);
     }

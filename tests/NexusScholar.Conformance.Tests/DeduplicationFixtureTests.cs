@@ -41,6 +41,7 @@ public sealed class DeduplicationFixtureTests
         "dedup-no-id-title-only-no-auto-merge",
         "dedup-representative-election",
         "dedup-representative-merge-preserves-evidence",
+        "dedup-representative-metadata-completeness",
         "dedup-raw-sightings-preserved",
         "dedup-web-app-projection-not-authority",
         "dedup-source-specific-id-not-workid-review-only"
@@ -228,6 +229,16 @@ public sealed class DeduplicationFixtureTests
                     representativeByTieBreak.GetString(),
                     result.Clusters[0].Representative.CandidateId,
                     fixtureId);
+            }
+
+            if (expected.TryGetProperty("representativeMetadata", out var representativeMetadata))
+            {
+                var representative = result.Clusters.Single().Representative;
+                CollectionAssert.AreEqual(ReadStringArray(representativeMetadata.GetProperty("authors")), representative.Authors.ToArray(), fixtureId);
+                Assert.AreEqual(representativeMetadata.GetProperty("year").GetInt32(), representative.Year, fixtureId);
+                Assert.AreEqual(representativeMetadata.GetProperty("venue").GetString(), representative.Venue, fixtureId);
+                Assert.AreEqual(representativeMetadata.GetProperty("abstract").GetString(), representative.Abstract, fixtureId);
+                CollectionAssert.AreEqual(ReadStringArray(representativeMetadata.GetProperty("keywords")), representative.Keywords.ToArray(), fixtureId);
             }
 
             Assert.IsTrue(
@@ -514,6 +525,11 @@ public sealed class DeduplicationFixtureTests
                     ? ReadParserWarnings(parserWarningsElement)
                     : Array.Empty<SearchImportParserNotice>();
                 var rawRecordDigest = ReadOptionalString(recordElement, "rawRecordDigest");
+                var authors = recordElement.TryGetProperty("authors", out var authorsElement) ? ReadStringArray(authorsElement) : Array.Empty<string>();
+                var year = ReadNullableInt(recordElement, "year");
+                var venue = ReadOptionalString(recordElement, "venue");
+                var abstractText = ReadOptionalString(recordElement, "abstract");
+                var keywords = recordElement.TryGetProperty("keywords", out var keywordsElement) ? ReadStringArray(keywordsElement) : Array.Empty<string>();
 
                 var work = isUnresolved || workIds.Length == 0
                     ? ScholarlyWork.UnresolvedCandidate(title, $"import:{sourceRecordId}")
@@ -525,11 +541,11 @@ public sealed class DeduplicationFixtureTests
                     null,
                     new System.Collections.ObjectModel.ReadOnlyCollection<string>(sourceIdentifiers),
                     work,
-                    Array.Empty<string>(),
-                    null,
-                    null,
-                    null,
-                    Array.Empty<string>(),
+                    authors,
+                    year,
+                    venue,
+                    abstractText,
+                    keywords,
                     rawRecordDigest,
                     null,
                     false,
