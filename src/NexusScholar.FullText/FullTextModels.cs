@@ -21,6 +21,10 @@ public static class FullTextSourceKinds
     public const string RawSearchTrace = "raw-search-trace";
     public const string RawSearchImport = "raw-search-import";
     public const string RawDedupMember = "raw-dedup-member";
+
+    public static bool IsAllowedInput(string sourceKind) =>
+        string.Equals(sourceKind, ScreeningHandoff, StringComparison.Ordinal) ||
+        string.Equals(sourceKind, LockedReviewableCandidateSet, StringComparison.Ordinal);
 }
 
 public static class FullTextScreeningVerdicts
@@ -34,6 +38,10 @@ public static class FullTextEligibility
 {
     public const string Retrievable = "retrievable";
     public const string ReviewableRetrievable = "reviewable-retrievable";
+
+    public static bool IsAllowed(string eligibility) =>
+        string.Equals(eligibility, Retrievable, StringComparison.Ordinal) ||
+        string.Equals(eligibility, ReviewableRetrievable, StringComparison.Ordinal);
 }
 
 public static class FullTextAcquisitionKinds
@@ -150,6 +158,8 @@ public static class FullTextErrorCodes
     public const string ExtractionFailure = "extraction-failure";
     public const string PartialExtraction = "partial-extraction";
     public const string DerivedTextMissingSourceDigest = "derived-text-missing-source-digest";
+    public const string InvalidAuthorityChain = "invalid-fulltext-authority-chain";
+    public const string InvalidAcquisitionState = "invalid-fulltext-acquisition-state";
 }
 
 public sealed class FullTextRuleException : InvalidOperationException
@@ -172,7 +182,7 @@ public sealed record FullTextSourceRef(string RefKind, string RefId)
 
 public sealed class FullTextInput
 {
-    public FullTextInput(
+    internal FullTextInput(
         string inputId,
         string sourceKind,
         string candidateSetId,
@@ -202,6 +212,12 @@ public sealed class FullTextInput
         NonClaims = ToReadOnly(nonClaims ?? DefaultNonClaims);
 
         ValidateInputBoundary(SourceKind, CandidateSetId, CandidateId);
+        if (!FullTextSourceKinds.IsAllowedInput(SourceKind) || !FullTextEligibility.IsAllowed(Eligibility))
+        {
+            throw new FullTextRuleException(
+                FullTextErrorCodes.MissingCandidateBinding,
+                "Full Text input source kind and eligibility must be explicitly allowed.");
+        }
     }
 
     public string InputId { get; }
@@ -393,7 +409,7 @@ public sealed class FullTextSourceAttempt
 
 public sealed class FullTextAcquisitionRecord
 {
-    public FullTextAcquisitionRecord(
+    internal FullTextAcquisitionRecord(
         string acquisitionId,
         FullTextInput inputRef,
         string acquisitionKind,
@@ -509,7 +525,7 @@ public sealed class FullTextAcquisitionRecord
 
 public sealed class FullTextArtifactEvidence
 {
-    public FullTextArtifactEvidence(
+    internal FullTextArtifactEvidence(
         string artifactId,
         FullTextInput inputRef,
         string candidateId,
@@ -628,6 +644,13 @@ public sealed class FullTextArtifactEvidence
     {
         ArgumentNullException.ThrowIfNull(acquisition);
         ArgumentNullException.ThrowIfNull(acceptedBytes);
+
+        if (!FullTextAuthorityValidator.SameInput(inputRef, acquisition.InputRef))
+        {
+            throw new FullTextRuleException(
+                FullTextErrorCodes.InvalidAuthorityChain,
+                "Full Text acquisition does not belong to the supplied input.");
+        }
 
         FullTextArtifactValidator.Validate(artifactKind, acceptedBytes, maxBytes, mediaType);
         var digest = ContentDigest.Sha256(acceptedBytes).ToString();

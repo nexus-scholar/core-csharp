@@ -5,7 +5,8 @@ Status: active hardening plan.
 Implementation progress:
 
 - Phase 1 canonical foundation: complete through Hardening 01 and Hardening 02.
-- Phase 2 authority-safe rehydration: active; Protocol, Workflow, Provenance, Bundle, Deduplication, and Screening authority paths completed in Hardening 03 through 10. Full Text is the final remaining authority path.
+- Phase 2 authority-safe rehydration: complete through Hardening 11 across Kernel, Protocol, Workflow, Provenance, Bundle, Deduplication, Screening, and Full Text.
+- Next phase: Phase 3 scholarly pipeline correctness.
 
 Source review: [full-technical-review.md](full-technical-review.md)
 
@@ -52,11 +53,11 @@ This plan supersedes the 2026-06-29 public-readiness plan as the current operati
 ## Current Blocker Themes
 
 - Canonical JSON number rendering and the Nexus NFC profile were corrected in Hardening 01; Kernel verified rehydration and default-value rejection were completed in Hardening 02.
-- Protocol approval/version, Protocol waiver/amendment, and Workflow compilation/rehydration authority paths are hardened; later module authority paths remain.
+- Authority-safe rehydration is complete for the Phase 2 module set; pipeline semantics remain subject to Phase 3 hardening.
 - Provenance append now recomputes event digests, reruns event invariants, and serializes concurrent in-memory appends through Hardening 07.
 - Shared identity can leave overlapping corpus members after bridge records.
 - Search import parsers mishandle ordinary RIS, multiline CSV, and common BibTeX shapes.
-- Screening and Full Text rely on caller-provided strings where typed, resolved authority bindings are required.
+- Screening now resolves Protocol and Deduplication authority, and Full Text verifies its complete input/acquisition/attempt/artifact chain.
 - ResearchWorkspace writes are not transactional and can produce mixed or stale generations.
 - Delivery posture is not release-managed: branch protection, packaging policy, license, Pages, security contact, and CI hardening remain incomplete.
 

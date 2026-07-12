@@ -1,3 +1,4 @@
+using System.Reflection;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NexusScholar.FullText;
@@ -9,6 +10,78 @@ namespace NexusScholar.Core.Tests;
 public sealed class FullTextTests
 {
     private static readonly DateTimeOffset FixedTime = new(2026, 6, 28, 12, 0, 0, TimeSpan.Zero);
+
+    [TestMethod]
+    public void Verified_chain_rehydrates_only_exact_input_acquisition_attempt_and_bytes()
+    {
+        var input = BuildInput("candidate-authority");
+        var acquisition = BuildAcquisition(input, FullTextAcquisitionKinds.ManualAcquisition);
+        var bytes = Encoding.UTF8.GetBytes("authoritative full text");
+        var artifact = FullTextArtifactEvidence.FromBytes(
+            "artifact-authority", input, acquisition, FullTextArtifactKinds.Text, "text/plain", bytes, 1024);
+
+        var verified = FullTextRehydrator.Rehydrate(
+            new UnverifiedFullTextChain(input, acquisition, artifact, bytes, 1024));
+
+        Assert.AreSame(input, verified.Input);
+        Assert.AreEqual(acquisition.AcquisitionId, verified.Acquisition.AcquisitionId);
+        Assert.AreEqual(artifact.ArtifactId, verified.Artifact.ArtifactId);
+    }
+
+    [TestMethod]
+    public void Full_text_authority_rejects_mismatched_input_and_persisted_artifact_binding()
+    {
+        var input = BuildInput("candidate-authority-a");
+        var otherInput = BuildInput("candidate-authority-b");
+        var acquisition = BuildAcquisition(input, FullTextAcquisitionKinds.ManualAcquisition);
+        var bytes = Encoding.UTF8.GetBytes("authoritative full text");
+
+        Assert.AreEqual(
+            FullTextErrorCodes.InvalidAuthorityChain,
+            Assert.ThrowsExactly<FullTextRuleException>(() => FullTextArtifactEvidence.FromBytes(
+                "artifact-mismatch", otherInput, acquisition, FullTextArtifactKinds.Text, "text/plain", bytes, 1024)).Category);
+
+        var artifact = new FullTextArtifactEvidence(
+            "artifact-persisted", input, "different-candidate", acquisition.AcquisitionId,
+            acquisition.AcquisitionKind, acquisition.SourceAlias, FullTextArtifactKinds.Text, "text/plain",
+            bytes.LongLength, ContentDigest.Sha256(bytes).ToString(), DigestScope.RawArtifactBytes.ToString(),
+            FullTextAttemptStatuses.Success, bytes);
+        Assert.AreEqual(
+            FullTextErrorCodes.InvalidAuthorityChain,
+            Assert.ThrowsExactly<FullTextRuleException>(() => FullTextRehydrator.Rehydrate(
+                new UnverifiedFullTextChain(input, acquisition, artifact, bytes, 1024))).Category);
+    }
+
+    [TestMethod]
+    public void Raw_authority_constructors_are_not_public_and_input_values_are_allowlisted()
+    {
+        Assert.AreEqual(0, typeof(FullTextInput).GetConstructors(BindingFlags.Public | BindingFlags.Instance).Length);
+        Assert.AreEqual(0, typeof(FullTextAcquisitionRecord).GetConstructors(BindingFlags.Public | BindingFlags.Instance).Length);
+        Assert.AreEqual(0, typeof(FullTextArtifactEvidence).GetConstructors(BindingFlags.Public | BindingFlags.Instance).Length);
+
+        Assert.ThrowsExactly<FullTextRuleException>(() => new FullTextInput(
+            "input-invalid-source", "invented-source", "set", "candidate", FullTextEligibility.Retrievable));
+        Assert.ThrowsExactly<FullTextRuleException>(() => new FullTextInput(
+            "input-invalid-eligibility", FullTextSourceKinds.ScreeningHandoff, "set", "candidate", "invented-eligibility"));
+    }
+
+    [TestMethod]
+    public void Verified_chain_derives_success_from_contiguous_attempt_history()
+    {
+        var input = BuildInput("candidate-state");
+        var bytes = Encoding.UTF8.GetBytes("full text state");
+        var acquisition = new FullTextAcquisitionRecord(
+            "acquisition-state", input, FullTextAcquisitionKinds.ManualAcquisition, "manual", "source",
+            FullTextActor(), FixedTime, FullTextAttemptStatuses.Success,
+            [new FullTextSourceAttempt("attempt-state", "manual", 2, FullTextAcquisitionKinds.ManualAcquisition, FullTextAttemptStatuses.Success)]);
+        var artifact = FullTextArtifactEvidence.FromBytes(
+            "artifact-state", input, acquisition, FullTextArtifactKinds.Text, "text/plain", bytes, 1024);
+
+        var error = Assert.ThrowsExactly<FullTextRuleException>(() => FullTextRehydrator.Rehydrate(
+            new UnverifiedFullTextChain(input, acquisition, artifact, bytes, 1024)));
+
+        Assert.AreEqual(FullTextErrorCodes.InvalidAcquisitionState, error.Category);
+    }
 
     [TestMethod]
     public void Valid_screening_include_and_needs_review_inputs_are_accepted()
