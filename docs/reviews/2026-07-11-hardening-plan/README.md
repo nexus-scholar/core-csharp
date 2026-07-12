@@ -5,7 +5,7 @@ Status: active hardening plan.
 Implementation progress:
 
 - Phase 1 canonical foundation: complete through Hardening 01 and Hardening 02.
-- Phase 2 authority-safe rehydration: active; Protocol and Workflow authority paths completed in Hardening 03 through 06, and the Provenance append authority boundary completed in Hardening 07. Bundle, Screening, and Full Text authority paths remain in dependency order.
+- Phase 2 authority-safe rehydration: active; Protocol, Workflow, Provenance, and Bundle authority paths completed in Hardening 03 through 08. Deduplication, Screening, and Full Text authority paths remain in dependency order.
 
 Source review: [full-technical-review.md](full-technical-review.md)
 

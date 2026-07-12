@@ -5,5 +5,8 @@
   <ItemGroup>
     <ProjectReference Include="../NexusScholar.Kernel/NexusScholar.Kernel.csproj" />
     <ProjectReference Include="../NexusScholar.Shared/NexusScholar.Shared.csproj" />
+    <ProjectReference Include="../NexusScholar.Protocol/NexusScholar.Protocol.csproj" />
+    <ProjectReference Include="../NexusScholar.Workflow/NexusScholar.Workflow.csproj" />
+    <ProjectReference Include="../NexusScholar.Provenance/NexusScholar.Provenance.csproj" />
   </ItemGroup>
 </Project>

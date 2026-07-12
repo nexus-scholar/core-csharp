@@ -167,13 +167,16 @@ public sealed class DependencyRulesTests
     }
 
     [TestMethod]
-    public void Bundle_project_uses_field_level_bindings_without_outward_domain_references()
+    public void Bundle_project_depends_inward_on_authority_owners_only()
     {
         var bundleAssembly = typeof(ReviewBundleManifest).Assembly;
         var allowed = new[]
         {
             typeof(IClock).Assembly.GetName().Name,
-            typeof(WorkId).Assembly.GetName().Name
+            typeof(WorkId).Assembly.GetName().Name,
+            "NexusScholar.Protocol",
+            "NexusScholar.Workflow",
+            "NexusScholar.Provenance"
         };
         var disallowed = bundleAssembly.GetReferencedAssemblies()
             .Select(reference => reference.Name ?? string.Empty)
@@ -184,7 +187,7 @@ public sealed class DependencyRulesTests
         Assert.AreEqual(
             0,
             disallowed.Length,
-            $"NexusScholar.Bundles must not depend on Protocol, Workflow, Provenance, or Artifacts. Found: {string.Join(", ", disallowed)}");
+            $"NexusScholar.Bundles may depend only on accepted inward authority owners. Found: {string.Join(", ", disallowed)}");
     }
 
     [TestMethod]

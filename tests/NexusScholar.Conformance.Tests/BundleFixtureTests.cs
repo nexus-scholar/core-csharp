@@ -1,3 +1,4 @@
+using System.Reflection;
 using System.Text;
 using System.Text.Json;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -5,6 +6,7 @@ using NexusScholar.Bundles;
 using NexusScholar.Kernel;
 using NexusScholar.Protocol;
 using NexusScholar.Provenance;
+using NexusScholar.Workflow;
 
 namespace NexusScholar.Conformance.Tests;
 
@@ -119,10 +121,10 @@ public sealed class BundleFixtureTests
                     provenanceBindings: new[] { CreateProvenanceBinding(eventRecord) });
                 options = options with
                 {
-                    KnownProvenanceEventDigests = new Dictionary<string, ContentDigest>(StringComparer.Ordinal)
-                    {
-                        [eventRecord.EventId.ToString()] = eventRecord.ToDigestEnvelope().ComputeDigest()
-                    }
+                    AuthorityResolver = new ReplayBundleAuthorityResolver(
+                        VerifiedProtocolAuthority(),
+                        CreateVerifiedWorkflowAuthority(CreateWorkflowBinding(), VerifiedProtocolAuthority()),
+                        eventRecord)
                 };
             }
             else
@@ -364,6 +366,7 @@ public sealed class BundleFixtureTests
                 [ProtocolVersionId] = ProtocolDigest(),
                 ["project-1-version"] = ProtocolDigest()
             },
+            AuthorityResolver = new ReplayBundleAuthorityResolver(VerifiedProtocolAuthority()),
             ArtifactBytes = new Dictionary<string, byte[]>(StringComparer.Ordinal)
             {
                 [logicalPath] = bytes
@@ -375,6 +378,26 @@ public sealed class BundleFixtureTests
     {
         var seed = CreateProtocolVersion(ContentDigest.Sha256Utf8("placeholder-protocol-content"));
         return CreateProtocolVersion(seed.ToProtocolContentDigestEnvelope().ComputeDigest());
+    }
+
+    private static VerifiedProtocolVersion VerifiedProtocolAuthority()
+    {
+        var version = ApprovedProtocolVersion();
+        return new VerifiedProtocolVersion(version, ApprovalPolicy.ExplicitCustomSingleResearcher(), Array.Empty<VerifiedProtocolApproval>());
+    }
+
+    private static WorkflowDefinition CreateVerifiedWorkflowAuthority(BundleWorkflowBinding binding, VerifiedProtocolVersion protocol)
+    {
+        var definition = (WorkflowDefinition)typeof(WorkflowDefinition).GetConstructors(BindingFlags.NonPublic | BindingFlags.Instance).Single().Invoke(new object[]
+        {
+            binding.WorkflowId, binding.WorkflowDefinitionDigest, "compiler", "1.0.0", protocol.Version.ProtocolId,
+            protocol.Version.Id, protocol.Version.VersionNumber, protocol.Version.ContentDigest,
+            binding.TemplateId, binding.TemplateVersion, binding.TemplateDigest,
+            Array.Empty<WorkflowResolvedInputBinding>(), Array.Empty<WorkflowCompiledNode>(), Array.Empty<WorkflowCompiledEdge>(),
+            Array.Empty<WorkflowCompiledApprovalRequirement>(), Array.Empty<WorkflowCompiledCapabilityRequirement>(),
+            Array.Empty<WorkflowCompiledArtifactDeclaration>(), Array.Empty<WorkflowInvalidationPlanEntry>()
+        });
+        return definition;
     }
 
     private static ProtocolVersion CreateProtocolVersion(ContentDigest contentDigest)
@@ -411,6 +434,24 @@ public sealed class BundleFixtureTests
             new ProvenanceActivity("workflow-node-completed", "Workflow node completed", false, false, false),
             new ProvenanceEntityRef("workflow", "workflow-1"),
             new ProvenanceAgent("researcher-1", "human"));
+    }
+
+    private sealed class ReplayBundleAuthorityResolver : IBundleAuthorityResolver
+    {
+        private readonly VerifiedProtocolVersion? _protocol;
+        private readonly WorkflowDefinition? _workflow;
+        private readonly ResearchEvent? _event;
+
+        public ReplayBundleAuthorityResolver(VerifiedProtocolVersion? protocol = null, WorkflowDefinition? workflow = null, ResearchEvent? @event = null)
+        {
+            _protocol = protocol;
+            _workflow = workflow;
+            _event = @event;
+        }
+
+        public VerifiedProtocolVersion ResolveProtocolVersion(string id) => id == _protocol?.Version.Id ? _protocol! : null!;
+        public WorkflowDefinition ResolveWorkflowDefinition(string id) => id == _workflow?.WorkflowId ? _workflow! : null!;
+        public ResearchEvent ResolveProvenanceEvent(string id) => id == _event?.EventId.ToString() ? _event! : null!;
     }
 
     private sealed class FixedIdGenerator : IIdGenerator
