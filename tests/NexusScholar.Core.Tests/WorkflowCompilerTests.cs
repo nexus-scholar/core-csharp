@@ -499,6 +499,123 @@ public sealed class WorkflowCompilerTests
     }
 
     [TestMethod]
+    public void Compile_accepts_exact_verified_waiver_authority()
+    {
+        var protocol = BuildApprovedProtocol(withDecision: false, withWaiver: true, waiverExpiresAt: Clock.UtcNow.AddDays(1));
+        var waiver = protocol.Waivers.Single();
+        var authority = new VerifiedProtocolWaiver(
+            waiver,
+            ContentDigest.Sha256CanonicalJson(waiver.ToCanonicalJson()),
+            ApprovalPolicy.ExplicitCustomSingleResearcher(),
+            Array.Empty<VerifiedProtocolSupplementalApproval>());
+
+        var definition = new WorkflowCompiler().Compile(BuildInput(
+            protocol,
+            BuildTemplate(withWaiverPolicy: true),
+            verifiedWaivers: new[] { authority }));
+
+        var binding = definition.ResolvedInputBindings.Single(item => item.InputId == "review-type");
+        Assert.AreEqual("protocol-waiver", binding.SourceType);
+        Assert.AreEqual(waiver.WaiverId, binding.WaiverId);
+        Assert.AreEqual(authority.WaiverDigest, binding.SourceDigest);
+    }
+
+    [TestMethod]
+    public void Compile_accepts_verified_amendment_and_immutable_notice_membership()
+    {
+        var state = BuildVerifiedAmendmentState("approve-search");
+        var definition = new WorkflowCompiler().Compile(BuildInput(
+            state.Produced.Version,
+            BuildTemplate(withInvalidationPolicy: true, hyphenatedInvalidationNode: true),
+            verifiedAmendment: state.Amendment));
+
+        var entry = definition.InvalidationPlanEntries.Single();
+        Assert.AreEqual(state.Amendment.Amendment.AmendmentId, entry.AmendmentId);
+        Assert.AreEqual(state.Amendment.InvalidationNotices[0].NoticeId, entry.NoticeId);
+        Assert.AreEqual(state.Amendment.AmendmentDigest, entry.AmendmentSourceDigest);
+    }
+
+    [TestMethod]
+    public void Compile_rejects_missing_extra_duplicate_or_foreign_verified_waiver_authority()
+    {
+        var protocol = BuildApprovedProtocol(withDecision: false, withWaiver: true, waiverExpiresAt: Clock.UtcNow.AddDays(1));
+        var waiver = protocol.Waivers.Single();
+        var authority = new VerifiedProtocolWaiver(
+            waiver, ContentDigest.Sha256CanonicalJson(waiver.ToCanonicalJson()),
+            ApprovalPolicy.ExplicitCustomSingleResearcher(), Array.Empty<VerifiedProtocolSupplementalApproval>());
+        var foreignWaiver = waiver with { WaiverId = "foreign-waiver" };
+        var foreign = new VerifiedProtocolWaiver(
+            foreignWaiver, ContentDigest.Sha256CanonicalJson(foreignWaiver.ToCanonicalJson()),
+            ApprovalPolicy.ExplicitCustomSingleResearcher(), Array.Empty<VerifiedProtocolSupplementalApproval>());
+        var template = BuildTemplate(withWaiverPolicy: true);
+
+        foreach (var authorities in new[]
+        {
+            Array.Empty<VerifiedProtocolWaiver>(),
+            new[] { authority, foreign },
+            new[] { authority, authority },
+            new[] { foreign }
+        })
+        {
+            var error = Assert.ThrowsExactly<WorkflowRuleException>(() =>
+                new WorkflowCompiler().Compile(BuildInput(protocol, template, verifiedWaivers: authorities)));
+            Assert.AreEqual(WorkflowErrorCodes.UnverifiedAuthority, error.Category);
+        }
+    }
+
+    [TestMethod]
+    public void Rehydrate_resolves_verified_waiver_and_amendment_authority_with_digest_parity()
+    {
+        var waiverProtocol = BuildApprovedProtocol(withDecision: false, withWaiver: true, waiverExpiresAt: Clock.UtcNow.AddDays(1));
+        var waiver = waiverProtocol.Waivers.Single();
+        var waiverAuthority = new VerifiedProtocolWaiver(
+            waiver, ContentDigest.Sha256CanonicalJson(waiver.ToCanonicalJson()),
+            ApprovalPolicy.ExplicitCustomSingleResearcher(), Array.Empty<VerifiedProtocolSupplementalApproval>());
+        var waiverTemplate = BuildTemplate(withWaiverPolicy: true);
+        var waiverDefinition = new WorkflowCompiler().Compile(BuildInput(
+            waiverProtocol, waiverTemplate, verifiedWaivers: new[] { waiverAuthority }));
+        var waiverVerified = WorkflowRehydrator.Rehydrate(
+            WorkflowRehydrator.FromCompiled(waiverDefinition),
+            new TestWorkflowAuthorityResolver(
+                ProtocolAuthorities.GetValue(waiverProtocol, _ => throw new InvalidOperationException()),
+                waiverTemplate,
+                new[] { waiverAuthority }));
+        Assert.AreEqual(waiverDefinition.WorkflowDigest, waiverVerified.Definition.WorkflowDigest);
+
+        var amendmentState = BuildVerifiedAmendmentState("approve-search");
+        var amendmentTemplate = BuildTemplate(withInvalidationPolicy: true, hyphenatedInvalidationNode: true);
+        var amendmentDefinition = new WorkflowCompiler().Compile(BuildInput(
+            amendmentState.Produced.Version, amendmentTemplate, verifiedAmendment: amendmentState.Amendment));
+        var amendmentVerified = WorkflowRehydrator.Rehydrate(
+            WorkflowRehydrator.FromCompiled(amendmentDefinition),
+            new TestWorkflowAuthorityResolver(
+                amendmentState.Produced, amendmentTemplate, amendment: amendmentState.Amendment));
+        Assert.AreEqual(amendmentDefinition.WorkflowId, amendmentVerified.Definition.WorkflowId);
+        Assert.AreEqual(amendmentDefinition.WorkflowDigest, amendmentVerified.Definition.WorkflowDigest);
+    }
+
+    [TestMethod]
+    public void Rehydrate_rejects_missing_amendment_authority_and_tampered_notice_membership()
+    {
+        var state = BuildVerifiedAmendmentState("approve-search");
+        var template = BuildTemplate(withInvalidationPolicy: true, hyphenatedInvalidationNode: true);
+        var definition = new WorkflowCompiler().Compile(BuildInput(
+            state.Produced.Version, template, verifiedAmendment: state.Amendment));
+        var input = WorkflowRehydrator.FromCompiled(definition);
+
+        var missing = Assert.ThrowsExactly<WorkflowRuleException>(() => WorkflowRehydrator.Rehydrate(
+            input, new TestWorkflowAuthorityResolver(state.Produced, template)));
+        Assert.AreEqual(WorkflowErrorCodes.UnverifiedAuthority, missing.Category);
+
+        var entries = input.InvalidationPlanEntries.ToArray();
+        entries[0] = entries[0] with { InvalidationNoticeDigest = ContentDigest.Sha256Utf8("tampered") };
+        var tampered = Assert.ThrowsExactly<WorkflowRuleException>(() => WorkflowRehydrator.Rehydrate(
+            input with { InvalidationPlanEntries = entries },
+            new TestWorkflowAuthorityResolver(state.Produced, template, amendment: state.Amendment)));
+        Assert.AreEqual(WorkflowErrorCodes.UnverifiedAuthority, tampered.Category);
+    }
+
+    [TestMethod]
     public void Compile_rejects_workflow_id_mismatch()
     {
         var protocol = BuildApprovedProtocol();
@@ -516,7 +633,9 @@ public sealed class WorkflowCompilerTests
         IReadOnlyDictionary<string, CanonicalJsonValue>? compileParameters = null,
         ProtocolAmendment? amendment = null,
         IEnumerable<ProtocolInvalidationNotice>? notices = null,
-        string? expectedWorkflowId = null)
+        string? expectedWorkflowId = null,
+        IReadOnlyList<VerifiedProtocolWaiver>? verifiedWaivers = null,
+        VerifiedProtocolAmendment? verifiedAmendment = null)
     {
         var selectedTemplate = unknownSchemaTemplate ?? template;
         var knownSchemaRefs = new System.Collections.Generic.HashSet<WorkflowSchemaRef>
@@ -532,12 +651,44 @@ public sealed class WorkflowCompilerTests
             selectedTemplate,
             compileParameters ?? new System.Collections.Generic.Dictionary<string, CanonicalJsonValue>(),
             knownSchemaRefs.ToArray(),
-            amendment is null ? null : new[] { amendment },
-            notices?.ToArray(),
+            verifiedWaivers,
+            verifiedAmendment,
             expectedWorkflowId,
             "nexus-workflow-compiler",
             "1.0.0");
     }
+
+    private static VerifiedAmendmentState BuildVerifiedAmendmentState(string affectedNodeId)
+    {
+        var previousVersion = BuildApprovedProtocol(withDecision: true);
+        var previous = ProtocolAuthorities.GetValue(previousVersion, _ => throw new InvalidOperationException());
+        var amendment = BuildAmendment(previousVersion, affectedNodeId);
+        amendment = new ProtocolAmendment(
+            amendment.AmendmentId, amendment.ProtocolId, amendment.AmendsVersionId, amendment.ProducesVersionId,
+            amendment.PreviousContentDigest, amendment.RequestedBy, amendment.RequestedAt, amendment.Rationale,
+            amendment.ChangedDecisionKeys, amendment.InvalidationNotices, amendment.InvalidationPlanDigest,
+            amendment.ApprovalPolicyId, new[] { "amendment-approval-1" });
+        var seed = new ProtocolVersion(
+            amendment.ProducesVersionId, previousVersion.ProtocolId, previousVersion.ProjectId, previousVersion.VersionNumber + 1,
+            ProtocolStatus.Approved, previousVersion.Template, previousVersion.Intent, previousVersion.Values,
+            previousVersion.RequiredDecisions, previousVersion.Decisions, previousVersion.Waivers,
+            ContentDigest.Sha256Utf8("placeholder"), previousVersion.ApprovalPolicyId, previousVersion.ApprovalIds,
+            Clock.UtcNow, previousVersion.Id, amendmentId: amendment.AmendmentId, unresolvedDecisions: previousVersion.UnresolvedDecisions);
+        var producedVersion = new ProtocolVersion(
+            seed.Id, seed.ProtocolId, seed.ProjectId, seed.VersionNumber, seed.Status, seed.Template, seed.Intent, seed.Values,
+            seed.RequiredDecisions, seed.Decisions, seed.Waivers, seed.ToProtocolContentDigestEnvelope().ComputeDigest(),
+            seed.ApprovalPolicyId, seed.ApprovalIds, seed.ApprovedAt, seed.SupersedesVersionId, seed.SupersededByVersionId,
+            seed.AmendmentId, seed.UnresolvedDecisions);
+        var produced = new VerifiedProtocolVersion(producedVersion, previous.ApprovalPolicy, previous.Approvals);
+        ProtocolAuthorities.Add(producedVersion, produced);
+        var verified = new VerifiedProtocolAmendment(
+            amendment, ContentDigest.Sha256CanonicalJson(amendment.ToCanonicalJson()),
+            ApprovalPolicy.ExplicitCustomSingleResearcher(), previous, produced,
+            Array.Empty<VerifiedProtocolSupplementalApproval>());
+        return new VerifiedAmendmentState(verified, produced);
+    }
+
+    private sealed record VerifiedAmendmentState(VerifiedProtocolAmendment Amendment, VerifiedProtocolVersion Produced);
 
     private static WorkflowTemplate BuildTemplate(
         bool duplicateNode = false,
@@ -970,15 +1121,30 @@ public sealed class WorkflowCompilerTests
     {
         private readonly VerifiedProtocolVersion _protocol;
         private readonly WorkflowTemplate _template;
+        private readonly IReadOnlyDictionary<string, VerifiedProtocolWaiver> _waivers;
+        private readonly VerifiedProtocolAmendment? _amendment;
 
-        public TestWorkflowAuthorityResolver(VerifiedProtocolVersion protocol, WorkflowTemplate template)
+        public TestWorkflowAuthorityResolver(
+            VerifiedProtocolVersion protocol,
+            WorkflowTemplate template,
+            IEnumerable<VerifiedProtocolWaiver>? waivers = null,
+            VerifiedProtocolAmendment? amendment = null)
         {
             _protocol = protocol;
             _template = template;
+            _waivers = (waivers ?? Array.Empty<VerifiedProtocolWaiver>())
+                .ToDictionary(item => item.Waiver.WaiverId, StringComparer.Ordinal);
+            _amendment = amendment;
         }
 
         public VerifiedProtocolVersion ResolveProtocolVersion(string protocolVersionId) =>
             string.Equals(protocolVersionId, _protocol.Version.Id, StringComparison.Ordinal) ? _protocol : null!;
+
+        public VerifiedProtocolWaiver ResolveProtocolWaiver(string waiverId) =>
+            _waivers.TryGetValue(waiverId, out var waiver) ? waiver : null!;
+
+        public VerifiedProtocolAmendment ResolveProtocolAmendment(string amendmentId) =>
+            string.Equals(amendmentId, _amendment?.Amendment.AmendmentId, StringComparison.Ordinal) ? _amendment! : null!;
 
         public WorkflowTemplate ResolveTemplate(string templateId, string templateVersion, ContentDigest expectedDigest) =>
             string.Equals(templateId, _template.TemplateId, StringComparison.Ordinal) &&

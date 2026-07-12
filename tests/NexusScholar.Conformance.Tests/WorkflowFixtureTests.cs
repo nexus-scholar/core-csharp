@@ -19,6 +19,7 @@ public sealed class WorkflowFixtureTests
     private static readonly ProtocolActor Researcher = ProtocolActor.Human("researcher-1");
     private static readonly IClock Clock = new FixedClock();
     private static readonly ConditionalWeakTable<ProtocolVersion, VerifiedProtocolVersion> ProtocolAuthorities = new();
+    private static readonly ConditionalWeakTable<WorkflowCompileInput, DeferredInputAuthority> DeferredInputAuthorities = new();
 
     private static readonly string[] PositiveFixtures =
     {
@@ -44,6 +45,15 @@ public sealed class WorkflowFixtureTests
         "workflow-authority-wrong-template-resolver.json",
         "workflow-authority-deferred-waiver-authority.json",
         "workflow-authority-deferred-amendment-authority.json"
+    };
+
+    private static readonly string[] SupplementalAuthorityFixtures =
+    {
+        "workflow-supplemental-waiver-valid-v1.json",
+        "workflow-supplemental-amendment-valid-v1.json",
+        "workflow-supplemental-rehydrate-valid-v1.json",
+        "workflow-supplemental-invalid-replacement-notice-v1.json",
+        "workflow-supplemental-invalid-missing-waiver-v1.json"
     };
 
     private static readonly string[] RequiredNegativeCategories =
@@ -95,7 +105,8 @@ public sealed class WorkflowFixtureTests
             var root = Load(path);
             var fixtureId = Path.GetFileName(path);
 
-            if (fixtureId.StartsWith("workflow-authority-", StringComparison.Ordinal))
+            if (fixtureId.StartsWith("workflow-authority-", StringComparison.Ordinal) ||
+                fixtureId.StartsWith("workflow-supplemental-", StringComparison.Ordinal))
             {
                 continue;
             }
@@ -173,6 +184,37 @@ public sealed class WorkflowFixtureTests
 
             Assert.AreEqual(digest, root.GetProperty("inputDigest").GetString(), fixture);
             Assert.AreEqual(digest, root.GetProperty("outputDigest").GetString(), fixture);
+        }
+    }
+
+    [TestMethod]
+    public void Hardening_06_supplemental_authority_recipes_are_complete_and_digest_replayable()
+    {
+        var names = WorkflowFixturePaths().Select(Path.GetFileName).ToHashSet(StringComparer.Ordinal);
+        var operations = new HashSet<string>(StringComparer.Ordinal);
+        var mutations = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var fixture in SupplementalAuthorityFixtures)
+        {
+            Assert.IsTrue(names.Contains(fixture), $"Missing Workflow supplemental authority recipe '{fixture}'.");
+            var root = LoadWorkflowFixture(fixture);
+            Assert.AreEqual("local-hardening-contract", root.GetProperty("sourceKind").GetString(), fixture);
+            Assert.AreEqual("hardening-06-v1", root.GetProperty("generatorVersion").GetString(), fixture);
+            Assert.IsTrue(root.GetProperty("sourceRefs").EnumerateArray().Any(value =>
+                string.Equals(value.GetString(), "docs/gates/HARDENING-06-WORKFLOW-SUPPLEMENTAL-AUTHORITY.md", StringComparison.Ordinal)), fixture);
+            var @case = root.GetProperty("case");
+            var digest = ContentDigest.Sha256Utf8(JsonSerializer.Serialize(@case, new JsonSerializerOptions { WriteIndented = false })).ToString();
+            Assert.AreEqual(digest, root.GetProperty("inputDigest").GetString(), fixture);
+            Assert.AreEqual(digest, root.GetProperty("outputDigest").GetString(), fixture);
+            operations.Add(@case.GetProperty("operation").GetString()!);
+            mutations.Add(@case.GetProperty("mutation").GetString()!);
+        }
+        foreach (var operation in new[] { "compile-waiver", "compile-amendment", "rehydrate" })
+        {
+            Assert.IsTrue(operations.Contains(operation), $"Missing Workflow supplemental operation '{operation}'.");
+        }
+        foreach (var mutation in new[] { "none", "replacement-notice", "missing-waiver-authority" })
+        {
+            Assert.IsTrue(mutations.Contains(mutation), $"Missing Workflow supplemental mutation '{mutation}'.");
         }
     }
 
@@ -407,7 +449,7 @@ public sealed class WorkflowFixtureTests
         ProtocolAmendment? amendment = null,
         IReadOnlyList<ProtocolInvalidationNotice>? notices = null)
     {
-        return new WorkflowCompileInput(
+        var input = new WorkflowCompileInput(
             ProtocolAuthorities.TryGetValue(protocol, out var authority) ? authority : null!,
             template,
             compileParameters ?? new Dictionary<string, CanonicalJsonValue>(StringComparer.Ordinal),
@@ -418,11 +460,16 @@ public sealed class WorkflowFixtureTests
                 new WorkflowSchemaRef("nexus.review.decision", "1.0.0"),
                 new WorkflowSchemaRef("nexus.workflow.artifact", "1.0.0")
             },
-            amendment is null ? null : new[] { amendment },
-            notices,
+            null,
+            null,
             null,
             "nexus-workflow-compiler",
             "1.0.0");
+        if (amendment is not null || (notices?.Count ?? 0) > 0)
+        {
+            DeferredInputAuthorities.Add(input, new DeferredInputAuthority(amendment, notices ?? Array.Empty<ProtocolInvalidationNotice>()));
+        }
+        return input;
     }
 
     private static ContentDigest ComputeInputDigest(WorkflowCompileInput input)
@@ -448,17 +495,21 @@ public sealed class WorkflowFixtureTests
                     .Add("schema_id", item.SchemaId)
                     .Add("schema_version", item.Version))
                 .ToArray()))
-            .Add("amendment_ids", CanonicalJsonValue.Array((input.Amendments ?? Array.Empty<ProtocolAmendment>())
+            .Add("amendment_ids", CanonicalJsonValue.Array((DeferredInputAuthorities.TryGetValue(input, out var deferred) && deferred.Amendment is not null
+                    ? new[] { deferred.Amendment }
+                    : Array.Empty<ProtocolAmendment>())
                 .OrderBy(item => item.AmendmentId, StringComparer.Ordinal)
                 .Select(item => CanonicalJsonValue.From(item.AmendmentId))
                 .ToArray()))
-            .Add("invalidation_notice_ids", CanonicalJsonValue.Array((input.InvalidationNotices ?? Array.Empty<ProtocolInvalidationNotice>())
+            .Add("invalidation_notice_ids", CanonicalJsonValue.Array((deferred?.Notices ?? Array.Empty<ProtocolInvalidationNotice>())
                 .OrderBy(item => item.NoticeId, StringComparer.Ordinal)
                 .Select(item => CanonicalJsonValue.From(item.NoticeId))
                 .ToArray()));
 
         return ContentDigest.Sha256CanonicalJson(canonical);
     }
+
+    private sealed record DeferredInputAuthority(ProtocolAmendment? Amendment, IReadOnlyList<ProtocolInvalidationNotice> Notices);
 
     private static WorkflowTemplate BuildTemplate(
         string templateId = "template-rapid-review",
@@ -866,6 +917,10 @@ public sealed class WorkflowFixtureTests
 
         public VerifiedProtocolVersion ResolveProtocolVersion(string protocolVersionId) =>
             protocolVersionId == _protocol.Version.Id ? _protocol : null!;
+
+        public VerifiedProtocolWaiver ResolveProtocolWaiver(string waiverId) => null!;
+
+        public VerifiedProtocolAmendment ResolveProtocolAmendment(string amendmentId) => null!;
 
         public WorkflowTemplate ResolveTemplate(string templateId, string templateVersion, ContentDigest expectedDigest) =>
             templateId == _template.TemplateId && templateVersion == _template.TemplateVersion && expectedDigest == _template.TemplateDigest
