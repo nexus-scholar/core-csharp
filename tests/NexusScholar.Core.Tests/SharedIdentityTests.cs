@@ -219,6 +219,45 @@ public sealed class SharedIdentityTests
     }
 
     [TestMethod]
+    public void Generated_overlap_graphs_are_order_independent_and_identity_unique()
+    {
+        var random = new Random(0x5A17);
+        for (var scenario = 0; scenario < 100; scenario++)
+        {
+            var componentCount = random.Next(1, 6);
+            var works = Enumerable.Range(0, componentCount)
+                .SelectMany(component => BuildConnectedComponent(component, random.Next(2, 8)))
+                .ToArray();
+            var expectedMembership = BuildSlice(works).StableMembershipIds().OrderBy(value => value, StringComparer.Ordinal).ToArray();
+
+            for (var permutation = 0; permutation < 10; permutation++)
+            {
+                var shuffled = works.OrderBy(_ => random.Next()).ToArray();
+                var slice = BuildSlice(shuffled);
+                slice = shuffled.Aggregate(slice, (current, work) => current.WithWork(work));
+
+                CollectionAssert.AreEqual(expectedMembership, slice.StableMembershipIds().OrderBy(value => value, StringComparer.Ordinal).ToArray(), $"scenario={scenario}; permutation={permutation}");
+                var allIds = slice.Works.SelectMany(work => work.WorkIds.Ids).Select(id => id.ToString()).ToArray();
+                Assert.AreEqual(allIds.Length, allIds.Distinct(StringComparer.Ordinal).Count(), $"scenario={scenario}; permutation={permutation}");
+            }
+        }
+    }
+
+    private static CorpusSlice BuildSlice(IEnumerable<ScholarlyWork> works) =>
+        works.Aggregate(CorpusSlice.Empty, (current, work) => current.WithWork(work));
+
+    private static IEnumerable<ScholarlyWork> BuildConnectedComponent(int component, int size)
+    {
+        var identifiers = Enumerable.Range(0, size + 1)
+            .Select(index => WorkId.From(index % 2 == 0 ? "doi" : "openalex", index % 2 == 0 ? $"10.5000/{component}-{index}" : $"W-{component}-{index}"))
+            .ToArray();
+        for (var index = 0; index < size; index++)
+        {
+            yield return ScholarlyWork.Identified($"Generated {component}-{index}", WorkIdSet.From(identifiers[index], identifiers[index + 1]));
+        }
+    }
+
+    [TestMethod]
     public void Corpus_slice_preserves_no_id_candidates_even_with_matching_titles()
     {
         var first = ScholarlyWork.UnresolvedCandidate("Same title", "import:row-1");

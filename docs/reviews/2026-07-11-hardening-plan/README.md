@@ -8,7 +8,8 @@ Implementation progress:
 - Phase 2 authority-safe rehydration: complete through Hardening 11 across Kernel, Protocol, Workflow, Provenance, Bundle, Deduplication, Screening, and Full Text.
 - Phase 3 scholarly pipeline correctness: complete through Hardening 16 across Shared identity, Search parsers, Deduplication metadata, Screening conflicts, and Full Text cross-record validation.
 - Phase 4 transactional workspace integrity: complete through Hardening 17.
-- Next phase: Phase 5 test strategy upgrade.
+- Phase 5 test strategy upgrade: complete through Hardening 18.
+- Next phase: Phase 6 release engineering.
 
 Source review: [full-technical-review.md](full-technical-review.md)
 

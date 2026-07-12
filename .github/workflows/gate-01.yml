@@ -36,6 +36,18 @@ jobs:
       - name: Test
         run: dotnet test NexusScholar.Core.slnx -c Release --no-build
 
+      - name: Collect informational coverage
+        if: matrix.os == 'ubuntu-latest'
+        run: dotnet test NexusScholar.Core.slnx -c Release --no-build --collect:"XPlat Code Coverage" --results-directory artifacts/coverage
+
+      - name: Upload informational coverage
+        if: matrix.os == 'ubuntu-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-cobertura
+          path: artifacts/coverage/**/coverage.cobertura.xml
+          if-no-files-found: error
+
       - name: CLI smoke
         run: |
           dotnet run --project src/NexusScholar.Cli --configuration Release --no-build -- doctor

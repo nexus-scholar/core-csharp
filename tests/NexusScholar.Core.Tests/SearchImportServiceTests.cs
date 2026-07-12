@@ -270,6 +270,63 @@ public sealed class SearchImportServiceTests
         Assert.AreEqual(SearchImportErrorCodes.MalformedRecord, trace.ImportedRecords[0].SkipReason);
     }
 
+    [TestMethod]
+    public void Deterministic_parser_mutation_corpus_never_crashes_or_loses_trace_identity()
+    {
+        var seeds = new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            ["ris"] = "TY  - JOUR\nTI  - Seed title\nAU  - Doe, Jane\nER  -\n",
+            ["scopus-csv"] = "title,author names,year\nSeed title,Jane Doe,2026\n",
+            ["bibtex"] = "@article{seed,title={Seed title},author={Doe, Jane},year={2026}}"
+        };
+        foreach (var seed in seeds)
+        {
+            for (var mutation = 0; mutation < 150; mutation++)
+            {
+                var bytes = MutateUtf8(seed.Value, mutation);
+                var traceId = $"fuzz-{seed.Key}-{mutation:000}";
+                try
+                {
+                    var trace = new SearchImportService().Parse(traceId, NewRequest(seed.Key), bytes);
+                    Assert.AreEqual(traceId, trace.TraceId);
+                    Assert.AreEqual(ContentDigest.Sha256(bytes).ToString(), trace.Metadata.SourceFileDigest);
+                    Assert.IsTrue(trace.ImportedRecords.All(record => record.IsSkipped || !string.IsNullOrWhiteSpace(record.RawRecordDigest)));
+                }
+                catch (SearchRuleException exception)
+                {
+                    Assert.IsFalse(string.IsNullOrWhiteSpace(exception.Category));
+                }
+            }
+        }
+    }
+
+    private static byte[] MutateUtf8(string seed, int mutation)
+    {
+        var bytes = Encoding.UTF8.GetBytes(seed).ToList();
+        var random = new Random(0x51A7 + mutation);
+        switch (mutation % 5)
+        {
+            case 0 when bytes.Count > 0:
+                var start = random.Next(bytes.Count);
+                bytes.RemoveRange(start, random.Next(1, Math.Min(8, bytes.Count - start) + 1));
+                break;
+            case 1:
+                bytes.Insert(random.Next(bytes.Count + 1), (byte)new[] { '\n', '\r', ',', '"', '{', '}', '\\', 0 }[mutation % 8]);
+                break;
+            case 2 when bytes.Count > 0:
+                bytes[random.Next(bytes.Count)] ^= (byte)(1 << random.Next(8));
+                break;
+            case 3:
+                bytes.AddRange(Encoding.UTF8.GetBytes(new string('x', mutation % 31)));
+                break;
+            case 4:
+                bytes.InsertRange(0, new byte[] { 0xEF, 0xBB, 0xBF });
+                break;
+        }
+
+        return bytes.ToArray();
+    }
+
     private static SearchImportRequest NewRequest(string format, string sourceDatabase = "crossref", string importedBy = ImportedBy, string importedAt = ImportedAt) =>
         new(sourceDatabase, format, ParserId, ParserVersion, importedBy, importedAt);
 }
