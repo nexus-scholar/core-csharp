@@ -6,7 +6,7 @@ Implementation progress:
 
 - Phase 1 canonical foundation: complete through Hardening 01 and Hardening 02.
 - Phase 2 authority-safe rehydration: complete through Hardening 11 across Kernel, Protocol, Workflow, Provenance, Bundle, Deduplication, Screening, and Full Text.
-- Phase 3 scholarly pipeline correctness: active; Shared transitive identity closure completed in Hardening 12. Search parser correctness is next.
+- Phase 3 scholarly pipeline correctness: active; Shared transitive identity closure and Search import parser correctness completed in Hardening 12 and 13. Deduplication representative metadata is next.
 
 Source review: [full-technical-review.md](full-technical-review.md)
 
@@ -56,7 +56,7 @@ This plan supersedes the 2026-06-29 public-readiness plan as the current operati
 - Authority-safe rehydration is complete for the Phase 2 module set; pipeline semantics remain subject to Phase 3 hardening.
 - Provenance append now recomputes event digests, reruns event invariants, and serializes concurrent in-memory appends through Hardening 07.
 - Shared bridge records now merge the complete overlap-connected component and validated rehydration rejects duplicate stable identity.
-- Search import parsers mishandle ordinary RIS, multiline CSV, and common BibTeX shapes.
+- Search import parsers now preserve RIS comma-form authors, multiline quoted CSV records, and nested/multiline BibTeX fields.
 - Screening now resolves Protocol and Deduplication authority, and Full Text verifies its complete input/acquisition/attempt/artifact chain.
 - ResearchWorkspace writes are not transactional and can produce mixed or stale generations.
 - Delivery posture is not release-managed: branch protection, packaging policy, license, Pages, security contact, and CI hardening remain incomplete.

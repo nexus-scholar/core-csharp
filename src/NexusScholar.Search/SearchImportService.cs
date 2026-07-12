@@ -273,7 +273,7 @@ public sealed class SearchImportService
         AddSourceSpecificIdentifier("SCI", FirstOrDefault(fields, "SCI"), sourceIdentifiers, notices, sourceRecordId, recordIndex, parserWarnings);
 
         var authors = fields.TryGetValue("AU", out var rawAuthors)
-            ? rawAuthors.SelectMany(ParseAuthorList).Distinct(StringComparer.Ordinal).ToArray()
+            ? rawAuthors.Where(author => !string.IsNullOrWhiteSpace(author)).Select(author => author.Trim()).Distinct(StringComparer.Ordinal).ToArray()
             : Array.Empty<string>();
         var year = ParseYear(FirstOrDefault(fields, "PY"), sourceRecordId, recordIndex, parserWarnings);
         var venue = FirstOrDefault(fields, "JO") ?? FirstOrDefault(fields, "JF");
@@ -315,19 +315,15 @@ public sealed class SearchImportService
         List<SearchImportParserNotice> parserWarnings)
     {
         var text = Encoding.UTF8.GetString(sourceFileBytes).Replace("\r\n", "\n", StringComparison.Ordinal);
-        var entryMatcher = new Regex(
-            @"@(?<type>[A-Za-z0-9_-]+)\s*\{\s*(?<key>[^,]+)\s*,(?<body>.*?)(?:\r?\n\}|\z)",
-            RegexOptions.IgnoreCase | RegexOptions.Singleline);
-
-        var entries = entryMatcher.Matches(text);
+        var entries = ParseBibtexEntries(text);
         var parsed = new List<SearchImportRecord>();
         var seenIds = new HashSet<string>(StringComparer.Ordinal);
         var recordIndex = 0;
 
-        foreach (Match match in entries)
+        foreach (var entry in entries)
         {
             recordIndex++;
-            var sourceRecordId = match.Groups["key"].Value.Trim();
+            var sourceRecordId = entry.Key;
             if (string.IsNullOrWhiteSpace(sourceRecordId))
             {
                 sourceRecordId = $"row-{recordIndex}";
@@ -345,8 +341,7 @@ public sealed class SearchImportService
                 continue;
             }
 
-            var body = match.Groups["body"].Value;
-            var fields = ParseBibtexFields(body);
+            var fields = ParseBibtexFields(entry.Body);
             if (fields.Count == 0)
             {
                 notices.Add(new SearchImportParserNotice(
@@ -390,7 +385,7 @@ public sealed class SearchImportService
                 continue;
             }
 
-            var recordText = match.Value.Trim();
+            var recordText = entry.RawText.Trim();
             var recordDigest = ContentDigest.Sha256Utf8(recordText).ToString();
             var rawIdentifiers = new List<string>();
             var sourceIdentifiers = new List<string>();
@@ -466,35 +461,38 @@ public sealed class SearchImportService
         List<SearchImportParserNotice> parserWarnings)
     {
         var text = Encoding.UTF8.GetString(sourceFileBytes).Replace("\r\n", "\n", StringComparison.Ordinal);
-        using var reader = new StringReader(text);
-
-        var firstLine = reader.ReadLine();
-        if (string.IsNullOrWhiteSpace(firstLine))
+        var csvRecords = ParseCsvRecords(text);
+        if (csvRecords.Count == 0 || !csvRecords[0].IsComplete)
         {
             parserWarnings.Add(new SearchImportParserNotice(SearchImportErrorCodes.MalformedRecord, "Scopus CSV contains no header line."));
             return new List<SearchImportRecord>();
         }
 
-        var headers = ParseCsvLine(firstLine);
+        var headers = csvRecords[0].Fields;
         var seenSourceIds = new HashSet<string>(StringComparer.Ordinal);
         var records = new List<SearchImportRecord>();
         var row = 0;
 
-        while (true)
+        foreach (var csvRecord in csvRecords.Skip(1))
         {
-            var line = reader.ReadLine();
-            if (line is null)
-            {
-                break;
-            }
-
-            if (string.IsNullOrWhiteSpace(line))
+            if (csvRecord.Fields.All(string.IsNullOrWhiteSpace))
             {
                 continue;
             }
 
             row++;
-            var fields = ParseCsvLine(line);
+            if (!csvRecord.IsComplete)
+            {
+                records.Add(CreateSkippedRecord(
+                    sourceDatabaseOrTool,
+                    $"row-{row}",
+                    SearchImportErrorCodes.MalformedRecord,
+                    "Scopus CSV record contains an unterminated quoted field.",
+                    parserWarnings));
+                continue;
+            }
+
+            var fields = csvRecord.Fields;
             var values = headers.Zip(fields, (header, value) => new { Header = header.ToLowerInvariant(), Value = value })
                 .ToDictionary(item => item.Header, item => item.Value, StringComparer.OrdinalIgnoreCase);
 
@@ -559,7 +557,7 @@ public sealed class SearchImportService
                 venue = GetValue(values, "journal");
             }
 
-            var rawText = line;
+            var rawText = csvRecord.RawText;
             var recordDigest = ContentDigest.Sha256Utf8(rawText).ToString();
             var year = ParseYear(GetValue(values, "year"), sourceRecordId, row, parserWarnings);
             var abstractText = GetValue(values, "abstract");
@@ -757,37 +755,283 @@ public sealed class SearchImportService
     private static Dictionary<string, string> ParseBibtexFields(string body)
     {
         var fields = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-        var fieldPattern = new Regex(@"^\s*(?<key>[A-Za-z0-9_-]+)\s*=\s*(?<value>.+?)\s*,?\s*$", RegexOptions.Compiled);
-        foreach (var line in body.Replace("\r\n", "\n").Split('\n'))
+        var index = 0;
+        while (index < body.Length)
         {
-            var lineText = line.Trim();
-            if (lineText.Length == 0)
+            SkipWhitespaceAndCommas(body, ref index);
+            var keyStart = index;
+            while (index < body.Length && (char.IsLetterOrDigit(body[index]) || body[index] is '_' or '-'))
             {
+                index++;
+            }
+
+            if (keyStart == index)
+            {
+                index++;
                 continue;
             }
 
-            var match = fieldPattern.Match(lineText);
-            if (!match.Success)
+            var key = body[keyStart..index].ToLowerInvariant();
+            while (index < body.Length && char.IsWhiteSpace(body[index]))
             {
+                index++;
+            }
+
+            if (index >= body.Length || body[index] != '=')
+            {
+                SkipToNextTopLevelComma(body, ref index);
                 continue;
             }
 
-            var key = match.Groups["key"].Value.ToLowerInvariant();
-            var value = match.Groups["value"].Value.Trim();
-            if (value.StartsWith("{", StringComparison.Ordinal) && value.EndsWith("},", StringComparison.Ordinal))
+            index++;
+            while (index < body.Length && char.IsWhiteSpace(body[index]))
             {
-                value = value[..^2].Trim();
+                index++;
             }
 
-            value = StripBibtexEnvelope(value);
+            var value = ReadBibtexValue(body, ref index);
             if (!string.IsNullOrWhiteSpace(value))
             {
-                fields[key] = value;
+                fields[key] = NormalizeBibtexValue(value);
             }
         }
 
         return fields;
     }
+
+    private static IReadOnlyList<BibtexEntry> ParseBibtexEntries(string text)
+    {
+        var entries = new List<BibtexEntry>();
+        var index = 0;
+        while (index < text.Length)
+        {
+            var entryStart = text.IndexOf('@', index);
+            if (entryStart < 0)
+            {
+                break;
+            }
+
+            index = entryStart + 1;
+            while (index < text.Length && (char.IsLetterOrDigit(text[index]) || text[index] is '_' or '-'))
+            {
+                index++;
+            }
+
+            while (index < text.Length && char.IsWhiteSpace(text[index]))
+            {
+                index++;
+            }
+
+            if (index >= text.Length || text[index] is not ('{' or '('))
+            {
+                continue;
+            }
+
+            var open = text[index];
+            var close = open == '{' ? '}' : ')';
+            var contentStart = ++index;
+            var depth = 1;
+            var inQuotes = false;
+            var escaped = false;
+            while (index < text.Length && depth > 0)
+            {
+                var character = text[index];
+                if (escaped)
+                {
+                    escaped = false;
+                }
+                else if (character == '\\')
+                {
+                    escaped = true;
+                }
+                else if (character == '"')
+                {
+                    inQuotes = !inQuotes;
+                }
+                else if (!inQuotes && character == open)
+                {
+                    depth++;
+                }
+                else if (!inQuotes && character == close)
+                {
+                    depth--;
+                }
+
+                index++;
+            }
+
+            if (depth != 0)
+            {
+                break;
+            }
+
+            var content = text[contentStart..(index - 1)];
+            var separator = FindTopLevelComma(content);
+            if (separator < 0)
+            {
+                continue;
+            }
+
+            var key = content[..separator].Trim();
+            if (key.Length == 0)
+            {
+                key = $"row-{entries.Count + 1}";
+            }
+
+            entries.Add(new BibtexEntry(key, content[(separator + 1)..], text[entryStart..index]));
+        }
+
+        return entries;
+    }
+
+    private static int FindTopLevelComma(string value)
+    {
+        var braceDepth = 0;
+        var inQuotes = false;
+        var escaped = false;
+        for (var index = 0; index < value.Length; index++)
+        {
+            var character = value[index];
+            if (escaped)
+            {
+                escaped = false;
+            }
+            else if (character == '\\')
+            {
+                escaped = true;
+            }
+            else if (character == '"')
+            {
+                inQuotes = !inQuotes;
+            }
+            else if (!inQuotes && character == '{')
+            {
+                braceDepth++;
+            }
+            else if (!inQuotes && character == '}')
+            {
+                braceDepth--;
+            }
+            else if (!inQuotes && braceDepth == 0 && character == ',')
+            {
+                return index;
+            }
+        }
+
+        return -1;
+    }
+
+    private static string ReadBibtexValue(string body, ref int index)
+    {
+        if (index >= body.Length)
+        {
+            return string.Empty;
+        }
+
+        if (body[index] == '{')
+        {
+            return ReadBalancedValue(body, ref index, '{', '}');
+        }
+
+        if (body[index] == '"')
+        {
+            return ReadQuotedValue(body, ref index);
+        }
+
+        var start = index;
+        while (index < body.Length && body[index] != ',')
+        {
+            index++;
+        }
+
+        return body[start..index].Trim();
+    }
+
+    private static string ReadBalancedValue(string body, ref int index, char open, char close)
+    {
+        var start = ++index;
+        var depth = 1;
+        while (index < body.Length && depth > 0)
+        {
+            if (body[index] == open)
+            {
+                depth++;
+            }
+            else if (body[index] == close)
+            {
+                depth--;
+            }
+
+            index++;
+        }
+
+        return depth == 0 ? body[start..(index - 1)] : body[start..];
+    }
+
+    private static string ReadQuotedValue(string body, ref int index)
+    {
+        var builder = new StringBuilder();
+        index++;
+        var escaped = false;
+        while (index < body.Length)
+        {
+            var character = body[index++];
+            if (escaped)
+            {
+                builder.Append(character);
+                escaped = false;
+            }
+            else if (character == '\\')
+            {
+                builder.Append(character);
+                escaped = true;
+            }
+            else if (character == '"')
+            {
+                break;
+            }
+            else
+            {
+                builder.Append(character);
+            }
+        }
+
+        return builder.ToString();
+    }
+
+    private static void SkipWhitespaceAndCommas(string value, ref int index)
+    {
+        while (index < value.Length && (char.IsWhiteSpace(value[index]) || value[index] == ','))
+        {
+            index++;
+        }
+    }
+
+    private static void SkipToNextTopLevelComma(string value, ref int index)
+    {
+        var depth = 0;
+        while (index < value.Length)
+        {
+            if (value[index] == '{')
+            {
+                depth++;
+            }
+            else if (value[index] == '}')
+            {
+                depth--;
+            }
+            else if (value[index] == ',' && depth == 0)
+            {
+                index++;
+                return;
+            }
+
+            index++;
+        }
+    }
+
+    private static string NormalizeBibtexValue(string value) =>
+        Regex.Replace(value, @"\s+", " ").Trim();
 
     private static string GetSingle(Dictionary<string, string> fields, string key) =>
         fields.TryGetValue(key, out var value) ? value : string.Empty;
@@ -856,21 +1100,39 @@ public sealed class SearchImportService
         return null;
     }
 
-    private static List<string> ParseCsvLine(string line)
+    private static IReadOnlyList<CsvRecord> ParseCsvRecords(string text)
     {
+        var records = new List<CsvRecord>();
         var values = new List<string>();
-        var builder = new StringBuilder();
+        var field = new StringBuilder();
+        var rawRecord = new StringBuilder();
         var inQuotes = false;
 
-        for (var i = 0; i < line.Length; i++)
+        void finishField()
         {
-            var character = line[i];
+            values.Add(field.ToString().Trim());
+            field.Clear();
+        }
+
+        void finishRecord()
+        {
+            finishField();
+            records.Add(new CsvRecord(values.ToArray(), rawRecord.ToString().TrimEnd('\n'), !inQuotes));
+            values.Clear();
+            rawRecord.Clear();
+        }
+
+        for (var index = 0; index < text.Length; index++)
+        {
+            var character = text[index];
+            rawRecord.Append(character);
             if (character == '"')
             {
-                if (inQuotes && i + 1 < line.Length && line[i + 1] == '"')
+                if (inQuotes && index + 1 < text.Length && text[index + 1] == '"')
                 {
-                    builder.Append('"');
-                    i++;
+                    field.Append('"');
+                    rawRecord.Append('"');
+                    index++;
                 }
                 else
                 {
@@ -882,16 +1144,25 @@ public sealed class SearchImportService
 
             if (character == ',' && !inQuotes)
             {
-                values.Add(builder.ToString());
-                builder.Clear();
+                finishField();
                 continue;
             }
 
-            builder.Append(character);
+            if (character == '\n' && !inQuotes)
+            {
+                finishRecord();
+                continue;
+            }
+
+            field.Append(character);
         }
 
-        values.Add(builder.ToString());
-        return values.Select(item => item.Trim()).ToList();
+        if (field.Length > 0 || values.Count > 0 || rawRecord.Length > 0)
+        {
+            finishRecord();
+        }
+
+        return records;
     }
 
     private static Dictionary<string, string> CreateSearchImportRawData(
@@ -943,4 +1214,8 @@ public sealed class SearchImportService
 
         public int GetHashCode(WorkId obj) => obj.ToString().GetHashCode(StringComparison.Ordinal);
     }
+
+    private sealed record BibtexEntry(string Key, string Body, string RawText);
+
+    private sealed record CsvRecord(IReadOnlyList<string> Fields, string RawText, bool IsComplete);
 }

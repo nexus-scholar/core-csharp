@@ -215,6 +215,61 @@ public sealed class SearchImportServiceTests
         Assert.IsTrue(trace.ImportedRecords[0].SkipReason == SearchImportErrorCodes.MalformedRecord || trace.ImportedRecords[0].Notices.Any(note => note.Category == SearchImportErrorCodes.MalformedRecord));
     }
 
+    [TestMethod]
+    public void Ris_author_commas_do_not_split_one_person_into_multiple_authors()
+    {
+        var sourceText = "TY  - JOUR\nTI  - Author fidelity\nAU  - Smith, John\nAU  - Doe, Jane\nER  -\n";
+
+        var trace = new SearchImportService().Parse("trace-ris-authors", NewRequest("ris"), Encoding.UTF8.GetBytes(sourceText));
+
+        CollectionAssert.AreEqual(new[] { "Smith, John", "Doe, Jane" }, trace.ImportedRecords.Single().Authors.ToArray());
+    }
+
+    [TestMethod]
+    public void Scopus_csv_supports_quoted_multiline_fields_and_escaped_quotes()
+    {
+        var sourceText = "eid,title,abstract,year\n2-s2.0-1,\"A \"\"quoted\"\" title\",\"First line\nSecond line\",2024\n";
+
+        var trace = new SearchImportService().Parse("trace-csv-multiline", NewRequest("scopus-csv"), Encoding.UTF8.GetBytes(sourceText));
+
+        Assert.AreEqual(1, trace.ImportedRecords.Count);
+        Assert.AreEqual("A \"quoted\" title", trace.ImportedRecords[0].Work.Title);
+        Assert.AreEqual("First line\nSecond line", trace.ImportedRecords[0].Abstract);
+    }
+
+    [TestMethod]
+    public void Bibtex_supports_multiline_fields_and_nested_braces()
+    {
+        var sourceText = """
+            @article{nested2026,
+              title = {A {Nested} Title
+                Across Lines},
+              author = {Smith, John and Doe, Jane},
+              abstract = {Evidence with {nested {braces}} preserved},
+              year = {2026}
+            }
+            """;
+
+        var trace = new SearchImportService().Parse("trace-bibtex-nested", NewRequest("bibtex"), Encoding.UTF8.GetBytes(sourceText));
+        var record = trace.ImportedRecords.Single();
+
+        Assert.AreEqual("A {Nested} Title Across Lines", record.Work.Title);
+        CollectionAssert.AreEqual(new[] { "Smith, John", "Doe, Jane" }, record.Authors.ToArray());
+        Assert.AreEqual("Evidence with {nested {braces}} preserved", record.Abstract);
+    }
+
+    [TestMethod]
+    public void Scopus_csv_preserves_unterminated_quoted_rows_as_skipped_evidence()
+    {
+        var sourceText = "title,abstract\nBroken,\"unterminated\n";
+
+        var trace = new SearchImportService().Parse("trace-csv-malformed", NewRequest("scopus-csv"), Encoding.UTF8.GetBytes(sourceText));
+
+        Assert.AreEqual(1, trace.ImportedRecords.Count);
+        Assert.IsTrue(trace.ImportedRecords[0].IsSkipped);
+        Assert.AreEqual(SearchImportErrorCodes.MalformedRecord, trace.ImportedRecords[0].SkipReason);
+    }
+
     private static SearchImportRequest NewRequest(string format, string sourceDatabase = "crossref", string importedBy = ImportedBy, string importedAt = ImportedAt) =>
         new(sourceDatabase, format, ParserId, ParserVersion, importedBy, importedAt);
 }

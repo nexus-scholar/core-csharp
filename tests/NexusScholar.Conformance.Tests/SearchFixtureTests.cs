@@ -36,6 +36,7 @@ public sealed class SearchFixtureTests
         "search-import-ris-trace.json",
         "search-import-bibtex-trace.json",
         "search-import-scopus-csv-trace.json",
+        "search-import-realistic-parser-forms.json",
         "search-import-source-file-digest.json",
         "search-import-parser-warning.json",
         "search-import-no-id-candidates.json",
@@ -74,6 +75,30 @@ public sealed class SearchFixtureTests
         Assert.AreEqual(expected.GetProperty("expectedSourceFileDigest").GetString(), trace.Metadata.SourceFileDigest);
         Assert.AreEqual(expected.GetProperty("sourceFileDigestScope").GetString(), trace.Metadata.SourceFileDigestScope);
         Assert.AreEqual(DigestScope.RawArtifactBytes.ToString(), trace.Metadata.SourceFileDigestScope);
+    }
+
+    [TestMethod]
+    public void Search_import_realistic_parser_forms_replay_without_field_loss()
+    {
+        using var document = LoadFixture("search-import-realistic-parser-forms.json");
+        foreach (var entry in document.RootElement.GetProperty("cases").EnumerateArray())
+        {
+            var request = ReadImportRequest(entry.GetProperty("request"));
+            var trace = new SearchImportService().Parse(
+                $"trace-{entry.GetProperty("caseId").GetString()}",
+                request,
+                Encoding.UTF8.GetBytes(entry.GetProperty("sourceFileText").GetString()!));
+            var record = trace.ImportedRecords.Single();
+            var expected = entry.GetProperty("expected");
+
+            Assert.IsFalse(record.IsSkipped);
+            Assert.AreEqual(expected.GetProperty("title").GetString(), record.Work.Title);
+            Assert.AreEqual(expected.GetProperty("authorCount").GetInt32(), record.Authors.Count);
+            if (expected.TryGetProperty("abstract", out var abstractText))
+            {
+                Assert.AreEqual(abstractText.GetString(), record.Abstract);
+            }
+        }
     }
 
     [TestMethod]

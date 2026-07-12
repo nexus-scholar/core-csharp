@@ -1,0 +1,61 @@
+{
+  "fixtureId": "search-import-realistic-parser-forms",
+  "sourceKind": "local-hardening-13-search-parser",
+  "sourceCommit": "local-hardening-13-implementation",
+  "comparisonRules": [
+    "no-php-compatibility-claim",
+    "preserve-format-field-boundaries"
+  ],
+  "cases": [
+    {
+      "caseId": "ris-comma-author",
+      "request": {
+        "sourceDatabaseOrTool": "crossref",
+        "exportFormat": "ris",
+        "parserId": "local-slice-parser",
+        "parserVersion": "1.0.0",
+        "importedBy": "import-operator-1",
+        "importedAt": "2026-07-12T12:00:00Z"
+      },
+      "sourceFileText": "TY  - JOUR\nTI  - RIS author fidelity\nAU  - Smith, John\nAU  - Doe, Jane\nER  -\n",
+      "expected": {
+        "title": "RIS author fidelity",
+        "authorCount": 2
+      }
+    },
+    {
+      "caseId": "csv-multiline",
+      "request": {
+        "sourceDatabaseOrTool": "scopus",
+        "exportFormat": "scopus-csv",
+        "parserId": "local-slice-parser",
+        "parserVersion": "1.0.0",
+        "importedBy": "import-operator-1",
+        "importedAt": "2026-07-12T12:00:00Z"
+      },
+      "sourceFileText": "title,author names,abstract\n\"Quoted title\",\"Alpha; Beta\",\"First line\nSecond line\"\n",
+      "expected": {
+        "title": "Quoted title",
+        "authorCount": 2,
+        "abstract": "First line\nSecond line"
+      }
+    },
+    {
+      "caseId": "bibtex-nested",
+      "request": {
+        "sourceDatabaseOrTool": "ieee",
+        "exportFormat": "bibtex",
+        "parserId": "local-slice-parser",
+        "parserVersion": "1.0.0",
+        "importedBy": "import-operator-1",
+        "importedAt": "2026-07-12T12:00:00Z"
+      },
+      "sourceFileText": "@article{nested,\n title = {A {Nested} Title\n Across Lines},\n author = {Smith, John and Doe, Jane},\n abstract = {Nested {evidence {content}}}\n}",
+      "expected": {
+        "title": "A {Nested} Title Across Lines",
+        "authorCount": 2,
+        "abstract": "Nested {evidence {content}}"
+      }
+    }
+  ]
+}
