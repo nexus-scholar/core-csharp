@@ -11,6 +11,17 @@ namespace NexusScholar.Conformance.Tests;
 [TestClass]
 public sealed class DeduplicationFixtureTests
 {
+    [TestMethod]
+    public void Hardening_09_result_rehydration_replays_verified_and_non_finite_cases()
+    {
+        var result = new DeduplicationService().Execute("rehydration-empty", [], []);
+        var verified = DeduplicationRehydrator.Rehydrate(new UnverifiedDeduplicationResult(result));
+        Assert.AreEqual("rehydration-empty", verified.Result.ResultId);
+
+        var error = Assert.ThrowsExactly<DeduplicationAuthorityException>(() =>
+            DeduplicationRehydrator.Rehydrate(new UnverifiedDeduplicationResult(result with { FuzzyTitleThreshold = double.NaN })));
+        Assert.AreEqual(DeduplicationAuthorityErrorCodes.NonFiniteScore, error.Category);
+    }
     private const int ValidationYear = 2026;
     private const string FixtureSourceKind = "local-gate-9-dedup-implementation";
     private const string FixtureSourceCommit = "local-gate-9-dedup-local";

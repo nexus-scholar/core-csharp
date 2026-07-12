@@ -58,7 +58,7 @@ public sealed class DeduplicationService
         ArgumentNullException.ThrowIfNull(searchTraces);
         ArgumentNullException.ThrowIfNull(importTraces);
 
-        if (fuzzyTitleThreshold < 0 || fuzzyTitleThreshold > 1)
+        if (!double.IsFinite(fuzzyTitleThreshold) || fuzzyTitleThreshold < 0 || fuzzyTitleThreshold > 1)
         {
             throw new ArgumentOutOfRangeException(
                 nameof(fuzzyTitleThreshold),

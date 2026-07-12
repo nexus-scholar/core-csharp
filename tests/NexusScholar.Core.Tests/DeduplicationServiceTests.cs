@@ -14,6 +14,71 @@ public sealed class DeduplicationServiceTests
     private const int ValidationYear = 2026;
 
     [TestMethod]
+    public void Execute_rejects_non_finite_thresholds()
+    {
+        foreach (var value in new[] { double.NaN, double.PositiveInfinity, double.NegativeInfinity })
+        {
+            Assert.ThrowsExactly<ArgumentOutOfRangeException>(() =>
+                new DeduplicationService().Execute("dedup-result", [], [], value));
+        }
+    }
+
+    [TestMethod]
+    public void Rehydrate_validates_and_snapshots_deduplication_result()
+    {
+        var result = BuildRehydrationResult();
+
+        var verified = DeduplicationRehydrator.Rehydrate(new UnverifiedDeduplicationResult(result));
+
+        Assert.AreEqual(result.ResultId, verified.Result.ResultId);
+        Assert.AreEqual(2, verified.Result.RawCandidates.Count);
+        Assert.ThrowsExactly<NotSupportedException>(() =>
+            ((IList<DedupCandidateRecord>)verified.Result.RawCandidates).Add(result.RawCandidates[0]));
+    }
+
+    [TestMethod]
+    [DataRow("duplicate-candidate", DeduplicationAuthorityErrorCodes.InvalidCandidate)]
+    [DataRow("foreign-evidence", DeduplicationAuthorityErrorCodes.InvalidEvidence)]
+    [DataRow("foreign-cluster-member", DeduplicationAuthorityErrorCodes.InvalidCluster)]
+    [DataRow("non-finite-score", DeduplicationAuthorityErrorCodes.NonFiniteScore)]
+    [DataRow("foreign-review-pair", DeduplicationAuthorityErrorCodes.InvalidEvidence)]
+    public void Rehydrate_rejects_fabricated_result_shapes(string mutation, string category)
+    {
+        var result = BuildRehydrationResult();
+        result = mutation switch
+        {
+            "duplicate-candidate" => result with { RawCandidates = new[] { result.RawCandidates[0], result.RawCandidates[0] } },
+            "foreign-evidence" => result with
+            {
+                Evidence = new[] { result.Evidence[0] with { SubjectCandidateId = "foreign" } }
+            },
+            "foreign-cluster-member" => result with
+            {
+                Clusters = new[] { result.Clusters[0] with { Members = new[] { result.Clusters[0].Members[0] with { CandidateId = "foreign" } } } }
+            },
+            "non-finite-score" => result with { FuzzyTitleThreshold = double.NaN },
+            "foreign-review-pair" => result with
+            {
+                ReviewRequiredCandidates = new[] { new DedupReviewCandidate("foreign", result.RawCandidates[0].CandidateId, 0.9, 0.8) }
+            },
+            _ => result
+        };
+
+        var error = Assert.ThrowsExactly<DeduplicationAuthorityException>(() =>
+            DeduplicationRehydrator.Rehydrate(new UnverifiedDeduplicationResult(result)));
+        Assert.AreEqual(category, error.Category);
+    }
+
+    private static DeduplicationResult BuildRehydrationResult()
+    {
+        var trace = BuildSearchTrace(
+            "rehydration-trace",
+            BuildSearchSighting("openalex", 1, 1, "Shared title", "doi", "10.1000/shared"),
+            BuildSearchSighting("crossref", 2, 1, "Shared title", "doi", "10.1000/shared"));
+        return new DeduplicationService().Execute("dedup-rehydration", new[] { trace }, []);
+    }
+
+    [TestMethod]
     public void Exact_identifier_overlap_clusters_automatically()
     {
         var trace = BuildSearchTrace(
