@@ -1,7 +1,8 @@
 bin/
 obj/
-artifacts/
 .packages/
+tests/NexusScholar.PackageSmoke/packages.lock.json
+artifacts/
 TestResults/
 .coverage/
 .idea/

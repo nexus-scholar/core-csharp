@@ -85,7 +85,7 @@ try {
         }
     }
 
-    dotnet restore tests/NexusScholar.PackageSmoke/NexusScholar.PackageSmoke.csproj --source $packageDirectory
+    dotnet restore tests/NexusScholar.PackageSmoke/NexusScholar.PackageSmoke.csproj --source $packageDirectory --force-evaluate
     if ($LASTEXITCODE -ne 0) { throw "Package smoke restore failed with exit code $LASTEXITCODE." }
     dotnet run --project tests/NexusScholar.PackageSmoke/NexusScholar.PackageSmoke.csproj -c Release --no-restore
     if ($LASTEXITCODE -ne 0) { throw "Package smoke execution failed with exit code $LASTEXITCODE." }

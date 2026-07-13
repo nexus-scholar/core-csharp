@@ -12,6 +12,8 @@ try {
 
     & "$PSScriptRoot/verify-packages.ps1"
 
+    & "$PSScriptRoot/build-release-evidence.ps1"
+
     dotnet test NexusScholar.Core.slnx --configuration Release --no-build
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 

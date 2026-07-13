@@ -4,6 +4,7 @@
     <TargetFramework>net10.0</TargetFramework>
     <ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
     <RestorePackagesPath>$(MSBuildThisFileDirectory).packages</RestorePackagesPath>
+    <RestoreLockedMode>false</RestoreLockedMode>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="NexusScholar.Bundles" Version="0.1.0-alpha.1" />
