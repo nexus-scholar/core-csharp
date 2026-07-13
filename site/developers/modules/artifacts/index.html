@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Artifacts Module - Nexus Scholar Core</title>
+  <link rel="stylesheet" href="../../../assets/css/site.css">
+</head>
+<body>
+  <div class="release-status" role="status">Early alpha. Not production-ready. No package publication or PHP compatibility claim.</div>
+  <header class="site-header">
+    <nav class="nav" aria-label="Primary navigation">
+      <a class="brand" href="../../../"><span class="brand-mark">NS</span><span>Nexus Scholar Core</span></a>
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-links">Menu</button>
+      <div class="nav-links" id="nav-links">
+        <a href="../../../developers/" aria-current="page">Developers</a>
+        <a href="../../../tutorials/">Tutorials</a>
+        <a href="../../../blog/">Blog</a>
+        <a href="../../../about/">About</a>
+        <a href="https://github.com/nexus-scholar/core-csharp">GitHub</a>
+      </div>
+    </nav>
+  </header>
+  <main class="page doc-page">
+    <p class="eyebrow">Module documentation</p>
+    <h1>Artifacts</h1>
+    <p class="lede">Immutable artifact identity, strict logical path rules, and raw-byte digest verification for portable review bundles and later audit replay.</p>
+    <div class="doc-shell">
+      <div class="doc-main">
+        <section class="content-section">
+          <h2>Scope and ownership</h2>
+          <p>Artifacts is the contract layer that says what a Core artifact is, how it is named, and how its bytes are verified. It is intentionally narrower than storage or export infrastructure. The module does not write to the filesystem, choose transport formats, or manage persistence. Its job is to fix a stable identity envelope around artifact content so other modules can move artifacts around without confusing file paths or containers with scientific identity.</p>
+          <p class="section-intro">The central object is the artifact descriptor: a bundle of reference name, logical path, kind, media type, size, raw digest, schema identity, and optional protocol, workflow, or provenance binding fields. That mix is what lets Artifacts sit between simple byte hashing and richer bundle reconstruction.</p>
+        </section>
+
+        <section class="content-section">
+          <h2>Gate and ADR status</h2>
+          <p><a href="https://github.com/nexus-scholar/core-csharp/blob/main/docs/adr/0009-portable-bundle-and-artifact-contract.md">ADR 0009</a> defines the accepted contract here, and the implemented scope is recorded in <a href="https://github.com/nexus-scholar/core-csharp/blob/main/docs/gates/GATE-06.md">GATE-06</a> with supporting evidence in <a href="https://github.com/nexus-scholar/core-csharp/blob/main/docs/gates/GATE-06-EVIDENCE.md">GATE-06-EVIDENCE</a>. That gate draws an explicit line between local artifact identity and any broader host or ecosystem behavior.</p>
+          <p class="section-intro">The fixed rules are that bundle manifests use schema <code>nexus.review-bundle.manifest</code>, manifest digests live in the <code>bundle-manifest</code> scope, artifact bytes use the <code>raw-artifact-bytes</code> scope, and logical paths are heavily constrained so a path can serve as a portable reference without turning into an unsafe write target.</p>
+        </section>
+
+        <section class="content-section">
+          <h2>Diagrams</h2>
+          <p>Artifacts makes more sense when its two responsibilities are separated visually: artifact identity itself, and the verification path that bundle import or export relies on.</p>
+          <div class="diagram-grid">
+            <article class="diagram-card">
+              <h3>Contract map</h3>
+              <p>The descriptor defines artifact identity, while bundle manifest and verifier add transport-safe checking without changing that identity.</p>
+              <svg viewBox="0 0 520 240" role="img" aria-label="Artifacts class map">
+                <defs>
+                  <marker id="arrow-artifacts-a" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+                    <path d="M0,0 L8,4 L0,8 z" fill="#0b4f4a"></path>
+                  </marker>
+                </defs>
+                <rect x="24" y="88" width="146" height="60" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="97" y="113" text-anchor="middle">ArtifactDescriptor</text>
+                <text x="97" y="131" text-anchor="middle" class="diagram-muted">path plus raw digest</text>
+                <rect x="206" y="30" width="146" height="60" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="279" y="55" text-anchor="middle">ReviewBundleManifest</text>
+                <text x="279" y="73" text-anchor="middle" class="diagram-muted">typed manifest entries</text>
+                <rect x="206" y="146" width="146" height="60" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="279" y="171" text-anchor="middle">BundleVerifier</text>
+                <text x="279" y="189" text-anchor="middle" class="diagram-muted">staged safety checks</text>
+                <rect x="388" y="88" width="108" height="60" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="442" y="113" text-anchor="middle">Verified bundle</text>
+                <text x="442" y="131" text-anchor="middle" class="diagram-muted">import-safe state</text>
+                <line x1="170" y1="106" x2="206" y2="74" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-artifacts-a)"></line>
+                <line x1="170" y1="130" x2="206" y2="166" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-artifacts-a)"></line>
+                <line x1="352" y1="176" x2="388" y2="118" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-artifacts-a)"></line>
+              </svg>
+            </article>
+            <article class="diagram-card">
+              <h3>Verification use case</h3>
+              <p>The module’s core use case is deterministic bundle checking: inspect manifest, bind known records, verify bytes, then accept or reject the package.</p>
+              <svg viewBox="0 0 520 220" role="img" aria-label="Artifacts verification use case">
+                <defs>
+                  <marker id="arrow-artifacts-b" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+                    <path d="M0,0 L8,4 L0,8 z" fill="#0b4f4a"></path>
+                  </marker>
+                </defs>
+                <rect x="22" y="74" width="96" height="58" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="70" y="99" text-anchor="middle">bundle input</text>
+                <text x="70" y="117" text-anchor="middle" class="diagram-muted">manifest plus bytes</text>
+                <rect x="154" y="74" width="112" height="58" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="210" y="99" text-anchor="middle">identity checks</text>
+                <text x="210" y="117" text-anchor="middle" class="diagram-muted">paths and digests</text>
+                <rect x="302" y="74" width="112" height="58" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="358" y="99" text-anchor="middle">binding checks</text>
+                <text x="358" y="117" text-anchor="middle" class="diagram-muted">protocol and provenance</text>
+                <rect x="450" y="38" width="54" height="48" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="477" y="66" text-anchor="middle">valid</text>
+                <rect x="450" y="122" width="54" height="48" rx="8" fill="#f4f1ea" stroke="#b7791f"></rect>
+                <text x="477" y="150" text-anchor="middle">reject</text>
+                <line x1="118" y1="103" x2="154" y2="103" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-artifacts-b)"></line>
+                <line x1="266" y1="103" x2="302" y2="103" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-artifacts-b)"></line>
+                <line x1="414" y1="94" x2="450" y2="70" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-artifacts-b)"></line>
+                <line x1="414" y1="112" x2="450" y2="146" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-artifacts-b)"></line>
+              </svg>
+            </article>
+          </div>
+        </section>
+
+        <section class="content-section">
+          <h2>Code surface and behavior</h2>
+          <p>The code is split across the dedicated Artifacts project and the bundle-manifest implementation that consumes it. The main files are <a href="https://github.com/nexus-scholar/core-csharp/blob/main/src/NexusScholar.Artifacts/Artifacts.cs">src/NexusScholar.Artifacts/Artifacts.cs</a>, <a href="https://github.com/nexus-scholar/core-csharp/blob/main/src/NexusScholar.Bundles/ReviewBundleManifest.cs">ReviewBundleManifest.cs</a>, and <a href="https://github.com/nexus-scholar/core-csharp/blob/main/src/NexusScholar.Bundles/BundleVerifier.cs">BundleVerifier.cs</a>.</p>
+          <p class="section-intro">The behavior is deliberately strict. Absolute paths, URI-like paths, traversal segments, empty segments, leading or trailing slashes, and backslashes are rejected. Artifact field validation checks blank values, size sanity, and digest shape. Bundle verification then layers manifest identity, required schema checks, protocol and provenance binding checks, artifact byte recomputation, and destructive-overwrite protection on top of the artifact descriptors themselves.</p>
+        </section>
+
+        <section class="content-section">
+          <h2>Verification and current limits</h2>
+          <p>The verification story is in good shape for a local gate. <a href="https://github.com/nexus-scholar/core-csharp/blob/main/tests/NexusScholar.Core.Tests/BundleTests.cs">BundleTests.cs</a> covers the behavior directly, while <a href="https://github.com/nexus-scholar/core-csharp/blob/main/tests/NexusScholar.Conformance.Tests/BundleFixtureTests.cs">BundleFixtureTests.cs</a> replays the conformance fixtures under <a href="https://github.com/nexus-scholar/core-csharp/blob/main/fixtures/conformance/bundles/">fixtures/conformance/bundles</a>. Architecture boundary tests also keep the bundle and artifact layers inward-facing rather than letting them depend on Protocol or Provenance assemblies directly.</p>
+          <p class="section-intro">The remaining limits are explicit and appropriate. Gate 6 does not define replacement policies beyond destructive-overwrite rejection, does not bind archive containers or transport metadata into identity, and does not expose API, UI, or runtime import/export surfaces. The module is therefore strong on local audit-oriented identity, but deliberately incomplete as a full application feature.</p>
+        </section>
+      </div>
+      <aside class="doc-aside">
+        <section class="doc-card">
+          <h2>At a glance</h2>
+          <ul class="link-list">
+            <li>Authority scope: `GATE-06`</li>
+            <li>Primary ADR: `ADR 0009`</li>
+            <li>Role: immutable artifact identity</li>
+            <li>Next module: <a href="../provenance/">Provenance</a></li>
+          </ul>
+        </section>
+        <section class="doc-card">
+          <h2>Closest dependencies</h2>
+          <ul class="link-list">
+            <li><a href="https://github.com/nexus-scholar/core-csharp/tree/main/src/NexusScholar.Bundles/">Bundles</a></li>
+            <li><a href="https://github.com/nexus-scholar/core-csharp/tree/main/src/NexusScholar.Protocol/">Protocol</a></li>
+            <li><a href="https://github.com/nexus-scholar/core-csharp/tree/main/src/NexusScholar.Provenance/">Provenance</a></li>
+            <li><a href="https://github.com/nexus-scholar/core-csharp/tree/main/src/NexusScholar.Workflow/">Workflow</a></li>
+          </ul>
+        </section>
+      </aside>
+    </div>
+  </main>
+  <footer class="site-footer"><p>Artifacts module documentation.</p></footer>
+  <script src="../../../assets/js/site.js"></script>
+</body>
+</html>

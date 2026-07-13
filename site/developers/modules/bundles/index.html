@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bundles Module - Nexus Scholar Core</title>
+  <link rel="stylesheet" href="../../../assets/css/site.css">
+</head>
+<body>
+  <div class="release-status" role="status">Early alpha. Not production-ready. No package publication or PHP compatibility claim.</div>
+  <header class="site-header">
+    <nav class="nav" aria-label="Primary navigation">
+      <a class="brand" href="../../../"><span class="brand-mark">NS</span><span>Nexus Scholar Core</span></a>
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-links">Menu</button>
+      <div class="nav-links" id="nav-links">
+        <a href="../../../developers/" aria-current="page">Developers</a>
+        <a href="../../../tutorials/">Tutorials</a>
+        <a href="../../../blog/">Blog</a>
+        <a href="../../../about/">About</a>
+        <a href="https://github.com/nexus-scholar/core-csharp">GitHub</a>
+      </div>
+    </nav>
+  </header>
+  <main class="page doc-page">
+    <p class="eyebrow">Module documentation</p>
+    <h1>Bundles</h1>
+    <p class="lede">Portable review-bundle manifests and verification rules that let the system move scientific state as a package without turning local files or app projections into authority.</p>
+    <div class="doc-shell">
+      <div class="doc-main">
+        <section class="content-section">
+          <h2>Scope and ownership</h2>
+          <p>Bundles owns the manifest contract for review packages. The implementation is centered on <code>ReviewBundleManifest</code>, its binding records for protocol, workflow, provenance, artifact membership, shared-identity membership, and unresolved candidates, plus the verifier that checks whether a manifest is structurally safe to import or compare.</p>
+          <p class="section-intro">The important point is that Bundles does not transport arbitrary application state. It packages references to already-governed records. Artifact paths remain paths, digests remain the scientific identity, and the manifest records what a bundle claims to contain so a verifier can reject malformed, stale, or destructive inputs.</p>
+        </section>
+        <section class="content-section">
+          <h2>Gate and ADR status</h2>
+          <p>The local C# behavior is the Gate 6 bundle surface, bounded by <a href="https://github.com/nexus-scholar/core-csharp/blob/main/docs/adr/0009-review-bundle-contract.md">ADR 0009</a> and the Gate 6 evidence pack. That accepted scope is narrower than a full import/export product. It defines a review-bundle manifest, required sections, bundle-safe overwrite rules, digest expectations, and verification findings.</p>
+          <p class="section-note">This module is implemented. The current verifier emits findings such as <code>invalid-manifest</code>, <code>missing-required-section</code>, <code>checksum-mismatch</code>, <code>stale-manifest-digest</code>, and <code>destructive-overwrite</code>. Those categories matter because the bundle contract is mostly about refusal rules.</p>
+        </section>
+        <section class="content-section">
+          <h2>Diagrams</h2>
+          <div class="diagram-grid">
+            <article class="diagram-card">
+              <h3>Class map</h3>
+              <p>The manifest gathers cross-module bindings, and the verifier inspects those bindings without becoming the owner of Protocol, Workflow, Provenance, or Shared semantics.</p>
+              <svg viewBox="0 0 520 240" role="img" aria-label="Bundles class map">
+                <defs><marker id="arrow-bundles-a" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#0b4f4a"></path></marker></defs>
+                <rect x="190" y="24" width="140" height="58" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="260" y="48" text-anchor="middle">ReviewBundleManifest</text>
+                <text x="260" y="66" text-anchor="middle" class="diagram-muted">bundle contract root</text>
+                <rect x="24" y="134" width="108" height="54" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="78" y="158" text-anchor="middle">SchemaRef</text>
+                <text x="78" y="176" text-anchor="middle" class="diagram-muted">required ids</text>
+                <rect x="146" y="134" width="108" height="54" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="200" y="158" text-anchor="middle">ArtifactEntry</text>
+                <text x="200" y="176" text-anchor="middle" class="diagram-muted">path, size, digest</text>
+                <rect x="268" y="134" width="108" height="54" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="322" y="158" text-anchor="middle">Protocol / Workflow</text>
+                <text x="322" y="176" text-anchor="middle" class="diagram-muted">binding refs</text>
+                <rect x="390" y="134" width="108" height="54" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="444" y="158" text-anchor="middle">Shared / Unresolved</text>
+                <text x="444" y="176" text-anchor="middle" class="diagram-muted">membership refs</text>
+                <rect x="190" y="134" width="140" height="54" rx="8" fill="#f4f1ea" stroke="#b7791f"></rect>
+                <text x="260" y="158" text-anchor="middle">BundleVerifier</text>
+                <text x="260" y="176" text-anchor="middle" class="diagram-muted">finding-based checks</text>
+                <line x1="260" y1="82" x2="78" y2="134" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-bundles-a)"></line>
+                <line x1="260" y1="82" x2="200" y2="134" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-bundles-a)"></line>
+                <line x1="260" y1="82" x2="322" y2="134" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-bundles-a)"></line>
+                <line x1="260" y1="82" x2="444" y2="134" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-bundles-a)"></line>
+              </svg>
+            </article>
+            <article class="diagram-card">
+              <h3>Use case flow</h3>
+              <p>A bundle export is only useful if the import side can verify it deterministically before any overwrite or trust decision.</p>
+              <svg viewBox="0 0 520 210" role="img" aria-label="Bundles use case flow">
+                <defs><marker id="arrow-bundles-b" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#0b4f4a"></path></marker></defs>
+                <rect x="18" y="74" width="90" height="56" rx="28" fill="#f4f1ea" stroke="#b7791f"></rect>
+                <text x="63" y="106" text-anchor="middle">records</text>
+                <rect x="144" y="68" width="120" height="68" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="204" y="94" text-anchor="middle">manifest</text>
+                <text x="204" y="112" text-anchor="middle" class="diagram-muted">bindings plus digests</text>
+                <rect x="300" y="68" width="120" height="68" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="360" y="94" text-anchor="middle">verify</text>
+                <text x="360" y="112" text-anchor="middle" class="diagram-muted">findings not guesses</text>
+                <rect x="444" y="68" width="58" height="68" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="473" y="94" text-anchor="middle">use</text>
+                <text x="473" y="112" text-anchor="middle" class="diagram-muted">or reject</text>
+                <line x1="108" y1="102" x2="144" y2="102" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-bundles-b)"></line>
+                <line x1="264" y1="102" x2="300" y2="102" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-bundles-b)"></line>
+                <line x1="420" y1="102" x2="444" y2="102" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-bundles-b)"></line>
+              </svg>
+            </article>
+          </div>
+        </section>
+        <section class="content-section">
+          <h2>Code surface and dependencies</h2>
+          <p>The implemented surface lives in <a href="https://github.com/nexus-scholar/core-csharp/blob/main/src/NexusScholar.Bundles/ReviewBundleManifest.cs">ReviewBundleManifest.cs</a> and <a href="https://github.com/nexus-scholar/core-csharp/blob/main/src/NexusScholar.Bundles/BundleVerifier.cs">BundleVerifier.cs</a>. The project depends only on <code>NexusScholar.Kernel</code> and <code>NexusScholar.Shared</code>. That is the correct shape: the module references stable identity and digest machinery, but it does not absorb the full higher-level domain graph.</p>
+          <p class="section-intro">The current class surface also makes the module’s intent obvious. Manifest records describe sections; verifier options tune checks; verification results return structured findings. There is no hidden import side effect. The module tells the caller what is wrong and leaves import policy to a later layer.</p>
+        </section>
+        <section class="content-section">
+          <h2>Current limits and related modules</h2>
+          <p>Bundles is downstream from Protocol, Workflow, Provenance, Artifacts, and Shared. It assumes those modules already own the records being referenced. It does not redefine them. The obvious risk is scope creep: app-specific full-text manifests, zip transport details, and persistence concerns are easy to drag into this module, but that would weaken the contract.</p>
+          <p class="section-intro">The local implementation is intentionally conservative. It verifies a review-bundle manifest. It does not claim hosted transport, remote trust negotiation, or CLI and Web manifest compatibility beyond the accepted contract.</p>
+        </section>
+      </div>
+      <aside class="doc-aside">
+        <section class="doc-card">
+          <h2>At a glance</h2>
+          <ul class="link-list">
+            <li>Authority scope: `GATE-06`</li>
+            <li>Primary ADR: `ADR 0009`</li>
+            <li>Status: implemented verifier surface</li>
+            <li>Next related module: <a href="../shared/">Shared</a></li>
+          </ul>
+        </section>
+        <section class="doc-card">
+          <h2>Depends on</h2>
+          <ul class="link-list">
+            <li><a href="../artifacts/">Artifacts</a></li>
+            <li><a href="../protocol/">Protocol</a></li>
+            <li><a href="../workflow/">Workflow</a></li>
+            <li><a href="../provenance/">Provenance</a></li>
+          </ul>
+        </section>
+      </aside>
+    </div>
+  </main>
+  <footer class="site-footer"><p>Bundles module documentation.</p></footer>
+  <script src="../../../assets/js/site.js"></script>
+</body>
+</html>

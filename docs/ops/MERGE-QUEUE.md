@@ -1,50 +1,23 @@
 # Merge Queue
 
-Status date: 2026-07-11
+Status date: 2026-07-13
 
 ## Current Queue
 
-No open PRs expected.
+| Order | Gate | Scope | Status |
+|---|---|---|---|
+| 1 | Hardening 23 | Pages workflow, public maturity correction, security contact, operational docs and port matrix | Active |
+| 2 | Hardening 24 | Live governance settings and tagged clean-machine rehearsal | Waiting on Hardening 23 |
 
-Recently completed:
+Recently landed:
 
-| PR | Branch / area | Result |
+| PR | Gate | Result |
 |---|---|---|
-| PR02 | CLI init/status | Landed |
-| PR03 | CLI import search | Landed |
-| PR04 | CLI verify | Landed |
-| PR05 | CLI analyze | Landed |
-| PR06 | CLI review/clusters | Landed |
-| PR07A | main docs workflow tutorial | Landed |
-| PR07B | gh-pages public workflow tutorial | Landed |
-| PR08 | CLI status/exit-code polish | Landed |
+| #42 | Hardening 19 release policy | Landed |
+| #43 | Hardening 20 package topology | Landed |
+| #44 | Hardening 21 locked restore and release evidence | Landed |
+| #45 | Hardening 22 release and security workflows | Landed |
 
-Current operating plan:
+## Do Not Queue
 
-| Plan | Scope | Status |
-|---|---|---|
-| 2026-07-11 hardening plan | Freeze feature expansion and remediate integrity blockers in dependency order | Active |
-
-## Do Not Queue Yet
-
-Do not queue these until there is a separate accepted ADR/task:
-
-- merge accept/reject/mark-unresolved execution;
-- actor identity for decisions;
-- persistence/database/API/cloud;
-- live providers or scraping;
-- provider credentials;
-- UI product shell;
-- PDF/OCR;
-- AI/model calls;
-- AppServices expansion beyond the accepted read-only projection.
-
-APP-01 merge-gate actions are placeholders only. They must not mutate Core records, execute commands, write files, call services, or imply that the CLI/UI can finalize a scientific decision.
-
-## Next Queue Item
-
-Next queue items should come from the active hardening plan:
-
-```text
-Phase 0: blocker issues, public maturity claim correction, main protection, owner/test/dependency assignment
-```
+Feature work remains frozen. Do not queue package publication, signing, live providers, scraping, persistence/API/cloud, product UI, PDF/OCR, model calls, executable merge decisions, or compatibility claims without a later accepted ADR and gate.

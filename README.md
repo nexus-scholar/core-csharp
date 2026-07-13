@@ -35,7 +35,7 @@ The walkthrough and issue templates are for first-tester feedback. They do not i
 
 ## Try It Locally
 
-Prerequisite: .NET SDK for `net10.0`.
+Prerequisites: the exact .NET SDK pinned by `global.json` and the .NET 8 runtime required by the repository-pinned SBOM tool. CI installs .NET SDK 8.0.422 only to supply that runtime; repository builds still use .NET SDK 10.0.301.
 
 Bootstrap:
 

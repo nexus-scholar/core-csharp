@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Contributing - Nexus Scholar Core</title>
+  <link rel="stylesheet" href="../../assets/css/site.css">
+</head>
+<body>
+  <div class="release-status" role="status">Early alpha. Not production-ready. No package publication or PHP compatibility claim.</div>
+  <header class="site-header">
+    <nav class="nav" aria-label="Primary navigation">
+      <a class="brand" href="../../"><span class="brand-mark">NS</span><span>Nexus Scholar Core</span></a>
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-links">Menu</button>
+      <div class="nav-links" id="nav-links">
+        <a href="../../developers/" aria-current="page">Developers</a>
+        <a href="../../tutorials/">Tutorials</a>
+        <a href="../../blog/">Blog</a>
+        <a href="../../about/">About</a>
+        <a href="https://github.com/nexus-scholar/core-csharp">GitHub</a>
+      </div>
+    </nav>
+  </header>
+  <main class="page">
+    <p class="eyebrow">Contributing</p>
+    <h1>Change behavior with evidence</h1>
+    <p class="lede">Nexus welcomes contributions that improve the research workflow while preserving reconstructability, authority boundaries, and explicit non-claims.</p>
+    <section class="content-section">
+      <h2>Good first contribution areas</h2>
+      <ul class="check-list">
+        <li>Improve module documentation with source-backed explanations.</li>
+        <li>Add or refine focused tests for accepted contracts.</li>
+        <li>Propose sample block plans for real research workflow situations.</li>
+        <li>Review ADRs for unclear authority or evidence boundaries.</li>
+        <li>Polish renderer surfaces without adding Core dependencies.</li>
+      </ul>
+    </section>
+    <section class="content-section">
+      <h2>Contribution boundaries</h2>
+      <ul class="check-list">
+        <li>Do not make AI output a final scientific decision.</li>
+        <li>Do not treat title-only matches, row ids, app hashes, or runtime object identity as scholarly identity.</li>
+        <li>Do not add live providers, credentials, scraping, or production dependencies without an accepted design record.</li>
+        <li>Do not move app projection behavior into Core without an ADR.</li>
+        <li>Do not claim PHP compatibility without fixture or comparator evidence.</li>
+      </ul>
+    </section>
+    <section class="content-section">
+      <h2>Baseline verification</h2>
+      <pre><code>dotnet build NexusScholar.Core.slnx -c Release
+dotnet test NexusScholar.Core.slnx -c Release --no-build
+dotnet format NexusScholar.Core.slnx --verify-no-changes --no-restore</code></pre>
+    </section>
+    <section class="content-section">
+      <h2>Public communication standard</h2>
+      <ul class="check-list">
+        <li>Say what is implemented and what is only planned.</li>
+        <li>Prefer source links, ADRs, tests, and fixtures over broad claims.</li>
+        <li>Separate Core authority from UI, CLI, Web, and sample behavior.</li>
+        <li>Keep public explanations understandable to researchers, not only library developers.</li>
+      </ul>
+    </section>
+  </main>
+  <footer class="site-footer"><p>Nexus Scholar Core contributor guide.</p></footer>
+  <script src="../../assets/js/site.js"></script>
+</body>
+</html>

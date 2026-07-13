@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AI Module - Nexus Scholar Core</title>
+  <link rel="stylesheet" href="../../../assets/css/site.css">
+</head>
+<body>
+  <div class="release-status" role="status">Early alpha. Not production-ready. No package publication or PHP compatibility claim.</div>
+  <header class="site-header">
+    <nav class="nav" aria-label="Primary navigation">
+      <a class="brand" href="../../../"><span class="brand-mark">NS</span><span>Nexus Scholar Core</span></a>
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-links">Menu</button>
+      <div class="nav-links" id="nav-links">
+        <a href="../../../developers/" aria-current="page">Developers</a>
+        <a href="../../../tutorials/">Tutorials</a>
+        <a href="../../../blog/">Blog</a>
+        <a href="../../../about/">About</a>
+        <a href="https://github.com/nexus-scholar/core-csharp">GitHub</a>
+      </div>
+    </nav>
+  </header>
+  <main class="page doc-page">
+    <p class="eyebrow">Module documentation</p>
+    <h1>AI</h1>
+    <p class="lede">Governed AI task and proposal primitives that preserve the repository rule that model output is suggestion or bounded transformation until an authorized human accepts it.</p>
+    <div class="doc-shell">
+      <div class="doc-main">
+        <section class="content-section">
+          <h2>Scope and ownership</h2>
+          <p>The AI module does not implement a complete AI execution subsystem. What it owns today is the policy boundary and proposal shape. <code>AiTaskPolicy</code> classifies authority, records whether human approval is required, and rejects unsafe policy combinations. <code>AiProposal&lt;T&gt;</code> and <code>AcceptedAiProposal&lt;T&gt;</code> separate raw model output from accepted output.</p>
+          <p class="section-intro">That split matters because this repository treats AI as one input to scientific work, not the authority over it. The local code surface is therefore small on purpose. It encodes guardrails before richer provider, logging, or workflow integration exists.</p>
+        </section>
+        <section class="content-section">
+          <h2>Status and contract boundary</h2>
+          <p>This module is partially implemented. The contract surface exists in code, but the larger AI governance gate remains unresolved for later work. In particular, conflict notes around AI governance were deferred rather than silently patched over. So this page documents the implemented policy surface, not a completed accepted gate.</p>
+          <p class="section-note">The most important current rule is visible in the authority vocabulary itself: <code>ReadOnlySuggestion</code>, <code>BoundedTransformation</code>, <code>ScientificDecisionProposal</code>, and <code>ExternalActionProposal</code>. Higher-authority categories must require human approval. If a caller tries to create a high-authority policy without that requirement, <code>AiTaskPolicy.Create(...)</code> refuses it.</p>
+        </section>
+        <section class="content-section">
+          <h2>Diagrams</h2>
+          <div class="diagram-grid">
+            <article class="diagram-card">
+              <h3>Class map</h3>
+              <p>The current implementation is narrow: policy and proposal classes express authority boundaries, while acceptance is explicit rather than implied.</p>
+              <svg viewBox="0 0 520 220" role="img" aria-label="AI class map">
+                <defs><marker id="arrow-ai-a" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#0b4f4a"></path></marker></defs>
+                <rect x="184" y="24" width="152" height="56" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="260" y="49" text-anchor="middle">AiTaskPolicy</text>
+                <text x="260" y="67" text-anchor="middle" class="diagram-muted">authority plus approval</text>
+                <rect x="54" y="132" width="124" height="54" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="116" y="156" text-anchor="middle">AiAuthority</text>
+                <text x="116" y="174" text-anchor="middle" class="diagram-muted">4 bounded levels</text>
+                <rect x="198" y="132" width="124" height="54" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="260" y="156" text-anchor="middle">AiProposal&lt;T&gt;</text>
+                <text x="260" y="174" text-anchor="middle" class="diagram-muted">raw proposal</text>
+                <rect x="342" y="132" width="124" height="54" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="404" y="156" text-anchor="middle">AcceptedAiProposal&lt;T&gt;</text>
+                <text x="404" y="174" text-anchor="middle" class="diagram-muted">accepted by actor</text>
+                <line x1="260" y1="80" x2="116" y2="132" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-ai-a)"></line>
+                <line x1="260" y1="80" x2="260" y2="132" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-ai-a)"></line>
+                <line x1="260" y1="80" x2="404" y2="132" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-ai-a)"></line>
+              </svg>
+            </article>
+            <article class="diagram-card">
+              <h3>Use case flow</h3>
+              <p>The expected path is simple: define authority, capture model output as a proposal, and require acceptance before any downstream scientific use.</p>
+              <svg viewBox="0 0 520 210" role="img" aria-label="AI use case flow">
+                <defs><marker id="arrow-ai-b" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#0b4f4a"></path></marker></defs>
+                <rect x="20" y="72" width="104" height="60" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="72" y="98" text-anchor="middle">policy</text>
+                <text x="72" y="116" text-anchor="middle" class="diagram-muted">allowed authority</text>
+                <rect x="156" y="72" width="104" height="60" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="208" y="98" text-anchor="middle">model output</text>
+                <text x="208" y="116" text-anchor="middle" class="diagram-muted">proposal only</text>
+                <rect x="292" y="72" width="104" height="60" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="344" y="98" text-anchor="middle">human accept</text>
+                <text x="344" y="116" text-anchor="middle" class="diagram-muted">or reject</text>
+                <rect x="428" y="72" width="76" height="60" rx="8" fill="#f4f1ea" stroke="#b7791f"></rect>
+                <text x="466" y="98" text-anchor="middle">reuse</text>
+                <text x="466" y="116" text-anchor="middle" class="diagram-muted">later modules</text>
+                <line x1="124" y1="102" x2="156" y2="102" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-ai-b)"></line>
+                <line x1="260" y1="102" x2="292" y2="102" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-ai-b)"></line>
+                <line x1="396" y1="102" x2="428" y2="102" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-ai-b)"></line>
+              </svg>
+            </article>
+          </div>
+        </section>
+        <section class="content-section">
+          <h2>Code surface and dependencies</h2>
+          <p>The current code lives in <a href="https://github.com/nexus-scholar/core-csharp/blob/main/src/NexusScholar.AI/AiTaskPolicy.cs">AiTaskPolicy.cs</a> and <a href="https://github.com/nexus-scholar/core-csharp/blob/main/src/NexusScholar.AI/AiProposal.cs">AiProposal.cs</a>. The project depends on <code>NexusScholar.Kernel</code> and <code>NexusScholar.Provenance</code>. That dependency shape is appropriate for recording bounded proposals and future acceptance evidence without letting AI reach outward into app frameworks or provider SDKs.</p>
+          <p class="section-intro">The module-local <code>AGENTS.md</code> sharpens the same rule in prose: model output is never canonical scientific truth. That is consistent with the repository product laws and means later integration work should preserve, not bypass, this contract.</p>
+        </section>
+        <section class="content-section">
+          <h2>Current gaps and related modules</h2>
+          <p>The obvious missing pieces are intentional: no provider abstraction, no prompt/result persistence contract, no full provenance acceptance path, no workflow binding, and no completed gate for broader AI governance. The implemented surface is useful because it stops callers from pretending those missing pieces are solved.</p>
+          <p class="section-intro">AI is closely related to Workflow, Provenance, Screening, and UiContracts. It will eventually show up inside those modules as proposal evidence, not as silent authority.</p>
+        </section>
+      </div>
+      <aside class="doc-aside">
+        <section class="doc-card">
+          <h2>At a glance</h2>
+          <ul class="link-list">
+            <li>Status: partial implementation</li>
+            <li>Primary rule: AI output is non-authoritative</li>
+            <li>Implemented surface: policy plus proposal records</li>
+            <li>Related module: <a href="../screening/">Screening</a></li>
+          </ul>
+        </section>
+        <section class="doc-card">
+          <h2>Authority levels</h2>
+          <ul class="link-list">
+            <li>`ReadOnlySuggestion`</li>
+            <li>`BoundedTransformation`</li>
+            <li>`ScientificDecisionProposal`</li>
+            <li>`ExternalActionProposal`</li>
+          </ul>
+        </section>
+      </aside>
+    </div>
+  </main>
+  <footer class="site-footer"><p>AI module documentation.</p></footer>
+  <script src="../../../assets/js/site.js"></script>
+</body>
+</html>

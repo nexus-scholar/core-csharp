@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Introducing Nexus Scholar Core</title>
+  <link rel="stylesheet" href="../../assets/css/site.css">
+</head>
+<body>
+  <div class="release-status" role="status">Early alpha. Not production-ready. No package publication or PHP compatibility claim.</div>
+  <header class="site-header">
+    <nav class="nav" aria-label="Primary navigation">
+      <a class="brand" href="../../"><span class="brand-mark">NS</span><span>Nexus Scholar Core</span></a>
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-links">Menu</button>
+      <div class="nav-links" id="nav-links">
+        <a href="../../developers/">Developers</a>
+        <a href="../../tutorials/">Tutorials</a>
+        <a href="../../blog/" aria-current="page">Blog</a>
+        <a href="../../about/">About</a>
+        <a href="https://github.com/nexus-scholar/core-csharp">GitHub</a>
+      </div>
+    </nav>
+  </header>
+  <main class="article">
+    <p class="eyebrow">June 28, 2026</p>
+    <h1>Introducing Nexus Scholar Core</h1>
+    <p class="lede">Nexus Scholar Core is a local-first C# kernel for audit-oriented research workflows. The goal is not to make one more paper search app. The goal is to make research work reconstructable.</p>
+    <p class="article-meta">Project narrative. Public-facing overview. Claims are limited to the current Core and UI foundation.</p>
+
+    <p>Modern research workflows are full of fragile transitions. A protocol becomes a spreadsheet. A search result becomes a deduplicated list. A screening vote becomes a final decision. A PDF path becomes evidence. An AI suggestion becomes text in a report. Each step may look harmless inside an app, but together they can erase the history needed to audit the work later.</p>
+    <p>Nexus Scholar Core is being built around a stricter rule: scientific state should be represented as explicit, reproducible, evidence-preserving records. A search observation is not corpus truth. A deduplication cluster is not deletion of raw evidence. A screening suggestion is not a human decision. A bundle is not a random archive. A protocol is not an editable note.</p>
+
+    <div class="article-callout">
+      <p><strong>Working principle:</strong> strict inside, simple outside, AI-assisted everywhere, human-authorized science.</p>
+    </div>
+
+    <h2>What exists today</h2>
+    <p>The Core already has the skeleton of a real systematic review workflow. It can model deterministic digests, approved protocols, compiled workflow plans, provenance events, review bundles, shared scholarly identity, raw search traces, imported search evidence, deduplication results, screening decisions, and a full-text acquisition contract.</p>
+    <p>That does not mean the whole product is finished. There is no live scholarly provider integration, no production database layer, no cloud backend, no full AI governance layer, and no real PDF extraction/OCR implementation yet. The current value is the contract foundation: the parts that decide what counts as evidence, what counts as authority, and what must never be silently collapsed.</p>
+
+    <h2>Why this is different</h2>
+    <p>Many tools help researchers search, screen, summarize, map, or manage papers. Nexus is aiming at a lower layer: the audit-oriented kernel underneath those workflows. It is designed to let future apps, command-line tools, desktop workspaces, and AI assistants operate over the same strict records instead of inventing their own meanings for identity, evidence, and approval.</p>
+    <p>That is why the architecture separates Core from UI. Core stays deterministic and authority-aware. UI and CLI layers can make the work understandable, but they should not become scientific authority by accident.</p>
+
+    <h2>The product shape</h2>
+    <p>The first visible product wedge is practical: import search exports, preserve raw evidence, show warnings, review duplicate candidates, require human merge decisions, preview provenance, and export an auditable bundle. That workflow is narrow enough to build, but important enough to show the project’s direction.</p>
+    <p>Longer term, Nexus can become a research cockpit: a workspace where AI explains and drafts, typed blocks expose evidence and actions, and human decisions remain explicit. The cockpit is not chat-first. It is workflow-first.</p>
+
+    <h2>What to watch next</h2>
+    <p>The next Core implementation target is a local, no-network full-text slice. That means user-supplied full-text artifacts, raw-byte digest validation, source-reference evidence, and extraction records. It explicitly excludes provider APIs, HTTP downloads, publisher scraping, paywall bypass, shadow-library sources, OCR, and real PDF extraction until those boundaries are governed.</p>
+    <p>This project will move best if the community evaluates both code and claims. The question is not only “does it work?” The harder question is “can we reconstruct what happened, who authorized it, and which evidence supports it?”</p>
+  </main>
+  <footer class="site-footer"><p>Nexus Scholar Core blog.</p></footer>
+  <script src="../../assets/js/site.js"></script>
+</body>
+</html>

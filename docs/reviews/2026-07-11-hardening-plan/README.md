@@ -9,8 +9,8 @@ Implementation progress:
 - Phase 3 scholarly pipeline correctness: complete through Hardening 16 across Shared identity, Search parsers, Deduplication metadata, Screening conflicts, and Full Text cross-record validation.
 - Phase 4 transactional workspace integrity: complete through Hardening 17.
 - Phase 5 test strategy upgrade: complete through Hardening 18.
-- Phase 6 release engineering: in progress through Hardening 22 validation-only release and security-analysis workflows.
-- Next gate: Hardening 23 Pages recovery and operational/security documentation.
+- Phase 6 release engineering: in progress through Hardening 23 Pages recovery and operational/security documentation.
+- Next gate: Hardening 24 live governance controls and tagged release rehearsal.
 
 Source review: [full-technical-review.md](full-technical-review.md)
 
@@ -63,7 +63,7 @@ This plan supersedes the 2026-06-29 public-readiness plan as the current operati
 - Search import parsers now preserve RIS comma-form authors, multiline quoted CSV records, and nested/multiline BibTeX fields.
 - Screening now resolves Protocol and Deduplication authority, and Full Text verifies its complete input/acquisition/attempt/artifact chain.
 - ResearchWorkspace imports and analysis now use staged atomic promotion, locking/CAS, revision-bound generation manifests, digest verification, and safe path resolution.
-- Delivery posture is not release-managed: branch protection, Pages, and security contact remain incomplete.
+- Delivery posture is not release-managed: live branch protection, private vulnerability reporting, protected release environment, and tagged rehearsal remain incomplete.
 
 ## Rules For Follow-Up Work
 

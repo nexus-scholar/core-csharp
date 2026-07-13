@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Provenance Module - Nexus Scholar Core</title>
+  <link rel="stylesheet" href="../../../assets/css/site.css">
+</head>
+<body>
+  <div class="release-status" role="status">Early alpha. Not production-ready. No package publication or PHP compatibility claim.</div>
+  <header class="site-header">
+    <nav class="nav" aria-label="Primary navigation">
+      <a class="brand" href="../../../"><span class="brand-mark">NS</span><span>Nexus Scholar Core</span></a>
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-links">Menu</button>
+      <div class="nav-links" id="nav-links">
+        <a href="../../../developers/" aria-current="page">Developers</a>
+        <a href="../../../tutorials/">Tutorials</a>
+        <a href="../../../blog/">Blog</a>
+        <a href="../../../about/">About</a>
+        <a href="https://github.com/nexus-scholar/core-csharp">GitHub</a>
+      </div>
+    </nav>
+  </header>
+  <main class="page doc-page">
+    <p class="eyebrow">Module documentation</p>
+    <h1>Provenance</h1>
+    <p class="lede">Append-only event records that preserve who acted, what happened, what inputs and outputs were involved, and which protocol or workflow context framed the event.</p>
+    <div class="doc-shell">
+      <div class="doc-main">
+        <section class="content-section">
+          <h2>Scope and ownership</h2>
+          <p>Provenance is the local ledger surface for reconstructable scientific events. It records immutable events, not mutable current state, and it does so without claiming execution authority, persistence policy, or host behavior. That is an important distinction: the module is concerned with preserving evidence of activity, not with deciding whether the activity was scientifically legitimate in the first place.</p>
+          <p class="section-intro">A recorded event can carry actor, activity, subject, timestamp, ordered inputs and outputs, and optional protocol or workflow binding. Taken together, those fields make the module the repository’s main answer to “what happened and what did it touch?” while still keeping broader workflow engines or application storage out of scope.</p>
+        </section>
+
+        <section class="content-section">
+          <h2>Gate and ADR status</h2>
+          <p><a href="https://github.com/nexus-scholar/core-csharp/blob/main/docs/adr/0008-provenance-ledger.md">ADR 0008</a> is the governing contract, and the accepted local implementation scope is recorded in <a href="https://github.com/nexus-scholar/core-csharp/blob/main/docs/gates/GATE-05.md">GATE-05</a> with supporting evidence in <a href="https://github.com/nexus-scholar/core-csharp/blob/main/docs/gates/GATE-05-EVIDENCE.md">GATE-05-EVIDENCE</a>. The current contract is intentionally local: it defines event records and append-only in-memory ordering, not broader enterprise logging or distributed audit infrastructure.</p>
+          <p class="section-intro">The key fixed points are the <code>nexus.provenance-event</code> schema identity, the <code>provenance-event</code> digest scope, and the stable rejection categories for duplicate IDs, missing actor or required IO, and non-canonical projection kinds. The module also keeps the important governance boundary that plugin, automation, import, or system actors may record provenance but do not become scientific approval authority by doing so.</p>
+        </section>
+
+        <section class="content-section">
+          <h2>Diagrams</h2>
+          <p>Provenance is conceptually simple once you see its two main relationships: how the event record is assembled, and how activity gets appended into the local ledger.</p>
+          <div class="diagram-grid">
+            <article class="diagram-card">
+              <h3>Event structure</h3>
+              <p>The factory assembles event records from actor, activity, entity references, and optional protocol or workflow bindings.</p>
+              <svg viewBox="0 0 520 250" role="img" aria-label="Provenance event structure">
+                <defs>
+                  <marker id="arrow-prov-a" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+                    <path d="M0,0 L8,4 L0,8 z" fill="#0b4f4a"></path>
+                  </marker>
+                </defs>
+                <rect x="190" y="96" width="140" height="60" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="260" y="121" text-anchor="middle">ResearchEvent</text>
+                <text x="260" y="139" text-anchor="middle" class="diagram-muted">digest-bearing record</text>
+                <rect x="26" y="24" width="128" height="56" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="90" y="49" text-anchor="middle">ProvenanceAgent</text>
+                <text x="90" y="67" text-anchor="middle" class="diagram-muted">human or automation</text>
+                <rect x="366" y="24" width="128" height="56" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="430" y="49" text-anchor="middle">ProvenanceActivity</text>
+                <text x="430" y="67" text-anchor="middle" class="diagram-muted">required IO rules</text>
+                <rect x="26" y="176" width="128" height="56" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="90" y="201" text-anchor="middle">EntityRef</text>
+                <text x="90" y="219" text-anchor="middle" class="diagram-muted">subject and IO</text>
+                <rect x="366" y="176" width="128" height="56" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="430" y="201" text-anchor="middle">Protocol or workflow</text>
+                <text x="430" y="219" text-anchor="middle" class="diagram-muted">optional binding</text>
+                <line x1="154" y1="78" x2="208" y2="108" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-prov-a)"></line>
+                <line x1="366" y1="78" x2="312" y2="108" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-prov-a)"></line>
+                <line x1="154" y1="190" x2="208" y2="144" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-prov-a)"></line>
+                <line x1="366" y1="190" x2="312" y2="144" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-prov-a)"></line>
+              </svg>
+            </article>
+            <article class="diagram-card">
+              <h3>Ledger use case</h3>
+              <p>An actor performs work, the factory validates the record, and the store appends the immutable event for later replay or bundle reference.</p>
+              <svg viewBox="0 0 520 220" role="img" aria-label="Provenance ledger use case">
+                <defs>
+                  <marker id="arrow-prov-b" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+                    <path d="M0,0 L8,4 L0,8 z" fill="#0b4f4a"></path>
+                  </marker>
+                </defs>
+                <circle cx="44" cy="88" r="18" fill="#f4f1ea" stroke="#b7791f"></circle>
+                <line x1="44" y1="106" x2="44" y2="142" stroke="#b7791f" stroke-width="2"></line>
+                <line x1="22" y1="120" x2="66" y2="120" stroke="#b7791f" stroke-width="2"></line>
+                <line x1="44" y1="142" x2="24" y2="172" stroke="#b7791f" stroke-width="2"></line>
+                <line x1="44" y1="142" x2="64" y2="172" stroke="#b7791f" stroke-width="2"></line>
+                <text x="44" y="198" text-anchor="middle">actor</text>
+                <rect x="98" y="58" width="118" height="62" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="157" y="84" text-anchor="middle">activity with IO</text>
+                <text x="157" y="102" text-anchor="middle" class="diagram-muted">candidate event</text>
+                <rect x="246" y="58" width="118" height="62" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="305" y="84" text-anchor="middle">ResearchEventFactory</text>
+                <text x="305" y="102" text-anchor="middle" class="diagram-muted">validate and digest</text>
+                <rect x="394" y="58" width="106" height="62" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="447" y="84" text-anchor="middle">append store</text>
+                <text x="447" y="102" text-anchor="middle" class="diagram-muted">immutable replay</text>
+                <line x1="62" y1="88" x2="98" y2="88" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-prov-b)"></line>
+                <line x1="216" y1="88" x2="246" y2="88" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-prov-b)"></line>
+                <line x1="364" y1="88" x2="394" y2="88" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-prov-b)"></line>
+              </svg>
+            </article>
+          </div>
+        </section>
+
+        <section class="content-section">
+          <h2>Code surface and behavior</h2>
+          <p>The main implementation files are <a href="https://github.com/nexus-scholar/core-csharp/blob/main/src/NexusScholar.Provenance/ProvenanceEvent.cs">ProvenanceEvent.cs</a>, <a href="https://github.com/nexus-scholar/core-csharp/blob/main/src/NexusScholar.Provenance/ResearchEventFactory.cs">ResearchEventFactory.cs</a>, and <a href="https://github.com/nexus-scholar/core-csharp/blob/main/src/NexusScholar.Provenance/ProvenanceStore.cs">ProvenanceStore.cs</a>. The code is compact and readable: a factory validates required actor and IO constraints, an event type carries the digest-bearing record, and the in-memory store enforces append-only ordering with duplicate rejection.</p>
+          <p class="section-intro">The most important behavior detail is that subject, input, and output references are not allowed to degrade into projection-like identities. Cache rows, wiki pages, local paths, and similar convenience representations are rejected as canonical provenance entities. This is strict, but it is consistent with the project’s broader rule that convenient application state is not the same thing as scientific record.</p>
+        </section>
+
+        <section class="content-section">
+          <h2>Verification and current limits</h2>
+          <p>Verification is split cleanly between direct behavior and fixture replay. <a href="https://github.com/nexus-scholar/core-csharp/blob/main/tests/NexusScholar.Core.Tests/ProvenanceTests.cs">ProvenanceTests.cs</a> covers the native rules, while <a href="https://github.com/nexus-scholar/core-csharp/blob/main/tests/NexusScholar.Conformance.Tests/ProvenanceFixtureTests.cs">ProvenanceFixtureTests.cs</a> replays the contract fixtures under <a href="https://github.com/nexus-scholar/core-csharp/blob/main/fixtures/conformance/provenance/">fixtures/conformance/provenance</a>. Architecture tests keep the project inward-facing and free from inappropriate outward dependencies.</p>
+          <p class="section-intro">The limits are explicit. There is no persistence schema, no compaction or retention strategy, no envelope chain for tamper evidence, and no CLI, UI, or API import/export surface yet. The store is intentionally minimal. That is acceptable for the current gate, but it also means readers should not mistake this module for a complete audit subsystem beyond the accepted local scope.</p>
+        </section>
+      </div>
+      <aside class="doc-aside">
+        <section class="doc-card">
+          <h2>At a glance</h2>
+          <ul class="link-list">
+            <li>Authority scope: `GATE-05`</li>
+            <li>Primary ADR: `ADR 0008`</li>
+            <li>Role: append-only event ledger</li>
+            <li>Next module: <a href="../extensibility/">Extensibility</a></li>
+          </ul>
+        </section>
+        <section class="doc-card">
+          <h2>Closest connections</h2>
+          <ul class="link-list">
+            <li><a href="https://github.com/nexus-scholar/core-csharp/tree/main/src/NexusScholar.Protocol/">Protocol</a></li>
+            <li><a href="https://github.com/nexus-scholar/core-csharp/tree/main/src/NexusScholar.Workflow/">Workflow</a></li>
+            <li><a href="https://github.com/nexus-scholar/core-csharp/tree/main/src/NexusScholar.Bundles/">Bundles</a></li>
+            <li><a href="https://github.com/nexus-scholar/core-csharp/tree/main/src/NexusScholar.Artifacts/">Artifacts</a></li>
+          </ul>
+        </section>
+      </aside>
+    </div>
+  </main>
+  <footer class="site-footer"><p>Provenance module documentation.</p></footer>
+  <script src="../../../assets/js/site.js"></script>
+</body>
+</html>

@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Extensibility Module - Nexus Scholar Core</title>
+  <link rel="stylesheet" href="../../../assets/css/site.css">
+</head>
+<body>
+  <div class="release-status" role="status">Early alpha. Not production-ready. No package publication or PHP compatibility claim.</div>
+  <header class="site-header">
+    <nav class="nav" aria-label="Primary navigation">
+      <a class="brand" href="../../../"><span class="brand-mark">NS</span><span>Nexus Scholar Core</span></a>
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-links">Menu</button>
+      <div class="nav-links" id="nav-links">
+        <a href="../../../developers/" aria-current="page">Developers</a>
+        <a href="../../../tutorials/">Tutorials</a>
+        <a href="../../../blog/">Blog</a>
+        <a href="../../../about/">About</a>
+        <a href="https://github.com/nexus-scholar/core-csharp">GitHub</a>
+      </div>
+    </nav>
+  </header>
+  <main class="page doc-page">
+    <p class="eyebrow">Module documentation</p>
+    <h1>Extensibility</h1>
+    <p class="lede">A narrow contract for plugin identity and capability requests, kept deliberately separate from runtime execution, secrets, and host trust assumptions.</p>
+    <div class="doc-shell">
+      <div class="doc-main">
+        <section class="content-section">
+          <h2>Scope and ownership</h2>
+          <p>Extensibility is intentionally small. It defines what an extension manifest looks like and how requested capabilities are represented, but it does not attempt to be a plugin runtime. That distinction is central to the module’s design quality: the current code is honest about what it knows and equally honest about what it does not yet implement.</p>
+          <p class="section-intro">The working contract is basically three pieces: an <code>ExtensionManifest</code> with ID, version, entry point, and requested capabilities; an <code>ExtensionCapability</code> enum that names the current capability vocabulary; and a <code>CapabilitySelection</code> record that represents a narrowed grant snapshot. Together they establish a typed capability boundary without pretending to solve sandboxing or process isolation.</p>
+        </section>
+
+        <section class="content-section">
+          <h2>Status and evidence</h2>
+          <p>This module is still planning-heavy. There is no dedicated accepted implementation gate for Extensibility yet. The relevant state lives in <a href="https://github.com/nexus-scholar/core-csharp/blob/main/docs/gates/GATE-00.md">GATE-00</a>, <a href="https://github.com/nexus-scholar/core-csharp/blob/main/docs/port/PORT-MATRIX.csv">PORT-MATRIX</a>, and <a href="https://github.com/nexus-scholar/core-csharp/blob/main/docs/port/GOLDEN-FIXTURE-PLAN.md">GOLDEN-FIXTURE-PLAN</a>, where the module is still tracked as blocked for a future gate.</p>
+          <p class="section-intro">The main blocker is not code volume but authority drift. <a href="https://github.com/nexus-scholar/core-csharp/blob/main/docs/port/OPEN-CONFLICTS.md">CF-005</a> and <a href="https://github.com/nexus-scholar/core-csharp/blob/main/docs/discovery/BLUEPRINT-AUDIT.md">BLUEPRINT-AUDIT</a> both note that the blueprint plugin contract expects richer execution and data-handling semantics than the local <code>PluginContracts</code> sketch currently models. That means the existing C# types are useful local scaffolding, but not yet an accepted conformance surface.</p>
+        </section>
+
+        <section class="content-section">
+          <h2>Diagrams</h2>
+          <p>Extensibility is easier to understand when the diagrams make one thing explicit: the current code models request and selection, not plugin execution.</p>
+          <div class="diagram-grid">
+            <article class="diagram-card">
+              <h3>Current contract surface</h3>
+              <p>The existing types define manifest metadata, a capability enum, and a narrowed selection record. No runtime host sits inside this module.</p>
+              <svg viewBox="0 0 520 230" role="img" aria-label="Extensibility contract surface">
+                <defs>
+                  <marker id="arrow-ext-a" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+                    <path d="M0,0 L8,4 L0,8 z" fill="#0b4f4a"></path>
+                  </marker>
+                </defs>
+                <rect x="28" y="86" width="146" height="58" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="101" y="111" text-anchor="middle">ExtensionManifest</text>
+                <text x="101" y="129" text-anchor="middle" class="diagram-muted">id, version, entry point</text>
+                <rect x="208" y="24" width="146" height="58" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="281" y="49" text-anchor="middle">ExtensionCapability</text>
+                <text x="281" y="67" text-anchor="middle" class="diagram-muted">typed capability set</text>
+                <rect x="208" y="148" width="146" height="58" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="281" y="173" text-anchor="middle">CapabilitySelection</text>
+                <text x="281" y="191" text-anchor="middle" class="diagram-muted">approved subset</text>
+                <rect x="388" y="86" width="104" height="58" rx="8" fill="#f4f1ea" stroke="#b7791f"></rect>
+                <text x="440" y="111" text-anchor="middle">runtime host</text>
+                <text x="440" y="129" text-anchor="middle" class="diagram-muted">not here</text>
+                <line x1="174" y1="102" x2="208" y2="62" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-ext-a)"></line>
+                <line x1="174" y1="128" x2="208" y2="172" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-ext-a)"></line>
+                <line x1="354" y1="177" x2="388" y2="120" stroke="#0b4f4a" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#arrow-ext-a)"></line>
+              </svg>
+            </article>
+            <article class="diagram-card">
+              <h3>Planned use case boundary</h3>
+              <p>The intended flow is request, narrow, and then hand off to an external host. The module intentionally stops before execution.</p>
+              <svg viewBox="0 0 520 220" role="img" aria-label="Extensibility use case boundary">
+                <defs>
+                  <marker id="arrow-ext-b" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+                    <path d="M0,0 L8,4 L0,8 z" fill="#0b4f4a"></path>
+                  </marker>
+                </defs>
+                <rect x="20" y="76" width="108" height="58" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="74" y="101" text-anchor="middle">plugin requests</text>
+                <text x="74" y="119" text-anchor="middle" class="diagram-muted">manifest caps</text>
+                <rect x="160" y="76" width="108" height="58" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="214" y="101" text-anchor="middle">narrow grant</text>
+                <text x="214" y="119" text-anchor="middle" class="diagram-muted">CapabilitySelection</text>
+                <rect x="300" y="76" width="108" height="58" rx="8" fill="#f4f1ea" stroke="#b7791f"></rect>
+                <text x="354" y="101" text-anchor="middle">external host</text>
+                <text x="354" y="119" text-anchor="middle" class="diagram-muted">future gate</text>
+                <rect x="440" y="76" width="62" height="58" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="471" y="101" text-anchor="middle">output</text>
+                <text x="471" y="119" text-anchor="middle" class="diagram-muted">staged</text>
+                <line x1="128" y1="105" x2="160" y2="105" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-ext-b)"></line>
+                <line x1="268" y1="105" x2="300" y2="105" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-ext-b)"></line>
+                <line x1="408" y1="105" x2="440" y2="105" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-ext-b)"></line>
+              </svg>
+            </article>
+          </div>
+        </section>
+
+        <section class="content-section">
+          <h2>Code surface and integration</h2>
+          <p>The implementation is limited to <a href="https://github.com/nexus-scholar/core-csharp/blob/main/src/NexusScholar.Extensibility/ExtensionManifest.cs">ExtensionManifest.cs</a>, <a href="https://github.com/nexus-scholar/core-csharp/blob/main/src/NexusScholar.Extensibility/PluginContracts.cs">PluginContracts.cs</a>, <a href="https://github.com/nexus-scholar/core-csharp/blob/main/src/NexusScholar.Extensibility/CapabilitySelection.cs">CapabilitySelection.cs</a>, and the module-local guidance in <a href="https://github.com/nexus-scholar/core-csharp/blob/main/src/NexusScholar.Extensibility/AGENTS.md">AGENTS.md</a>. The manifest factory validates non-blank inputs and collapses duplicate capability requests via a set, which is fine for local identity shaping.</p>
+          <p class="section-intro">The actual integration point today is indirect. Workflow templates can declare capability requirements and optional plugin capability labels, and the workflow compiler validates that capability references are known. But extension manifests are not consulted during compilation, no runtime resolver grants capabilities, and the CLI project reference is only for build alignment rather than actual extension execution.</p>
+        </section>
+
+        <section class="content-section">
+          <h2>Current gaps</h2>
+          <p>The largest gap is that the module is contract-only. There is no plugin host, no data-handling policy object, no secrets policy, no process boundary, and no staged output pipeline beyond the caution recorded in the local AGENTS file. The repo is therefore right to avoid making stronger claims than the implementation deserves.</p>
+          <p class="section-intro">Coverage is also thin compared with the accepted modules. There are architecture tests that include the assembly in dependency checks, but there are no direct unit tests or conformance fixtures for extension manifests, capability grants, or privilege reduction. The planned fixtures <code>plugin-manifest-minimal.json</code> and <code>plugin-permission-grant.json</code> still do not exist, which is a real documentation point, not just a future nicety.</p>
+        </section>
+      </div>
+      <aside class="doc-aside">
+        <section class="doc-card">
+          <h2>At a glance</h2>
+          <ul class="link-list">
+            <li>Status: planning and blocked</li>
+            <li>Primary conflicts: `CF-005`, blueprint drift</li>
+            <li>Role: extension identity and capability requests</li>
+            <li>Next module: AI still needs a real page</li>
+          </ul>
+        </section>
+        <section class="doc-card">
+          <h2>Important non-claims</h2>
+          <ul class="link-list">
+            <li>No plugin runtime</li>
+            <li>No credential or secret transport</li>
+            <li>No security sandbox claim</li>
+            <li>No conformance fixtures yet</li>
+          </ul>
+        </section>
+      </aside>
+    </div>
+  </main>
+  <footer class="site-footer"><p>Extensibility module documentation with planning and implementation-surface details.</p></footer>
+  <script src="../../../assets/js/site.js"></script>
+</body>
+</html>

@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Strict Inside, Simple Outside</title>
+  <link rel="stylesheet" href="../../assets/css/site.css">
+</head>
+<body>
+  <div class="release-status" role="status">Early alpha. Not production-ready. No package publication or PHP compatibility claim.</div>
+  <header class="site-header">
+    <nav class="nav" aria-label="Primary navigation">
+      <a class="brand" href="../../"><span class="brand-mark">NS</span><span>Nexus Scholar Core</span></a>
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-links">Menu</button>
+      <div class="nav-links" id="nav-links">
+        <a href="../../developers/">Developers</a>
+        <a href="../../tutorials/">Tutorials</a>
+        <a href="../../blog/" aria-current="page">Blog</a>
+        <a href="../../about/">About</a>
+        <a href="https://github.com/nexus-scholar/core-csharp">GitHub</a>
+      </div>
+    </nav>
+  </header>
+  <main class="article">
+    <p class="eyebrow">June 28, 2026</p>
+    <h1>Strict Inside, Simple Outside</h1>
+    <p class="lede">The product direction is a structured research cockpit: strict Core records underneath, typed research blocks on the surface, and AI assistance that never becomes hidden authority.</p>
+    <p class="article-meta">UI and architecture narrative based on the current UiContracts and Avalonia Blocks foundation.</p>
+
+    <p>The UI question for Nexus is not “how do we add chat?” It is “how do we make strict research records understandable without weakening them?”</p>
+    <p>That led to the product idea of a research cockpit. A cockpit is not a loose chat transcript. It is a structured workspace where evidence, warnings, proposed actions, human decisions, provenance, and export steps are visible as blocks. AI can explain and draft inside that workspace, but final scientific actions remain explicit.</p>
+
+    <h2>The architecture</h2>
+    <p>The current UI foundation has three clean layers. Core owns scientific truth and has no UI dependency. <code>NexusScholar.UiContracts</code> defines a platform-neutral language for workspace plans and research blocks. <code>NexusScholar.Avalonia.Blocks</code> renders those contracts as Avalonia controls without referencing Core domain projects.</p>
+    <p>That separation is important. It means a desktop renderer, CLI renderer, web renderer, or mobile renderer can consume the same typed workspace plan later. It also means the UI cannot silently mutate scientific records just because a button exists.</p>
+
+    <h2>Typed blocks instead of magic screens</h2>
+    <p>The contract layer defines <code>WorkspacePlan</code>, <code>ResearchBlockDescriptor</code>, <code>EvidenceRef</code>, <code>ValidationRef</code>, and <code>BlockActionDescriptor</code>. These types give the UI a shared vocabulary for import warnings, duplicate review candidates, bundle verification summaries, AI proposals, validation findings, and human gates.</p>
+    <p>This is better than making each renderer invent its own meaning. A warning should point to evidence. A block action should declare whether human confirmation is required. A sample plan should stay non-authoritative. A payload should be valid JSON, not arbitrary UI-shaped state.</p>
+
+    <div class="article-callout">
+      <p><strong>Design rule:</strong> the UI should explain Core strictness, not bypass it.</p>
+    </div>
+
+    <h2>Why it matters for communities</h2>
+    <p>Researchers need interfaces that do not punish them for doing careful work. Students need workflows that show why a warning matters. Methodologists need evidence and decision boundaries. Developers need contracts they can test. AI researchers need a place where model output can be useful without pretending to be final authority.</p>
+    <p>Typed research blocks create a shared surface for all of those groups. They make the project discussable. A contributor can propose a new block type, a reviewer can inspect whether an action is safe, and a designer can improve the visual flow without changing Core behavior.</p>
+
+    <h2>The first visible workflow</h2>
+    <p>The first UI wedge should be narrow: import warning, dedup review, and bundle verification blocks. That already tells a clear story. Nexus preserves evidence, shows warnings, refuses silent fuzzy merges, requires human decisions, and prepares audit bundles.</p>
+    <p>That is enough to make the product identity visible without pretending the full desktop application is already complete.</p>
+  </main>
+  <footer class="site-footer"><p>Nexus Scholar Core blog.</p></footer>
+  <script src="../../assets/js/site.js"></script>
+</body>
+</html>

@@ -1,0 +1,308 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Architecture - Nexus Scholar Core</title>
+  <link rel="stylesheet" href="../../assets/css/site.css">
+</head>
+<body>
+  <div class="release-status" role="status">Early alpha. Not production-ready. No package publication or PHP compatibility claim.</div>
+  <header class="site-header">
+    <nav class="nav" aria-label="Primary navigation">
+      <a class="brand" href="../../"><span class="brand-mark">NS</span><span>Nexus Scholar Core</span></a>
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-links">Menu</button>
+      <div class="nav-links" id="nav-links">
+        <a href="../../developers/" aria-current="page">Developers</a>
+        <a href="../../tutorials/">Tutorials</a>
+        <a href="../../blog/">Blog</a>
+        <a href="../../about/">About</a>
+        <a href="https://github.com/nexus-scholar/core-csharp">GitHub</a>
+      </div>
+    </nav>
+  </header>
+  <main class="page doc-page">
+    <p class="eyebrow">Architecture</p>
+    <h1>Domain inward, applications outward</h1>
+    <p class="lede">Nexus Scholar Core is shaped as a strict research workflow kernel. Apps, renderers, AI assistants, providers, and storage can make the system useful, but they must not become scientific authority by accident.</p>
+
+    <div class="doc-shell">
+      <div class="doc-main">
+        <section class="content-section">
+          <h2>Architecture in one sentence</h2>
+          <p>Core owns reconstructable scientific records; applications own experience, orchestration, persistence, and integrations. The dependency direction points inward, and the authority direction is explicit: suggestions and projections can support decisions, but they do not replace approved protocol content, evidence records, human decisions, or provenance.</p>
+          <p class="section-note">The working product rule is: strict inside, simple outside, AI-assisted everywhere, human-authorized science.</p>
+        </section>
+
+        <section class="content-section">
+          <h2>Layer map</h2>
+          <p>The repository is organized around a domain kernel with carefully separated supporting layers. The Core modules should not depend on UI frameworks, ASP.NET Core, EF Core, provider SDKs, storage SDKs, or concrete model clients. Those belong outside the domain boundary.</p>
+          <div class="diagram-grid">
+            <article class="diagram-card">
+              <h3>Dependency direction</h3>
+              <p>Infrastructure and product surfaces depend inward. Core does not reach outward to hosts, providers, renderers, or AI SDKs.</p>
+              <svg viewBox="0 0 560 300" role="img" aria-label="Nexus dependency direction diagram">
+                <defs>
+                  <marker id="arrow-arch-layer" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+                    <path d="M0,0 L8,4 L0,8 z" fill="#0b4f4a"></path>
+                  </marker>
+                </defs>
+                <rect x="168" y="110" width="224" height="72" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="280" y="140" text-anchor="middle">Nexus Scholar Core</text>
+                <text x="280" y="160" text-anchor="middle" class="diagram-muted">scientific records and rules</text>
+
+                <rect x="26" y="24" width="160" height="54" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="106" y="48" text-anchor="middle">Applications</text>
+                <text x="106" y="66" text-anchor="middle" class="diagram-muted">CLI, desktop, web</text>
+
+                <rect x="374" y="24" width="160" height="54" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="454" y="48" text-anchor="middle">Infrastructure</text>
+                <text x="454" y="66" text-anchor="middle" class="diagram-muted">storage, providers, jobs</text>
+
+                <rect x="26" y="220" width="160" height="54" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="106" y="244" text-anchor="middle">Renderers</text>
+                <text x="106" y="262" text-anchor="middle" class="diagram-muted">Avalonia, web, CLI</text>
+
+                <rect x="374" y="220" width="160" height="54" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="454" y="244" text-anchor="middle">AI / plugins</text>
+                <text x="454" y="262" text-anchor="middle" class="diagram-muted">proposals, capabilities</text>
+
+                <line x1="186" y1="78" x2="230" y2="110" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-arch-layer)"></line>
+                <line x1="374" y1="78" x2="330" y2="110" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-arch-layer)"></line>
+                <line x1="186" y1="220" x2="230" y2="182" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-arch-layer)"></line>
+                <line x1="374" y1="220" x2="330" y2="182" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-arch-layer)"></line>
+              </svg>
+            </article>
+            <article class="diagram-card">
+              <h3>UI portability</h3>
+              <p>Core remains UI-free. UiContracts gives renderers a shared block language without giving UI code authority over scientific records.</p>
+              <svg viewBox="0 0 560 300" role="img" aria-label="Nexus UI portability diagram">
+                <defs>
+                  <marker id="arrow-arch-ui" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+                    <path d="M0,0 L8,4 L0,8 z" fill="#0b4f4a"></path>
+                  </marker>
+                </defs>
+                <rect x="190" y="22" width="180" height="54" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="280" y="46" text-anchor="middle">Core records</text>
+                <text x="280" y="64" text-anchor="middle" class="diagram-muted">truth source, no UI</text>
+
+                <rect x="174" y="122" width="212" height="58" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="280" y="147" text-anchor="middle">UiContracts</text>
+                <text x="280" y="165" text-anchor="middle" class="diagram-muted">WorkspacePlan and research blocks</text>
+
+                <rect x="22" y="228" width="116" height="46" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="80" y="256" text-anchor="middle">Avalonia</text>
+                <rect x="158" y="228" width="116" height="46" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="216" y="256" text-anchor="middle">CLI</text>
+                <rect x="294" y="228" width="116" height="46" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="352" y="256" text-anchor="middle">Web</text>
+                <rect x="430" y="228" width="106" height="46" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="483" y="256" text-anchor="middle">Mobile</text>
+
+                <line x1="280" y1="76" x2="280" y2="122" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-arch-ui)"></line>
+                <line x1="244" y1="180" x2="94" y2="228" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-arch-ui)"></line>
+                <line x1="264" y1="180" x2="222" y2="228" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-arch-ui)"></line>
+                <line x1="296" y1="180" x2="346" y2="228" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-arch-ui)"></line>
+                <line x1="316" y1="180" x2="474" y2="228" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-arch-ui)"></line>
+              </svg>
+            </article>
+          </div>
+        </section>
+
+        <section class="content-section">
+          <h2>Authority pipeline</h2>
+          <p>The architecture is easiest to understand as a pipeline of records. Each stage has a bounded job and a clear non-claim. Search observes. Deduplication structures duplicate evidence. Screening records human decisions. Full Text binds artifact bytes. Bundles export verifiable packages. Provenance ties the history together.</p>
+          <div class="diagram-grid">
+            <article class="diagram-card">
+              <h3>Research workflow records</h3>
+              <p>The modules are arranged so later stages cite earlier evidence instead of overwriting it.</p>
+              <svg viewBox="0 0 640 250" role="img" aria-label="Nexus research workflow pipeline">
+                <defs>
+                  <marker id="arrow-arch-pipe" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+                    <path d="M0,0 L8,4 L0,8 z" fill="#0b4f4a"></path>
+                  </marker>
+                </defs>
+                <rect x="16" y="88" width="84" height="58" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="58" y="112" text-anchor="middle">Protocol</text>
+                <text x="58" y="130" text-anchor="middle" class="diagram-muted">approved plan</text>
+                <rect x="122" y="88" width="84" height="58" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="164" y="112" text-anchor="middle">Workflow</text>
+                <text x="164" y="130" text-anchor="middle" class="diagram-muted">compiled path</text>
+                <rect x="228" y="88" width="84" height="58" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="270" y="112" text-anchor="middle">Search</text>
+                <text x="270" y="130" text-anchor="middle" class="diagram-muted">raw trace</text>
+                <rect x="334" y="88" width="84" height="58" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="376" y="112" text-anchor="middle">Dedup</text>
+                <text x="376" y="130" text-anchor="middle" class="diagram-muted">evidence graph</text>
+                <rect x="440" y="88" width="84" height="58" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="482" y="112" text-anchor="middle">Screening</text>
+                <text x="482" y="130" text-anchor="middle" class="diagram-muted">human verdicts</text>
+                <rect x="546" y="88" width="78" height="58" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="585" y="112" text-anchor="middle">Full Text</text>
+                <text x="585" y="130" text-anchor="middle" class="diagram-muted">artifact bytes</text>
+                <rect x="228" y="182" width="184" height="46" rx="8" fill="#f4f1ea" stroke="#b7791f"></rect>
+                <text x="320" y="210" text-anchor="middle">Provenance ledger</text>
+                <rect x="440" y="182" width="84" height="46" rx="8" fill="#f4f1ea" stroke="#b7791f"></rect>
+                <text x="482" y="210" text-anchor="middle">Bundle</text>
+                <line x1="100" y1="117" x2="122" y2="117" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-arch-pipe)"></line>
+                <line x1="206" y1="117" x2="228" y2="117" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-arch-pipe)"></line>
+                <line x1="312" y1="117" x2="334" y2="117" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-arch-pipe)"></line>
+                <line x1="418" y1="117" x2="440" y2="117" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-arch-pipe)"></line>
+                <line x1="524" y1="117" x2="546" y2="117" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-arch-pipe)"></line>
+                <line x1="320" y1="146" x2="320" y2="182" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-arch-pipe)"></line>
+                <line x1="482" y1="146" x2="482" y2="182" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-arch-pipe)"></line>
+              </svg>
+            </article>
+            <article class="diagram-card">
+              <h3>What must not collapse</h3>
+              <p>The architecture exists to preserve distinctions that normal app workflows often blur.</p>
+              <svg viewBox="0 0 640 250" role="img" aria-label="Nexus authority boundary diagram">
+                <rect x="28" y="38" width="188" height="58" rx="8" fill="#fff" stroke="#9f3a38"></rect>
+                <text x="122" y="62" text-anchor="middle">AI suggestion</text>
+                <text x="122" y="80" text-anchor="middle" class="diagram-muted">not a decision</text>
+                <rect x="424" y="38" width="188" height="58" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="518" y="62" text-anchor="middle">Human decision</text>
+                <text x="518" y="80" text-anchor="middle" class="diagram-muted">actor, rationale, criteria</text>
+
+                <rect x="28" y="112" width="188" height="58" rx="8" fill="#fff" stroke="#9f3a38"></rect>
+                <text x="122" y="136" text-anchor="middle">App projection</text>
+                <text x="122" y="154" text-anchor="middle" class="diagram-muted">not Core authority</text>
+                <rect x="424" y="112" width="188" height="58" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="518" y="136" text-anchor="middle">Core record</text>
+                <text x="518" y="154" text-anchor="middle" class="diagram-muted">schema and digest bound</text>
+
+                <rect x="28" y="186" width="188" height="46" rx="8" fill="#fff" stroke="#9f3a38"></rect>
+                <text x="122" y="214" text-anchor="middle">Local path</text>
+                <rect x="424" y="186" width="188" height="46" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="518" y="214" text-anchor="middle">Raw-byte digest</text>
+
+                <text x="320" y="70" text-anchor="middle" class="diagram-muted">must be accepted by</text>
+                <text x="320" y="144" text-anchor="middle" class="diagram-muted">must be transformed into</text>
+                <text x="320" y="214" text-anchor="middle" class="diagram-muted">must cite</text>
+              </svg>
+            </article>
+          </div>
+        </section>
+
+        <section class="content-section">
+          <h2>AI-assisted use cases</h2>
+          <p>AI belongs in the architecture as assistance, not authority. A model can explain warnings, draft rationales, compare candidate records, suggest workflow blocks, or propose a command. A trusted application layer must validate that proposal, show its evidence, and require a human action when the action changes scientific state.</p>
+          <div class="diagram-grid">
+            <article class="diagram-card">
+              <h3>Assisted dedup review</h3>
+              <p>AI can summarize why two records look similar. The merge decision remains a human gate over preserved evidence.</p>
+              <svg viewBox="0 0 560 230" role="img" aria-label="AI assisted dedup review use case">
+                <defs>
+                  <marker id="arrow-arch-ai-a" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+                    <path d="M0,0 L8,4 L0,8 z" fill="#0b4f4a"></path>
+                  </marker>
+                </defs>
+                <rect x="16" y="86" width="110" height="58" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="71" y="110" text-anchor="middle">Dedup result</text>
+                <text x="71" y="128" text-anchor="middle" class="diagram-muted">candidate pair</text>
+                <rect x="156" y="86" width="110" height="58" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="211" y="110" text-anchor="middle">AI explanation</text>
+                <text x="211" y="128" text-anchor="middle" class="diagram-muted">proposal text</text>
+                <rect x="296" y="86" width="110" height="58" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="351" y="110" text-anchor="middle">Block action</text>
+                <text x="351" y="128" text-anchor="middle" class="diagram-muted">accept / reject</text>
+                <rect x="436" y="86" width="108" height="58" rx="8" fill="#f4f1ea" stroke="#b7791f"></rect>
+                <text x="490" y="110" text-anchor="middle">Human merge</text>
+                <text x="490" y="128" text-anchor="middle" class="diagram-muted">or unresolved</text>
+                <line x1="126" y1="115" x2="156" y2="115" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-arch-ai-a)"></line>
+                <line x1="266" y1="115" x2="296" y2="115" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-arch-ai-a)"></line>
+                <line x1="406" y1="115" x2="436" y2="115" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-arch-ai-a)"></line>
+              </svg>
+            </article>
+            <article class="diagram-card">
+              <h3>Assisted screening rationale</h3>
+              <p>AI may draft a rationale from evidence refs. A final screening decision still needs an identified human actor and criteria digest.</p>
+              <svg viewBox="0 0 560 230" role="img" aria-label="AI assisted screening use case">
+                <defs>
+                  <marker id="arrow-arch-ai-b" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+                    <path d="M0,0 L8,4 L0,8 z" fill="#0b4f4a"></path>
+                  </marker>
+                </defs>
+                <rect x="16" y="82" width="110" height="66" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="71" y="108" text-anchor="middle">Candidate set</text>
+                <text x="71" y="126" text-anchor="middle" class="diagram-muted">locked input</text>
+                <rect x="156" y="82" width="110" height="66" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="211" y="108" text-anchor="middle">Criteria</text>
+                <text x="211" y="126" text-anchor="middle" class="diagram-muted">digest-bound</text>
+                <rect x="296" y="82" width="110" height="66" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="351" y="108" text-anchor="middle">AI draft</text>
+                <text x="351" y="126" text-anchor="middle" class="diagram-muted">suggested rationale</text>
+                <rect x="436" y="82" width="108" height="66" rx="8" fill="#f4f1ea" stroke="#b7791f"></rect>
+                <text x="490" y="108" text-anchor="middle">Human verdict</text>
+                <text x="490" y="126" text-anchor="middle" class="diagram-muted">include / exclude</text>
+                <line x1="126" y1="115" x2="156" y2="115" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-arch-ai-b)"></line>
+                <line x1="266" y1="115" x2="296" y2="115" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-arch-ai-b)"></line>
+                <line x1="406" y1="115" x2="436" y2="115" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-arch-ai-b)"></line>
+              </svg>
+            </article>
+          </div>
+        </section>
+
+        <section class="content-section">
+          <h2>Use case catalog</h2>
+          <p>These are the first public architecture use cases the project should make easy to understand. They are written as flows because architecture is only useful if it explains how real research work moves through the system.</p>
+          <h3>Import evidence with warnings</h3>
+          <p>A researcher imports RIS, BibTeX, or Scopus CSV exports. Core records the exact source-file digest, parser metadata, imported records, skipped rows, parser warnings, source-specific identifiers, and no-id candidates. The UI can show a warning block, but it cannot pretend warnings are resolved.</p>
+          <h3>Review duplicate candidates</h3>
+          <p>Deduplication clusters exact stable identifier overlaps automatically, but fuzzy title or no-id matches become review-required candidates. An app can show side-by-side comparison blocks and AI explanations, while the final merge/reject/unresolved action remains human-authorized.</p>
+          <h3>Screen with human authority</h3>
+          <p>Screening consumes a locked candidate set, applies criteria with a canonical digest, and records include, exclude, or needs-review decisions from identified human actors. AI suggestions may be cited, but they are not final decisions.</p>
+          <h3>Attach full-text evidence safely</h3>
+          <p>The Full Text contract starts with no-network, user-supplied or deterministic artifact evidence. The artifact identity is exact accepted bytes plus <code>raw-artifact-bytes</code> digest. Local paths, URLs, app rows, and download routes remain projections unless transformed into accepted Core records.</p>
+          <h3>Export an audit bundle</h3>
+          <p>A review bundle gathers governed records, artifact entries, manifests, and digest bindings for transport or replay. The bundle verifier reports structured findings before anything is trusted or overwritten.</p>
+        </section>
+
+        <section class="content-section">
+          <h2>Architecture rules for contributors</h2>
+          <ul class="check-list">
+            <li>Domain projects do not reference EF Core, ASP.NET Core, UI frameworks, provider SDKs, storage SDKs, or concrete model clients.</li>
+            <li><code>NexusScholar.UiContracts</code> stays renderer-neutral and has no Avalonia, web, mobile, CLI-renderer, provider, or AI SDK dependency.</li>
+            <li><code>NexusScholar.Avalonia.Blocks</code> may render <code>WorkspacePlan</code> data, but it must not depend on Core domain projects.</li>
+            <li>Applications may display projections, but projections do not become Core authority without an accepted contract.</li>
+            <li>AI may propose explanations, rationales, block plans, or commands, but human-authorized decisions remain explicit.</li>
+            <li>Compatibility claims need fixture or comparator evidence; convenient similarity is not compatibility.</li>
+          </ul>
+        </section>
+      </div>
+
+      <aside class="doc-aside">
+        <section class="doc-card">
+          <h2>At a glance</h2>
+          <ul class="link-list">
+            <li>Core owns scientific records.</li>
+            <li>Apps own orchestration and experience.</li>
+            <li>Renderers consume contracts.</li>
+            <li>AI proposes; humans decide.</li>
+          </ul>
+        </section>
+        <section class="doc-card">
+          <h2>Related docs</h2>
+          <ul class="link-list">
+            <li><a href="../modules/">Module documentation</a></li>
+            <li><a href="../modules/uicontracts/">UiContracts module</a></li>
+            <li><a href="../modules/avalonia-blocks/">Avalonia Blocks module</a></li>
+            <li><a href="../contributing/">Contributing guide</a></li>
+          </ul>
+        </section>
+        <section class="doc-card">
+          <h2>Core non-claims</h2>
+          <ul class="link-list">
+            <li>No live provider authority yet.</li>
+            <li>No production database boundary yet.</li>
+            <li>No AI autopilot authority.</li>
+            <li>No PHP compatibility without fixtures.</li>
+          </ul>
+        </section>
+      </aside>
+    </div>
+  </main>
+  <footer class="site-footer"><p>Nexus Scholar Core architecture.</p></footer>
+  <script src="../../assets/js/site.js"></script>
+</body>
+</html>

@@ -1,73 +1,34 @@
 # Branch Board
 
-Status date: 2026-07-11
+Status date: 2026-07-13
 
 ## Current Repository State
 
-- `main`: current after desktop verify/analyze actions and hardening review baseline.
-- Latest known main commit: `7f9e285 feat(ui): add desktop verify analyze actions`.
-- `gh-pages`: current after public CLI workflow walkthrough.
-- Latest known gh-pages commit: `589fc2e docs(site): add research workspace CLI walkthrough`.
-- Open PRs: none expected.
-- Active next branch: none recorded. Next work should be a dependency-ordered hardening branch from `docs/reviews/2026-07-11-hardening-plan/README.md`.
+- `main`: Phase 6 complete through Hardening 22 at merge `8c55bcd`.
+- `gh-pages`: retained as historical static-site source at `9a76975`; new Pages deployments are sourced from `site/` on `main`.
+- Active hardening branch: `cdx/hardening-23-pages-ops`.
+- Active plan: `docs/reviews/2026-07-11-hardening-plan/README.md`.
+- Feature expansion remains frozen.
 
-## Completed Public CLI Workflow
+## Completed Hardening
 
-PR02-PR08 delivered the local researcher-facing CLI loop:
+- Phases 1-5 are complete.
+- Phase 6 has accepted release policy, a 12-package validation topology, 30 locked solution restore graphs, normalized package reproducibility, clean local-source package smoke, SPDX SBOM and release evidence, retained test artifacts, dependency review, CodeQL SARIF, and validation-only artifact attestation.
+- Current main verification baseline is 539 tests on Windows and Linux.
 
-```bash
-nexus init
-nexus status
-nexus import search
-nexus verify
-nexus analyze
-nexus review
-nexus clusters
-nexus clusters exact
-nexus clusters review
-nexus clusters show <id>
-```
+## Remaining Phase 6 Work
 
-A Nexus research project is a local folder. `nexus.project.json` is a local project index, not a database and not canonical scientific authority.
+1. Merge Hardening 23 Pages and operational/security documentation.
+2. Apply and verify `main` protection, private vulnerability reporting, and the protected `release` environment.
+3. Create the matching release-candidate tag and complete the clean hosted release-validation rehearsal.
 
-The CLI verifies local files, analyzes imported Search/Deduplication evidence, and shows records requiring human review. It does not query live providers or execute merge decisions.
+## Product Boundary
 
-## Current Product Boundary
+No live providers, scraping, persistence/API/cloud, PDF/OCR, product UI shell, package publication, signing, executable merge decisions, or PHP compatibility claims are authorized.
 
-The implemented workflow is local and read-only around review/cluster inspection.
-
-It uses researcher-supplied local files and generated local outputs. It does not add:
-
-- live providers;
-- scraping;
-- provider credentials;
-- persistence/database/API/cloud;
-- PDF/OCR;
-- AI/model calls;
-- Core mutation;
-- PHP compatibility claims;
-- executable merge decisions.
-
-APP-01 merge gates remain display-only placeholders. They must not accept, reject, mark unresolved, mutate Core records, write decision state, call services, or execute commands.
-
-## Current Next Move
-
-Feature expansion is frozen. The next move is Phase 0 of the 2026-07-11 hardening plan:
-
-1. open one issue per confirmed blocker;
-2. correct public maturity claims;
-3. protect `main`;
-4. assign each blocker an owner, test case, and dependency order.
-
-Do not start merge decisions, persistence, providers, UI product shell, PDF/OCR, AI/model calls, or AppServices expansion without a later explicit ADR/task.
-
-## Safe Cleanup Candidates
-
-None expected.
-
-## Not Safe To Delete
+## Protected References
 
 - `main`
-- `gh-pages`
+- `gh-pages` historical branch
 - `origin/main`
 - `origin/gh-pages`

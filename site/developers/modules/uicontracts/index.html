@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>UiContracts Module - Nexus Scholar Core</title>
+  <link rel="stylesheet" href="../../../assets/css/site.css">
+</head>
+<body>
+  <div class="release-status" role="status">Early alpha. Not production-ready. No package publication or PHP compatibility claim.</div>
+  <header class="site-header">
+    <nav class="nav" aria-label="Primary navigation">
+      <a class="brand" href="../../../"><span class="brand-mark">NS</span><span>Nexus Scholar Core</span></a>
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-links">Menu</button>
+      <div class="nav-links" id="nav-links">
+        <a href="../../../developers/" aria-current="page">Developers</a>
+        <a href="../../../tutorials/">Tutorials</a>
+        <a href="../../../blog/">Blog</a>
+        <a href="../../../about/">About</a>
+        <a href="https://github.com/nexus-scholar/core-csharp">GitHub</a>
+      </div>
+    </nav>
+  </header>
+  <main class="page doc-page">
+    <p class="eyebrow">Module documentation</p>
+    <h1>UiContracts</h1>
+    <p class="lede">Platform-neutral workspace and research-block contracts for renderers and app services that need a common display language without pulling UI frameworks into Core.</p>
+    <div class="doc-shell">
+      <div class="doc-main">
+        <section class="content-section">
+          <h2>Scope and ownership</h2>
+          <p>UiContracts defines the shared JSON-friendly model for future workspace renderers. The core records are <code>WorkspacePlan</code>, <code>ResearchBlockDescriptor</code>, <code>EvidenceRef</code>, <code>ValidationRef</code>, and <code>BlockActionDescriptor</code>, supported by enums for mode, severity, source kind, and action kind plus a small known-vocabulary surface.</p>
+          <p class="section-intro">This is not a scientific authority module. It does not decide protocol approval, deduplication acceptance, or screening outcomes. It exists so multiple renderers can describe the same work surface without each renderer inventing its own contract.</p>
+        </section>
+        <section class="content-section">
+          <h2>Boundary status</h2>
+          <p>The authoritative source here is the implementation boundary document <a href="https://github.com/nexus-scholar/core-csharp/blob/main/docs/ui/UI-CONTRACTS-v0.md">UI-CONTRACTS-v0</a>, not an ADR. That is appropriate because the work is still renderer-oriented. The module is implemented as a contract library, and the repo already has tests and sample plans that consume it.</p>
+          <p class="section-note">The important architectural guarantee is that <code>NexusScholar.UiContracts</code> has no project references. Core stays UI-free, and UI contracts stay framework-free.</p>
+        </section>
+        <section class="content-section">
+          <h2>Diagrams</h2>
+          <div class="diagram-grid">
+            <article class="diagram-card">
+              <h3>Class map</h3>
+              <p>The workspace contains blocks, and blocks carry evidence, validation, actions, and an optional JSON payload guarded as an object.</p>
+              <svg viewBox="0 0 520 244" role="img" aria-label="UiContracts class map">
+                <defs><marker id="arrow-ui-a" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#0b4f4a"></path></marker></defs>
+                <rect x="186" y="22" width="148" height="56" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="260" y="47" text-anchor="middle">WorkspacePlan</text>
+                <text x="260" y="65" text-anchor="middle" class="diagram-muted">top-level render input</text>
+                <rect x="174" y="108" width="172" height="56" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="260" y="133" text-anchor="middle">ResearchBlockDescriptor</text>
+                <text x="260" y="151" text-anchor="middle" class="diagram-muted">kind, summary, payload</text>
+                <rect x="34" y="186" width="108" height="42" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="88" y="212" text-anchor="middle">EvidenceRef</text>
+                <rect x="160" y="186" width="108" height="42" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="214" y="212" text-anchor="middle">ValidationRef</text>
+                <rect x="286" y="186" width="108" height="42" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="340" y="212" text-anchor="middle">ActionDescriptor</text>
+                <rect x="412" y="186" width="74" height="42" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="449" y="212" text-anchor="middle">Enums</text>
+                <line x1="260" y1="78" x2="260" y2="108" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-ui-a)"></line>
+                <line x1="260" y1="164" x2="88" y2="186" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-ui-a)"></line>
+                <line x1="260" y1="164" x2="214" y2="186" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-ui-a)"></line>
+                <line x1="260" y1="164" x2="340" y2="186" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-ui-a)"></line>
+                <line x1="260" y1="164" x2="449" y2="186" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-ui-a)"></line>
+              </svg>
+            </article>
+            <article class="diagram-card">
+              <h3>Use case flow</h3>
+              <p>A trusted app service can compose a workspace plan once, then render it in desktop, CLI, or web surfaces without changing authority semantics.</p>
+              <svg viewBox="0 0 520 210" role="img" aria-label="UiContracts use case flow">
+                <defs><marker id="arrow-ui-b" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#0b4f4a"></path></marker></defs>
+                <rect x="18" y="72" width="114" height="60" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="75" y="98" text-anchor="middle">app service</text>
+                <text x="75" y="116" text-anchor="middle" class="diagram-muted">compose plan</text>
+                <rect x="164" y="72" width="114" height="60" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="221" y="98" text-anchor="middle">WorkspacePlan</text>
+                <text x="221" y="116" text-anchor="middle" class="diagram-muted">shared contract</text>
+                <rect x="310" y="72" width="84" height="60" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="352" y="98" text-anchor="middle">desktop</text>
+                <text x="352" y="116" text-anchor="middle" class="diagram-muted">renderer</text>
+                <rect x="426" y="72" width="76" height="60" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="464" y="98" text-anchor="middle">CLI / web</text>
+                <text x="464" y="116" text-anchor="middle" class="diagram-muted">later</text>
+                <line x1="132" y1="102" x2="164" y2="102" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-ui-b)"></line>
+                <line x1="278" y1="102" x2="310" y2="102" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-ui-b)"></line>
+                <line x1="394" y1="102" x2="426" y2="102" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-ui-b)"></line>
+              </svg>
+            </article>
+          </div>
+        </section>
+        <section class="content-section">
+          <h2>Code surface and verification</h2>
+          <p>The full contract lives in <a href="https://github.com/nexus-scholar/core-csharp/blob/main/src/NexusScholar.UiContracts/BlockContracts.cs">BlockContracts.cs</a>. The code is intentionally direct: constructors guard blank ids and labels, payload JSON must be a valid object when present, known constants define early interoperable labels, and serializer options are standardized through <code>UiContractJson</code>.</p>
+          <p class="section-intro">The right way to think about this module is that it stabilizes display payloads before renderer code grows. The sample plans under <code>samples/block-plans</code> and the matching tests are integration aids, not scientific fixtures.</p>
+        </section>
+        <section class="content-section">
+          <h2>Related modules and current risks</h2>
+          <p>UiContracts is consumed by Avalonia Blocks today and could be consumed by CLI or Web renderers later. Its main risk is accidental authority inflation: once a block shows a decision or warning, it becomes tempting to treat the block itself as canonical state. That would be a mistake.</p>
+          <p class="section-intro">The current design pushes in the right direction. Evidence refs point outward, actions declare intent, and the contract never claims to be the domain record itself.</p>
+        </section>
+      </div>
+      <aside class="doc-aside">
+        <section class="doc-card">
+          <h2>At a glance</h2>
+          <ul class="link-list">
+            <li>Status: implemented contract library</li>
+            <li>Authority: UI boundary document only</li>
+            <li>Framework references: none</li>
+            <li>Current consumer: <a href="../avalonia-blocks/">Avalonia Blocks</a></li>
+          </ul>
+        </section>
+        <section class="doc-card">
+          <h2>Key records</h2>
+          <ul class="link-list">
+            <li>`WorkspacePlan`</li>
+            <li>`ResearchBlockDescriptor`</li>
+            <li>`EvidenceRef`</li>
+            <li>`BlockActionDescriptor`</li>
+          </ul>
+        </section>
+      </aside>
+    </div>
+  </main>
+  <footer class="site-footer"><p>UiContracts module documentation.</p></footer>
+  <script src="../../../assets/js/site.js"></script>
+</body>
+</html>

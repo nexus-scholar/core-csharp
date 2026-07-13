@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Deduplication Module - Nexus Scholar Core</title>
+  <link rel="stylesheet" href="../../../assets/css/site.css">
+</head>
+<body>
+  <div class="release-status" role="status">Early alpha. Not production-ready. No package publication or PHP compatibility claim.</div>
+  <header class="site-header">
+    <nav class="nav" aria-label="Primary navigation">
+      <a class="brand" href="../../../"><span class="brand-mark">NS</span><span>Nexus Scholar Core</span></a>
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-links">Menu</button>
+      <div class="nav-links" id="nav-links">
+        <a href="../../../developers/" aria-current="page">Developers</a>
+        <a href="../../../tutorials/">Tutorials</a>
+        <a href="../../../blog/">Blog</a>
+        <a href="../../../about/">About</a>
+        <a href="https://github.com/nexus-scholar/core-csharp">GitHub</a>
+      </div>
+    </nav>
+  </header>
+  <main class="page doc-page">
+    <p class="eyebrow">Module documentation</p>
+    <h1>Deduplication</h1>
+    <p class="lede">Evidence-backed duplicate clustering over raw Search and imported-source sightings, with deterministic representatives and an explicit review boundary for fuzzy or no-id cases.</p>
+    <div class="doc-shell">
+      <div class="doc-main">
+        <section class="content-section">
+          <h2>Scope and ownership</h2>
+          <p>Deduplication owns the move from raw Search evidence to reviewable duplicate structure. Its records model candidates, sighting refs, parser notices, evidence edges, clusters, representative projections, unresolved candidates, and review-required pairs. The center of the implemented surface is <code>DeduplicationService.Execute(...)</code>.</p>
+          <p class="section-intro">The module does not invent identity from titles. It consumes Search traces and import traces, preserves those bindings, forms automatic clusters only through accepted exact identifier evidence, and records fuzzy-title and source-specific overlap as review-needed evidence.</p>
+        </section>
+        <section class="content-section">
+          <h2>Gate and ADR status</h2>
+          <p>The local contract is fixed by <a href="https://github.com/nexus-scholar/core-csharp/blob/main/docs/adr/0012-deduplication-evidence-and-cluster-contract.md">ADR 0012</a> and the Gate 9 Dedup evidence pack. This is implemented local C# behavior, but it deliberately stops short of broader PHP compatibility claims. The accepted contract resolves important questions such as input shape, transitive cluster formation, representative election, and the default fuzzy title threshold.</p>
+          <p class="section-note">One concrete decision matters for anyone reading older PHP material: the local default fuzzy title threshold is <code>0.95</code>. The older <code>92</code> drift is treated as drift, not adopted as the C# default.</p>
+        </section>
+        <section class="content-section">
+          <h2>Diagrams</h2>
+          <div class="diagram-grid">
+            <article class="diagram-card">
+              <h3>Class map</h3>
+              <p>Deduplication keeps candidate evidence separate from representative projections so later stages can still reconstruct why a cluster exists.</p>
+              <svg viewBox="0 0 520 248" role="img" aria-label="Deduplication class map">
+                <defs><marker id="arrow-dedup-a" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#0b4f4a"></path></marker></defs>
+                <rect x="176" y="22" width="168" height="58" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="260" y="47" text-anchor="middle">DeduplicationService</text>
+                <text x="260" y="65" text-anchor="middle" class="diagram-muted">cluster and review logic</text>
+                <rect x="28" y="138" width="116" height="56" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="86" y="162" text-anchor="middle">CandidateRecord</text>
+                <text x="86" y="180" text-anchor="middle" class="diagram-muted">raw inputs</text>
+                <rect x="158" y="138" width="102" height="56" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="209" y="162" text-anchor="middle">Evidence</text>
+                <text x="209" y="180" text-anchor="middle" class="diagram-muted">exact or review</text>
+                <rect x="274" y="138" width="112" height="56" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="330" y="162" text-anchor="middle">Cluster</text>
+                <text x="330" y="180" text-anchor="middle" class="diagram-muted">members plus links</text>
+                <rect x="400" y="138" width="92" height="56" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="446" y="162" text-anchor="middle">Representative</text>
+                <text x="446" y="180" text-anchor="middle" class="diagram-muted">projection</text>
+                <line x1="260" y1="80" x2="86" y2="138" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-dedup-a)"></line>
+                <line x1="260" y1="80" x2="209" y2="138" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-dedup-a)"></line>
+                <line x1="260" y1="80" x2="330" y2="138" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-dedup-a)"></line>
+                <line x1="330" y1="194" x2="400" y2="194" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-dedup-a)"></line>
+              </svg>
+            </article>
+            <article class="diagram-card">
+              <h3>Use case flow</h3>
+              <p>The pipeline is raw sightings in, exact-id clusters when justified, review candidates when not, and a deterministic result that retains the evidence graph.</p>
+              <svg viewBox="0 0 520 210" role="img" aria-label="Deduplication use case flow">
+                <defs><marker id="arrow-dedup-b" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#0b4f4a"></path></marker></defs>
+                <rect x="14" y="72" width="94" height="60" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="61" y="98" text-anchor="middle">search/import</text>
+                <text x="61" y="116" text-anchor="middle" class="diagram-muted">raw candidates</text>
+                <rect x="138" y="72" width="108" height="60" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="192" y="98" text-anchor="middle">exact id pass</text>
+                <text x="192" y="116" text-anchor="middle" class="diagram-muted">automatic cluster</text>
+                <rect x="276" y="72" width="108" height="60" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="330" y="98" text-anchor="middle">fuzzy review</text>
+                <text x="330" y="116" text-anchor="middle" class="diagram-muted">no auto merge</text>
+                <rect x="414" y="72" width="92" height="60" rx="8" fill="#f4f1ea" stroke="#b7791f"></rect>
+                <text x="460" y="98" text-anchor="middle">result</text>
+                <text x="460" y="116" text-anchor="middle" class="diagram-muted">clusters plus warnings</text>
+                <line x1="108" y1="102" x2="138" y2="102" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-dedup-b)"></line>
+                <line x1="246" y1="102" x2="276" y2="102" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-dedup-b)"></line>
+                <line x1="384" y1="102" x2="414" y2="102" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-dedup-b)"></line>
+              </svg>
+            </article>
+          </div>
+        </section>
+        <section class="content-section">
+          <h2>Code surface and implemented behavior</h2>
+          <p><a href="https://github.com/nexus-scholar/core-csharp/blob/main/src/NexusScholar.Deduplication/DeduplicationModels.cs">DeduplicationModels.cs</a> defines the result vocabulary. <a href="https://github.com/nexus-scholar/core-csharp/blob/main/src/NexusScholar.Deduplication/DeduplicationService.cs">DeduplicationService.cs</a> builds candidates from <code>SearchTrace</code> and <code>SearchImportTrace</code>, records source evidence, unions exact identifier overlaps, computes title similarity for review candidates, elects a representative deterministically, and emits a <code>nexus.deduplication.result</code> record with policy id, threshold, clusters, unresolved candidates, warnings, and non-claims.</p>
+          <p class="section-intro">The current provider-priority table and representative scoring are explicit in code. That is a strength, because representative election is exactly the kind of behavior that should be stable and auditable rather than implicit in collection order.</p>
+        </section>
+        <section class="content-section">
+          <h2>Related modules and current risks</h2>
+          <p>Deduplication sits between Search and Screening, and it leans on Shared for normalized stable identifiers. The main risk is silent identity inflation: once a cluster exists, downstream code may be tempted to forget the raw members or act as if fuzzy similarity created scientific identity. The current contract resists that by preserving all direct evidence and keeping review-required edges visible.</p>
+          <p class="section-intro">That is the right boundary. Deduplication can form reviewable structure; it cannot convert ambiguous evidence into final scientific truth.</p>
+        </section>
+      </div>
+      <aside class="doc-aside">
+        <section class="doc-card">
+          <h2>At a glance</h2>
+          <ul class="link-list">
+            <li>Primary ADR: `ADR 0012`</li>
+            <li>Status: implemented local contract</li>
+            <li>Schema: `nexus.deduplication.result`</li>
+            <li>Next stage: <a href="../screening/">Screening</a></li>
+          </ul>
+        </section>
+        <section class="doc-card">
+          <h2>Review triggers</h2>
+          <ul class="link-list">
+            <li>fuzzy-title-only overlap</li>
+            <li>no stable ids</li>
+            <li>source-specific-id-only overlap</li>
+            <li>policy overrides</li>
+          </ul>
+        </section>
+      </aside>
+    </div>
+  </main>
+  <footer class="site-footer"><p>Deduplication module documentation.</p></footer>
+  <script src="../../../assets/js/site.js"></script>
+</body>
+</html>

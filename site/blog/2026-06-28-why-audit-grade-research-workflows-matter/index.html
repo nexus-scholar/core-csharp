@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Why Audit-Oriented Research Workflows Matter</title>
+  <link rel="stylesheet" href="../../assets/css/site.css">
+</head>
+<body>
+  <div class="release-status" role="status">Early alpha. Not production-ready. No package publication or PHP compatibility claim.</div>
+  <header class="site-header">
+    <nav class="nav" aria-label="Primary navigation">
+      <a class="brand" href="../../"><span class="brand-mark">NS</span><span>Nexus Scholar Core</span></a>
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-links">Menu</button>
+      <div class="nav-links" id="nav-links">
+        <a href="../../developers/">Developers</a>
+        <a href="../../tutorials/">Tutorials</a>
+        <a href="../../blog/" aria-current="page">Blog</a>
+        <a href="../../about/">About</a>
+        <a href="https://github.com/nexus-scholar/core-csharp">GitHub</a>
+      </div>
+    </nav>
+  </header>
+  <main class="article">
+    <p class="eyebrow">June 28, 2026</p>
+    <h1>Why Audit-Oriented Research Workflows Matter</h1>
+    <p class="lede">Research software should make work faster, but it should not make evidence weaker. Audit-oriented workflows preserve the path from plan to evidence to decision.</p>
+    <p class="article-meta">Motivation note. Written from the current Core architecture and project summaries.</p>
+
+    <p>A systematic review is not just a list of papers. It is a sequence of scientific choices: what was planned, where evidence was searched, how duplicates were handled, which criteria were used, who made decisions, how conflicts were resolved, which full-text artifacts were examined, and what finally shipped as an output.</p>
+    <p>Most software can show the current state. Fewer tools preserve the history strongly enough that someone else can reconstruct it later. Nexus Scholar Core starts from the reconstruction problem.</p>
+
+    <h2>The weak spots</h2>
+    <p>The fragile parts of a research workflow are often the transitions between stages. Search can erase provider-level observations if it returns only a unique corpus. Deduplication can corrupt a review if fuzzy title similarity becomes an automatic merge. Screening can become scientifically ambiguous if AI votes are stored as final decisions. Full-text work can become unauditable if a local path is treated as artifact identity.</p>
+    <p>Those are not edge cases. They are common software shortcuts. They are convenient in a product interface, but dangerous if the goal is evidence-preserving research.</p>
+
+    <h2>The Nexus rule</h2>
+    <p>Nexus separates concepts before it automates them. Search is observation. Deduplication is duplicate evidence and review structure. Screening is human scientific judgment. Full-text artifacts are identified by raw bytes and digests, not by paths. Provenance is append-only reconstruction evidence, not just a log stream.</p>
+    <p>This is why the project spends so much effort on canonical JSON, digest scopes, protocol approval, workflow compilation, provenance, bundle manifests, shared scholarly identity, and explicit non-claims. These foundations are not ceremony. They are the guardrails that keep faster workflows from becoming weaker workflows.</p>
+
+    <div class="article-callout">
+      <p><strong>Core distinction:</strong> evidence processing can be automated, but scientific authority must remain explicit.</p>
+    </div>
+
+    <h2>AI makes this more urgent</h2>
+    <p>AI can help researchers understand papers, draft rationales, identify likely duplicates, explain warnings, and summarize evidence. That is useful. It also raises the risk that generated text looks more authoritative than it is.</p>
+    <p>Nexus treats model output as proposal evidence unless an authorized human action accepts it. This does not make AI less useful. It makes AI safer to use in research workflows where decisions need to be defended later.</p>
+
+    <h2>What audit-oriented means here</h2>
+    <p>Audit-oriented does not mean heavy enterprise software. It means the workflow can answer concrete questions: which protocol content was approved, which search attempts succeeded or failed, which duplicate edges were exact identifiers versus review candidates, which criteria digest governed a screening decision, which actor made that decision, and which artifact bytes supported a full-text record.</p>
+    <p>That is the standard the project is aiming for. The interface can be simple. The underlying records cannot be vague.</p>
+  </main>
+  <footer class="site-footer"><p>Nexus Scholar Core blog.</p></footer>
+  <script src="../../assets/js/site.js"></script>
+</body>
+</html>

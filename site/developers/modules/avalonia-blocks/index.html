@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Avalonia Blocks Module - Nexus Scholar Core</title>
+  <link rel="stylesheet" href="../../../assets/css/site.css">
+</head>
+<body>
+  <div class="release-status" role="status">Early alpha. Not production-ready. No package publication or PHP compatibility claim.</div>
+  <header class="site-header">
+    <nav class="nav" aria-label="Primary navigation">
+      <a class="brand" href="../../../"><span class="brand-mark">NS</span><span>Nexus Scholar Core</span></a>
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-links">Menu</button>
+      <div class="nav-links" id="nav-links">
+        <a href="../../../developers/" aria-current="page">Developers</a>
+        <a href="../../../tutorials/">Tutorials</a>
+        <a href="../../../blog/">Blog</a>
+        <a href="../../../about/">About</a>
+        <a href="https://github.com/nexus-scholar/core-csharp">GitHub</a>
+      </div>
+    </nav>
+  </header>
+  <main class="page doc-page">
+    <p class="eyebrow">Module documentation</p>
+    <h1>Avalonia Blocks</h1>
+    <p class="lede">A renderer-only prototype that consumes UiContracts workspace plans and turns them into Avalonia views without pulling Core domain projects into the desktop layer.</p>
+    <div class="doc-shell">
+      <div class="doc-main">
+        <section class="content-section">
+          <h2>Scope and ownership</h2>
+          <p>Avalonia Blocks is not the desktop product. It is a renderer prototype for <code>WorkspacePlan</code> JSON. Its job is to prove that the contract can be consumed by a concrete UI without contaminating Core. That is why the current surface is view models and user controls, not app services, persistence, or domain commands.</p>
+          <p class="section-intro">The module exposes controls such as <code>WorkspacePlanView</code>, <code>ResearchBlockView</code>, <code>EvidenceRefListView</code>, <code>ValidationRefListView</code>, <code>BlockActionListView</code>, and <code>PayloadJsonView</code>. Actions are callbacks only. They are display plumbing, not Core mutation.</p>
+        </section>
+        <section class="content-section">
+          <h2>Boundary status</h2>
+          <p>The active design reference is <a href="https://github.com/nexus-scholar/core-csharp/blob/main/docs/ui/AVALONIA-RENDERER-PROTOTYPE-v0.md">AVALONIA-RENDERER-PROTOTYPE-v0</a>. The document is explicit about what this module is not: no shell, no Core state loading, no app-state persistence, no AI execution, and no command bridge into the domain stack.</p>
+          <p class="section-note">That boundary is healthy. Desktop renderer work is valuable here only if it remains a consumer of contracts rather than a backdoor into domain behavior.</p>
+        </section>
+        <section class="content-section">
+          <h2>Diagrams</h2>
+          <div class="diagram-grid">
+            <article class="diagram-card">
+              <h3>Class map</h3>
+              <p>The renderer projects a contract into view models and controls. The domain stack stays outside the module.</p>
+              <svg viewBox="0 0 520 244" role="img" aria-label="Avalonia Blocks class map">
+                <defs><marker id="arrow-ava-a" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#0b4f4a"></path></marker></defs>
+                <rect x="190" y="22" width="140" height="56" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="260" y="47" text-anchor="middle">WorkspacePlan</text>
+                <text x="260" y="65" text-anchor="middle" class="diagram-muted">UiContracts input</text>
+                <rect x="176" y="104" width="168" height="56" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="260" y="129" text-anchor="middle">WorkspacePlanViewModels</text>
+                <text x="260" y="147" text-anchor="middle" class="diagram-muted">projection layer</text>
+                <rect x="34" y="186" width="124" height="42" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="96" y="212" text-anchor="middle">WorkspacePlanView</text>
+                <rect x="176" y="186" width="120" height="42" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="236" y="212" text-anchor="middle">ResearchBlockView</text>
+                <rect x="314" y="186" width="172" height="42" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="400" y="212" text-anchor="middle">evidence / validation / actions</text>
+                <line x1="260" y1="78" x2="260" y2="104" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-ava-a)"></line>
+                <line x1="260" y1="160" x2="96" y2="186" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-ava-a)"></line>
+                <line x1="260" y1="160" x2="236" y2="186" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-ava-a)"></line>
+                <line x1="260" y1="160" x2="400" y2="186" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-ava-a)"></line>
+              </svg>
+            </article>
+            <article class="diagram-card">
+              <h3>Use case flow</h3>
+              <p>The supported path is one-way: deserialize contract, project view models, render, optionally invoke caller-supplied callbacks.</p>
+              <svg viewBox="0 0 520 210" role="img" aria-label="Avalonia Blocks use case flow">
+                <defs><marker id="arrow-ava-b" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#0b4f4a"></path></marker></defs>
+                <rect x="18" y="72" width="114" height="60" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="75" y="98" text-anchor="middle">sample JSON</text>
+                <text x="75" y="116" text-anchor="middle" class="diagram-muted">workspace plan</text>
+                <rect x="164" y="72" width="114" height="60" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="221" y="98" text-anchor="middle">deserialize</text>
+                <text x="221" y="116" text-anchor="middle" class="diagram-muted">UiContracts</text>
+                <rect x="310" y="72" width="96" height="60" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="358" y="98" text-anchor="middle">render</text>
+                <text x="358" y="116" text-anchor="middle" class="diagram-muted">Avalonia</text>
+                <rect x="438" y="72" width="66" height="60" rx="8" fill="#f4f1ea" stroke="#b7791f"></rect>
+                <text x="471" y="98" text-anchor="middle">callback</text>
+                <text x="471" y="116" text-anchor="middle" class="diagram-muted">optional</text>
+                <line x1="132" y1="102" x2="164" y2="102" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-ava-b)"></line>
+                <line x1="278" y1="102" x2="310" y2="102" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-ava-b)"></line>
+                <line x1="406" y1="102" x2="438" y2="102" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-ava-b)"></line>
+              </svg>
+            </article>
+          </div>
+        </section>
+        <section class="content-section">
+          <h2>Code surface and dependencies</h2>
+          <p>The implementation is split between view-model projection in <a href="https://github.com/nexus-scholar/core-csharp/blob/main/src/NexusScholar.Avalonia.Blocks/WorkspacePlanViewModels.cs">WorkspacePlanViewModels.cs</a> and a small set of controls such as <code>WorkspacePlanView</code> and <code>ResearchBlockView</code>. The project should reference only <code>NexusScholar.UiContracts</code> and Avalonia packages.</p>
+          <p class="section-intro">That dependency line is not cosmetic. If this renderer starts referencing Kernel, Protocol, Search, or Screening directly, it will collapse the separation that the UI prep work was trying to establish.</p>
+        </section>
+        <section class="content-section">
+          <h2>Related modules and current risks</h2>
+          <p>Avalonia Blocks depends on UiContracts and on sample plan data. It should not depend on Core modules. The main risk is accidental app-shell growth inside the renderer project: once callbacks exist, it is easy to start wiring direct command execution and domain reads here.</p>
+          <p class="section-intro">For now the module stays disciplined. It proves renderer feasibility and nothing more.</p>
+        </section>
+      </div>
+      <aside class="doc-aside">
+        <section class="doc-card">
+          <h2>At a glance</h2>
+          <ul class="link-list">
+            <li>Status: renderer prototype</li>
+            <li>Authority: non-authoritative sample consumer</li>
+            <li>Depends on: `NexusScholar.UiContracts`</li>
+            <li>Must not depend on Core domain projects</li>
+          </ul>
+        </section>
+        <section class="doc-card">
+          <h2>Owns</h2>
+          <ul class="link-list">
+            <li>view models</li>
+            <li>Avalonia controls</li>
+            <li>display-only action callbacks</li>
+            <li>sample-plan rendering</li>
+          </ul>
+        </section>
+      </aside>
+    </div>
+  </main>
+  <footer class="site-footer"><p>Avalonia Blocks module documentation.</p></footer>
+  <script src="../../../assets/js/site.js"></script>
+</body>
+</html>

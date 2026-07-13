@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Search Module - Nexus Scholar Core</title>
+  <link rel="stylesheet" href="../../../assets/css/site.css">
+</head>
+<body>
+  <div class="release-status" role="status">Early alpha. Not production-ready. No package publication or PHP compatibility claim.</div>
+  <header class="site-header">
+    <nav class="nav" aria-label="Primary navigation">
+      <a class="brand" href="../../../"><span class="brand-mark">NS</span><span>Nexus Scholar Core</span></a>
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-links">Menu</button>
+      <div class="nav-links" id="nav-links">
+        <a href="../../../developers/" aria-current="page">Developers</a>
+        <a href="../../../tutorials/">Tutorials</a>
+        <a href="../../../blog/">Blog</a>
+        <a href="../../../about/">About</a>
+        <a href="https://github.com/nexus-scholar/core-csharp">GitHub</a>
+      </div>
+    </nav>
+  </header>
+  <main class="page doc-page">
+    <p class="eyebrow">Module documentation</p>
+    <h1>Search</h1>
+    <p class="lede">Raw search-plan, execution-trace, and imported-source contracts that preserve provider evidence and partial-failure details before any deduplication or screening step begins.</p>
+    <div class="doc-shell">
+      <div class="doc-main">
+        <section class="content-section">
+          <h2>Scope and ownership</h2>
+          <p>Search owns executable search inputs and raw execution outputs. That includes <code>SearchPlan</code>, <code>SearchPlanItem</code>, <code>ParsedSearchPlan</code>, <code>SearchTrace</code>, provider attempt and statistics records, raw <code>SearchSighting</code> entries, and imported-export traces parsed from offline files.</p>
+          <p class="section-intro">The module is deliberately evidence-first. A Search run returns the raw trace of what happened: selected provider aliases, cache identity, per-provider status, and all preserved sightings. It does not collapse that output into a unique corpus, because uniqueness belongs downstream.</p>
+        </section>
+        <section class="content-section">
+          <h2>Gate and ADR status</h2>
+          <p>The implemented contract is grounded in <a href="https://github.com/nexus-scholar/core-csharp/blob/main/docs/adr/0010-search-trace-and-plan-contract.md">ADR 0010</a> and <a href="https://github.com/nexus-scholar/core-csharp/blob/main/docs/adr/0011-search-import-source-contract.md">ADR 0011</a>. Those decisions fix two important boundaries: Search emits raw trace evidence, and imported search exports are admitted as source evidence without pretending they are live provider calls.</p>
+          <p class="section-note">The most important non-claim here is just as important as the positive contract: Search does not deduplicate, does not convert title-only records into stable identity, and does not treat app projections as authoritative Core behavior.</p>
+        </section>
+        <section class="content-section">
+          <h2>Diagrams</h2>
+          <div class="diagram-grid">
+            <article class="diagram-card">
+              <h3>Class map</h3>
+              <p>Plans are parsed up front, execution records what happened, and imports stay visible as a separate source path rather than being hidden inside provider logic.</p>
+              <svg viewBox="0 0 520 240" role="img" aria-label="Search class map">
+                <defs><marker id="arrow-search-a" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#0b4f4a"></path></marker></defs>
+                <rect x="32" y="28" width="112" height="56" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="88" y="52" text-anchor="middle">SearchPlan</text>
+                <text x="88" y="70" text-anchor="middle" class="diagram-muted">schema-closed input</text>
+                <rect x="184" y="28" width="152" height="56" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="260" y="52" text-anchor="middle">SearchPlanParser</text>
+                <text x="260" y="70" text-anchor="middle" class="diagram-muted">schema and legacy import</text>
+                <rect x="376" y="28" width="112" height="56" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="432" y="52" text-anchor="middle">SearchService</text>
+                <text x="432" y="70" text-anchor="middle" class="diagram-muted">provider execution</text>
+                <rect x="114" y="148" width="132" height="56" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="180" y="172" text-anchor="middle">SearchTrace</text>
+                <text x="180" y="190" text-anchor="middle" class="diagram-muted">attempts and sightings</text>
+                <rect x="274" y="148" width="132" height="56" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="340" y="172" text-anchor="middle">SearchImportTrace</text>
+                <text x="340" y="190" text-anchor="middle" class="diagram-muted">offline source evidence</text>
+                <line x1="144" y1="56" x2="184" y2="56" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-search-a)"></line>
+                <line x1="336" y1="56" x2="376" y2="56" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-search-a)"></line>
+                <line x1="432" y1="84" x2="340" y2="148" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-search-a)"></line>
+                <line x1="432" y1="84" x2="220" y2="148" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-search-a)"></line>
+              </svg>
+            </article>
+            <article class="diagram-card">
+              <h3>Use case flow</h3>
+              <p>The safe path is plan or import first, raw trace second, deduplication later.</p>
+              <svg viewBox="0 0 520 210" role="img" aria-label="Search use case flow">
+                <defs><marker id="arrow-search-b" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#0b4f4a"></path></marker></defs>
+                <rect x="16" y="72" width="102" height="60" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="67" y="98" text-anchor="middle">query or file</text>
+                <text x="67" y="116" text-anchor="middle" class="diagram-muted">source path</text>
+                <rect x="150" y="72" width="102" height="60" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="201" y="98" text-anchor="middle">execute</text>
+                <text x="201" y="116" text-anchor="middle" class="diagram-muted">providers / parser</text>
+                <rect x="284" y="72" width="102" height="60" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="335" y="98" text-anchor="middle">trace</text>
+                <text x="335" y="116" text-anchor="middle" class="diagram-muted">raw sightings kept</text>
+                <rect x="418" y="72" width="86" height="60" rx="8" fill="#f4f1ea" stroke="#b7791f"></rect>
+                <text x="461" y="98" text-anchor="middle">dedup later</text>
+                <text x="461" y="116" text-anchor="middle" class="diagram-muted">not here</text>
+                <line x1="118" y1="102" x2="150" y2="102" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-search-b)"></line>
+                <line x1="252" y1="102" x2="284" y2="102" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-search-b)"></line>
+                <line x1="386" y1="102" x2="418" y2="102" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-search-b)"></line>
+              </svg>
+            </article>
+          </div>
+        </section>
+        <section class="content-section">
+          <h2>Code surface and behavior</h2>
+          <p><a href="https://github.com/nexus-scholar/core-csharp/blob/main/src/NexusScholar.Search/SearchService.cs">SearchService.cs</a> validates query shape, result bounds, offsets, and years, normalizes provider aliases, computes cache identity, executes providers, and returns <code>SearchTrace</code> with attempts, stats, sightings, and summary. <a href="https://github.com/nexus-scholar/core-csharp/blob/main/src/NexusScholar.Search/SearchPlan.cs">SearchPlan.cs</a> and <a href="https://github.com/nexus-scholar/core-csharp/blob/main/src/NexusScholar.Search/SearchPlanParser.cs">SearchPlanParser.cs</a> define the executable-plan side, while <code>SearchImportService</code> and related types preserve imported-export metadata and parser warnings.</p>
+          <p class="section-intro">One implementation detail worth calling out is that <code>include_raw_data</code> participates in cache identity. That is correct: a trace that strips raw data is not the same trace as one that preserves it.</p>
+        </section>
+        <section class="content-section">
+          <h2>Related modules and current risks</h2>
+          <p>Search hands directly to Deduplication. Shared identity affects how later modules interpret identifiers, but Search itself should avoid prematurely asserting identity. The main risk is accidental aggregation drift: app consumers often want “unique papers” immediately, and that pressure can erode the raw-trace boundary.</p>
+          <p class="section-intro">The module should stay conservative. It captures acquisition evidence. It does not silently become corpus construction policy.</p>
+        </section>
+      </div>
+      <aside class="doc-aside">
+        <section class="doc-card">
+          <h2>At a glance</h2>
+          <ul class="link-list">
+            <li>Primary ADRs: `ADR 0010`, `ADR 0011`</li>
+            <li>Status: implemented local contract</li>
+            <li>Output: raw trace, not unique corpus</li>
+            <li>Next stage: <a href="../deduplication/">Deduplication</a></li>
+          </ul>
+        </section>
+        <section class="doc-card">
+          <h2>Owns</h2>
+          <ul class="link-list">
+            <li>`SearchPlan`</li>
+            <li>`SearchTrace`</li>
+            <li>`SearchImportTrace`</li>
+            <li>provider attempts and sightings</li>
+          </ul>
+        </section>
+      </aside>
+    </div>
+  </main>
+  <footer class="site-footer"><p>Search module documentation.</p></footer>
+  <script src="../../../assets/js/site.js"></script>
+</body>
+</html>

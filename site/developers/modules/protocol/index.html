@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Protocol Module - Nexus Scholar Core</title>
+  <link rel="stylesheet" href="../../../assets/css/site.css">
+</head>
+<body>
+  <div class="release-status" role="status">Early alpha. Not production-ready. No package publication or PHP compatibility claim.</div>
+  <header class="site-header">
+    <nav class="nav" aria-label="Primary navigation">
+      <a class="brand" href="../../../"><span class="brand-mark">NS</span><span>Nexus Scholar Core</span></a>
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-links">Menu</button>
+      <div class="nav-links" id="nav-links">
+        <a href="../../../developers/" aria-current="page">Developers</a>
+        <a href="../../../tutorials/">Tutorials</a>
+        <a href="../../../blog/">Blog</a>
+        <a href="../../../about/">About</a>
+        <a href="https://github.com/nexus-scholar/core-csharp">GitHub</a>
+      </div>
+    </nav>
+  </header>
+  <main class="page doc-page">
+    <p class="eyebrow">Module documentation</p>
+    <h1>Protocol</h1>
+    <p class="lede">Scientific protocol records, approvals, waivers, amendments, and immutable approved versions that define what the project is authorized to do before Workflow ever compiles a plan.</p>
+    <div class="doc-shell">
+      <div class="doc-main">
+        <section class="content-section">
+          <h2>Scope and ownership</h2>
+          <p>Protocol owns the lifecycle of scientific intent inside Core. It is where draft records are shaped, where required decisions become explicit, and where approved versions become immutable scientific state. The module depends only on <code>NexusScholar.Kernel</code>, which is the right boundary: protocol meaning stays in the domain layer and does not mix with storage, UI, CLI presentation, or transport concerns.</p>
+          <p class="section-intro">That lifecycle is more than simple state switching. The code enforces that decision keys are not silently overwritten, approval binds to exact content digests, and approved versions are treated as fixed content rather than mutable working notes. In this repository, Protocol is the authority for what has been approved; other modules only consume that result.</p>
+        </section>
+
+        <section class="content-section">
+          <h2>Gate and ADR status</h2>
+          <p><a href="https://github.com/nexus-scholar/core-csharp/blob/main/docs/gates/GATE-03.md">GATE-03</a> is the accepted local scope for protocol lifecycle behavior, with <a href="https://github.com/nexus-scholar/core-csharp/blob/main/docs/adr/0003-protocol-record-contract.md">ADR 0003</a> defining the record contract and <a href="https://github.com/nexus-scholar/core-csharp/blob/main/docs/adr/0004-protocol-approval-semantics.md">ADR 0004</a> defining approval semantics. The important reading is that Protocol is already on an accepted contract, not just a scaffold.</p>
+          <p class="section-intro">The core fixed points are the <code>protocol-content</code> digest for approved content, the <code>approval-record</code> digest for approval snapshots, and the rule that approval authority is human-only. Stale approvals, duplicate approvals, unresolved blocking decisions, and dual-policy failures are rejected with stable categories rather than left to application code to interpret later.</p>
+          <p class="section-note">The evidence bundle for this module lives in <a href="https://github.com/nexus-scholar/core-csharp/blob/main/docs/gates/GATE-03-EVIDENCE.md">GATE-03-EVIDENCE</a>. That file matters because it marks the difference between accepted local behavior and any later blueprint or PHP parity claim, neither of which is being asserted here.</p>
+        </section>
+
+        <section class="content-section">
+          <h2>Diagrams</h2>
+          <p>Protocol has both a strong class shape and a clear research-facing use case. The diagrams below make the lifecycle easier to scan than reading the types in isolation.</p>
+          <div class="diagram-grid">
+            <article class="diagram-card">
+              <h3>Class lifecycle</h3>
+              <p>The core object progression is draft to approved version to approval record, with decisions and required definitions shaping the draft state.</p>
+              <svg viewBox="0 0 520 250" role="img" aria-label="Protocol class lifecycle">
+                <defs>
+                  <marker id="arrow-protocol-a" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+                    <path d="M0,0 L8,4 L0,8 z" fill="#0b4f4a"></path>
+                  </marker>
+                </defs>
+                <rect x="20" y="24" width="150" height="58" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="95" y="49" text-anchor="middle">RequiredDecisionDefinition</text>
+                <text x="95" y="67" text-anchor="middle" class="diagram-muted">declares what must exist</text>
+                <rect x="188" y="96" width="146" height="58" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="261" y="121" text-anchor="middle">ProtocolDraft</text>
+                <text x="261" y="139" text-anchor="middle" class="diagram-muted">records mutable intent</text>
+                <rect x="350" y="24" width="146" height="58" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="423" y="49" text-anchor="middle">ProtocolDecision</text>
+                <text x="423" y="67" text-anchor="middle" class="diagram-muted">fills required keys</text>
+                <rect x="108" y="178" width="146" height="58" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="181" y="203" text-anchor="middle">ProtocolVersion</text>
+                <text x="181" y="221" text-anchor="middle" class="diagram-muted">immutable approved content</text>
+                <rect x="272" y="178" width="146" height="58" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="345" y="203" text-anchor="middle">ProtocolApproval</text>
+                <text x="345" y="221" text-anchor="middle" class="diagram-muted">digest-bound authority</text>
+                <line x1="170" y1="66" x2="226" y2="96" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-protocol-a)"></line>
+                <line x1="350" y1="66" x2="296" y2="96" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-protocol-a)"></line>
+                <line x1="238" y1="154" x2="199" y2="178" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-protocol-a)"></line>
+                <line x1="286" y1="154" x2="327" y2="178" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-protocol-a)"></line>
+              </svg>
+            </article>
+            <article class="diagram-card">
+              <h3>Research use case</h3>
+              <p>A human researcher moves a protocol from draft to approved state, and downstream modules only consume the approved version and its approval evidence.</p>
+              <svg viewBox="0 0 520 220" role="img" aria-label="Protocol use case">
+                <defs>
+                  <marker id="arrow-protocol-b" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+                    <path d="M0,0 L8,4 L0,8 z" fill="#0b4f4a"></path>
+                  </marker>
+                </defs>
+                <circle cx="42" cy="92" r="18" fill="#f4f1ea" stroke="#b7791f"></circle>
+                <line x1="42" y1="110" x2="42" y2="146" stroke="#b7791f" stroke-width="2"></line>
+                <line x1="20" y1="124" x2="64" y2="124" stroke="#b7791f" stroke-width="2"></line>
+                <line x1="42" y1="146" x2="22" y2="176" stroke="#b7791f" stroke-width="2"></line>
+                <line x1="42" y1="146" x2="62" y2="176" stroke="#b7791f" stroke-width="2"></line>
+                <text x="42" y="204" text-anchor="middle">researcher</text>
+                <rect x="96" y="60" width="110" height="62" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="151" y="86" text-anchor="middle">draft protocol</text>
+                <text x="151" y="104" text-anchor="middle" class="diagram-muted">record decisions</text>
+                <rect x="236" y="60" width="110" height="62" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="291" y="86" text-anchor="middle">approval check</text>
+                <text x="291" y="104" text-anchor="middle" class="diagram-muted">human-only policy</text>
+                <rect x="376" y="60" width="124" height="62" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="438" y="86" text-anchor="middle">approved version</text>
+                <text x="438" y="104" text-anchor="middle" class="diagram-muted">Workflow consumes</text>
+                <line x1="60" y1="92" x2="96" y2="92" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-protocol-b)"></line>
+                <line x1="206" y1="92" x2="236" y2="92" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-protocol-b)"></line>
+                <line x1="346" y1="92" x2="376" y2="92" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-protocol-b)"></line>
+              </svg>
+            </article>
+          </div>
+        </section>
+
+        <section class="content-section">
+          <h2>Code surface and verification</h2>
+          <p>The public surface is small but consequential: <a href="https://github.com/nexus-scholar/core-csharp/blob/main/src/NexusScholar.Protocol/ProtocolDraft.cs">ProtocolDraft.cs</a>, <a href="https://github.com/nexus-scholar/core-csharp/blob/main/src/NexusScholar.Protocol/ProtocolModels.cs">ProtocolModels.cs</a>, and the module project file together describe the working contract. These files define draft creation, decision recording, approval candidates, approved versions, waivers, deviations, and related identity material.</p>
+          <p class="section-intro">Verification is stronger than the size of the module might suggest. <a href="https://github.com/nexus-scholar/core-csharp/blob/main/tests/NexusScholar.Core.Tests/ProtocolTests.cs">ProtocolTests.cs</a> covers the direct behavior, <a href="https://github.com/nexus-scholar/core-csharp/blob/main/tests/NexusScholar.Conformance.Tests/ProtocolFixtureTests.cs">ProtocolFixtureTests.cs</a> replays the fixture contract under <a href="https://github.com/nexus-scholar/core-csharp/blob/main/fixtures/conformance/protocol/">fixtures/conformance/protocol</a>, and <a href="https://github.com/nexus-scholar/core-csharp/blob/main/tests/NexusScholar.Core.Tests/WorkflowCompilerTests.cs">WorkflowCompilerTests.cs</a> proves that downstream workflow compilation respects approved protocol invariants rather than bypassing them.</p>
+        </section>
+
+        <section class="content-section">
+          <h2>Consumers and current risks</h2>
+          <p>Protocol is consumed directly by Workflow, Bundles, Provenance, and the sample CLI paths. Workflow compiles from approved versions, Bundles bind protocol versions into portable review manifests, Provenance carries protocol binding metadata, and the CLI exercises the path in smoke-style sample behavior. AI is relevant mostly as a non-consumer boundary: automation can propose, warn, or validate, but it does not inherit protocol approval authority.</p>
+          <p class="section-intro">The current issues are narrow but worth calling out. The convenience overload <code>ProtocolDraft.Create(ids, title, requiredDecisionKeys)</code> still injects hard-coded legacy placeholders, so it should be treated as sample or utility surface rather than a strong domain entry point. The draft identity surface is also a little confusing because <code>ProtocolDraft.Id</code> mirrors <code>ProtocolId</code> instead of cleanly foregrounding <code>DraftId</code>. Finally, withdrawal behavior is only partially surfaced at the contract level; the rules exist, but there is not yet a richer high-level workflow around them.</p>
+        </section>
+      </div>
+      <aside class="doc-aside">
+        <section class="doc-card">
+          <h2>At a glance</h2>
+          <ul class="link-list">
+            <li>Authority scope: `GATE-03`</li>
+            <li>Primary ADRs: `ADR 0003`, `ADR 0004`</li>
+            <li>Role: scientific approval authority</li>
+            <li>Next module: <a href="../workflow/">Workflow</a></li>
+          </ul>
+        </section>
+        <section class="doc-card">
+          <h2>Main consumers</h2>
+          <ul class="link-list">
+            <li><a href="https://github.com/nexus-scholar/core-csharp/tree/main/src/NexusScholar.Workflow/">Workflow</a></li>
+            <li><a href="https://github.com/nexus-scholar/core-csharp/tree/main/src/NexusScholar.Bundles/">Bundles</a></li>
+            <li><a href="https://github.com/nexus-scholar/core-csharp/tree/main/src/NexusScholar.Provenance/">Provenance</a></li>
+            <li><a href="https://github.com/nexus-scholar/core-csharp/tree/main/src/NexusScholar.Cli/">CLI</a></li>
+          </ul>
+        </section>
+      </aside>
+    </div>
+  </main>
+  <footer class="site-footer"><p>Protocol module documentation for Module 2.</p></footer>
+  <script src="../../../assets/js/site.js"></script>
+</body>
+</html>

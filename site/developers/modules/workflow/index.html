@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Workflow Module - Nexus Scholar Core</title>
+  <link rel="stylesheet" href="../../../assets/css/site.css">
+</head>
+<body>
+  <div class="release-status" role="status">Early alpha. Not production-ready. No package publication or PHP compatibility claim.</div>
+  <header class="site-header">
+    <nav class="nav" aria-label="Primary navigation">
+      <a class="brand" href="../../../"><span class="brand-mark">NS</span><span>Nexus Scholar Core</span></a>
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-links">Menu</button>
+      <div class="nav-links" id="nav-links">
+        <a href="../../../developers/" aria-current="page">Developers</a>
+        <a href="../../../tutorials/">Tutorials</a>
+        <a href="../../../blog/">Blog</a>
+        <a href="../../../about/">About</a>
+        <a href="https://github.com/nexus-scholar/core-csharp">GitHub</a>
+      </div>
+    </nav>
+  </header>
+  <main class="page doc-page">
+    <p class="eyebrow">Module documentation</p>
+    <h1>Workflow</h1>
+    <p class="lede">Deterministic compilation from approved protocol content into a planned graph with explicit approvals, capability requirements, waivers, and invalidation rules.</p>
+    <div class="doc-shell">
+      <div class="doc-main">
+        <section class="content-section">
+          <h2>Scope and ownership</h2>
+          <p>Workflow translates approved protocol state into a reproducible plan for scientific conduct. Its job is to compile, validate, normalize, and digest the plan. It does not run tasks, host plugins, persist execution state, or call providers. That separation is one of the stronger design decisions in the repo because it stops execution concerns from leaking backward into the planning contract.</p>
+          <p class="section-intro">The main input is <code>WorkflowCompileInput</code>, which bundles an approved protocol version, a template, compile parameters, schema references, and optional amendment or invalidation material. The output is a digest-bearing <code>WorkflowDefinition</code> with resolved inputs, normalized nodes and edges, approval and capability requirements, declared artifacts, and any invalidation plan entries.</p>
+        </section>
+
+        <section class="content-section">
+          <h2>Gate and ADR status</h2>
+          <p><a href="https://github.com/nexus-scholar/core-csharp/blob/main/docs/gates/GATE-04.md">GATE-04</a> is the accepted local scope for the workflow compiler, with <a href="https://github.com/nexus-scholar/core-csharp/blob/main/docs/adr/0005-workflow-template-contract.md">ADR 0005</a> fixing the template contract and <a href="https://github.com/nexus-scholar/core-csharp/blob/main/docs/adr/0006-workflow-compiler-semantics.md">ADR 0006</a> fixing the compile semantics. The combination matters because Workflow is not just a serializer; it is the point where many earlier contracts are checked together.</p>
+          <p class="section-intro">The non-negotiable rules are that compilation is explicit-only, approved protocol state is required, template and protocol digests are recomputed and checked, and schema closure is mandatory for the local fixture set. The compiler also normalizes ordering before digesting so that semantically equivalent input order does not produce unstable workflow identity.</p>
+          <p class="section-note">The accepted evidence scope is recorded in <a href="https://github.com/nexus-scholar/core-csharp/blob/main/docs/gates/GATE-04-EVIDENCE.md">GATE-04-EVIDENCE</a>. It is important to keep reading this module through that gate boundary because the code intentionally does not claim runtime execution, PHP parity, or blueprint conformance.</p>
+        </section>
+
+        <section class="content-section">
+          <h2>Diagrams</h2>
+          <p>Workflow is the easiest module to lose in detail because a lot of the contract is encoded as validation logic. The diagrams below separate the core type relationships from the compiler’s end-to-end use case.</p>
+          <div class="diagram-grid">
+            <article class="diagram-card">
+              <h3>Compiler structure</h3>
+              <p>Templates and compile input flow through the compiler into a digest-bearing workflow definition with compiled nodes and bindings.</p>
+              <svg viewBox="0 0 520 250" role="img" aria-label="Workflow compiler structure">
+                <defs>
+                  <marker id="arrow-workflow-a" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+                    <path d="M0,0 L8,4 L0,8 z" fill="#0b4f4a"></path>
+                  </marker>
+                </defs>
+                <rect x="22" y="34" width="128" height="56" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="86" y="58" text-anchor="middle">WorkflowTemplate</text>
+                <text x="86" y="76" text-anchor="middle" class="diagram-muted">nodes, gates, refs</text>
+                <rect x="22" y="146" width="128" height="56" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="86" y="170" text-anchor="middle">WorkflowCompileInput</text>
+                <text x="86" y="188" text-anchor="middle" class="diagram-muted">protocol plus params</text>
+                <rect x="196" y="90" width="128" height="56" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="260" y="114" text-anchor="middle">WorkflowCompiler</text>
+                <text x="260" y="132" text-anchor="middle" class="diagram-muted">validates and normalizes</text>
+                <rect x="370" y="34" width="128" height="56" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="434" y="58" text-anchor="middle">WorkflowCompiledNode</text>
+                <text x="434" y="76" text-anchor="middle" class="diagram-muted">ordered graph units</text>
+                <rect x="370" y="146" width="128" height="56" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="434" y="170" text-anchor="middle">WorkflowDefinition</text>
+                <text x="434" y="188" text-anchor="middle" class="diagram-muted">final digest-bearing plan</text>
+                <line x1="150" y1="62" x2="196" y2="108" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-workflow-a)"></line>
+                <line x1="150" y1="174" x2="196" y2="128" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-workflow-a)"></line>
+                <line x1="324" y1="108" x2="370" y2="62" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-workflow-a)"></line>
+                <line x1="324" y1="128" x2="370" y2="174" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-workflow-a)"></line>
+              </svg>
+            </article>
+            <article class="diagram-card">
+              <h3>Compile use case</h3>
+              <p>An approved protocol version and a schema-closed template enter the compiler, which either rejects bad planning state or emits a reproducible workflow definition.</p>
+              <svg viewBox="0 0 520 220" role="img" aria-label="Workflow compile use case">
+                <defs>
+                  <marker id="arrow-workflow-b" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+                    <path d="M0,0 L8,4 L0,8 z" fill="#0b4f4a"></path>
+                  </marker>
+                </defs>
+                <rect x="20" y="74" width="106" height="60" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="73" y="99" text-anchor="middle">approved protocol</text>
+                <text x="73" y="117" text-anchor="middle" class="diagram-muted">plus template</text>
+                <rect x="164" y="74" width="106" height="60" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="217" y="99" text-anchor="middle">compile checks</text>
+                <text x="217" y="117" text-anchor="middle" class="diagram-muted">schema, graph, gates</text>
+                <rect x="308" y="38" width="92" height="50" rx="8" fill="#f4f1ea" stroke="#b7791f"></rect>
+                <text x="354" y="67" text-anchor="middle">reject</text>
+                <rect x="308" y="122" width="92" height="50" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="354" y="151" text-anchor="middle">compile</text>
+                <rect x="430" y="74" width="72" height="60" rx="8" fill="#fff" stroke="#0f766e"></rect>
+                <text x="466" y="99" text-anchor="middle">plan</text>
+                <text x="466" y="117" text-anchor="middle" class="diagram-muted">Bundle</text>
+                <line x1="126" y1="104" x2="164" y2="104" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-workflow-b)"></line>
+                <line x1="270" y1="94" x2="308" y2="68" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-workflow-b)"></line>
+                <line x1="270" y1="114" x2="308" y2="146" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-workflow-b)"></line>
+                <line x1="400" y1="146" x2="430" y2="104" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-workflow-b)"></line>
+              </svg>
+            </article>
+          </div>
+        </section>
+
+        <section class="content-section">
+          <h2>Validation pipeline</h2>
+          <p>The strongest part of this module is the validation chain. Before a workflow definition exists, the compiler checks template normalization, amended-protocol witness requirements, protocol digest freshness, schema closure, template digest freshness, graph shape, artifact declarations, approval roles, capability references, waiver mapping, and invalidation notices. This is where the repository turns a broad template concept into a narrow, replayable local contract.</p>
+          <p class="section-intro">The source is concentrated in <a href="https://github.com/nexus-scholar/core-csharp/blob/main/src/NexusScholar.Workflow/Workflow.cs">Workflow.cs</a>, with the sample entry path in <a href="https://github.com/nexus-scholar/core-csharp/blob/main/src/NexusScholar.Cli/Program.cs">NexusScholar.Cli/Program.cs</a>. That single-file concentration is convenient for inspection, but it also means the module will become harder to navigate as the contract expands. For now, the benefit is that the validation logic is visible in one place and can be read against the gate docs without hunting through multiple assemblies.</p>
+        </section>
+
+        <section class="content-section">
+          <h2>Identity, tests, and current limits</h2>
+          <p>Workflow identity is deterministic by design. The workflow ID is derived from protocol and template identity plus compiler identity, and the workflow digest uses a canonical-record envelope over normalized compile output. Template digests and workflow digests are intentionally separated, which helps keep “what was compiled” distinct from “what the resulting plan became.”</p>
+          <p class="section-intro">Verification is broad. <a href="https://github.com/nexus-scholar/core-csharp/blob/main/tests/NexusScholar.Core.Tests/WorkflowCompilerTests.cs">WorkflowCompilerTests.cs</a> covers the behavioral rules directly, and <a href="https://github.com/nexus-scholar/core-csharp/blob/main/tests/NexusScholar.Conformance.Tests/WorkflowFixtureTests.cs">WorkflowFixtureTests.cs</a> replays the fixture contract under <a href="https://github.com/nexus-scholar/core-csharp/blob/main/fixtures/conformance/workflow/">fixtures/conformance/workflow/</a>, including positive digested snapshots and negative rejection packs. The remaining limits are explicit: there is still no runtime planner, no AI or plugin execution behavior, and no broader compatibility claim beyond the accepted local gate.</p>
+        </section>
+      </div>
+      <aside class="doc-aside">
+        <section class="doc-card">
+          <h2>At a glance</h2>
+          <ul class="link-list">
+            <li>Authority scope: `GATE-04`</li>
+            <li>Primary ADRs: `ADR 0005`, `ADR 0006`</li>
+            <li>Role: deterministic planning compiler</li>
+            <li>Next module: <a href="../artifacts/">Artifacts</a></li>
+          </ul>
+        </section>
+        <section class="doc-card">
+          <h2>Key boundaries</h2>
+          <ul class="link-list">
+            <li>No runtime execution</li>
+            <li>No plugin host behavior</li>
+            <li>No AI task execution</li>
+            <li>No PHP or blueprint parity claim</li>
+          </ul>
+        </section>
+      </aside>
+    </div>
+  </main>
+  <footer class="site-footer"><p>Workflow module documentation.</p></footer>
+  <script src="../../../assets/js/site.js"></script>
+</body>
+</html>
