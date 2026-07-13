@@ -9,7 +9,8 @@ Implementation progress:
 - Phase 3 scholarly pipeline correctness: complete through Hardening 16 across Shared identity, Search parsers, Deduplication metadata, Screening conflicts, and Full Text cross-record validation.
 - Phase 4 transactional workspace integrity: complete through Hardening 17.
 - Phase 5 test strategy upgrade: complete through Hardening 18.
-- Next phase: Phase 6 release engineering.
+- Phase 6 release engineering: in progress; Hardening 19 release policy foundation complete.
+- Next gate: Hardening 20 package topology and clean-install validation.
 
 Source review: [full-technical-review.md](full-technical-review.md)
 

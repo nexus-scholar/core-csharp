@@ -2,6 +2,8 @@ $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
 Push-Location $root
 try {
+    & "$PSScriptRoot/verify-release-policy.ps1"
+
     dotnet restore NexusScholar.Core.slnx
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
