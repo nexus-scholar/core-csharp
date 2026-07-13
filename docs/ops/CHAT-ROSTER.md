@@ -4,9 +4,9 @@ Status date: 2026-07-13
 
 ## Active Lanes
 
-- Main development lane: `main` at the Hardening 22 merge.
-- Current manager lane: Hardening 23 Pages and operations.
-- Next manager lane: Hardening 24 live governance and tagged rehearsal.
+- Main development lane: `main` at the Hardening 24 merge `8436af3`.
+- Current manager lane: Phase 6 closeout evidence.
+- Next manager lane: Phase 7 compatibility evidence planning.
 - Historical public-site lane: `gh-pages`; deployable site source now moves to `site/` on `main`.
 
 ## Ownership
@@ -22,3 +22,4 @@ Status date: 2026-07-13
 - Model outputs remain proposals; human authorization boundaries are unchanged.
 - No live provider, persistence, cloud, PDF/OCR, product UI, publication, or signing expansion is in scope.
 - The active operating plan is `docs/reviews/2026-07-11-hardening-plan/README.md`.
+- Tag `v0.1.0-alpha.1` is a validated and attested rehearsal artifact set, not a published NuGet release.

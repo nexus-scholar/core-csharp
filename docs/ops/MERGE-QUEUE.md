@@ -6,8 +6,8 @@ Status date: 2026-07-13
 
 | Order | Gate | Scope | Status |
 |---|---|---|---|
-| 1 | Hardening 23 | Pages workflow, public maturity correction, security contact, operational docs and port matrix | Active |
-| 2 | Hardening 24 | Live governance settings and tagged clean-machine rehearsal | Waiting on Hardening 23 |
+| 1 | Phase 6 closeout | Record verified Pages, governance, tag, evidence, and attestation results | Active |
+| 2 | Phase 7 planning | Pinned PHP fixtures and semantic comparators | Waiting on closeout |
 
 Recently landed:
 
@@ -17,6 +17,8 @@ Recently landed:
 | #43 | Hardening 20 package topology | Landed |
 | #44 | Hardening 21 locked restore and release evidence | Landed |
 | #45 | Hardening 22 release and security workflows | Landed |
+| #46 | Hardening 23 Pages and operations | Landed |
+| #47 | Hardening 24 governance verifier | Landed |
 
 ## Do Not Queue
 
