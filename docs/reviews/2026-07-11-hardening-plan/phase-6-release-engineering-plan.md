@@ -1,6 +1,6 @@
 # Phase 6 - Release Engineering Plan
 
-Status: in progress through Hardening 23; final governance and tagged rehearsal active.
+Status: complete through Hardening 24.
 
 ## Goal
 
