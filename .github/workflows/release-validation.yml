@@ -1,0 +1,74 @@
+name: release-validation
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    environment: release
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Setup SBOM runtime
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 8.0.422
+
+      - name: Setup pinned repository SDK
+        uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+
+      - name: Validate tag and package version
+        if: startsWith(github.ref, 'refs/tags/')
+        shell: pwsh
+        run: ./scripts/verify-release-tag.ps1 -TagName "${{ github.ref_name }}"
+
+      - name: Restore locked dependencies
+        run: dotnet restore NexusScholar.Core.slnx --locked-mode
+
+      - name: Build
+        run: dotnet build NexusScholar.Core.slnx -c Release --no-restore
+
+      - name: Test
+        run: dotnet test NexusScholar.Core.slnx -c Release --no-build --logger trx --results-directory artifacts/test-results
+
+      - name: Build validation artifacts and evidence
+        shell: pwsh
+        run: |
+          ./scripts/verify-packages.ps1
+          ./scripts/build-release-evidence.ps1
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: release-test-results
+          path: artifacts/test-results/*.trx
+          if-no-files-found: error
+
+      - name: Upload release evidence
+        uses: actions/upload-artifact@v7
+        with:
+          name: release-evidence-${{ github.sha }}
+          path: artifacts/release/
+          if-no-files-found: error
+
+      - name: Attest validation artifacts
+        uses: actions/attest-build-provenance@v4
+        with:
+          subject-path: artifacts/release/**/*

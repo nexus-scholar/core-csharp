@@ -1,0 +1,42 @@
+name: codeql
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  schedule:
+    - cron: '23 4 * * 2'
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v4
+        with:
+          languages: csharp
+          build-mode: manual
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+
+      - name: Restore locked dependencies
+        run: dotnet restore NexusScholar.Core.slnx --locked-mode
+
+      - name: Build
+        run: dotnet build NexusScholar.Core.slnx -c Release --no-restore
+
+      - name: Analyze and upload SARIF
+        uses: github/codeql-action/analyze@v4
+        with:
+          category: /language:csharp
