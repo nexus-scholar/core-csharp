@@ -21,6 +21,8 @@
     <None Include="../../fixtures/conformance/bundles/*.json" Link="fixtures/bundles/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../fixtures/conformance/kernel/*.json" Link="fixtures/kernel/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../fixtures/conformance/kernel/*.ndjson" Link="fixtures/kernel/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../fixtures/php-golden/shared-identity/v1/*.json" Link="fixtures/php-golden/shared-identity/v1/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../specs/SOURCE.lock.json" Link="fixtures/php-golden/SOURCE.lock.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="../../src/NexusScholar.Kernel/NexusScholar.Kernel.csproj" />

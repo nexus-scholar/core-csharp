@@ -1,0 +1,124 @@
+{
+  "fixtureSetId": "php-shared-identity-v1",
+  "schemaVersion": "1.0.0",
+  "cases": [
+    {
+      "id": "normalize-identifiers",
+      "operation": "normalize-identifiers",
+      "identifiers": [
+        { "namespace": "doi", "value": " https://doi.org/10.1000/XYZ " },
+        { "namespace": "arxiv", "value": "arXiv:2301.00001" },
+        { "namespace": "openalex", "value": "W123" }
+      ]
+    },
+    {
+      "id": "primary-identifier",
+      "operation": "primary-identifier",
+      "identifiers": [
+        { "namespace": "arxiv", "value": "2301.00001" },
+        { "namespace": "openalex", "value": "W123" },
+        { "namespace": "doi", "value": "10.1000/xyz" }
+      ]
+    },
+    {
+      "id": "identifier-overlap",
+      "operation": "identifier-overlap",
+      "left": [{ "namespace": "doi", "value": "https://doi.org/10.1000/XYZ" }],
+      "right": [
+        { "namespace": "doi", "value": "10.1000/xyz" },
+        { "namespace": "s2", "value": "S2-1" }
+      ]
+    },
+    {
+      "id": "merge-identifier-sets",
+      "operation": "merge-identifier-sets",
+      "left": [{ "namespace": "doi", "value": "10.1000/xyz" }],
+      "right": [
+        { "namespace": "doi", "value": "https://doi.org/10.1000/XYZ" },
+        { "namespace": "s2", "value": "S2-1" }
+      ]
+    },
+    {
+      "id": "identifier-set-ordering",
+      "operation": "merge-identifier-sets",
+      "left": [{ "namespace": "arxiv", "value": "2301.00001" }],
+      "right": [{ "namespace": "doi", "value": "10.1000/xyz" }]
+    },
+    {
+      "id": "merge-works",
+      "operation": "merge-works",
+      "left": {
+        "title": "Left title",
+        "sourceProvider": "openalex",
+        "ids": [{ "namespace": "doi", "value": "10.1000/xyz" }]
+      },
+      "right": {
+        "title": "Right title",
+        "sourceProvider": "semantic-scholar",
+        "ids": [
+          { "namespace": "doi", "value": "https://doi.org/10.1000/XYZ" },
+          { "namespace": "s2", "value": "S2-1" }
+        ]
+      }
+    },
+    {
+      "id": "dedupe-corpus",
+      "operation": "dedupe-corpus",
+      "works": [
+        {
+          "title": "Left",
+          "sourceProvider": "openalex",
+          "ids": [{ "namespace": "doi", "value": "10.1000/xyz" }]
+        },
+        {
+          "title": "Overlap",
+          "sourceProvider": "crossref",
+          "ids": [
+            { "namespace": "doi", "value": "https://doi.org/10.1000/XYZ" },
+            { "namespace": "openalex", "value": "W1" }
+          ]
+        },
+        {
+          "title": "Other",
+          "sourceProvider": "semantic-scholar",
+          "ids": [{ "namespace": "s2", "value": "S2-9" }]
+        }
+      ]
+    },
+    {
+      "id": "no-id-candidates",
+      "operation": "no-id-candidates",
+      "left": { "title": "Same title", "sourceProvider": "import-row-1", "ids": [] },
+      "right": { "title": "Same title", "sourceProvider": "import-row-2", "ids": [] }
+    },
+    {
+      "id": "title-lookup",
+      "operation": "title-lookup",
+      "work": {
+        "title": "Research Title",
+        "sourceProvider": "test",
+        "ids": [{ "namespace": "doi", "value": "10.1000/title" }]
+      },
+      "query": " research title "
+    },
+    {
+      "id": "parse-multiple-separators",
+      "operation": "parse-identifier",
+      "value": "doi:arxiv:2301.00001"
+    },
+    {
+      "id": "blank-direct-constructor",
+      "operation": "construct-identifier",
+      "identifier": { "namespace": "doi", "value": "doi:" }
+    },
+    {
+      "id": "unsafe-same-instance",
+      "operation": "unsafe-same-instance",
+      "work": {
+        "title": "Same instance",
+        "sourceProvider": "test",
+        "ids": [{ "namespace": "doi", "value": "10.1000/unsafe" }]
+      }
+    }
+  ]
+}

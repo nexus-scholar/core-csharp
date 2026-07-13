@@ -1,0 +1,123 @@
+{
+    "fixtureSetId": "php-shared-identity-v1",
+    "schemaVersion": "1.0.0",
+    "sourceKind": "pinned-php-observable-behavior",
+    "sourceCommit": "b24d0d71ec7b64003465182477e7edb7f49994f4",
+    "cases": [
+        {
+            "id": "normalize-identifiers",
+            "operation": "normalize-identifiers",
+            "result": {
+                "normalized": [
+                    "doi:10.1000/xyz",
+                    "arxiv:2301.00001",
+                    "openalex:w123"
+                ]
+            }
+        },
+        {
+            "id": "primary-identifier",
+            "operation": "primary-identifier",
+            "result": {
+                "primary": "doi:10.1000/xyz"
+            }
+        },
+        {
+            "id": "identifier-overlap",
+            "operation": "identifier-overlap",
+            "result": {
+                "overlap": true
+            }
+        },
+        {
+            "id": "merge-identifier-sets",
+            "operation": "merge-identifier-sets",
+            "result": {
+                "ids": [
+                    "doi:10.1000/xyz",
+                    "s2:s2-1"
+                ]
+            }
+        },
+        {
+            "id": "identifier-set-ordering",
+            "operation": "merge-identifier-sets",
+            "result": {
+                "ids": [
+                    "arxiv:2301.00001",
+                    "doi:10.1000/xyz"
+                ]
+            }
+        },
+        {
+            "id": "merge-works",
+            "operation": "merge-works",
+            "result": {
+                "sameWork": true,
+                "title": "Left title",
+                "ids": [
+                    "doi:10.1000/xyz",
+                    "s2:s2-1"
+                ]
+            }
+        },
+        {
+            "id": "dedupe-corpus",
+            "operation": "dedupe-corpus",
+            "result": {
+                "count": 2,
+                "works": [
+                    {
+                        "title": "Left",
+                        "ids": [
+                            "doi:10.1000/xyz",
+                            "openalex:w1"
+                        ]
+                    },
+                    {
+                        "title": "Other",
+                        "ids": [
+                            "s2:s2-9"
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "id": "no-id-candidates",
+            "operation": "no-id-candidates",
+            "result": {
+                "count": 2,
+                "sameWork": false
+            }
+        },
+        {
+            "id": "title-lookup",
+            "operation": "title-lookup",
+            "result": {
+                "foundTitle": "Research Title"
+            }
+        },
+        {
+            "id": "parse-multiple-separators",
+            "operation": "parse-identifier",
+            "result": {
+                "normalized": "doi:arxiv:2301.00001"
+            }
+        },
+        {
+            "id": "blank-direct-constructor",
+            "operation": "construct-identifier",
+            "result": {
+                "normalized": "doi:"
+            }
+        },
+        {
+            "id": "unsafe-same-instance",
+            "operation": "unsafe-same-instance",
+            "result": {
+                "count": 1
+            }
+        }
+    ]
+}

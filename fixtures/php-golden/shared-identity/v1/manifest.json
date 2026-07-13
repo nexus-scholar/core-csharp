@@ -1,0 +1,36 @@
+{
+    "fixtureSetId": "php-shared-identity-v1",
+    "schemaVersion": "1.0.0",
+    "sourceKind": "pinned-php-observable-behavior",
+    "sourceRepository": "nexus-scholar/core",
+    "sourceCommit": "b24d0d71ec7b64003465182477e7edb7f49994f4",
+    "sourceRefs": [
+        "src/Shared/ValueObject/WorkId.php",
+        "src/Shared/ValueObject/WorkIdNamespace.php",
+        "src/Shared/ValueObject/WorkIdSet.php",
+        "src/Shared/Domain/ScholarlyWork.php",
+        "src/Shared/Domain/CorpusSlice.php",
+        "tests/Unit/Shared/WorkIdTest.php",
+        "tests/Unit/Shared/ScholarlyWorkTest.php"
+    ],
+    "generatorCommand": "php scripts/php-golden/shared-identity-export.php --php-reference \"$PHP_REFERENCE\" --source-lock specs/SOURCE.lock.json --input fixtures/php-golden/shared-identity/v1/input.json --comparison fixtures/php-golden/shared-identity/v1/comparison.json --output fixtures/php-golden/shared-identity/v1/expected.json --manifest fixtures/php-golden/shared-identity/v1/manifest.json",
+    "generatorVersion": "shared-identity-v1",
+    "environmentAssumptions": [
+        "PHP 8.3 or later",
+        "git is available",
+        "PHP reference tracked files are clean",
+        "no network access or Composer dependencies are required",
+        "UTF-8 JSON with LF line endings"
+    ],
+    "inputDigest": "sha256:b5fe1a0ff98192532ac089e9e1e84abd4d7b24d8b28f72a6a602a231c35182a8",
+    "outputDigest": "sha256:fe0840a1776a20e950421a38af005650f2703abf42563e0729cc1c9571c87478",
+    "sourceLockDigest": "sha256:325ba2e579e6fdb9b3379912fdc8f245eb28bd04881a4587b8ed26757c6261ea",
+    "classificationDigest": "sha256:ac55e77160a8326014559816ca5e02b9b5e5a29dec9c3812364a84c7f4c85ef2",
+    "ignoredNondeterminism": [],
+    "comparisonRules": [
+        "compare normalized identifier strings exactly",
+        "compare ordered result arrays only where the fixture operation defines order",
+        "exclude generated corpus ids and retrieved timestamps from output",
+        "require every case to have a reviewed semantic classification"
+    ]
+}

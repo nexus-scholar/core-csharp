@@ -10,7 +10,8 @@ Implementation progress:
 - Phase 4 transactional workspace integrity: complete through Hardening 17.
 - Phase 5 test strategy upgrade: complete through Hardening 18.
 - Phase 6 release engineering: complete through Hardening 24 live governance and tagged release rehearsal.
-- Next phase: Phase 7 compatibility evidence, beginning with pinned PHP fixture generation and semantic comparators.
+- Phase 7 compatibility evidence: in progress through Hardening 25 Shared Identity fixture generation and semantic comparison.
+- Remaining Phase 7 jobs: H26 Search, H27 Deduplication/corpus lock, H28 Screening/Full Text, and H29 graph/export closeout.
 
 Source review: [full-technical-review.md](full-technical-review.md)
 
@@ -53,6 +54,7 @@ This plan supersedes the 2026-06-29 public-readiness plan as the current operati
    - define package topology, license, versioning, reproducible build, SBOM/signing/provenance, release workflow, package smoke tests, Pages recovery, and current operational docs.
 8. Phase 7 - compatibility evidence:
    - only after local correctness, generate pinned PHP fixtures and semantic comparators before making compatibility claims.
+   - execution plan: [phase-7-compatibility-evidence-plan.md](phase-7-compatibility-evidence-plan.md).
 
 ## Current Blocker Themes
 

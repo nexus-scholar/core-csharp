@@ -1,0 +1,18 @@
+{
+  "fixtureSetId": "php-shared-identity-v1",
+  "schemaVersion": "1.0.0",
+  "classifications": [
+    { "caseId": "normalize-identifiers", "classification": "equivalent_serialization", "authorityRefs": ["docs/adr/0007-shared-scientific-identity.md"] },
+    { "caseId": "primary-identifier", "classification": "equivalent_serialization", "authorityRefs": ["docs/adr/0007-shared-scientific-identity.md"] },
+    { "caseId": "identifier-overlap", "classification": "equivalent_serialization", "authorityRefs": ["docs/adr/0007-shared-scientific-identity.md"] },
+    { "caseId": "merge-identifier-sets", "classification": "equivalent_serialization", "authorityRefs": ["docs/adr/0007-shared-scientific-identity.md"] },
+    { "caseId": "identifier-set-ordering", "classification": "equivalent_serialization", "comparisonRule": "unordered_identifier_set", "authorityRefs": ["docs/adr/0007-shared-scientific-identity.md"], "rationale": "PHP preserves encounter order while C# renders the same identifier set in ADR 0007 precedence order." },
+    { "caseId": "merge-works", "classification": "equivalent_serialization", "authorityRefs": ["docs/adr/0007-shared-scientific-identity.md"] },
+    { "caseId": "dedupe-corpus", "classification": "equivalent_serialization", "authorityRefs": ["docs/adr/0007-shared-scientific-identity.md"] },
+    { "caseId": "no-id-candidates", "classification": "equivalent_serialization", "authorityRefs": ["docs/adr/0007-shared-scientific-identity.md"] },
+    { "caseId": "title-lookup", "classification": "equivalent_serialization", "authorityRefs": ["docs/adr/0007-shared-scientific-identity.md"] },
+    { "caseId": "parse-multiple-separators", "classification": "intentional_change", "authorityRefs": ["docs/adr/0007-shared-scientific-identity.md"], "rationale": "C# rejects ambiguous multiple-separator identifiers." },
+    { "caseId": "blank-direct-constructor", "classification": "intentional_change", "authorityRefs": ["docs/adr/0007-shared-scientific-identity.md"], "rationale": "C# rejects identifiers that normalize to blank." },
+    { "caseId": "unsafe-same-instance", "classification": "intentional_change", "authorityRefs": ["docs/adr/0007-shared-scientific-identity.md"], "rationale": "C# preserves unvalidated input records and never uses runtime object identity as scientific identity." }
+  ]
+}

@@ -4,14 +4,19 @@
 
 - Shared identity target for shared identity reconnaissance.
 - Focus: `WorkId`, `WorkIdNamespace`, `WorkIdSet`, `ScholarlyWork`, `CorpusSlice`, and shared identifier precedence.
-- Reconnaissance uses planning and conformance seed fixtures only. PHP-generated fixtures are not used in this phase.
+- Phase 7 H25 adds the first PHP-generated fixture set and semantic comparator for the shared contract surface.
 
 ## Fixture sources
 
 - Handcrafted seed JSON/NDJSON under `tests/` are planning/conformance seeds only.
-- PHP-generated fixtures are not accepted as this phase’s source-of-truth compatibility evidence.
-- Future fixtures must include source metadata per `GOLDEN-FIXTURE-PLAN.md`.
-- PHP compatibility proof must use generator-backed fixtures with complete source metadata as defined in `GOLDEN-FIXTURE-PLAN.md`.
+- Local conformance fixtures remain local contract evidence only.
+- The generated fixture set is `fixtures/php-golden/shared-identity/v1/` and includes complete source metadata per `GOLDEN-FIXTURE-PLAN.md`.
+- Compatibility statements are limited to cases classified by `PhpSharedIdentityGoldenTests`; uncovered Shared behavior remains unclaimed.
+
+## H25 implemented subset
+
+- Generated coverage includes identifier normalization, primary precedence, overlap, merge/set-order semantics, left-biased title merge, direct corpus deduplication, no-id candidate separation, and title lookup.
+- Generated coverage does not yet claim parity for authors, year, venue, abstract, citation count, retraction merge/filter behavior, raw data, completeness scoring, sorting, subtraction, or persistence projections.
 
 ## Planned positive fixture set
 
@@ -81,3 +86,7 @@
 - `tests/Unit/Shared/ScholarlyWorkTest.php`
 - `tests/Unit/Shared/ValueObjectsTest.php`
 - `tests/Feature/Laravel/DeduplicateCorpusJobTest.php` for `CorpusSlice::fromWorksUnsafe()` usage
+- `scripts/php-golden/shared-identity-export.php`
+- `fixtures/php-golden/shared-identity/v1/manifest.json`
+- `fixtures/php-golden/shared-identity/v1/comparison.json`
+- `tests/NexusScholar.Conformance.Tests/PhpSharedIdentityGoldenTests.cs`
