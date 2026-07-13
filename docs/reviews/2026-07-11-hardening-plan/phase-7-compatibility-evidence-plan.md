@@ -25,7 +25,7 @@ Generation must fail when the PHP checkout is not at the pinned commit or has tr
 | H25 | Fixture harness and Shared Identity | implemented on `cdx/hardening-phase-7-shared-identity` | deterministic PHP exporter, 12 cases, manifest digests, reviewed classifications, C# comparator |
 | H26 | Search query, cache, provider selection, and local import boundary | implemented on `cdx/hardening-phase-7-search-evidence` | 18 generated PHP cases, four corrected C# defects, semantic comparators, and explicit imported-export non-claim |
 | H27 | Deduplication plus corpus lock/snapshot behavior | implemented on `cdx/hardening-phase-7-dedup-evidence` | 16 generated PHP cases, semantic comparators, runtime identity and threshold differences classified, lock/snapshot non-adoption governed by ADR 0026 |
-| H28 | Screening and local Full Text overlap | pending | generated PHP fixtures for the shared local contract surface; app/path/runtime projections excluded |
+| H28 | Screening and local Full Text overlap | implemented on `cdx/hardening-phase-7-screening-fulltext-evidence` | 26 cases (16 equivalent, 9 intentional, 1 `php_defect`), `php-golden/screening-fulltext/v1`, and typed comparator test coverage |
 | H29 | Citation network, dissemination exports, and Phase 7 closeout | pending | generated graph/export fixtures, compatibility claim inventory, full validation, and final phase report |
 
 ## H25 Evidence

@@ -65,7 +65,7 @@ public sealed class ScreeningFixtureTests
             Assert.AreEqual("local-gate-9-screening-implementation", root.GetProperty("sourceKind").GetString());
             Assert.AreEqual("local-gate-9-screening-local", root.GetProperty("sourceCommit").GetString());
             Assert.IsTrue(root.GetProperty("sourceRefs").GetArrayLength() > 0);
-            Assert.IsTrue(root.GetProperty("comparisonRules").EnumerateArray().Any(item => item.GetString() == "no-php-compatibility-claim"));
+            Assert.IsTrue(root.GetProperty("comparisonRules").EnumerateArray().Any(item => item.GetString() == "no-broad-php-screening-compatibility"));
             Assert.IsTrue(ContentDigest.TryParse(root.GetProperty("inputDigest").GetString(), out _));
             Assert.IsTrue(ContentDigest.TryParse(root.GetProperty("outputDigest").GetString(), out _));
         }
@@ -538,7 +538,7 @@ public sealed class ScreeningFixtureTests
             Array.Empty<DedupReviewCandidate>(),
             Array.Empty<DedupMessage>(),
             Array.Empty<DedupMessage>(),
-            new[] { "no-php-compatibility-claim", "no-screening" });
+            new[] { "no-broad-php-screening-compatibility", "no-screening" });
     }
 
     private static DedupCandidateRecord BuildCandidate(string candidateId, bool hasStableIdentifier = true)

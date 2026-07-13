@@ -66,7 +66,8 @@ public sealed class FullTextFixtureTests
             Assert.AreEqual("local-gate-9-fulltext-implementation", root.GetProperty("sourceKind").GetString());
             Assert.AreEqual("local-gate-9-fulltext-local", root.GetProperty("sourceCommit").GetString());
             Assert.IsTrue(root.GetProperty("sourceRefs").GetArrayLength() > 0);
-            Assert.IsTrue(root.GetProperty("comparisonRules").EnumerateArray().Any(item => item.GetString() == "no-php-compatibility-claim"));
+            Assert.IsTrue(root.GetProperty("comparisonRules").EnumerateArray().Any(item => item.GetString() == "no-broad-php-fulltext-compatibility"));
+            Assert.IsTrue(root.GetProperty("comparisonRules").EnumerateArray().Any(item => item.GetString() == "no-path-runtime-projection-compatibility"));
             Assert.IsTrue(root.GetProperty("comparisonRules").EnumerateArray().Any(item => item.GetString() == "no-network-provider-behavior"));
             Assert.IsTrue(ContentDigest.TryParse(root.GetProperty("inputDigest").GetString(), out _));
             Assert.IsTrue(ContentDigest.TryParse(root.GetProperty("outputDigest").GetString(), out _));

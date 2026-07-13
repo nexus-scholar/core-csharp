@@ -1,0 +1,48 @@
+{
+    "fixtureSetId": "php-screening-fulltext-v1",
+    "schemaVersion": "1.0.0",
+    "sourceKind": "pinned-php-observable-behavior",
+    "sourceRepository": "nexus-scholar/core",
+    "sourceCommit": "b24d0d71ec7b64003465182477e7edb7f49994f4",
+    "sourceRefs": [
+        "src/Dissemination/Application/Dto/FullTextResult.php",
+        "src/Dissemination/Application/UseCase/RetrieveFullTextHandler.php",
+        "src/Dissemination/Domain/FullText.php",
+        "src/Dissemination/Domain/FullTextArtifactType.php",
+        "src/Dissemination/Domain/FullTextStatus.php",
+        "src/Dissemination/Domain/Port/DownloadResult.php",
+        "src/Screening/Domain/CouncilDecisionAggregator.php",
+        "src/Screening/Domain/ScreeningCriteria.php",
+        "src/Screening/Domain/ScreeningDecision.php",
+        "src/Screening/Domain/ScreeningRationale.php",
+        "src/Screening/Domain/ScreeningStage.php",
+        "src/Screening/Domain/ScreeningVote.php",
+        "src/Screening/Domain/ScreeningVerdict.php"
+    ],
+    "generatorCommand": "php scripts/php-golden/screening-fulltext-export.php --php-reference \"$PHP_REFERENCE\" --source-lock specs/SOURCE.lock.json --input fixtures/php-golden/screening-fulltext/v1/input.json --comparison fixtures/php-golden/screening-fulltext/v1/comparison.json --output fixtures/php-golden/screening-fulltext/v1/expected.json --manifest fixtures/php-golden/screening-fulltext/v1/manifest.json",
+    "generatorVersion": "screening-fulltext-v1",
+    "environmentAssumptions": [
+        "PHP 8.3 or later",
+        "git is available",
+        "PHP reference tracked files are clean",
+        "no network access and no Composer/network mode",
+        "no live provider/download invocation",
+        "output uses UTF-8 JSON with LF line endings"
+    ],
+    "inputDigest": "sha256:86e316056c4fadd733a04016df34f8e7660768dbb02b793edd47f605b36d2b88",
+    "outputDigest": "sha256:8b6a43999e3a97f4779d6cec32bfda988c03dae1ba7368292c207ba7528985d1",
+    "sourceLockDigest": "sha256:325ba2e579e6fdb9b3379912fdc8f245eb28bd04881a4587b8ed26757c6261ea",
+    "classificationDigest": "sha256:fbeb34518ed34ae302ff9590a2f97028b598f4154f7a9f2d6cf506faf6c11df3",
+    "ignoredNondeterminism": [
+        "generated council verdict ids",
+        "council verdict timestamps",
+        "handler durations"
+    ],
+    "comparisonRules": [
+        "compare deterministic enum values and normalized hashes",
+        "compare screening verdicts as {decision, confidence, source, rationale, voteCounts, votes} only",
+        "exercise private RetrieveFullTextHandler validation via ReflectionClass::newInstanceWithoutConstructor",
+        "normalize non-finite numeric values before JSON serialization",
+        "no runtime network calls in fixture generation"
+    ]
+}

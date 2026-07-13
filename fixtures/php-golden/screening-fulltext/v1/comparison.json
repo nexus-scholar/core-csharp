@@ -1,0 +1,216 @@
+{
+  "fixtureSetId": "php-screening-fulltext-v1",
+  "classifications": [
+    {
+      "caseId": "screening-decision-vocabulary",
+      "classification": "equivalent_serialization",
+      "comparisonRule": "exact",
+      "authorityRefs": ["docs/adr/0013-screening-decision-and-conflict-contract.md"],
+      "rationale": "Narrow equivalence for screening decision vocabulary between PHP and C# boundary behavior."
+    },
+    {
+      "caseId": "screening-stage-vocabulary",
+      "classification": "equivalent_serialization",
+      "comparisonRule": "exact",
+      "authorityRefs": ["docs/adr/0013-screening-decision-and-conflict-contract.md"],
+      "rationale": "Narrow equivalence for screening stage vocabulary and accepted boundary values."
+    },
+    {
+      "caseId": "screening-criteria-key-order-stable",
+      "classification": "equivalent_serialization",
+      "comparisonRule": "key_order_stable",
+      "authorityRefs": ["docs/adr/0013-screening-decision-and-conflict-contract.md"],
+      "rationale": "Narrow equivalence: key order in criteria input is semantically stable."
+    },
+    {
+      "caseId": "screening-criteria-list-order-semantic",
+      "classification": "equivalent_serialization",
+      "comparisonRule": "list_order_semantic",
+      "authorityRefs": ["docs/adr/0013-screening-decision-and-conflict-contract.md"],
+      "rationale": "Narrow equivalence: list order remains semantic, so reordering criteria values changes both PHP and C# digests."
+    },
+    {
+      "caseId": "screening-confidence-below-zero-rejected",
+      "classification": "equivalent_serialization",
+      "comparisonRule": "exact",
+      "authorityRefs": ["docs/adr/0013-screening-decision-and-conflict-contract.md"],
+      "rationale": "Narrow equivalence for confidence lower-bound screening rejection semantics."
+    },
+    {
+      "caseId": "screening-confidence-above-one-rejected",
+      "classification": "equivalent_serialization",
+      "comparisonRule": "exact",
+      "authorityRefs": ["docs/adr/0013-screening-decision-and-conflict-contract.md"],
+      "rationale": "Narrow equivalence for confidence upper-bound screening rejection semantics."
+    },
+    {
+      "caseId": "fulltext-artifact-type-vocabulary",
+      "classification": "equivalent_serialization",
+      "comparisonRule": "shared-raw-artifact-subset",
+      "authorityRefs": ["docs/adr/0014-fulltext-acquisition-artifact-and-extraction-contract.md"],
+      "rationale": "Narrow equivalence for the shared pdf/xml/text raw-artifact subset; C# derived-text remains an intentional ADR 0014 extension outside the PHP vocabulary."
+    },
+    {
+      "caseId": "fulltext-status-vocabulary",
+      "classification": "equivalent_serialization",
+      "comparisonRule": "exact",
+      "authorityRefs": ["docs/adr/0014-fulltext-acquisition-artifact-and-extraction-contract.md"],
+      "rationale": "Narrow equivalence for Full Text status vocabulary semantics."
+    },
+    {
+      "caseId": "fulltext-failure-result",
+      "classification": "equivalent_serialization",
+      "comparisonRule": "exact",
+      "authorityRefs": ["docs/adr/0014-fulltext-acquisition-artifact-and-extraction-contract.md"],
+      "rationale": "Narrow equivalence for Full Text failure-result encoding and status behavior."
+    },
+    {
+      "caseId": "fulltext-skipped-result",
+      "classification": "equivalent_serialization",
+      "comparisonRule": "exact",
+      "authorityRefs": ["docs/adr/0014-fulltext-acquisition-artifact-and-extraction-contract.md"],
+      "rationale": "Narrow equivalence for Full Text skipped-result status behavior."
+    },
+    {
+      "caseId": "screening-nonfinite-confidence-accepted",
+      "classification": "php_defect",
+      "comparisonRule": "finite-confidence-validation",
+      "authorityRefs": [
+        "docs/adr/0013-screening-decision-and-conflict-contract.md"
+      ],
+      "rationale": "PHP accepts NAN because ordered comparisons against NAN are false, contradicting its stated confidence range invariant; C# correctly rejects non-finite confidence as invalid-confidence."
+    },
+    {
+      "caseId": "screening-criteria-raw-hash-vs-envelope",
+      "classification": "intentional_change",
+      "comparisonRule": "hash_scope_boundary",
+      "authorityRefs": [
+        "docs/adr/0013-screening-decision-and-conflict-contract.md",
+        "docs/adr/0021-screening-authority-dependency-direction.md"
+      ],
+      "rationale": "Intentional C# boundary: raw criteria and envelope hashing are projected through Core authority, not adopted from PHP."
+    },
+    {
+      "caseId": "screening-council-unanimous-final",
+      "classification": "intentional_change",
+      "comparisonRule": "council_projection_boundary",
+      "authorityRefs": [
+        "docs/adr/0013-screening-decision-and-conflict-contract.md",
+        "docs/adr/0021-screening-authority-dependency-direction.md"
+      ],
+      "rationale": "PHP emits a final llm_council verdict; C# preserves the same model output only as proposal evidence until an authorized human decision."
+    },
+    {
+      "caseId": "screening-council-majority-final",
+      "classification": "intentional_change",
+      "comparisonRule": "council_projection_boundary",
+      "authorityRefs": [
+        "docs/adr/0013-screening-decision-and-conflict-contract.md",
+        "docs/adr/0021-screening-authority-dependency-direction.md"
+      ],
+      "rationale": "PHP turns a council majority into a final verdict; C# does not grant model aggregation final screening authority."
+    },
+    {
+      "caseId": "screening-council-conflict-final",
+      "classification": "intentional_change",
+      "comparisonRule": "council_projection_boundary",
+      "authorityRefs": [
+        "docs/adr/0013-screening-decision-and-conflict-contract.md",
+        "docs/adr/0021-screening-authority-dependency-direction.md"
+      ],
+      "rationale": "PHP persists the council conflict result as a needs_review verdict; C# retains it as a suggestion and requires human authority for a final decision."
+    },
+    {
+      "caseId": "screening-council-all-failed-final",
+      "classification": "intentional_change",
+      "comparisonRule": "council_projection_boundary",
+      "authorityRefs": [
+        "docs/adr/0013-screening-decision-and-conflict-contract.md",
+        "docs/adr/0021-screening-authority-dependency-direction.md"
+      ],
+      "rationale": "PHP persists an all-failed council outcome as a needs_review verdict; C# keeps failures as proposal evidence and cannot finalize automatically."
+    },
+    {
+      "caseId": "fulltext-success-path-projection",
+      "classification": "intentional_change",
+      "comparisonRule": "path_projection_boundary",
+      "authorityRefs": [
+        "docs/adr/0014-fulltext-acquisition-artifact-and-extraction-contract.md",
+        "docs/adr/0022-fulltext-artifacts-dependency-direction.md"
+      ],
+      "rationale": "Intentional C# boundary: projection metadata is accepted only as local provenance, not a cross-language authority claim."
+    },
+    {
+      "caseId": "fulltext-success-missing-byte-digest",
+      "classification": "intentional_change",
+      "comparisonRule": "missing_artifact_digest_boundary",
+      "authorityRefs": [
+        "docs/adr/0014-fulltext-acquisition-artifact-and-extraction-contract.md",
+        "docs/adr/0022-fulltext-artifacts-dependency-direction.md"
+      ],
+      "rationale": "PHP can report success without a raw-byte digest; C# requires raw-artifact-bytes identity before artifact evidence is authoritative."
+    },
+    {
+      "caseId": "fulltext-runtime-retrieval-projection",
+      "classification": "intentional_change",
+      "comparisonRule": "runtime_projection_boundary",
+      "authorityRefs": [
+        "docs/adr/0014-fulltext-acquisition-artifact-and-extraction-contract.md",
+        "docs/adr/0022-fulltext-artifacts-dependency-direction.md"
+      ],
+      "rationale": "Intentional C# boundary: runtime-retrieval projection metadata is local provenance, not a cross-language compatibility claim."
+    },
+    {
+      "caseId": "fulltext-derived-extraction-absent",
+      "classification": "intentional_change",
+      "comparisonRule": "derived_extraction_boundary",
+      "authorityRefs": [
+        "docs/adr/0014-fulltext-acquisition-artifact-and-extraction-contract.md",
+        "docs/adr/0022-fulltext-artifacts-dependency-direction.md"
+      ],
+      "rationale": "The pinned PHP result has no digest-bound extraction record; C# extraction evidence must bind to the source artifact id and raw-byte digest."
+    },
+    {
+      "caseId": "fulltext-valid-pdf-validation",
+      "classification": "equivalent_serialization",
+      "comparisonRule": "exact",
+      "authorityRefs": ["docs/adr/0014-fulltext-acquisition-artifact-and-extraction-contract.md"],
+      "rationale": "Narrow equivalence comparing PHP and C# FullTextArtifactValidator behavior for valid PDF payloads."
+    },
+    {
+      "caseId": "fulltext-invalid-pdf-signature",
+      "classification": "equivalent_serialization",
+      "comparisonRule": "exact",
+      "authorityRefs": ["docs/adr/0014-fulltext-acquisition-artifact-and-extraction-contract.md"],
+      "rationale": "Narrow equivalence comparing PDF signature validation behavior between PHP and C#."
+    },
+    {
+      "caseId": "fulltext-oversized-artifact",
+      "classification": "equivalent_serialization",
+      "comparisonRule": "exact",
+      "authorityRefs": ["docs/adr/0014-fulltext-acquisition-artifact-and-extraction-contract.md"],
+      "rationale": "Narrow equivalence comparing max-bytes rejection behavior for oversized artifacts."
+    },
+    {
+      "caseId": "fulltext-valid-xml-validation",
+      "classification": "equivalent_serialization",
+      "comparisonRule": "exact",
+      "authorityRefs": ["docs/adr/0014-fulltext-acquisition-artifact-and-extraction-contract.md"],
+      "rationale": "Narrow equivalence comparing PHP and C# FullTextArtifactValidator for valid XML payloads."
+    },
+    {
+      "caseId": "fulltext-html-rejected-as-xml",
+      "classification": "equivalent_serialization",
+      "comparisonRule": "exact",
+      "authorityRefs": ["docs/adr/0014-fulltext-acquisition-artifact-and-extraction-contract.md"],
+      "rationale": "Narrow equivalence comparing HTML-as-XML rejection behavior in FullTextArtifactValidator."
+    },
+    {
+      "caseId": "fulltext-empty-text-rejected",
+      "classification": "equivalent_serialization",
+      "comparisonRule": "exact",
+      "authorityRefs": ["docs/adr/0014-fulltext-acquisition-artifact-and-extraction-contract.md"],
+      "rationale": "Narrow equivalence comparing empty-text rejection behavior in FullTextArtifactValidator."
+    }
+  ]
+}

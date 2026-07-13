@@ -24,6 +24,7 @@
     <None Include="../../fixtures/php-golden/shared-identity/v1/*.json" Link="fixtures/php-golden/shared-identity/v1/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../fixtures/php-golden/search/v1/*.json" Link="fixtures/php-golden/search/v1/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../fixtures/php-golden/deduplication/v1/*.json" Link="fixtures/php-golden/deduplication/v1/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../fixtures/php-golden/screening-fulltext/v1/*.json" Link="fixtures/php-golden/screening-fulltext/v1/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../specs/SOURCE.lock.json" Link="fixtures/php-golden/SOURCE.lock.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
   <ItemGroup>

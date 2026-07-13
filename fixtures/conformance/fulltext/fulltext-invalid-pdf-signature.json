@@ -5,7 +5,7 @@
   "generatorCommand": "hand-authored local Gate 9 Full Text fixture",
   "generatorVersion": "gate-9-fulltext-v1",
   "sourceRefs": ["docs/adr/0014-fulltext-acquisition-artifact-and-extraction-contract.md"],
-  "comparisonRules": ["no-php-compatibility-claim", "no-generated-php-fixture", "no-network-provider-behavior"],
+  "comparisonRules": ["no-broad-php-fulltext-compatibility", "no-path-runtime-projection-compatibility", "no-network-provider-behavior"],
   "inputDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000014",
   "outputDigest": "sha256:1000000000000000000000000000000000000000000000000000000000000014",
   "case": { "artifact": { "artifactKind": "pdf", "mediaType": "application/pdf", "bytes": "not a pdf" }, "expected": { "category": "invalid-pdf-signature" } }

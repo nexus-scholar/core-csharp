@@ -10,8 +10,8 @@ Implementation progress:
 - Phase 4 transactional workspace integrity: complete through Hardening 17.
 - Phase 5 test strategy upgrade: complete through Hardening 18.
 - Phase 6 release engineering: complete through Hardening 24 live governance and tagged release rehearsal.
-- Phase 7 compatibility evidence: in progress through Hardening 27 Deduplication and corpus lock/snapshot evidence.
-- Remaining Phase 7 jobs: H28 Screening/Full Text and H29 graph/export closeout.
+- Phase 7 compatibility evidence: in progress through Hardening 28 Screening and Full Text compatibility evidence.
+- Remaining Phase 7 job: H29 graph/export closeout.
 
 Source review: [full-technical-review.md](full-technical-review.md)
 

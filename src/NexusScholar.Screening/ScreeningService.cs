@@ -709,5 +709,5 @@ public sealed class ScreeningService
         return $"conflict:{generation}:{digest}";
     }
 
-    private const string ScreeningRuleConstantsNoPhpCompat = "no-php-compatibility-claim";
+    private const string ScreeningRuleConstantsNoPhpCompat = "no-broad-php-screening-compatibility";
 }

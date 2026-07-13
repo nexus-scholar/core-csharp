@@ -13,8 +13,8 @@
     "docs/adr/0013-screening-decision-and-conflict-contract.md"
   ],
   "comparisonRules": [
-    "no-php-compatibility-claim",
-    "no-generated-php-fixture",
+    "no-broad-php-screening-compatibility",
+    "no-php-screening-authority-compatibility",
     "no-persistence-api-ui-cloud",
     "no-cli-web-authority",
     "no-live-llm-provider-network",

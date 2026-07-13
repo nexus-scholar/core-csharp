@@ -1,0 +1,615 @@
+{
+    "fixtureSetId": "php-screening-fulltext-v1",
+    "schemaVersion": "1.0.0",
+    "sourceKind": "pinned-php-observable-behavior",
+    "sourceCommit": "b24d0d71ec7b64003465182477e7edb7f49994f4",
+    "cases": [
+        {
+            "id": "screening-decision-vocabulary",
+            "operation": "screening-decision-vocabulary",
+            "result": {
+                "values": [
+                    "include",
+                    "needs_review",
+                    "exclude"
+                ]
+            }
+        },
+        {
+            "id": "screening-stage-vocabulary",
+            "operation": "screening-stage-vocabulary",
+            "result": {
+                "values": [
+                    "title_abstract",
+                    "full_text",
+                    "human_adjudication"
+                ]
+            }
+        },
+        {
+            "id": "screening-criteria-key-order-stable",
+            "operation": "screening-criteria-key-order-stable",
+            "result": {
+                "hashLeft": "fdb0a784fc049639f23f4dbdd4260d4c0ffa539f6b11fa44cdb3f1c1612c048b",
+                "hashRight": "fdb0a784fc049639f23f4dbdd4260d4c0ffa539f6b11fa44cdb3f1c1612c048b",
+                "equal": true,
+                "normalizedLeft": {
+                    "exclude": [
+                        "predatory",
+                        "irrelevant"
+                    ],
+                    "include": [
+                        "systematic",
+                        "review"
+                    ]
+                },
+                "normalizedRight": {
+                    "exclude": [
+                        "predatory",
+                        "irrelevant"
+                    ],
+                    "include": [
+                        "systematic",
+                        "review"
+                    ]
+                }
+            }
+        },
+        {
+            "id": "screening-criteria-list-order-semantic",
+            "operation": "screening-criteria-list-order-semantic",
+            "result": {
+                "hashLeft": "fdb0a784fc049639f23f4dbdd4260d4c0ffa539f6b11fa44cdb3f1c1612c048b",
+                "hashRight": "2268f623b029912493a290a4bc903c4728037fdaf0ffe3c7df5a9cb09f4bc310",
+                "equal": false,
+                "normalizedLeft": {
+                    "exclude": [
+                        "predatory",
+                        "irrelevant"
+                    ],
+                    "include": [
+                        "systematic",
+                        "review"
+                    ]
+                },
+                "normalizedRight": {
+                    "exclude": [
+                        "irrelevant",
+                        "predatory"
+                    ],
+                    "include": [
+                        "review",
+                        "systematic"
+                    ]
+                }
+            }
+        },
+        {
+            "id": "screening-confidence-below-zero-rejected",
+            "operation": "screening-confidence-below-zero-rejected",
+            "result": {
+                "accepted": false,
+                "errorCategory": "vote-confidence-rejected",
+                "expectedRejection": "rejected",
+                "message": "Screening vote confidence must be between 0 and 1."
+            }
+        },
+        {
+            "id": "screening-confidence-above-one-rejected",
+            "operation": "screening-confidence-above-one-rejected",
+            "result": {
+                "accepted": false,
+                "errorCategory": "vote-confidence-rejected",
+                "expectedRejection": "rejected",
+                "message": "Screening vote confidence must be between 0 and 1."
+            }
+        },
+        {
+            "id": "fulltext-artifact-type-vocabulary",
+            "operation": "fulltext-artifact-type-vocabulary",
+            "result": {
+                "values": [
+                    "pdf",
+                    "xml",
+                    "text"
+                ]
+            }
+        },
+        {
+            "id": "fulltext-status-vocabulary",
+            "operation": "fulltext-status-vocabulary",
+            "result": {
+                "values": [
+                    "success",
+                    "failure",
+                    "skipped"
+                ]
+            }
+        },
+        {
+            "id": "fulltext-failure-result",
+            "operation": "fulltext-failure-result",
+            "result": {
+                "status": "failure",
+                "path": null,
+                "source": "screening-handoff",
+                "errorMessage": "inaccessible-full-text",
+                "http": 500,
+                "hasRawBytes": false,
+                "hasRawByteDigest": false,
+                "legacy": {
+                    "status": "failure",
+                    "path": null,
+                    "source": "screening-handoff",
+                    "errorMessage": "inaccessible-full-text",
+                    "http": 500,
+                    "hasRawBytes": false,
+                    "hasRawByteDigest": false
+                }
+            }
+        },
+        {
+            "id": "fulltext-skipped-result",
+            "operation": "fulltext-skipped-result",
+            "result": {
+                "status": "skipped",
+                "path": null,
+                "source": "screening-handoff",
+                "errorMessage": "skipped",
+                "http": null,
+                "hasRawBytes": false,
+                "hasRawByteDigest": false,
+                "legacy": {
+                    "status": "skipped",
+                    "path": null,
+                    "source": null,
+                    "errorMessage": "skipped",
+                    "http": null,
+                    "hasRawBytes": false,
+                    "hasRawByteDigest": false
+                }
+            }
+        },
+        {
+            "id": "screening-nonfinite-confidence-accepted",
+            "operation": "screening-nonfinite-confidence-accepted",
+            "result": {
+                "accepted": true,
+                "decision": "include",
+                "confidenceFinite": false,
+                "confidence": null
+            }
+        },
+        {
+            "id": "screening-criteria-raw-hash-vs-envelope",
+            "operation": "screening-criteria-raw-hash-vs-envelope",
+            "result": {
+                "hash": "sha256:ee317cc437d1888263f3deba495bdf0d09240f48854e891e4d8f4a01bac70f78",
+                "normalized": {
+                    "exclude": [
+                        "retired"
+                    ],
+                    "include": [
+                        "systematic",
+                        "evidence"
+                    ]
+                },
+                "criteriaHash": "ee317cc437d1888263f3deba495bdf0d09240f48854e891e4d8f4a01bac70f78"
+            }
+        },
+        {
+            "id": "screening-council-unanimous-final",
+            "operation": "screening-council-unanimous-final",
+            "result": {
+                "decision": "include",
+                "confidence": 0.9133333333333334,
+                "source": "llm_council",
+                "rationale": {
+                    "reason": "Council majority: 3 of 3 models voted include.",
+                    "evidence": [
+                        "fixture-evidence"
+                    ],
+                    "uncertainty": [],
+                    "exclusion_basis": []
+                },
+                "voteCounts": {
+                    "include": 3,
+                    "exclude": 0,
+                    "needs_review": 0,
+                    "failed": 0
+                },
+                "votes": [
+                    {
+                        "decision": "include",
+                        "confidence": 0.94,
+                        "source": "fixture-provider:model-gpt-4o-mini",
+                        "rationale": {
+                            "reason": "fixture",
+                            "evidence": [
+                                "fixture-evidence"
+                            ],
+                            "uncertainty": [],
+                            "exclusion_basis": []
+                        }
+                    },
+                    {
+                        "decision": "include",
+                        "confidence": 0.91,
+                        "source": "fixture-provider:model-llama-70b",
+                        "rationale": {
+                            "reason": "fixture",
+                            "evidence": [
+                                "fixture-evidence"
+                            ],
+                            "uncertainty": [],
+                            "exclusion_basis": []
+                        }
+                    },
+                    {
+                        "decision": "include",
+                        "confidence": 0.89,
+                        "source": "fixture-provider:model-mistral-large",
+                        "rationale": {
+                            "reason": "fixture",
+                            "evidence": [
+                                "fixture-evidence"
+                            ],
+                            "uncertainty": [],
+                            "exclusion_basis": []
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "id": "screening-council-majority-final",
+            "operation": "screening-council-majority-final",
+            "result": {
+                "decision": "include",
+                "confidence": 0.7333333333333333,
+                "source": "llm_council",
+                "rationale": {
+                    "reason": "Council majority: 3 of 4 models voted include.",
+                    "evidence": [
+                        "fixture-evidence"
+                    ],
+                    "uncertainty": [],
+                    "exclusion_basis": []
+                },
+                "voteCounts": {
+                    "include": 3,
+                    "exclude": 0,
+                    "needs_review": 1,
+                    "failed": 0
+                },
+                "votes": [
+                    {
+                        "decision": "include",
+                        "confidence": 0.82,
+                        "source": "fixture-provider:model-gpt-4o-mini",
+                        "rationale": {
+                            "reason": "fixture",
+                            "evidence": [
+                                "fixture-evidence"
+                            ],
+                            "uncertainty": [],
+                            "exclusion_basis": []
+                        }
+                    },
+                    {
+                        "decision": "include",
+                        "confidence": 0.77,
+                        "source": "fixture-provider:model-llama-70b",
+                        "rationale": {
+                            "reason": "fixture",
+                            "evidence": [
+                                "fixture-evidence"
+                            ],
+                            "uncertainty": [],
+                            "exclusion_basis": []
+                        }
+                    },
+                    {
+                        "decision": "include",
+                        "confidence": 0.61,
+                        "source": "fixture-provider:model-mistral-large",
+                        "rationale": {
+                            "reason": "fixture",
+                            "evidence": [
+                                "fixture-evidence"
+                            ],
+                            "uncertainty": [],
+                            "exclusion_basis": []
+                        }
+                    },
+                    {
+                        "decision": "needs_review",
+                        "confidence": 0.55,
+                        "source": "fixture-provider:model-claude",
+                        "rationale": {
+                            "reason": "fixture",
+                            "evidence": [
+                                "fixture-evidence"
+                            ],
+                            "uncertainty": [],
+                            "exclusion_basis": []
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "id": "screening-council-conflict-final",
+            "operation": "screening-council-conflict-final",
+            "result": {
+                "decision": "needs_review",
+                "confidence": 0.52125,
+                "source": "llm_council",
+                "rationale": {
+                    "reason": "Council disagreement: include and exclude votes require manual review.",
+                    "evidence": [
+                        "fixture-evidence"
+                    ],
+                    "uncertainty": [
+                        "council_include_exclude_conflict"
+                    ],
+                    "exclusion_basis": []
+                },
+                "voteCounts": {
+                    "include": 2,
+                    "exclude": 2,
+                    "needs_review": 0,
+                    "failed": 0
+                },
+                "votes": [
+                    {
+                        "decision": "include",
+                        "confidence": 0.72,
+                        "source": "fixture-provider:model-gpt-4o-mini",
+                        "rationale": {
+                            "reason": "fixture",
+                            "evidence": [
+                                "fixture-evidence"
+                            ],
+                            "uncertainty": [],
+                            "exclusion_basis": []
+                        }
+                    },
+                    {
+                        "decision": "exclude",
+                        "confidence": 0.7,
+                        "source": "fixture-provider:model-llama-70b",
+                        "rationale": {
+                            "reason": "fixture",
+                            "evidence": [
+                                "fixture-evidence"
+                            ],
+                            "uncertainty": [],
+                            "exclusion_basis": []
+                        }
+                    },
+                    {
+                        "decision": "include",
+                        "confidence": 0.68,
+                        "source": "fixture-provider:model-mistral-large",
+                        "rationale": {
+                            "reason": "fixture",
+                            "evidence": [
+                                "fixture-evidence"
+                            ],
+                            "uncertainty": [],
+                            "exclusion_basis": []
+                        }
+                    },
+                    {
+                        "decision": "exclude",
+                        "confidence": 0.68,
+                        "source": "fixture-provider:model-claude",
+                        "rationale": {
+                            "reason": "fixture",
+                            "evidence": [
+                                "fixture-evidence"
+                            ],
+                            "uncertainty": [],
+                            "exclusion_basis": []
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "id": "screening-council-all-failed-final",
+            "operation": "screening-council-all-failed-final",
+            "result": {
+                "decision": "needs_review",
+                "confidence": 0,
+                "source": "llm_council",
+                "rationale": {
+                    "reason": "Council could not produce a valid model vote.",
+                    "evidence": [],
+                    "uncertainty": [
+                        "model_failure:model-gpt-4o-mini",
+                        "model_failure:model-llama-70b",
+                        "model_failure:model-mistral-large"
+                    ],
+                    "exclusion_basis": []
+                },
+                "voteCounts": {
+                    "include": 0,
+                    "exclude": 0,
+                    "needs_review": 0,
+                    "failed": 3
+                },
+                "votes": [
+                    {
+                        "decision": null,
+                        "confidence": null,
+                        "source": "fixture-provider:model-gpt-4o-mini",
+                        "rationale": {
+                            "reason": "Model vote failed.",
+                            "evidence": [],
+                            "uncertainty": [
+                                "model_failure:model-gpt-4o-mini"
+                            ],
+                            "exclusion_basis": []
+                        }
+                    },
+                    {
+                        "decision": null,
+                        "confidence": null,
+                        "source": "fixture-provider:model-llama-70b",
+                        "rationale": {
+                            "reason": "Model vote failed.",
+                            "evidence": [],
+                            "uncertainty": [
+                                "model_failure:model-llama-70b"
+                            ],
+                            "exclusion_basis": []
+                        }
+                    },
+                    {
+                        "decision": null,
+                        "confidence": null,
+                        "source": "fixture-provider:model-mistral-large",
+                        "rationale": {
+                            "reason": "Model vote failed.",
+                            "evidence": [],
+                            "uncertainty": [
+                                "model_failure:model-mistral-large"
+                            ],
+                            "exclusion_basis": []
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "id": "fulltext-success-path-projection",
+            "operation": "fulltext-success-path-projection",
+            "result": {
+                "status": "success",
+                "path": "artifacts/fulltext/path/017.txt",
+                "source": "source-017",
+                "errorMessage": null,
+                "http": 200,
+                "hasRawBytes": false,
+                "hasRawByteDigest": false,
+                "legacy": {
+                    "status": "success",
+                    "path": "artifacts/fulltext/path/017.txt",
+                    "source": "source-017",
+                    "errorMessage": null,
+                    "http": 200,
+                    "hasRawBytes": false,
+                    "hasRawByteDigest": false
+                }
+            }
+        },
+        {
+            "id": "fulltext-success-missing-byte-digest",
+            "operation": "fulltext-success-missing-byte-digest",
+            "result": {
+                "status": "success",
+                "path": "artifacts/fulltext/path/018.pdf",
+                "source": "source-018",
+                "errorMessage": null,
+                "http": 200,
+                "hasRawBytes": false,
+                "hasRawByteDigest": false,
+                "legacy": {
+                    "status": "success",
+                    "path": "artifacts/fulltext/path/018.pdf",
+                    "source": "source-018",
+                    "errorMessage": null,
+                    "http": 200,
+                    "hasRawBytes": false,
+                    "hasRawByteDigest": false
+                }
+            }
+        },
+        {
+            "id": "fulltext-runtime-retrieval-projection",
+            "operation": "fulltext-runtime-retrieval-projection",
+            "result": {
+                "projection": {
+                    "path": "runtime/fulltext/019.html",
+                    "source": "source-019",
+                    "http": 200
+                },
+                "hasRawBytes": false,
+                "hasRawByteDigest": false,
+                "hasLegacyBytes": false,
+                "hasLegacyDigest": false,
+                "sourceMeta": "runtime-path"
+            }
+        },
+        {
+            "id": "fulltext-derived-extraction-absent",
+            "operation": "fulltext-derived-extraction-absent",
+            "result": {
+                "fullTextResult": {
+                    "status": "success",
+                    "path": "artifacts/fulltext/path/020.pdf",
+                    "source": "source-020",
+                    "errorMessage": null,
+                    "http": 200,
+                    "hasRawBytes": false,
+                    "hasRawByteDigest": false
+                },
+                "fullTextExtractionRecordClassExists": false
+            }
+        },
+        {
+            "id": "fulltext-valid-pdf-validation",
+            "operation": "fulltext-valid-pdf-validation",
+            "result": {
+                "accepted": true,
+                "category": null
+            }
+        },
+        {
+            "id": "fulltext-invalid-pdf-signature",
+            "operation": "fulltext-invalid-pdf-signature",
+            "result": {
+                "accepted": false,
+                "errorCategory": "invalid-pdf-signature",
+                "message": "Downloaded content is not a PDF: missing %PDF signature."
+            }
+        },
+        {
+            "id": "fulltext-oversized-artifact",
+            "operation": "fulltext-oversized-artifact",
+            "result": {
+                "accepted": false,
+                "errorCategory": "artifact-too-large",
+                "message": "Downloaded text exceeds size limit of 8 bytes."
+            }
+        },
+        {
+            "id": "fulltext-valid-xml-validation",
+            "operation": "fulltext-valid-xml-validation",
+            "result": {
+                "accepted": true,
+                "category": null
+            }
+        },
+        {
+            "id": "fulltext-html-rejected-as-xml",
+            "operation": "fulltext-html-rejected-as-xml",
+            "result": {
+                "accepted": false,
+                "errorCategory": "html-not-fulltext-xml",
+                "message": "Downloaded content is not XML full text: received an HTML page."
+            }
+        },
+        {
+            "id": "fulltext-empty-text-rejected",
+            "operation": "fulltext-empty-text-rejected",
+            "result": {
+                "accepted": false,
+                "errorCategory": "empty-text-artifact",
+                "message": "Downloaded text is empty."
+            }
+        }
+    ]
+}

@@ -1,0 +1,393 @@
+{
+  "fixtureSetId": "php-screening-fulltext-v1",
+  "cases": [
+    {
+      "id": "screening-decision-vocabulary",
+      "operation": "screening-decision-vocabulary",
+      "sourceKind": "screening-handoff",
+      "candidateId": "candidate-screening-fulltext-001",
+      "decision": "include",
+      "stage": "title_abstract"
+    },
+    {
+      "id": "screening-stage-vocabulary",
+      "operation": "screening-stage-vocabulary",
+      "sourceKind": "screening-handoff",
+      "candidateId": "candidate-screening-fulltext-002",
+      "decision": "needs_review",
+      "stage": "full_text"
+    },
+    {
+      "id": "screening-criteria-key-order-stable",
+      "operation": "screening-criteria-key-order-stable",
+      "criteriaA": {
+        "include": ["systematic", "review"],
+        "exclude": ["predatory", "irrelevant"]
+      },
+      "criteriaB": {
+        "exclude": ["predatory", "irrelevant"],
+        "include": ["systematic", "review"]
+      }
+    },
+    {
+      "id": "screening-criteria-list-order-semantic",
+      "operation": "screening-criteria-list-order-semantic",
+      "criteriaA": {
+        "exclude": ["predatory", "irrelevant"],
+        "include": ["systematic", "review"]
+      },
+      "criteriaB": {
+        "exclude": ["irrelevant", "predatory"],
+        "include": ["review", "systematic"]
+      }
+    },
+    {
+      "id": "screening-confidence-below-zero-rejected",
+      "operation": "screening-confidence-below-zero-rejected",
+      "sourceKind": "screening-handoff",
+      "candidateId": "candidate-screening-fulltext-005",
+      "decision": "include",
+      "stage": "title_abstract",
+      "confidence": -0.05
+    },
+    {
+      "id": "screening-confidence-above-one-rejected",
+      "operation": "screening-confidence-above-one-rejected",
+      "sourceKind": "screening-handoff",
+      "candidateId": "candidate-screening-fulltext-006",
+      "decision": "include",
+      "stage": "full_text",
+      "confidence": 1.1
+    },
+    {
+      "id": "fulltext-artifact-type-vocabulary",
+      "operation": "fulltext-artifact-type-vocabulary",
+      "path": "artifacts/fulltext-vocab/001.pdf",
+      "source": "screening-handoff",
+      "status": "success",
+      "http": 200,
+      "artifactKind": "pdf",
+      "mediaType": "application/pdf",
+      "maxBytes": 4096
+    },
+    {
+      "id": "fulltext-status-vocabulary",
+      "operation": "fulltext-status-vocabulary",
+      "path": "artifacts/fulltext-vocab/002.xml",
+      "source": "screening-handoff",
+      "status": "skipped",
+      "http": 204,
+      "artifactKind": "xml",
+      "mediaType": "application/xml",
+      "maxBytes": 4096
+    },
+    {
+      "id": "fulltext-failure-result",
+      "operation": "fulltext-failure-result",
+      "path": "artifacts/fulltext-vocab/003.txt",
+      "source": "screening-handoff",
+      "status": "failure",
+      "http": 500,
+      "artifactKind": "text",
+      "mediaType": "text/plain",
+      "maxBytes": 4096,
+      "errorCategory": "inaccessible-full-text"
+    },
+    {
+      "id": "fulltext-skipped-result",
+      "operation": "fulltext-skipped-result",
+      "path": "artifacts/fulltext-vocab/004.txt",
+      "source": "screening-handoff",
+      "status": "skipped",
+      "http": 204,
+      "artifactKind": "text",
+      "mediaType": "text/plain",
+      "maxBytes": 4096
+    },
+    {
+      "id": "screening-nonfinite-confidence-accepted",
+      "operation": "screening-nonfinite-confidence-accepted",
+      "sourceKind": "screening-handoff",
+      "candidateId": "candidate-screening-fulltext-011",
+      "decision": "include",
+      "stage": "title_abstract",
+      "confidence": "NaN"
+    },
+    {
+      "id": "screening-criteria-raw-hash-vs-envelope",
+      "operation": "screening-criteria-raw-hash-vs-envelope",
+      "sourceKind": "screening-handoff",
+      "candidateId": "candidate-screening-fulltext-012",
+      "criteria": {
+        "include": ["systematic", "evidence"],
+        "exclude": ["retired"]
+      }
+    },
+    {
+      "id": "screening-council-unanimous-final",
+      "operation": "screening-council-unanimous-final",
+      "sourceKind": "screening-handoff",
+      "candidateId": "candidate-screening-fulltext-013",
+      "stage": "full_text",
+      "votes": [
+        {
+          "voteId": "vote-uh-001",
+          "modelId": "model-gpt-4o-mini",
+          "decision": "include",
+          "confidence": 0.94
+        },
+        {
+          "voteId": "vote-uh-002",
+          "modelId": "model-llama-70b",
+          "decision": "include",
+          "confidence": 0.91
+        },
+        {
+          "voteId": "vote-uh-003",
+          "modelId": "model-mistral-large",
+          "decision": "include",
+          "confidence": 0.89
+        }
+      ]
+    },
+    {
+      "id": "screening-council-majority-final",
+      "operation": "screening-council-majority-final",
+      "sourceKind": "screening-handoff",
+      "candidateId": "candidate-screening-fulltext-014",
+      "stage": "full_text",
+      "votes": [
+        {
+          "voteId": "vote-mf-001",
+          "modelId": "model-gpt-4o-mini",
+          "decision": "include",
+          "confidence": 0.82
+        },
+        {
+          "voteId": "vote-mf-002",
+          "modelId": "model-llama-70b",
+          "decision": "include",
+          "confidence": 0.77
+        },
+        {
+          "voteId": "vote-mf-003",
+          "modelId": "model-mistral-large",
+          "decision": "include",
+          "confidence": 0.61
+        },
+        {
+          "voteId": "vote-mf-004",
+          "modelId": "model-claude",
+          "decision": "needs_review",
+          "confidence": 0.55
+        }
+      ]
+    },
+    {
+      "id": "screening-council-conflict-final",
+      "operation": "screening-council-conflict-final",
+      "sourceKind": "screening-handoff",
+      "candidateId": "candidate-screening-fulltext-015",
+      "stage": "full_text",
+      "votes": [
+        {
+          "voteId": "vote-cf-001",
+          "modelId": "model-gpt-4o-mini",
+          "decision": "include",
+          "confidence": 0.72
+        },
+        {
+          "voteId": "vote-cf-002",
+          "modelId": "model-llama-70b",
+          "decision": "exclude",
+          "confidence": 0.7
+        },
+        {
+          "voteId": "vote-cf-003",
+          "modelId": "model-mistral-large",
+          "decision": "include",
+          "confidence": 0.68
+        },
+        {
+          "voteId": "vote-cf-004",
+          "modelId": "model-claude",
+          "decision": "exclude",
+          "confidence": 0.68
+        }
+      ]
+    },
+    {
+      "id": "screening-council-all-failed-final",
+      "operation": "screening-council-all-failed-final",
+      "sourceKind": "screening-handoff",
+      "candidateId": "candidate-screening-fulltext-016",
+      "stage": "full_text",
+      "votes": [
+        {
+          "voteId": "vote-af-001",
+          "modelId": "model-gpt-4o-mini",
+          "error": "provider-timeout"
+        },
+        {
+          "voteId": "vote-af-002",
+          "modelId": "model-llama-70b",
+          "error": "provider-rate-limit"
+        },
+        {
+          "voteId": "vote-af-003",
+          "modelId": "model-mistral-large",
+          "error": "provider-unavailable"
+        }
+      ]
+    },
+    {
+      "id": "fulltext-success-path-projection",
+      "operation": "fulltext-success-path-projection",
+      "path": "artifacts/fulltext/path/017.txt",
+      "source": {
+        "kind": "screening-handoff",
+        "id": "source-017"
+      },
+      "status": "success",
+      "http": 200,
+      "artifactKind": "text",
+      "mediaType": "text/plain",
+      "maxBytes": 4096,
+      "sourceReference": "path-projection-017"
+    },
+    {
+      "id": "fulltext-success-missing-byte-digest",
+      "operation": "fulltext-success-missing-byte-digest",
+      "path": "artifacts/fulltext/path/018.pdf",
+      "source": {
+        "kind": "screening-handoff",
+        "id": "source-018"
+      },
+      "status": "success",
+      "http": 200,
+      "artifactKind": "pdf",
+      "mediaType": "application/pdf",
+      "maxBytes": 4096,
+      "rawByteDigest": null
+    },
+    {
+      "id": "fulltext-runtime-retrieval-projection",
+      "operation": "fulltext-runtime-retrieval-projection",
+      "path": "runtime/fulltext/019.html",
+      "source": {
+        "kind": "screening-handoff",
+        "id": "source-019"
+      },
+      "status": "success",
+      "http": 200,
+      "artifactKind": "xml",
+      "mediaType": "application/xml",
+      "maxBytes": 4096
+    },
+    {
+      "id": "fulltext-derived-extraction-absent",
+      "operation": "fulltext-derived-extraction-absent",
+      "path": "artifacts/fulltext/path/020.pdf",
+      "source": {
+        "kind": "screening-handoff",
+        "id": "source-020"
+      },
+      "status": "success",
+      "http": 200,
+      "artifactKind": "pdf",
+      "mediaType": "application/pdf",
+      "maxBytes": 4096,
+      "derivedExtractionPresent": false
+    },
+    {
+      "id": "fulltext-valid-pdf-validation",
+      "operation": "fulltext-valid-pdf-validation",
+      "path": "artifacts/fulltext/validation/021.pdf",
+      "source": {
+        "kind": "screening-handoff",
+        "id": "source-021"
+      },
+      "status": "success",
+      "http": 200,
+      "artifactKind": "pdf",
+      "mediaType": "application/pdf",
+      "maxBytes": 64,
+      "bytes": "%PDF-1.7 valid-fulltext-payload"
+    },
+    {
+      "id": "fulltext-invalid-pdf-signature",
+      "operation": "fulltext-invalid-pdf-signature",
+      "path": "artifacts/fulltext/validation/022.pdf",
+      "source": {
+        "kind": "screening-handoff",
+        "id": "source-022"
+      },
+      "status": "failure",
+      "http": 200,
+      "artifactKind": "pdf",
+      "mediaType": "application/pdf",
+      "maxBytes": 64,
+      "bytes": "not-a-pdf-document"
+    },
+    {
+      "id": "fulltext-oversized-artifact",
+      "operation": "fulltext-oversized-artifact",
+      "path": "artifacts/fulltext/validation/023.txt",
+      "source": {
+        "kind": "screening-handoff",
+        "id": "source-023"
+      },
+      "status": "failure",
+      "http": 413,
+      "artifactKind": "text",
+      "mediaType": "text/plain",
+      "maxBytes": 8,
+      "bytes": "this payload exceeds max bytes"
+    },
+    {
+      "id": "fulltext-valid-xml-validation",
+      "operation": "fulltext-valid-xml-validation",
+      "path": "artifacts/fulltext/validation/024.xml",
+      "source": {
+        "kind": "screening-handoff",
+        "id": "source-024"
+      },
+      "status": "success",
+      "http": 200,
+      "artifactKind": "xml",
+      "mediaType": "application/xml",
+      "maxBytes": 128,
+      "bytes": "<?xml version='1.0'?><article/>"
+    },
+    {
+      "id": "fulltext-html-rejected-as-xml",
+      "operation": "fulltext-html-rejected-as-xml",
+      "path": "artifacts/fulltext/validation/025.xml",
+      "source": {
+        "kind": "screening-handoff",
+        "id": "source-025"
+      },
+      "status": "failure",
+      "http": 200,
+      "artifactKind": "xml",
+      "mediaType": "application/xml",
+      "maxBytes": 128,
+      "bytes": "<html><head><title>Not XML for fulltext</title></head><body>Bad</body></html>"
+    },
+    {
+      "id": "fulltext-empty-text-rejected",
+      "operation": "fulltext-empty-text-rejected",
+      "path": "artifacts/fulltext/validation/026.txt",
+      "source": {
+        "kind": "screening-handoff",
+        "id": "source-026"
+      },
+      "status": "failure",
+      "http": 200,
+      "artifactKind": "text",
+      "mediaType": "text/plain",
+      "maxBytes": 128,
+      "bytes": "   "
+    }
+  ]
+}

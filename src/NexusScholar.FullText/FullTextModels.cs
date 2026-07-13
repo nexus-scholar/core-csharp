@@ -266,7 +266,8 @@ public sealed class FullTextInput
     {
         "no-live-provider-network-behavior",
         "no-pdf-extraction-implementation",
-        "no-php-compatibility-claim"
+        "no-broad-php-fulltext-compatibility",
+        "no-path-runtime-projection-compatibility"
     };
 
     public static FullTextInput FromScreeningDecision(
