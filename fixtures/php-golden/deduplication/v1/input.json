@@ -1,0 +1,245 @@
+{
+  "fixtureSetId": "php-deduplication-v1",
+  "schemaVersion": "1.0.0",
+  "cases": [
+    {
+      "id": "exact-doi-policy",
+      "operation": "exact-doi-policy",
+      "works": [
+        {
+          "title": "Exact DOI Record A",
+          "sourceProvider": "openalex",
+          "ids": [{ "namespace": "doi", "value": "https://doi.org/10.1000/EXACT-DOI" }]
+        },
+        {
+          "title": "Exact DOI Record B",
+          "sourceProvider": "crossref",
+          "ids": [{ "namespace": "doi", "value": "10.1000/EXACT-DOI" }]
+        }
+      ]
+    },
+    {
+      "id": "exact-arxiv-policy",
+      "operation": "exact-arxiv-policy",
+      "works": [
+        {
+          "title": "Exact arXiv Record A",
+          "sourceProvider": "openalex",
+          "ids": [{ "namespace": "arxiv", "value": "arXiv:2301.00001" }]
+        },
+        {
+          "title": "Exact arXiv Record B",
+          "sourceProvider": "arxiv",
+          "ids": [{ "namespace": "arxiv", "value": "arxiv:2301.00001" }]
+        }
+      ]
+    },
+    {
+      "id": "exact-openalex-policy",
+      "operation": "exact-openalex-policy",
+      "works": [
+        {
+          "title": "Exact OpenAlex Record A",
+          "sourceProvider": "crossref",
+          "ids": [{ "namespace": "openalex", "value": "W123456" }]
+        },
+        {
+          "title": "Exact OpenAlex Record B",
+          "sourceProvider": "openalex",
+          "ids": [{ "namespace": "openalex", "value": "W123456" }]
+        }
+      ]
+    },
+    {
+      "id": "exact-s2-policy",
+      "operation": "exact-s2-policy",
+      "works": [
+        {
+          "title": "Exact S2 Record A",
+          "sourceProvider": "crossref",
+          "ids": [{ "namespace": "s2", "value": "S2-0001" }]
+        },
+        {
+          "title": "Exact S2 Record B",
+          "sourceProvider": "semantic_scholar",
+          "ids": [{ "namespace": "s2", "value": "S2-0001" }]
+        }
+      ]
+    },
+    {
+      "id": "exact-pubmed-policy",
+      "operation": "exact-pubmed-policy",
+      "works": [
+        {
+          "title": "Exact PubMed Record A",
+          "sourceProvider": "crossref",
+          "ids": [{ "namespace": "pubmed", "value": "PMID123456" }]
+        },
+        {
+          "title": "Exact PubMed Record B",
+          "sourceProvider": "pubmed",
+          "ids": [{ "namespace": "pubmed", "value": "PMID123456" }]
+        }
+      ]
+    },
+    {
+      "id": "empty-handler",
+      "operation": "empty-handler",
+      "works": []
+    },
+    {
+      "id": "singleton-handler",
+      "operation": "singleton-handler",
+      "works": [
+        {
+          "title": "Singleton Corpus Member",
+          "sourceProvider": "openalex",
+          "year": 2024,
+          "ids": [{ "namespace": "doi", "value": "10.1000/singleton-001" }],
+          "abstract": "This record stays unique.",
+          "citedByCount": 11
+        }
+      ]
+    },
+    {
+      "id": "transitive-handler",
+      "operation": "transitive-handler",
+      "works": [
+        {
+          "title": "Transitive Work A",
+          "sourceProvider": "crossref",
+          "ids": [{ "namespace": "openalex", "value": "W-TR-A" }, { "namespace": "arxiv", "value": "2301.tran" }]
+        },
+        {
+          "title": "Transitive Work B",
+          "sourceProvider": "openalex",
+          "ids": [{ "namespace": "openalex", "value": "W-TR-B" }, { "namespace": "arxiv", "value": "2301.tran" }, { "namespace": "s2", "value": "S2-TRANSITIVE" }]
+        },
+        {
+          "title": "Transitive Work C",
+          "sourceProvider": "arxiv",
+          "ids": [{ "namespace": "openalex", "value": "W-TR-C" }, { "namespace": "s2", "value": "S2-TRANSITIVE" }]
+        }
+      ]
+    },
+    {
+      "id": "representative-merge-handler",
+      "operation": "representative-merge-handler",
+      "works": [
+        {
+          "title": "Representative Merge Base",
+          "sourceProvider": "openalex",
+          "year": 2021,
+          "ids": [{ "namespace": "openalex", "value": "W-MERGE-BASE" }, { "namespace": "arxiv", "value": "2301.merge" }],
+          "abstract": "Representative retains this abstract.",
+          "citedByCount": 14
+        },
+        {
+          "title": "Representative Merge Member",
+          "sourceProvider": "arxiv",
+          "year": null,
+          "ids": [{ "namespace": "openalex", "value": "W-MERGE-MEMBER" }, { "namespace": "arxiv", "value": "2301.merge" }],
+          "venue": { "name": "Proceedings of Deduplication", "type": "conference" },
+          "citedByCount": 9
+        }
+      ]
+    },
+    {
+      "id": "title-default-92-vs-95",
+      "operation": "title-default-92-vs-95",
+      "works": [
+        {
+          "title": "deep learning x",
+          "sourceProvider": "openalex",
+          "year": 2024,
+          "ids": [{ "namespace": "openalex", "value": "W-TITLE-92-A" }]
+        },
+        {
+          "title": "deep learning y",
+          "sourceProvider": "arxiv",
+          "year": 2024,
+          "ids": [{ "namespace": "openalex", "value": "W-TITLE-92-B" }]
+        }
+      ]
+    },
+    {
+      "id": "title-explicit-95-auto-cluster",
+      "operation": "title-explicit-95-auto-cluster",
+      "works": [
+        {
+          "title": "deep learning methods for medical image analysis x",
+          "sourceProvider": "openalex",
+          "year": 2024,
+          "ids": [{ "namespace": "openalex", "value": "W-TITLE-95-A" }]
+        },
+        {
+          "title": "deep learning methods for medical image analysis y",
+          "sourceProvider": "arxiv",
+          "year": 2024,
+          "ids": [{ "namespace": "openalex", "value": "W-TITLE-95-B" }]
+        }
+      ]
+    },
+    {
+      "id": "no-id-runtime-fallback",
+      "operation": "no-id-runtime-fallback",
+      "works": [
+        {
+          "title": "No id witness record one",
+          "sourceProvider": "openalex",
+          "year": 2024
+        },
+        {
+          "title": "No id witness record two",
+          "sourceProvider": "arxiv",
+          "year": 2024
+        },
+        {
+          "title": "No id witness record three",
+          "sourceProvider": "crossref",
+          "year": 2024
+        }
+      ]
+    },
+    {
+      "id": "corpus-slice-construction",
+      "operation": "corpus-slice-construction",
+      "sliceMode": "from-works",
+      "projectId": "fixture-project",
+      "works": [
+        {
+          "title": "Unsafe merge candidate A",
+          "sourceProvider": "openalex",
+          "ids": [{ "namespace": "doi", "value": "10.1000/SLICE-01" }]
+        },
+        {
+          "title": "Unsafe merge candidate B",
+          "sourceProvider": "crossref",
+          "ids": [{ "namespace": "doi", "value": "10.1000/SLICE-01" }]
+        }
+      ]
+    },
+    {
+      "id": "locked-dedup-rejected",
+      "operation": "locked-dedup-rejected",
+      "projectId": "fixture-locked-project",
+      "works": [
+        {
+          "title": "Locked Dedup Request",
+          "sourceProvider": "openalex",
+          "ids": [{ "namespace": "doi", "value": "10.1000/LOCKED-01" }]
+        }
+      ]
+    },
+    {
+      "id": "lock-export-with-snapshot",
+      "operation": "lock-export-with-snapshot",
+      "projectId": "fixture-lock-with-snapshot"
+    },
+    {
+      "id": "lock-export-without-snapshot",
+      "operation": "lock-export-without-snapshot",
+      "projectId": "fixture-lock-without-snapshot"
+    }
+  ]
+}

@@ -39,8 +39,8 @@ public sealed class DeduplicationService
         new ReadOnlyCollection<string>(
             new[]
             {
-                "no-php-compatibility-claim",
-                "no-generated-php-fixture",
+                "no-broad-php-deduplication-compatibility",
+                "no-corpus-lock-snapshot-compatibility",
                 "no-screening",
                 "no-search-screening-claim",
                 "no-live-provider-network",

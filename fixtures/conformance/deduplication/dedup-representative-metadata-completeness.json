@@ -9,8 +9,8 @@
     "docs/adr/0012-deduplication-evidence-and-cluster-contract.md"
   ],
   "comparisonRules": [
-    "no-php-compatibility-claim",
-    "no-generated-php-fixture",
+    "no-broad-php-deduplication-compatibility",
+    "no-corpus-lock-snapshot-compatibility",
     "no-screening",
     "no-app-projection-authority"
   ],

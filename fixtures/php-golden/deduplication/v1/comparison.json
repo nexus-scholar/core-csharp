@@ -1,0 +1,102 @@
+{
+  "fixtureSetId": "php-deduplication-v1",
+  "schemaVersion": "1.0.0",
+  "classifications": [
+    {
+      "caseId": "exact-doi-policy",
+      "classification": "equivalent_serialization",
+      "authorityRefs": ["docs/adr/0012-deduplication-evidence-and-cluster-contract.md"]
+    },
+    {
+      "caseId": "exact-arxiv-policy",
+      "classification": "equivalent_serialization",
+      "authorityRefs": ["docs/adr/0012-deduplication-evidence-and-cluster-contract.md"]
+    },
+    {
+      "caseId": "exact-openalex-policy",
+      "classification": "equivalent_serialization",
+      "authorityRefs": ["docs/adr/0012-deduplication-evidence-and-cluster-contract.md"]
+    },
+    {
+      "caseId": "exact-s2-policy",
+      "classification": "equivalent_serialization",
+      "authorityRefs": ["docs/adr/0012-deduplication-evidence-and-cluster-contract.md"]
+    },
+    {
+      "caseId": "exact-pubmed-policy",
+      "classification": "equivalent_serialization",
+      "authorityRefs": ["docs/adr/0012-deduplication-evidence-and-cluster-contract.md"]
+    },
+    {
+      "caseId": "empty-handler",
+      "classification": "equivalent_serialization",
+      "authorityRefs": ["docs/adr/0012-deduplication-evidence-and-cluster-contract.md"]
+    },
+    {
+      "caseId": "singleton-handler",
+      "classification": "intentional_change",
+      "comparisonRule": "singleton-cluster-output-shape",
+      "authorityRefs": ["docs/adr/0012-deduplication-evidence-and-cluster-contract.md", "docs/adr/0007-shared-scientific-identity.md"],
+      "rationale": "PHP emits a singleton cluster while C# keeps the singleton as a raw candidate without claiming an automatic duplicate cluster."
+    },
+    {
+      "caseId": "transitive-handler",
+      "classification": "equivalent_serialization",
+      "authorityRefs": ["docs/adr/0012-deduplication-evidence-and-cluster-contract.md"]
+    },
+    {
+      "caseId": "representative-merge-handler",
+      "classification": "equivalent_serialization",
+      "authorityRefs": ["docs/adr/0012-deduplication-evidence-and-cluster-contract.md"]
+    },
+    {
+      "caseId": "title-default-92-vs-95",
+      "classification": "intentional_change",
+      "comparisonRule": "title_fuzzy_threshold_subset",
+      "authorityRefs": ["docs/adr/0012-deduplication-evidence-and-cluster-contract.md", "docs/adr/0007-shared-scientific-identity.md"],
+      "rationale": "PHP constructor default 92 matches this pair while the PHP Laravel-bound and local C# threshold 95 do not."
+    },
+    {
+      "caseId": "title-explicit-95-auto-cluster",
+      "classification": "intentional_change",
+      "comparisonRule": "title_fuzzy_threshold_subset",
+      "authorityRefs": ["docs/adr/0012-deduplication-evidence-and-cluster-contract.md", "docs/adr/0007-shared-scientific-identity.md"],
+      "rationale": "PHP threshold 95 automatically clusters a fuzzy-title pair while C# records review-required evidence and does not create scientific identity."
+    },
+    {
+      "caseId": "no-id-runtime-fallback",
+      "classification": "intentional_change",
+      "comparisonRule": "no_id_identifier_set",
+      "authorityRefs": ["docs/adr/0012-deduplication-evidence-and-cluster-contract.md", "docs/adr/0007-shared-scientific-identity.md"],
+      "rationale": "PHP uses runtime object-identity fallback when primary IDs are absent; C# must preserve unresolved no-id candidates without making runtime keys scientific."
+    },
+    {
+      "caseId": "corpus-slice-construction",
+      "classification": "intentional_change",
+      "comparisonRule": "slice-member-preservation",
+      "authorityRefs": ["docs/adr/0012-deduplication-evidence-and-cluster-contract.md"],
+      "rationale": "The default CorpusSlice::fromWorks collapse path can hide duplicate evidence; C# must preserve raw candidate members by input-shape decision."
+    },
+    {
+      "caseId": "locked-dedup-rejected",
+      "classification": "intentional_change",
+      "comparisonRule": "lock-gate-semantic-subset",
+      "authorityRefs": ["docs/adr/0026-phase-7-corpus-lock-snapshot-compatibility-boundary.md"],
+      "rationale": "PHP lock refusal is retained as evidence but intentionally not adopted as C# corpus-lock compatibility without a dedicated snapshot contract."
+    },
+    {
+      "caseId": "lock-export-with-snapshot",
+      "classification": "intentional_change",
+      "comparisonRule": "lock-metadata-subset",
+      "authorityRefs": ["docs/adr/0026-phase-7-corpus-lock-snapshot-compatibility-boundary.md"],
+      "rationale": "PHP snapshot-backed citable metadata is retained as evidence but intentionally not adopted as C# snapshot authority."
+    },
+    {
+      "caseId": "lock-export-without-snapshot",
+      "classification": "intentional_change",
+      "comparisonRule": "lock-metadata-subset",
+      "authorityRefs": ["docs/adr/0026-phase-7-corpus-lock-snapshot-compatibility-boundary.md"],
+      "rationale": "PHP locked-without-snapshot finality is retained as evidence but intentionally not adopted as C# snapshot authority."
+    }
+  ]
+}

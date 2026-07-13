@@ -1,0 +1,497 @@
+{
+    "fixtureSetId": "php-deduplication-v1",
+    "schemaVersion": "1.0.0",
+    "sourceKind": "pinned-php-observable-behavior",
+    "sourceCommit": "b24d0d71ec7b64003465182477e7edb7f49994f4",
+    "cases": [
+        {
+            "id": "exact-doi-policy",
+            "operation": "exact-doi-policy",
+            "result": {
+                "policy": "doi_match",
+                "duplicateCount": 1,
+                "duplicates": [
+                    {
+                        "primary": "doi:10.1000/exact-doi",
+                        "secondary": "doi:10.1000/exact-doi",
+                        "reason": "doi_match",
+                        "confidence": 1
+                    }
+                ]
+            }
+        },
+        {
+            "id": "exact-arxiv-policy",
+            "operation": "exact-arxiv-policy",
+            "result": {
+                "policy": "arxiv_match",
+                "duplicateCount": 1,
+                "duplicates": [
+                    {
+                        "primary": "arxiv:2301.00001",
+                        "secondary": "arxiv:2301.00001",
+                        "reason": "arxiv_match",
+                        "confidence": 1
+                    }
+                ]
+            }
+        },
+        {
+            "id": "exact-openalex-policy",
+            "operation": "exact-openalex-policy",
+            "result": {
+                "policy": "openalex_match",
+                "duplicateCount": 1,
+                "duplicates": [
+                    {
+                        "primary": "openalex:w123456",
+                        "secondary": "openalex:w123456",
+                        "reason": "openalex_match",
+                        "confidence": 1
+                    }
+                ]
+            }
+        },
+        {
+            "id": "exact-s2-policy",
+            "operation": "exact-s2-policy",
+            "result": {
+                "policy": "s2_match",
+                "duplicateCount": 1,
+                "duplicates": [
+                    {
+                        "primary": "s2:s2-0001",
+                        "secondary": "s2:s2-0001",
+                        "reason": "s2_match",
+                        "confidence": 1
+                    }
+                ]
+            }
+        },
+        {
+            "id": "exact-pubmed-policy",
+            "operation": "exact-pubmed-policy",
+            "result": {
+                "policy": "pubmed_match",
+                "duplicateCount": 1,
+                "duplicates": [
+                    {
+                        "primary": "pubmed:pmid123456",
+                        "secondary": "pubmed:pmid123456",
+                        "reason": "pubmed_match",
+                        "confidence": 1
+                    }
+                ]
+            }
+        },
+        {
+            "id": "empty-handler",
+            "operation": "empty-handler",
+            "result": {
+                "inputCount": 0,
+                "uniqueCount": 0,
+                "duplicatesRemoved": 0,
+                "policyStats": [],
+                "clusterCount": 0,
+                "clusters": []
+            }
+        },
+        {
+            "id": "singleton-handler",
+            "operation": "singleton-handler",
+            "result": {
+                "inputCount": 1,
+                "uniqueCount": 1,
+                "duplicatesRemoved": 0,
+                "policyStats": {
+                    "doi_match": 0,
+                    "arxiv_match": 0,
+                    "openalex_match": 0,
+                    "s2_match": 0,
+                    "pubmed_match": 0
+                },
+                "clusterCount": 1,
+                "clusters": [
+                    {
+                        "representative": {
+                            "ids": [
+                                "doi:10.1000/singleton-001"
+                            ],
+                            "title": "Singleton Corpus Member",
+                            "provider": "openalex",
+                            "year": 2024,
+                            "hasAbstract": true,
+                            "hasVenue": false,
+                            "hasCitedBy": 11
+                        },
+                        "memberIdentifierSets": [
+                            [
+                                "doi:10.1000/singleton-001"
+                            ]
+                        ],
+                        "memberTitles": [
+                            "Singleton Corpus Member"
+                        ],
+                        "memberProviders": [
+                            "openalex"
+                        ],
+                        "duplicateReasons": [],
+                        "duplicateCount": 0,
+                        "evidence": [],
+                        "memberCount": 1
+                    }
+                ]
+            }
+        },
+        {
+            "id": "transitive-handler",
+            "operation": "transitive-handler",
+            "result": {
+                "inputCount": 3,
+                "uniqueCount": 1,
+                "duplicatesRemoved": 2,
+                "policyStats": {
+                    "arxiv_match": 1,
+                    "s2_match": 1
+                },
+                "clusterCount": 1,
+                "clusters": [
+                    {
+                        "representative": {
+                            "ids": [
+                                "arxiv:2301.tran",
+                                "openalex:w-tr-b",
+                                "s2:s2-transitive"
+                            ],
+                            "title": "Transitive Work B",
+                            "provider": "openalex",
+                            "year": null,
+                            "hasAbstract": false,
+                            "hasVenue": false,
+                            "hasCitedBy": null
+                        },
+                        "memberIdentifierSets": [
+                            [
+                                "arxiv:2301.tran",
+                                "openalex:w-tr-a"
+                            ],
+                            [
+                                "arxiv:2301.tran",
+                                "openalex:w-tr-b",
+                                "s2:s2-transitive"
+                            ],
+                            [
+                                "openalex:w-tr-c",
+                                "s2:s2-transitive"
+                            ]
+                        ],
+                        "memberTitles": [
+                            "Transitive Work A",
+                            "Transitive Work B",
+                            "Transitive Work C"
+                        ],
+                        "memberProviders": [
+                            "crossref",
+                            "openalex",
+                            "arxiv"
+                        ],
+                        "duplicateReasons": [
+                            "arxiv_match",
+                            "s2_match"
+                        ],
+                        "duplicateCount": 2,
+                        "evidence": [
+                            {
+                                "primary": "openalex:w-tr-a",
+                                "secondary": "openalex:w-tr-b",
+                                "reason": "arxiv_match",
+                                "confidence": 1
+                            },
+                            {
+                                "primary": "openalex:w-tr-b",
+                                "secondary": "openalex:w-tr-c",
+                                "reason": "s2_match",
+                                "confidence": 1
+                            }
+                        ],
+                        "memberCount": 3
+                    }
+                ]
+            }
+        },
+        {
+            "id": "representative-merge-handler",
+            "operation": "representative-merge-handler",
+            "result": {
+                "inputCount": 2,
+                "uniqueCount": 1,
+                "duplicatesRemoved": 1,
+                "policyStats": {
+                    "arxiv_match": 1
+                },
+                "clusterCount": 1,
+                "clusters": [
+                    {
+                        "representative": {
+                            "ids": [
+                                "arxiv:2301.merge",
+                                "openalex:w-merge-base"
+                            ],
+                            "title": "Representative Merge Base",
+                            "provider": "openalex",
+                            "year": 2021,
+                            "hasAbstract": true,
+                            "hasVenue": false,
+                            "hasCitedBy": 14
+                        },
+                        "memberIdentifierSets": [
+                            [
+                                "arxiv:2301.merge",
+                                "openalex:w-merge-base"
+                            ],
+                            [
+                                "arxiv:2301.merge",
+                                "openalex:w-merge-member"
+                            ]
+                        ],
+                        "memberTitles": [
+                            "Representative Merge Base",
+                            "Representative Merge Member"
+                        ],
+                        "memberProviders": [
+                            "openalex",
+                            "arxiv"
+                        ],
+                        "duplicateReasons": [
+                            "arxiv_match"
+                        ],
+                        "duplicateCount": 1,
+                        "evidence": [
+                            {
+                                "primary": "openalex:w-merge-base",
+                                "secondary": "openalex:w-merge-member",
+                                "reason": "arxiv_match",
+                                "confidence": 1
+                            }
+                        ],
+                        "memberCount": 2
+                    }
+                ],
+                "fusedRepresentative": {
+                    "ids": [
+                        "arxiv:2301.merge",
+                        "openalex:w-merge-base",
+                        "openalex:w-merge-member"
+                    ],
+                    "title": "Representative Merge Base",
+                    "provider": "openalex",
+                    "year": 2021,
+                    "hasAbstract": true,
+                    "hasVenue": true,
+                    "hasCitedBy": 14
+                },
+                "representativeElectionSource": "CompletenessElectionPolicy"
+            }
+        },
+        {
+            "id": "title-default-92-vs-95",
+            "operation": "title-default-92-vs-95",
+            "result": {
+                "threshold92DuplicateCount": 1,
+                "threshold95DuplicateCount": 0,
+                "similarityRatio": 93
+            }
+        },
+        {
+            "id": "title-explicit-95-auto-cluster",
+            "operation": "title-explicit-95-auto-cluster",
+            "result": {
+                "inputCount": 2,
+                "uniqueCount": 1,
+                "duplicatesRemoved": 1,
+                "policyStats": {
+                    "title_fuzzy": 1
+                },
+                "clusterCount": 1,
+                "clusters": [
+                    {
+                        "representative": {
+                            "ids": [
+                                "openalex:w-title-95-a"
+                            ],
+                            "title": "deep learning methods for medical image analysis x",
+                            "provider": "openalex",
+                            "year": 2024,
+                            "hasAbstract": false,
+                            "hasVenue": false,
+                            "hasCitedBy": null
+                        },
+                        "memberIdentifierSets": [
+                            [
+                                "openalex:w-title-95-a"
+                            ],
+                            [
+                                "openalex:w-title-95-b"
+                            ]
+                        ],
+                        "memberTitles": [
+                            "deep learning methods for medical image analysis x",
+                            "deep learning methods for medical image analysis y"
+                        ],
+                        "memberProviders": [
+                            "openalex",
+                            "arxiv"
+                        ],
+                        "duplicateReasons": [
+                            "title_fuzzy"
+                        ],
+                        "duplicateCount": 1,
+                        "evidence": [
+                            {
+                                "primary": "openalex:w-title-95-a",
+                                "secondary": "openalex:w-title-95-b",
+                                "reason": "title_fuzzy",
+                                "confidence": 0.98
+                            }
+                        ],
+                        "memberCount": 2
+                    }
+                ]
+            }
+        },
+        {
+            "id": "no-id-runtime-fallback",
+            "operation": "no-id-runtime-fallback",
+            "result": {
+                "inputCount": 3,
+                "uniqueCount": 3,
+                "duplicatesRemoved": 0,
+                "policyStats": {
+                    "title_fuzzy": 0
+                },
+                "clusterCount": 3,
+                "clusters": [
+                    {
+                        "representative": {
+                            "ids": [],
+                            "title": "No id witness record one",
+                            "provider": "openalex",
+                            "year": 2024,
+                            "hasAbstract": false,
+                            "hasVenue": false,
+                            "hasCitedBy": null
+                        },
+                        "memberIdentifierSets": [
+                            []
+                        ],
+                        "memberTitles": [
+                            "No id witness record one"
+                        ],
+                        "memberProviders": [
+                            "openalex"
+                        ],
+                        "duplicateReasons": [],
+                        "duplicateCount": 0,
+                        "evidence": [],
+                        "memberCount": 1
+                    },
+                    {
+                        "representative": {
+                            "ids": [],
+                            "title": "No id witness record two",
+                            "provider": "arxiv",
+                            "year": 2024,
+                            "hasAbstract": false,
+                            "hasVenue": false,
+                            "hasCitedBy": null
+                        },
+                        "memberIdentifierSets": [
+                            []
+                        ],
+                        "memberTitles": [
+                            "No id witness record two"
+                        ],
+                        "memberProviders": [
+                            "arxiv"
+                        ],
+                        "duplicateReasons": [],
+                        "duplicateCount": 0,
+                        "evidence": [],
+                        "memberCount": 1
+                    },
+                    {
+                        "representative": {
+                            "ids": [],
+                            "title": "No id witness record three",
+                            "provider": "crossref",
+                            "year": 2024,
+                            "hasAbstract": false,
+                            "hasVenue": false,
+                            "hasCitedBy": null
+                        },
+                        "memberIdentifierSets": [
+                            []
+                        ],
+                        "memberTitles": [
+                            "No id witness record three"
+                        ],
+                        "memberProviders": [
+                            "crossref"
+                        ],
+                        "duplicateReasons": [],
+                        "duplicateCount": 0,
+                        "evidence": [],
+                        "memberCount": 1
+                    }
+                ]
+            }
+        },
+        {
+            "id": "corpus-slice-construction",
+            "operation": "corpus-slice-construction",
+            "result": {
+                "safeCount": 1,
+                "unsafeCount": 2
+            }
+        },
+        {
+            "id": "locked-dedup-rejected",
+            "operation": "locked-dedup-rejected",
+            "result": {
+                "accepted": false,
+                "errorCategory": "project-locked",
+                "error": "Project fixture-locked-project is locked; deduplicate cannot mutate the corpus."
+            }
+        },
+        {
+            "id": "lock-export-with-snapshot",
+            "operation": "lock-export-with-snapshot",
+            "result": {
+                "projectId": "fixture-lock-with-snapshot",
+                "lockMetadata": {
+                    "project_locked": true,
+                    "lock_status": "locked",
+                    "snapshot_present": true,
+                    "snapshot_work_count": 2,
+                    "citable": true,
+                    "final": true
+                }
+            }
+        },
+        {
+            "id": "lock-export-without-snapshot",
+            "operation": "lock-export-without-snapshot",
+            "result": {
+                "projectId": "fixture-lock-without-snapshot",
+                "lockMetadata": {
+                    "project_locked": true,
+                    "lock_status": "locked",
+                    "snapshot_present": false,
+                    "snapshot_work_count": null,
+                    "citable": false,
+                    "final": false
+                }
+            }
+        }
+    ]
+}

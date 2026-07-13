@@ -77,8 +77,8 @@ public sealed class DeduplicationFixtureTests
             var sourceRefs = root.GetProperty("sourceRefs").EnumerateArray().Select(value => value.GetString()).ToArray();
             Assert.IsTrue(sourceRefs.Contains("docs/adr/0012-deduplication-evidence-and-cluster-contract.md", StringComparer.Ordinal), fixtureId);
             var comparisonRules = root.GetProperty("comparisonRules").EnumerateArray().Select(value => value.GetString()).ToArray();
-            Assert.IsTrue(comparisonRules.Contains("no-php-compatibility-claim", StringComparer.Ordinal), fixtureId);
-            Assert.IsTrue(comparisonRules.Contains("no-generated-php-fixture", StringComparer.Ordinal), fixtureId);
+            Assert.IsTrue(comparisonRules.Contains("no-broad-php-deduplication-compatibility", StringComparer.Ordinal), fixtureId);
+            Assert.IsTrue(comparisonRules.Contains("no-corpus-lock-snapshot-compatibility", StringComparer.Ordinal), fixtureId);
 
             _ = ContentDigest.Parse(root.GetProperty("inputDigest").GetString()!);
             _ = ContentDigest.Parse(root.GetProperty("outputDigest").GetString()!);
