@@ -4,8 +4,8 @@ Status date: 2026-07-14
 
 ## Active Lanes
 
-- Main development lane: `main` at the Hardening 29 merge `37df601`.
-- Current manager lane: Hardening 30 post-Phase 7 review remediation.
+- Main development lane: `main` at the Hardening 30 merge `32d3c5c`.
+- Current manager lane: next-gate selection; no feature-expansion branch is active.
 - Compatibility evidence lane: Phase 7 complete; future additions remain case-scoped and ADR-mediated.
 - Historical public-site lane: `gh-pages`; deployable site source now moves to `site/` on `main`.
 
