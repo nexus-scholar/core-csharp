@@ -67,6 +67,12 @@ public sealed class VerifiedDeduplicationAuthorityEvidenceDigest
 }
 
 public sealed record UnverifiedDeduplicationAuthorityReviewTargetDigest(
+    string SchemaId,
+    string SchemaVersion,
+    string TargetKind,
+    string TargetId,
+    string SourceResultId,
+    ContentDigest SourceResultDigest,
     IReadOnlyList<string> CandidateIds,
     DedupReviewCandidate ReviewPair,
     IReadOnlyList<DedupEvidence> Evidence,
@@ -85,9 +91,9 @@ public sealed class VerifiedDeduplicationAuthorityReviewTargetDigest
     {
         TargetId = Guard.NotBlank(targetId, nameof(targetId));
         TargetKind = Guard.NotBlank(targetKind, nameof(targetKind));
-        CandidateIds = candidateIds ?? throw new ArgumentNullException(nameof(candidateIds));
+        CandidateIds = Array.AsReadOnly((candidateIds ?? throw new ArgumentNullException(nameof(candidateIds))).ToArray());
         ReviewPair = reviewPair ?? throw new ArgumentNullException(nameof(reviewPair));
-        Evidence = evidence ?? throw new ArgumentNullException(nameof(evidence));
+        Evidence = Array.AsReadOnly((evidence ?? throw new ArgumentNullException(nameof(evidence))).ToArray());
         TargetDigest = targetDigest;
         DigestEnvelope = digestEnvelope ?? throw new ArgumentNullException(nameof(digestEnvelope));
     }
@@ -154,7 +160,7 @@ public static class DeduplicationAuthorityDigests
 
         var content = BuildCandidateContent(candidate, canonicalizeCollections: true);
         var envelope = new DigestEnvelope(DigestScope.CanonicalJsonRecord, CandidateSchemaId, CandidateSchemaVersion, content);
-        return new VerifiedDeduplicationAuthorityCandidateDigest(candidate, envelope);
+        return new VerifiedDeduplicationAuthorityCandidateDigest(FreezeCandidate(candidate), envelope);
     }
 
     public static VerifiedDeduplicationAuthorityCandidateDigest RehydrateCandidateDigestMaterial(
@@ -176,7 +182,7 @@ public static class DeduplicationAuthorityDigests
                 "Deduplication candidate digest does not match persisted authority material.");
         }
 
-        return new VerifiedDeduplicationAuthorityCandidateDigest(input.Candidate, envelope);
+        return new VerifiedDeduplicationAuthorityCandidateDigest(FreezeCandidate(input.Candidate), envelope);
     }
 
     public static VerifiedDeduplicationAuthorityEvidenceDigest CreateEvidenceDigestMaterial(DedupEvidence evidence)
@@ -321,12 +327,29 @@ public static class DeduplicationAuthorityDigests
         ArgumentNullException.ThrowIfNull(sourceResult);
         ArgumentNullException.ThrowIfNull(input);
 
+        if (!string.Equals(input.SchemaId, ReviewTargetSchemaId, StringComparison.Ordinal) ||
+            !string.Equals(input.SchemaVersion, ReviewTargetSchemaVersion, StringComparison.Ordinal) ||
+            !string.Equals(input.TargetKind, "review-candidate-pair", StringComparison.Ordinal) ||
+            !string.Equals(input.SourceResultId, sourceResult.Result.ResultId, StringComparison.Ordinal) ||
+            input.SourceResultDigest != sourceResult.ResultDigest)
+        {
+            throw new DeduplicationAuthorityException(
+                DeduplicationAuthorityDigestErrorCodes.StaleAuthoritySourceBinding,
+                "Persisted review target schema or source-result binding is invalid.");
+        }
+
         var verified = CreateReviewTargetDigestMaterial(sourceResult, input.ReviewPair, input.CandidateIds, input.Evidence);
+        if (!string.Equals(input.TargetId, verified.TargetId, StringComparison.Ordinal))
+        {
+            throw new DeduplicationAuthorityException(
+                DeduplicationAuthorityDigestErrorCodes.InvalidAuthorityTarget,
+                "Persisted review target id does not match its candidate membership.");
+        }
         var canonical = BuildReviewTargetContent(
-            verified.TargetKind,
-            verified.TargetId,
-            sourceResult.Result.ResultId,
-            sourceResult.ResultDigest,
+            input.TargetKind,
+            input.TargetId,
+            input.SourceResultId,
+            input.SourceResultDigest,
             verified.CandidateIds,
             verified.ReviewPair,
             verified.Evidence,
@@ -393,7 +416,7 @@ public static class DeduplicationAuthorityDigests
                 .ThenBy(item => item.CandidateBId, StringComparer.Ordinal)
                 .ThenBy(item => item.ThresholdUsed, Comparer<double>.Default)
                 .ThenBy(item => item.TitleSimilarity, Comparer<double>.Default)
-            : result.ReviewRequiredCandidates.Select(NormalizeReviewPair));
+            : result.ReviewRequiredCandidates.Select(ValidateReviewPair));
 
         return new CanonicalJsonObject()
             .Add("result_id", Guard.NotBlank(result.ResultId, nameof(result.ResultId)))
@@ -425,7 +448,7 @@ public static class DeduplicationAuthorityDigests
             .Add("clusters", CanonicalJsonValue.Array(clusters.Select(cluster => BuildClusterContent(cluster, canonicalizeCollections)).ToArray()))
             .Add("evidence", CanonicalJsonValue.Array(evidence.Select(item => BuildEvidenceContent(item, canonicalizeCollections)).ToArray()))
             .Add("unresolved_candidates", CanonicalJsonValue.Array(unresolvedCandidates.Select(candidate => BuildCandidateContent(candidate, canonicalizeCollections)).ToArray()))
-            .Add("review_required_candidates", CanonicalJsonValue.Array(reviewPairs.Select(pair => BuildReviewPairContent(pair)).ToArray()))
+            .Add("review_required_candidates", CanonicalJsonValue.Array(reviewPairs.Select(pair => BuildReviewPairContent(pair, canonicalizeCollections)).ToArray()))
             .Add(
                 "warnings",
                 CanonicalJsonValue.Array(
@@ -453,6 +476,7 @@ public static class DeduplicationAuthorityDigests
 
         var workIds = NormalizeTextCollection(candidate.WorkIds, canonicalizeCollections);
         var sourceSpecificIds = NormalizeTextCollection(candidate.SourceSpecificIds, canonicalizeCollections);
+        var keywords = NormalizeTextCollection(candidate.Keywords, canonicalizeCollections);
         var parserWarnings = CandidateNotices(candidate.Source.ParserWarnings, canonicalizeCollections);
         var recordNotices = CandidateNotices(candidate.Source.RecordNotices, canonicalizeCollections);
 
@@ -499,7 +523,7 @@ public static class DeduplicationAuthorityDigests
             .Add("year", candidate.Year is null ? CanonicalJsonValue.Null() : CanonicalJsonValue.From(candidate.Year.Value))
             .Add("venue", candidate.Venue is null ? CanonicalJsonValue.Null() : CanonicalJsonValue.From(candidate.Venue))
             .Add("abstract", candidate.Abstract is null ? CanonicalJsonValue.Null() : CanonicalJsonValue.From(candidate.Abstract))
-            .Add("keywords", CanonicalJsonValue.Array(candidate.Keywords.Select(CanonicalJsonValue.From).ToArray()));
+            .Add("keywords", CanonicalJsonValue.Array(keywords.Select(CanonicalJsonValue.From).ToArray()));
     }
 
     private static CanonicalJsonObject BuildClusterContent(DedupCluster cluster, bool canonicalizeCollections)
@@ -527,12 +551,17 @@ public static class DeduplicationAuthorityDigests
 
     private static CanonicalJsonObject BuildRepresentativeContent(DedupRepresentativeResult representative, bool canonicalizeCollections)
     {
+        ValidateDigestCollection(representative.SourceFileDigests, "representative source-file digest");
+        ValidateRawArtifactScopes(representative.SourceFileDigestScopes, "representative source-file digest scope");
+        ValidateDigestCollection(representative.RawRecordDigests, "representative raw-record digest");
+
         var workIds = NormalizeTextCollection(representative.WorkIds, canonicalizeCollections);
         var sourceSightingIds = NormalizeTextCollection(representative.SourceSightingIds, canonicalizeCollections);
         var sourceFileDigests = NormalizeTextCollection(representative.SourceFileDigests, canonicalizeCollections);
         var sourceFileDigestScopes = NormalizeTextCollection(representative.SourceFileDigestScopes, canonicalizeCollections);
         var rawRecordDigests = NormalizeTextCollection(representative.RawRecordDigests, canonicalizeCollections);
         var reasonCodes = NormalizeTextCollection(representative.ReasonCodes, canonicalizeCollections);
+        var keywords = NormalizeTextCollection(representative.Keywords, canonicalizeCollections);
         var parserWarnings = CandidateNotices(representative.ParserWarnings, canonicalizeCollections);
         var recordNotices = CandidateNotices(representative.RecordNotices, canonicalizeCollections);
 
@@ -562,7 +591,12 @@ public static class DeduplicationAuthorityDigests
                 CanonicalJsonValue.Array(parserWarnings.Select(BuildParserNotice).ToArray()))
             .Add(
                 "record_notices",
-                CanonicalJsonValue.Array(recordNotices.Select(BuildParserNotice).ToArray()));
+                CanonicalJsonValue.Array(recordNotices.Select(BuildParserNotice).ToArray()))
+            .Add("authors", CanonicalJsonValue.Array(representative.Authors.Select(CanonicalJsonValue.From).ToArray()))
+            .Add("year", representative.Year is null ? CanonicalJsonValue.Null() : CanonicalJsonValue.From(representative.Year.Value))
+            .Add("venue", representative.Venue is null ? CanonicalJsonValue.Null() : CanonicalJsonValue.From(representative.Venue))
+            .Add("abstract", representative.Abstract is null ? CanonicalJsonValue.Null() : CanonicalJsonValue.From(representative.Abstract))
+            .Add("keywords", CanonicalJsonValue.Array(keywords.Select(CanonicalJsonValue.From).ToArray()));
     }
 
     private static CanonicalJsonObject BuildEvidenceContent(DedupEvidence evidence, bool canonicalizeCollections)
@@ -581,9 +615,9 @@ public static class DeduplicationAuthorityDigests
             .Add("policy_version", Guard.NotBlank(evidence.PolicyVersion, nameof(evidence.PolicyVersion)));
     }
 
-    private static CanonicalJsonObject BuildReviewPairContent(DedupReviewCandidate pair)
+    private static CanonicalJsonObject BuildReviewPairContent(DedupReviewCandidate pair, bool canonicalizeCollections = true)
     {
-        var normalized = NormalizeReviewPair(pair);
+        var normalized = canonicalizeCollections ? NormalizeReviewPair(pair) : ValidateReviewPair(pair);
         return new CanonicalJsonObject()
             .Add("candidate_a_id", normalized.CandidateAId)
             .Add("candidate_b_id", normalized.CandidateBId)
@@ -602,7 +636,7 @@ public static class DeduplicationAuthorityDigests
         IReadOnlyList<(string CandidateId, ContentDigest Digest)> candidateDigests,
         bool canonicalizeCollections)
     {
-        var normalizedPair = NormalizeReviewPair(reviewPair);
+        var normalizedPair = canonicalizeCollections ? NormalizeReviewPair(reviewPair) : ValidateReviewPair(reviewPair);
         var orderedCandidateIds = canonicalizeCollections
             ? candidateIds.OrderBy(item => item, StringComparer.Ordinal).ToArray()
             : candidateIds;
@@ -633,7 +667,7 @@ public static class DeduplicationAuthorityDigests
                 "candidate_ids",
                 CanonicalJsonValue.Array(
                     orderedCandidateIds.Select(CanonicalJsonValue.From).ToArray()))
-            .Add("review_pair", BuildReviewPairContent(normalizedPair))
+            .Add("review_pair", BuildReviewPairContent(normalizedPair, canonicalizeCollections))
             .Add("candidate_digests", CanonicalJsonValue.Array(
                 (canonicalizeCollections ? canonicalCandidateDigests : candidateDigests)
                     .Select(item => (CanonicalJsonValue)new CanonicalJsonObject()
@@ -655,7 +689,7 @@ public static class DeduplicationAuthorityDigests
         IEnumerable<(string CandidateId, ContentDigest Digest)> candidateDigests,
         bool canonicalizeCollections)
     {
-        var normalizedPair = NormalizeReviewPair(reviewPair);
+        var normalizedPair = canonicalizeCollections ? NormalizeReviewPair(reviewPair) : ValidateReviewPair(reviewPair);
         var orderedCandidateDigests = canonicalizeCollections
             ? candidateDigests.OrderBy(item => item.CandidateId, StringComparer.Ordinal).ToArray()
             : candidateDigests.ToArray();
@@ -666,7 +700,7 @@ public static class DeduplicationAuthorityDigests
             .Add("source_result_id", Guard.NotBlank(sourceResultId, nameof(sourceResultId)))
             .Add("source_result_digest", sourceResultDigest.ToString())
             .Add("candidate_ids", CanonicalJsonValue.Array(candidateIds.Select(CanonicalJsonValue.From).ToArray()))
-            .Add("review_pair", BuildReviewPairContent(normalizedPair))
+            .Add("review_pair", BuildReviewPairContent(normalizedPair, canonicalizeCollections))
             .Add("evidence_references", CanonicalJsonValue.Array(evidenceReferences.ToArray()))
             .Add("candidate_digests", CanonicalJsonValue.Array(
                 orderedCandidateDigests.Select(item => (CanonicalJsonValue)new CanonicalJsonObject()
@@ -805,6 +839,18 @@ public static class DeduplicationAuthorityDigests
 
     private static DedupReviewCandidate NormalizeReviewPair(DedupReviewCandidate pair)
     {
+        pair = ValidateReviewPair(pair);
+
+        if (string.Compare(pair.CandidateAId, pair.CandidateBId, StringComparison.Ordinal) <= 0)
+        {
+            return pair;
+        }
+
+        return new DedupReviewCandidate(pair.CandidateBId, pair.CandidateAId, pair.TitleSimilarity, pair.ThresholdUsed);
+    }
+
+    private static DedupReviewCandidate ValidateReviewPair(DedupReviewCandidate pair)
+    {
         if (string.IsNullOrWhiteSpace(pair.CandidateAId))
         {
             throw new DeduplicationAuthorityException(DeduplicationAuthorityErrorCodes.InvalidEvidence, "Review pair candidate A is required.");
@@ -827,12 +873,7 @@ public static class DeduplicationAuthorityDigests
             throw new DeduplicationAuthorityException(DeduplicationAuthorityErrorCodes.InvalidCandidate, "Review pair candidates must be distinct.");
         }
 
-        if (string.Compare(pair.CandidateAId, pair.CandidateBId, StringComparison.Ordinal) <= 0)
-        {
-            return pair;
-        }
-
-        return new DedupReviewCandidate(pair.CandidateBId, pair.CandidateAId, pair.TitleSimilarity, pair.ThresholdUsed);
+        return pair;
     }
 
     private static bool IsPairEvidence(DedupReviewCandidate pair, DedupEvidence evidence)
@@ -876,6 +917,24 @@ public static class DeduplicationAuthorityDigests
         {
             throw new DeduplicationAuthorityException(DeduplicationAuthorityErrorCodes.InvalidCandidate, "Candidate keywords cannot contain blank values.");
         }
+
+        if ((candidate.Source.SourceFileDigest is null) != (candidate.Source.SourceFileDigestScope is null))
+        {
+            throw new DeduplicationAuthorityException(
+                DeduplicationAuthorityDigestErrorCodes.NonCanonicalAuthorityMaterial,
+                "Candidate source-file digest and scope must either both be present or both be absent.");
+        }
+
+        if (candidate.Source.SourceFileDigest is not null)
+        {
+            ValidateDigest(candidate.Source.SourceFileDigest, "candidate source-file digest");
+            ValidateRawArtifactScope(candidate.Source.SourceFileDigestScope!, "candidate source-file digest scope");
+        }
+
+        if (candidate.Source.RawRecordDigest is not null)
+        {
+            ValidateDigest(candidate.Source.RawRecordDigest, "candidate raw-record digest");
+        }
     }
 
     private static void ValidateEvidence(DedupEvidence evidence)
@@ -903,7 +962,21 @@ public static class DeduplicationAuthorityDigests
 
     private static void EnsureCanonicalInput(string label, CanonicalJsonValue provided, CanonicalJsonValue canonicalized)
     {
-        if (!string.Equals(Canonicalize(provided), Canonicalize(canonicalized), StringComparison.Ordinal))
+        string providedText;
+        try
+        {
+            providedText = CanonicalJsonSerializer.Serialize(
+                provided,
+                new CanonicalJsonSerializerOptions { StringNormalization = CanonicalStringNormalizationMode.RequireNormalized });
+        }
+        catch (InvalidOperationException exception)
+        {
+            throw new DeduplicationAuthorityException(
+                DeduplicationAuthorityDigestErrorCodes.NonCanonicalAuthorityMaterial,
+                $"{label} authority material contains non-NFC text: {exception.Message}");
+        }
+
+        if (!string.Equals(providedText, Canonicalize(canonicalized), StringComparison.Ordinal))
         {
             throw new DeduplicationAuthorityException(
                 DeduplicationAuthorityDigestErrorCodes.NonCanonicalAuthorityMaterial,
@@ -917,4 +990,53 @@ public static class DeduplicationAuthorityDigests
     }
 
     private static string Canonicalize(CanonicalJsonValue value) => CanonicalJsonSerializer.Serialize(value);
+
+    private static DedupCandidateRecord FreezeCandidate(DedupCandidateRecord candidate) => candidate with
+    {
+        WorkIds = Array.AsReadOnly(candidate.WorkIds.ToArray()),
+        SourceSpecificIds = Array.AsReadOnly(candidate.SourceSpecificIds.ToArray()),
+        Authors = Array.AsReadOnly(candidate.Authors.ToArray()),
+        Keywords = Array.AsReadOnly(candidate.Keywords.ToArray()),
+        Source = candidate.Source with
+        {
+            ParserWarnings = Array.AsReadOnly(candidate.Source.ParserWarnings.ToArray()),
+            RecordNotices = Array.AsReadOnly(candidate.Source.RecordNotices.ToArray())
+        }
+    };
+
+    private static void ValidateDigestCollection(IEnumerable<string> values, string label)
+    {
+        foreach (var value in values)
+        {
+            ValidateDigest(value, label);
+        }
+    }
+
+    private static void ValidateRawArtifactScopes(IEnumerable<string> values, string label)
+    {
+        foreach (var value in values)
+        {
+            ValidateRawArtifactScope(value, label);
+        }
+    }
+
+    private static void ValidateDigest(string value, string label)
+    {
+        if (!ContentDigest.TryParse(value, out _))
+        {
+            throw new DeduplicationAuthorityException(
+                DeduplicationAuthorityDigestErrorCodes.NonCanonicalAuthorityMaterial,
+                $"{label} must be a canonical lowercase SHA-256 digest.");
+        }
+    }
+
+    private static void ValidateRawArtifactScope(string value, string label)
+    {
+        if (!DigestScope.TryParse(value, out var scope) || scope != DigestScope.RawArtifactBytes)
+        {
+            throw new DeduplicationAuthorityException(
+                DeduplicationAuthorityDigestErrorCodes.NonCanonicalAuthorityMaterial,
+                $"{label} must be '{DigestScope.RawArtifactBytes}'.");
+        }
+    }
 }

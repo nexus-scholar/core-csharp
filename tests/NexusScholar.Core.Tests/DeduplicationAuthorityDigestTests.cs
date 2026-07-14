@@ -40,6 +40,22 @@ public sealed class DeduplicationAuthorityDigestTests
     }
 
     [TestMethod]
+    public void Candidate_digest_normalizes_keyword_order_but_preserves_verified_collection_ownership()
+    {
+        var mutableWorkIds = new List<string> { "w-b", "w-a" };
+        var left = BuildCandidate("candidate-a", workIds: mutableWorkIds, keywords: new[] { "zeta", "alpha" });
+        var right = BuildCandidate("candidate-a", workIds: new[] { "w-a", "w-b" }, keywords: new[] { "alpha", "zeta" });
+
+        var verified = DeduplicationAuthorityDigests.CreateCandidateDigestMaterial(left);
+        mutableWorkIds.Add("caller-mutation");
+
+        Assert.AreEqual(
+            DeduplicationAuthorityDigests.CreateCandidateDigestMaterial(right).CandidateDigest,
+            verified.CandidateDigest);
+        CollectionAssert.DoesNotContain(verified.Candidate.WorkIds.ToArray(), "caller-mutation");
+    }
+
+    [TestMethod]
     public void Create_result_digest_material_normalizes_set_like_collections_for_determinism()
     {
         var first = BuildCandidate("candidate-1");
@@ -82,6 +98,23 @@ public sealed class DeduplicationAuthorityDigestTests
         var error = Assert.ThrowsExactly<DeduplicationAuthorityException>(() =>
             DeduplicationAuthorityDigests.RehydrateCandidateDigestMaterial(new(persisted, material.CandidateDigest)));
         Assert.AreEqual(DeduplicationAuthorityDigestErrorCodes.NonCanonicalAuthorityMaterial, error.Category);
+    }
+
+    [TestMethod]
+    public void Rehydrate_candidate_digest_material_rejects_non_nfc_and_malformed_digest_material()
+    {
+        var canonical = BuildCandidate("candidate-1");
+        var material = DeduplicationAuthorityDigests.CreateCandidateDigestMaterial(canonical);
+
+        var nonNfc = canonical with { Title = "Cafe\u0301" };
+        var nfcError = Assert.ThrowsExactly<DeduplicationAuthorityException>(() =>
+            DeduplicationAuthorityDigests.RehydrateCandidateDigestMaterial(new(nonNfc, material.CandidateDigest)));
+        Assert.AreEqual(DeduplicationAuthorityDigestErrorCodes.NonCanonicalAuthorityMaterial, nfcError.Category);
+
+        var malformed = canonical with { Source = canonical.Source with { SourceFileDigest = "SHA256:NOT-CANONICAL" } };
+        var digestError = Assert.ThrowsExactly<DeduplicationAuthorityException>(() =>
+            DeduplicationAuthorityDigests.RehydrateCandidateDigestMaterial(new(malformed, material.CandidateDigest)));
+        Assert.AreEqual(DeduplicationAuthorityDigestErrorCodes.NonCanonicalAuthorityMaterial, digestError.Category);
     }
 
     [TestMethod]
@@ -152,8 +185,14 @@ public sealed class DeduplicationAuthorityDigestTests
             DeduplicationAuthorityDigests.RehydrateReviewTargetDigestMaterial(
                 verifiedResult,
                 new(
+                    SchemaId: DeduplicationAuthorityDigests.ReviewTargetSchemaId,
+                    SchemaVersion: DeduplicationAuthorityDigests.ReviewTargetSchemaVersion,
+                    TargetKind: target.TargetKind,
+                    TargetId: target.TargetId,
+                    SourceResultId: verifiedResult.Result.ResultId,
+                    SourceResultDigest: verifiedResult.ResultDigest,
                     CandidateIds: new[] { "candidate-2", "candidate-1" },
-                    ReviewPair: new DedupReviewCandidate("candidate-2", "candidate-1", 0.9, 0.8),
+                    ReviewPair: new DedupReviewCandidate("candidate-1", "candidate-2", 0.9, 0.8),
                     Evidence: new[] { evidence },
                     TargetDigest: target.TargetDigest)));
         Assert.AreEqual(DeduplicationAuthorityDigestErrorCodes.NonCanonicalAuthorityMaterial, error.Category);
@@ -181,6 +220,12 @@ public sealed class DeduplicationAuthorityDigestTests
 
         var mutated = target.TargetDigest;
         var mismatch = new UnverifiedDeduplicationAuthorityReviewTargetDigest(
+            DeduplicationAuthorityDigests.ReviewTargetSchemaId,
+            DeduplicationAuthorityDigests.ReviewTargetSchemaVersion,
+            target.TargetKind,
+            target.TargetId,
+            verifiedResult.Result.ResultId,
+            verifiedResult.ResultDigest,
             new[] { "candidate-1", "candidate-2" },
             new DedupReviewCandidate("candidate-1", "candidate-2", 0.9, 0.8),
             new[] { mismatchedEvidence },
@@ -189,6 +234,40 @@ public sealed class DeduplicationAuthorityDigestTests
         var error = Assert.ThrowsExactly<DeduplicationAuthorityException>(() =>
             DeduplicationAuthorityDigests.RehydrateReviewTargetDigestMaterial(verifiedResult, mismatch));
         Assert.AreEqual(DeduplicationAuthorityErrorCodes.InvalidEvidence, error.Category);
+    }
+
+    [TestMethod]
+    public void Rehydrate_review_target_rejects_persisted_descriptor_mismatch()
+    {
+        var first = BuildCandidate("candidate-1");
+        var second = BuildCandidate("candidate-2");
+        var evidence = BuildEvidence("evidence-1", first.CandidateId, second.CandidateId);
+        var verifiedResult = DeduplicationAuthorityDigests.CreateResultDigestMaterial(BuildResult(
+            new[] { first, second },
+            new[] { evidence },
+            new[] { "trace-a" },
+            new[] { new DedupReviewCandidate(first.CandidateId, second.CandidateId, 0.9, 0.8) }));
+        var target = DeduplicationAuthorityDigests.CreateReviewTargetDigestMaterial(
+            verifiedResult,
+            new DedupReviewCandidate(first.CandidateId, second.CandidateId, 0.9, 0.8),
+            new[] { first.CandidateId, second.CandidateId },
+            new[] { evidence });
+
+        var persisted = new UnverifiedDeduplicationAuthorityReviewTargetDigest(
+            DeduplicationAuthorityDigests.ReviewTargetSchemaId,
+            DeduplicationAuthorityDigests.ReviewTargetSchemaVersion,
+            target.TargetKind,
+            "wrong-target-id",
+            verifiedResult.Result.ResultId,
+            verifiedResult.ResultDigest,
+            target.CandidateIds,
+            target.ReviewPair,
+            target.Evidence,
+            target.TargetDigest);
+
+        var error = Assert.ThrowsExactly<DeduplicationAuthorityException>(() =>
+            DeduplicationAuthorityDigests.RehydrateReviewTargetDigestMaterial(verifiedResult, persisted));
+        Assert.AreEqual(DeduplicationAuthorityDigestErrorCodes.InvalidAuthorityTarget, error.Category);
     }
 
     private static DeduplicationResult BuildResult(
@@ -225,7 +304,8 @@ public sealed class DeduplicationAuthorityDigestTests
         string id,
         IReadOnlyList<string>? workIds = null,
         IReadOnlyList<string>? sourceSpecificIds = null,
-        IReadOnlyList<string>? authors = null)
+        IReadOnlyList<string>? authors = null,
+        IReadOnlyList<string>? keywords = null)
     {
         return new DedupCandidateRecord(
             id,
@@ -239,7 +319,7 @@ public sealed class DeduplicationAuthorityDigestTests
             2026,
             null,
             null,
-            new[] { "keyword-a", "keyword-b" });
+            keywords ?? new[] { "keyword-a", "keyword-b" });
     }
 
     private static DedupEvidence BuildEvidence(string evidenceId, string subjectCandidateId, string objectCandidateId)
@@ -263,9 +343,9 @@ public sealed class DeduplicationAuthorityDigestTests
         ProviderAlias: "provider",
         SourceDatabaseOrTool: "tool",
         SourceRecordId: $"record-{id}",
-        SourceFileDigest: "digest",
-        SourceFileDigestScope: DigestScope.CanonicalJsonRecord.ToString(),
-        RawRecordDigest: "raw",
+        SourceFileDigest: ContentDigest.Sha256Utf8($"source-{id}").ToString(),
+        SourceFileDigestScope: DigestScope.RawArtifactBytes.ToString(),
+        RawRecordDigest: ContentDigest.Sha256Utf8($"raw-{id}").ToString(),
         SourceContext: "ctx",
         ParserWarnings: Array.Empty<DedupParserNotice>(),
         RecordNotices: Array.Empty<DedupParserNotice>());
