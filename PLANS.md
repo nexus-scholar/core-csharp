@@ -36,7 +36,7 @@ The CLI verifies local files, analyzes imported Search/Deduplication evidence, a
 
 ## Current Plan
 
-Feature expansion is frozen. Hardening Phases 1-7 from the 2026-07-11 full technical review are complete on protected `main`; the current operating work is the Hardening 30 corrective closeout:
+Feature expansion is frozen pending an accepted next gate. Hardening Phases 1-7 and the Hardening 30 corrective closeout are complete on protected `main`:
 
 - `docs/reviews/2026-07-11-hardening-plan/README.md`
 - `docs/reviews/2026-07-11-hardening-plan/full-technical-review.md`
@@ -51,7 +51,7 @@ The completed dependency order was:
 6. release engineering;
 7. PHP compatibility evidence only after local correctness.
 
-Hardening 30 retains the feature freeze while correcting the post-phase review findings in AI proposal authority, Full Text rehydration, Search import parsing, compatibility-evidence guards, package version identity, and operating documentation.
+Hardening 30 corrected the post-phase review findings in AI proposal authority, Full Text rehydration, Search import parsing, compatibility-evidence guards, package version identity, and operating documentation. No feature-expansion branch is active.
 
 ## Explicitly Deferred
 

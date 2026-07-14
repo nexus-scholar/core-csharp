@@ -1,6 +1,6 @@
 # Hardening 30 - Post-Phase 7 Review Remediation
 
-Status: implemented and locally verified; protected-branch merge verification pending.
+Status: complete; protected-branch merge verified by PR #54 at merge `32d3c5c`.
 
 ## Scope
 

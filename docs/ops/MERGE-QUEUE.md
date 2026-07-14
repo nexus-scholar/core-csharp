@@ -6,7 +6,7 @@ Status date: 2026-07-14
 
 | Order | Gate | Scope | Status |
 |---|---|---|---|
-| 1 | Hardening 30 | Remediate the post-Phase 7 technical review findings and verify the complete gate | Active |
+| - | None | Await an accepted feature-expansion gate | Clear |
 
 Recently landed:
 
@@ -24,6 +24,7 @@ Recently landed:
 | #51 | Hardening 27 Deduplication compatibility evidence | Landed |
 | #52 | Hardening 28 Screening/Full Text compatibility evidence | Landed |
 | #53 | Hardening 29 Phase 7 closeout | Landed |
+| #54 | Hardening 30 post-Phase 7 remediation | Landed |
 
 ## Do Not Queue
 

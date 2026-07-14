@@ -1,6 +1,6 @@
 # Core Hardening Plan - 2026-07-11
 
-Status: Phases 1-7 complete; Hardening 30 post-review remediation is active.
+Status: complete through Hardening 30; feature expansion remains frozen pending an accepted next gate.
 
 Implementation progress:
 
@@ -11,7 +11,7 @@ Implementation progress:
 - Phase 5 test strategy upgrade: complete through Hardening 18.
 - Phase 6 release engineering: complete through Hardening 24 live governance and tagged release rehearsal.
 - Phase 7 compatibility evidence: complete through Hardening 29.
-- Post-Phase 7 review remediation: implemented on the H30 branch; protected-branch merge verification pending.
+- Post-Phase 7 review remediation: complete through Hardening 30 at protected merge `32d3c5c` (PR #54).
 
 Source review: [full-technical-review.md](full-technical-review.md)
 
@@ -21,11 +21,11 @@ Baseline:
 - Original review commit: `7f9e2850dc312cb0b8e8ac0007421937bf5fad1c`
 - Current protected `main`: `37df601a4870fa130225c3231a1f44e93f8232e4` (PR #53)
 - Date refreshed: 2026-07-14
-- Protected-main baseline before H30: clean worktree, 561 tests, build and formatting passed.
+- Protected-main H30 baseline: 573 tests passed on Windows and Linux with build, package, security, and formatting checks green.
 
 ## Decision
 
-Feature expansion remains frozen. Phases 1-7 are complete; the current work is the H30 corrective closeout from the independent post-phase review.
+Feature expansion remains frozen until an accepted next gate defines scope, authority, tests, and non-claims. Phases 1-7 and the H30 corrective closeout are complete.
 
 The repository remains useful for contract development, deterministic local fixtures, architecture exploration, and controlled alpha demonstrations. It must not be used yet for real evidence reviews, final scientific decisions, published NuGet packages, durable workspace storage, PHP compatibility claims, or production desktop workflows.
 
