@@ -2,8 +2,9 @@
 
 Status: active successor roadmap after Hardening 30.
 
-Current authorization: FE-01 gate planning and ADR drafting only. This roadmap
-ranks future work; it does not by itself authorize feature implementation.
+Current authorization: FE-01 local implementation under accepted ADR 0028 and
+`docs/gates/FE-01-DECISION-SNAPSHOT-AUTHORITY.md`. FE-02 through FE-12 remain
+sequenced future work and are not implementation-authorized by this roadmap.
 
 ## Operating Decision
 
@@ -817,8 +818,7 @@ become compatibility obligations.
 
 ## Immediate Next Gate
 
-The immediate job is to plan FE-01, not implement FE-02 or later work. The FE-01
-planning branch should produce:
+The FE-01 contract package is accepted. Its implementation branch must produce:
 
 1. a decision-and-snapshot ADR;
 2. a conflict-resolution update for the named `CF-014` scope;
@@ -831,7 +831,9 @@ planning branch should produce:
 9. exact architecture, conformance, and regression test targets;
 10. explicit non-claims and measurable exit criteria.
 
-Implementation starts only after those decisions are accepted.
+ADR 0028 and the FE-01 gate are accepted. Implementation is now limited to their
+baseline authority-initialization scope; decision append and action reduction
+remain FE-02.
 
 ## Verification Baseline
 

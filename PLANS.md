@@ -40,7 +40,7 @@ Hardening Phases 1-7 and the Hardening 30 corrective closeout are complete on pr
 
 - `docs/plans/2026-07-14-feature-expansion-priority.md`
 
-The roadmap establishes the dependency-ordered feature sequence FE-01 through FE-12. The immediate next job is FE-01 decision-and-snapshot gate planning. Only planning and ADR drafting are currently authorized; feature implementation still requires an accepted gate with explicit scope, authority, tests, and non-claims.
+The roadmap establishes the dependency-ordered feature sequence FE-01 through FE-12. ADR 0028 and `docs/gates/FE-01-DECISION-SNAPSHOT-AUTHORITY.md` are accepted for FE-01 local implementation. The admitted production transition is baseline authority initialization with an empty decision set; decision append and merge/keep-separate/unresolved reduction remain FE-02. Every later feature still requires its own accepted gate with explicit scope, authority, tests, and non-claims.
 
 Completed hardening references remain:
 

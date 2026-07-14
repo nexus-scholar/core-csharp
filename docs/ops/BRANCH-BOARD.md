@@ -6,9 +6,9 @@ Status date: 2026-07-14
 
 - `main`: hardening and closeout complete at merge `f0e5806` (PR #55).
 - `gh-pages`: retained as historical static-site source at `9a76975`; new Pages deployments are sourced from `site/` on `main`.
-- Active corrective branch: none.
+- Active feature branch: `cdx/fe-01-decision-snapshot-authority`.
 - Active plan: `docs/plans/2026-07-14-feature-expansion-priority.md`.
-- Immediate next job: FE-01 decision-and-snapshot gate planning; no feature-expansion implementation branch is active.
+- Immediate job: FE-01 baseline decision-and-snapshot authority implementation under accepted ADR 0028.
 
 ## Completed Hardening
 

@@ -6,7 +6,7 @@ Status date: 2026-07-14
 
 | Order | Gate | Scope | Status |
 |---|---|---|---|
-| - | FE-01 planning | Decision-and-snapshot ADR and gate package not yet opened | Clear |
+| 1 | FE-01 | Decision-and-snapshot authority implementation on `cdx/fe-01-decision-snapshot-authority` | In progress |
 
 Recently landed:
 
@@ -29,4 +29,4 @@ Recently landed:
 
 ## Do Not Queue
 
-The roadmap authorizes FE-01 planning only. Do not queue FE-01 implementation or later package publication, signing, live providers, scraping, persistence/API/cloud, product UI, PDF/OCR, model calls, executable merge decisions, or compatibility claims without the relevant accepted ADR and gate.
+ADR 0028 authorizes only the FE-01 baseline authority-initialization scope. Do not queue FE-02 decision append or later package publication, signing, live providers, scraping, persistence/API/cloud, product UI, PDF/OCR, model calls, executable merge decisions, or compatibility claims without the relevant accepted ADR and gate.

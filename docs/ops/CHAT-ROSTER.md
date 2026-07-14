@@ -5,7 +5,7 @@ Status date: 2026-07-14
 ## Active Lanes
 
 - Main development lane: `main` at the Hardening 30 closeout merge `f0e5806`.
-- Current manager lane: FE-01 decision-and-snapshot gate planning; no feature-expansion implementation branch is active.
+- Current manager lane: FE-01 implementation and integration on `cdx/fe-01-decision-snapshot-authority`.
 - Compatibility evidence lane: Phase 7 complete; future additions remain case-scoped and ADR-mediated.
 - Historical public-site lane: `gh-pages`; deployable site source now moves to `site/` on `main`.
 
