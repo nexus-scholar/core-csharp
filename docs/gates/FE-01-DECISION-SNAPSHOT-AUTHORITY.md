@@ -1,6 +1,8 @@
 # FE-01: Decision And Snapshot Authority
 
-Status: accepted for local implementation under ADR 0028; completion evidence is pending.
+Status: complete and accepted for the local FE-01 scope under ADR 0028.
+
+Completion evidence: `docs/gates/FE-01-DECISION-SNAPSHOT-AUTHORITY-EVIDENCE.md`.
 
 ## Goal And Scientific Behavior
 

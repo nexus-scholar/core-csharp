@@ -2,8 +2,10 @@
 
 Status: active successor roadmap after Hardening 30.
 
-Current authorization: FE-01 local implementation under accepted ADR 0028 and
-`docs/gates/FE-01-DECISION-SNAPSHOT-AUTHORITY.md`. FE-02 through FE-12 remain
+Current state: FE-01 is complete under accepted ADR 0028 and
+`docs/gates/FE-01-DECISION-SNAPSHOT-AUTHORITY.md`, with evidence in
+`docs/gates/FE-01-DECISION-SNAPSHOT-AUTHORITY-EVIDENCE.md`. FE-02 is next in
+sequence but is not implementation-authorized. FE-03 through FE-12 remain
 sequenced future work and are not implementation-authorized by this roadmap.
 
 ## Operating Decision
@@ -818,22 +820,11 @@ become compatibility obligations.
 
 ## Immediate Next Gate
 
-The FE-01 contract package is accepted. Its implementation branch must produce:
-
-1. a decision-and-snapshot ADR;
-2. a conflict-resolution update for the named `CF-014` scope;
-3. record and schema drafts with canonical digest scopes;
-4. a dependency diagram and module ownership decision;
-5. a fixture catalog including the negative cases above;
-6. a persistence-independent domain design;
-7. a ResearchWorkspace atomic-write integration design;
-8. an implementation task breakdown with one behavior per task;
-9. exact architecture, conformance, and regression test targets;
-10. explicit non-claims and measurable exit criteria.
-
-ADR 0028 and the FE-01 gate are accepted. Implementation is now limited to their
-baseline authority-initialization scope; decision append and action reduction
-remain FE-02.
+FE-01 is complete. The next gate is FE-02: executable Deduplication decisions and
+snapshot transition. Before implementation, FE-02 requires an accepted gate that
+closes command authority, decision append, action reduction, successor snapshot,
+invalidation, atomic persistence, recovery, fixtures, and measurable non-claims.
+No FE-02 implementation is authorized by this roadmap alone.
 
 ## Verification Baseline
 

@@ -40,7 +40,7 @@ Hardening Phases 1-7 and the Hardening 30 corrective closeout are complete on pr
 
 - `docs/plans/2026-07-14-feature-expansion-priority.md`
 
-The roadmap establishes the dependency-ordered feature sequence FE-01 through FE-12. ADR 0028 and `docs/gates/FE-01-DECISION-SNAPSHOT-AUTHORITY.md` are accepted for FE-01 local implementation. The admitted production transition is baseline authority initialization with an empty decision set; decision append and merge/keep-separate/unresolved reduction remain FE-02. Every later feature still requires its own accepted gate with explicit scope, authority, tests, and non-claims.
+The roadmap establishes the dependency-ordered feature sequence FE-01 through FE-12. FE-01 is complete under ADR 0028 and `docs/gates/FE-01-DECISION-SNAPSHOT-AUTHORITY.md`; its evidence is recorded in `docs/gates/FE-01-DECISION-SNAPSHOT-AUTHORITY-EVIDENCE.md`. The admitted production transition is baseline authority initialization with an empty decision set. Decision append and merge/keep-separate/unresolved reduction remain FE-02, which is next in sequence but is not implementation-authorized. Every later feature still requires its own accepted gate with explicit scope, authority, tests, and non-claims.
 
 Completed hardening references remain:
 
@@ -57,11 +57,10 @@ The completed dependency order was:
 6. release engineering;
 7. PHP compatibility evidence only after local correctness.
 
-Hardening 30 corrected the post-phase review findings in AI proposal authority, Full Text rehydration, Search import parsing, compatibility-evidence guards, package version identity, and operating documentation. No feature-expansion implementation branch is active.
+Hardening 30 corrected the post-phase review findings in AI proposal authority, Full Text rehydration, Search import parsing, compatibility-evidence guards, package version identity, and operating documentation. FE-01 is the first completed feature-expansion gate; no later feature gate is active.
 
 ## Deferred Until Their Feature Gate
 
-- actor-bound decisions, immutable candidate snapshots, and local decision persistence: FE-01;
 - executable Deduplication merge, keep-separate, and unresolved decisions: FE-02;
 - workflow execution state and human task journal: FE-03;
 - durable title and abstract Screening conduct: FE-04;
