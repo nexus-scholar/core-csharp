@@ -13,7 +13,8 @@
     "NexusScholar.Screening",
     "NexusScholar.Search",
     "NexusScholar.Shared",
-    "NexusScholar.Workflow"
+    "NexusScholar.Workflow",
+    "NexusScholar.WorkflowExecution"
   ],
   "smokeRoots": [
     "NexusScholar.Bundles",

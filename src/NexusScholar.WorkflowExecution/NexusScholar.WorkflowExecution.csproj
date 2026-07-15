@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <IsPackable>true</IsPackable>
+    <Description>Deterministic protocol-bound workflow execution journals.</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../NexusScholar.Kernel/NexusScholar.Kernel.csproj" />
+    <ProjectReference Include="../NexusScholar.Workflow/NexusScholar.Workflow.csproj" />
+  </ItemGroup>
+</Project>

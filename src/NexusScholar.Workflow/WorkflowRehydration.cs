@@ -40,15 +40,63 @@ public sealed class VerifiedWorkflowDefinition
 {
     internal VerifiedWorkflowDefinition(
         WorkflowDefinition definition,
-        VerifiedProtocolVersion protocolAuthority)
+        VerifiedProtocolVersion protocolAuthority,
+        WorkflowTemplate resolvedTemplate)
     {
         Definition = definition ?? throw new ArgumentNullException(nameof(definition));
         ProtocolAuthority = protocolAuthority ?? throw new ArgumentNullException(nameof(protocolAuthority));
+        ResolvedTemplate = CloneTemplate(resolvedTemplate ?? throw new ArgumentNullException(nameof(resolvedTemplate)));
     }
 
     public WorkflowDefinition Definition { get; }
 
     public VerifiedProtocolVersion ProtocolAuthority { get; }
+
+    public WorkflowTemplate ResolvedTemplate { get; }
+
+    private static WorkflowTemplate CloneTemplate(WorkflowTemplate template) => template with
+    {
+        RequiredInputs = Array.AsReadOnly(template.RequiredInputs.Select(input => input with
+        {
+            DefaultValue = input.DefaultValue is null ? null : CanonicalJsonValue.DeepClone(input.DefaultValue)
+        }).ToArray()),
+        Nodes = Array.AsReadOnly(template.Nodes.Select(node => node with
+        {
+            Requires = Array.AsReadOnly(node.Requires.ToArray()),
+            Produces = Array.AsReadOnly(node.Produces.ToArray()),
+            CapabilityRequirementRefs = Array.AsReadOnly(node.CapabilityRequirementRefs.ToArray())
+        }).ToArray()),
+        Edges = Array.AsReadOnly(template.Edges.Select(edge => edge with { }).ToArray()),
+        Gates = Array.AsReadOnly(template.Gates.Select(gate => gate with
+        {
+            RequiredArtifactRefs = Array.AsReadOnly(gate.RequiredArtifactRefs.ToArray()),
+            RequiredDecisionRefs = Array.AsReadOnly(gate.RequiredDecisionRefs.ToArray()),
+            RequiredActorRoles = Array.AsReadOnly(gate.RequiredActorRoles.ToArray())
+        }).ToArray()),
+        ApprovalRequirements = Array.AsReadOnly(template.ApprovalRequirements.Select(requirement => requirement with
+        {
+            RequiredRoles = Array.AsReadOnly(requirement.RequiredRoles.ToArray())
+        }).ToArray()),
+        Roles = Array.AsReadOnly(template.Roles.Select(role => role with { }).ToArray()),
+        CapabilityRequirements = Array.AsReadOnly(template.CapabilityRequirements.Select(requirement => requirement with
+        {
+            RequiredScopes = Array.AsReadOnly(requirement.RequiredScopes.ToArray())
+        }).ToArray()),
+        WaiverPolicies = Array.AsReadOnly(template.WaiverPolicies.Select(policy => policy with
+        {
+            WaivableRequirementRefs = Array.AsReadOnly(policy.WaivableRequirementRefs.ToArray())
+        }).ToArray()),
+        ArtifactDeclarations = Array.AsReadOnly(template.ArtifactDeclarations.Select(declaration => declaration with
+        {
+            RequiredForGates = Array.AsReadOnly(declaration.RequiredForGates.ToArray())
+        }).ToArray()),
+        InvalidationPolicies = Array.AsReadOnly(template.InvalidationPolicies.Select(policy => policy with
+        {
+            AffectedRequirementRefs = Array.AsReadOnly(policy.AffectedRequirementRefs.ToArray()),
+            AffectedArtifactRefs = Array.AsReadOnly(policy.AffectedArtifactRefs.ToArray()),
+            AffectedNodeRefs = Array.AsReadOnly(policy.AffectedNodeRefs.ToArray())
+        }).ToArray())
+    };
 
 }
 
@@ -126,7 +174,7 @@ public static class WorkflowRehydrator
             input.CapabilityRequirements,
             input.ArtifactDeclarations,
             input.InvalidationPlanEntries);
-        return new VerifiedWorkflowDefinition(definition, protocolAuthority);
+        return new VerifiedWorkflowDefinition(definition, protocolAuthority, template);
     }
 
     public static UnverifiedWorkflowDefinition FromCompiled(WorkflowDefinition definition)

@@ -19,6 +19,7 @@ using NexusScholar.Search;
 using NexusScholar.Shared;
 using NexusScholar.UiContracts;
 using NexusScholar.Workflow;
+using NexusScholar.WorkflowExecution;
 
 namespace NexusScholar.Architecture.Tests;
 
@@ -52,6 +53,7 @@ public sealed class DependencyRulesTests
             typeof(ArtifactDescriptor).Assembly,
             typeof(ProtocolDraft).Assembly,
             typeof(WorkflowDefinition).Assembly,
+            typeof(WorkflowExecutionJournal).Assembly,
             typeof(ResearchEvent).Assembly,
             typeof(WorkId).Assembly,
             typeof(SearchTrace).Assembly,
@@ -149,6 +151,31 @@ public sealed class DependencyRulesTests
             0,
             disallowed.Length,
             $"NexusScholar.Provenance must depend inward only on Kernel. Found: {string.Join(", ", disallowed)}");
+    }
+
+    [TestMethod]
+    public void WorkflowExecution_project_depends_only_on_kernel_and_workflow_inside_nexus_domain()
+    {
+        var assembly = typeof(WorkflowExecutionJournal).Assembly;
+        var allowed = new[]
+        {
+            typeof(IClock).Assembly.GetName().Name,
+            typeof(WorkflowDefinition).Assembly.GetName().Name
+        };
+        var disallowed = assembly.GetReferencedAssemblies()
+            .Select(reference => reference.Name ?? string.Empty)
+            .Where(name => name.StartsWith("NexusScholar.", StringComparison.Ordinal))
+            .Where(name => !allowed.Contains(name, StringComparer.Ordinal))
+            .ToArray();
+
+        Assert.AreEqual(
+            0,
+            disallowed.Length,
+            $"NexusScholar.WorkflowExecution may depend only on Kernel and Workflow. Found: {string.Join(", ", disallowed)}");
+        Assert.IsFalse(
+            typeof(WorkflowDefinition).Assembly.GetReferencedAssemblies()
+                .Any(reference => string.Equals(reference.Name, assembly.GetName().Name, StringComparison.Ordinal)),
+            "NexusScholar.Workflow must not depend on WorkflowExecution.");
     }
 
     [TestMethod]

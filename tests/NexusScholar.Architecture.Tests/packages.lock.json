@@ -449,6 +449,13 @@
           "NexusScholar.Protocol": "[0.1.0-alpha.2, )"
         }
       },
+      "nexusscholar.workflowexecution": {
+        "type": "Project",
+        "dependencies": {
+          "NexusScholar.Kernel": "[0.1.0-alpha.2, )",
+          "NexusScholar.Workflow": "[0.1.0-alpha.2, )"
+        }
+      },
       "Avalonia": {
         "type": "CentralTransitive",
         "requested": "[12.0.4, )",

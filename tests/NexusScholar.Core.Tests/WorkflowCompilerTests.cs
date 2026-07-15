@@ -4,6 +4,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NexusScholar.Kernel;
 using NexusScholar.Protocol;
 using NexusScholar.Workflow;
+using NexusScholar.WorkflowExecution;
 
 namespace NexusScholar.Core.Tests;
 
@@ -66,6 +67,147 @@ public sealed class WorkflowCompilerTests
         Assert.AreEqual(compiled.WorkflowId, verified.Definition.WorkflowId);
         Assert.AreEqual(compiled.WorkflowDigest, verified.Definition.WorkflowDigest);
         Assert.AreSame(authority, verified.ProtocolAuthority);
+        Assert.AreNotSame(template, verified.ResolvedTemplate);
+        Assert.AreEqual(template.TemplateDigest, verified.ResolvedTemplate.TemplateDigest);
+    }
+
+    [TestMethod]
+    public void Execution_journal_replays_hash_chained_attempt_and_dependency_history()
+    {
+        var authority = BuildExecutionAuthority();
+        var policy = BuildExecutionPolicy(authority);
+        var researcher = new WorkflowExecutionActor("researcher-1", WorkflowExecutionActorKinds.Human, "methodologist");
+        var runner = new WorkflowExecutionActor("runner-1", WorkflowExecutionActorKinds.Automation, "runner");
+        var header = WorkflowExecutionHeader.Create("execution-1", authority, policy, researcher, Clock.UtcNow);
+        var journal = WorkflowExecutionJournal.Create(header, authority, policy);
+
+        Assert.AreEqual(WorkflowExecutionState.Ready, journal.Projection.NodeStates["start"]);
+        Assert.AreEqual(WorkflowExecutionState.Pending, journal.Projection.NodeStates["approve"]);
+
+        Append(journal, "start-1", "start", WorkflowExecutionEventKind.WorkStarted,
+            WorkflowExecutionState.Ready, WorkflowExecutionState.Active, runner, attemptId: "attempt-1", attemptSequence: 1);
+        Append(journal, "complete-1", "start", WorkflowExecutionEventKind.WorkCompleted,
+            WorkflowExecutionState.Active, WorkflowExecutionState.Completed, runner, attemptId: "attempt-1", attemptSequence: 1,
+            outputs: new[] { Ref("artifact", "search-plan") });
+        Append(journal, "ready-approve", "approve", WorkflowExecutionEventKind.DependenciesSatisfied,
+            WorkflowExecutionState.Pending, WorkflowExecutionState.Ready, researcher);
+
+        var replay = WorkflowExecutionJournal.Rehydrate(header, journal.Events, authority, policy);
+
+        Assert.AreEqual(journal.Projection.HeadDigest, replay.Projection.HeadDigest);
+        Assert.AreEqual(WorkflowExecutionState.Ready, replay.Projection.NodeStates["approve"]);
+        Assert.AreEqual(1, replay.Projection.Attempts["start"].Count);
+        Assert.AreEqual(WorkflowExecutionState.Completed, replay.Projection.Attempts["start"][0].State);
+    }
+
+    [TestMethod]
+    public void Execution_journal_preserves_failed_attempt_before_retry_success()
+    {
+        var authority = BuildExecutionAuthority();
+        var policy = BuildExecutionPolicy(authority);
+        var researcher = new WorkflowExecutionActor("researcher-1", WorkflowExecutionActorKinds.Human, "methodologist");
+        var runner = new WorkflowExecutionActor("runner-1", WorkflowExecutionActorKinds.Automation, "runner");
+        var journal = WorkflowExecutionJournal.Create(
+            WorkflowExecutionHeader.Create("execution-retry", authority, policy, researcher, Clock.UtcNow), authority, policy);
+
+        Append(journal, "start-1", "start", WorkflowExecutionEventKind.WorkStarted,
+            WorkflowExecutionState.Ready, WorkflowExecutionState.Active, runner, attemptId: "attempt-1", attemptSequence: 1);
+        Append(journal, "fail-1", "start", WorkflowExecutionEventKind.WorkFailed,
+            WorkflowExecutionState.Active, WorkflowExecutionState.Failed, runner, attemptId: "attempt-1", attemptSequence: 1,
+            errorCategory: "provider-error", errorSummary: "local adapter failed");
+        Append(journal, "retry-1", "start", WorkflowExecutionEventKind.RetryAuthorized,
+            WorkflowExecutionState.Failed, WorkflowExecutionState.Ready, researcher);
+        Append(journal, "start-2", "start", WorkflowExecutionEventKind.WorkStarted,
+            WorkflowExecutionState.Ready, WorkflowExecutionState.Active, runner, attemptId: "attempt-2", attemptSequence: 2);
+        Append(journal, "complete-2", "start", WorkflowExecutionEventKind.WorkCompleted,
+            WorkflowExecutionState.Active, WorkflowExecutionState.Completed, runner, attemptId: "attempt-2", attemptSequence: 2,
+            outputs: new[] { Ref("artifact", "search-plan") });
+
+        Assert.AreEqual(2, journal.Projection.Attempts["start"].Count);
+        Assert.AreEqual(WorkflowExecutionState.Failed, journal.Projection.Attempts["start"][0].State);
+        Assert.AreEqual(WorkflowExecutionState.Completed, journal.Projection.Attempts["start"][1].State);
+    }
+
+    [TestMethod]
+    public void Execution_journal_resumes_blocked_attempt_without_overlap()
+    {
+        var authority = BuildExecutionAuthority();
+        var policy = BuildExecutionPolicy(authority);
+        var researcher = new WorkflowExecutionActor("researcher-1", WorkflowExecutionActorKinds.Human, "methodologist");
+        var runner = new WorkflowExecutionActor("runner-1", WorkflowExecutionActorKinds.Automation, "runner");
+        var journal = WorkflowExecutionJournal.Create(
+            WorkflowExecutionHeader.Create("execution-block", authority, policy, researcher, Clock.UtcNow), authority, policy);
+
+        Append(journal, "start", "start", WorkflowExecutionEventKind.WorkStarted,
+            WorkflowExecutionState.Ready, WorkflowExecutionState.Active, runner, attemptId: "attempt-1", attemptSequence: 1);
+        Append(journal, "block", "start", WorkflowExecutionEventKind.WorkBlocked,
+            WorkflowExecutionState.Active, WorkflowExecutionState.Blocked, runner, attemptId: "attempt-1", attemptSequence: 1);
+        Append(journal, "clear", "start", WorkflowExecutionEventKind.BlockCleared,
+            WorkflowExecutionState.Blocked, WorkflowExecutionState.Active, runner, attemptId: "attempt-1", attemptSequence: 1);
+        Append(journal, "complete", "start", WorkflowExecutionEventKind.WorkCompleted,
+            WorkflowExecutionState.Active, WorkflowExecutionState.Completed, runner, attemptId: "attempt-1", attemptSequence: 1,
+            outputs: new[] { Ref("artifact", "search-plan") });
+
+        Assert.AreEqual(1, journal.Projection.Attempts["start"].Count);
+        Assert.AreEqual(WorkflowExecutionState.Completed, journal.Projection.Attempts["start"][0].State);
+    }
+
+    [TestMethod]
+    public void Execution_journal_strict_replay_rejects_duplicate_and_invalidation_fails_closed()
+    {
+        var authority = BuildExecutionAuthority();
+        var policy = BuildExecutionPolicy(authority);
+        var researcher = new WorkflowExecutionActor("researcher-1", WorkflowExecutionActorKinds.Human, "methodologist");
+        var runner = new WorkflowExecutionActor("runner-1", WorkflowExecutionActorKinds.Automation, "runner");
+        var header = WorkflowExecutionHeader.Create("execution-replay", authority, policy, researcher, Clock.UtcNow);
+        var journal = WorkflowExecutionJournal.Create(header, authority, policy);
+        Append(journal, "start", "start", WorkflowExecutionEventKind.WorkStarted,
+            WorkflowExecutionState.Ready, WorkflowExecutionState.Active, runner, attemptId: "attempt-1", attemptSequence: 1);
+
+        var replayError = Assert.ThrowsExactly<WorkflowExecutionRuleException>(() => WorkflowExecutionJournal.Rehydrate(
+            header, journal.Events.Concat(new[] { journal.Events[0] }), authority, policy));
+        Assert.AreEqual(WorkflowExecutionErrorCodes.ConflictingRequest, replayError.Category);
+
+        var invalidation = WorkflowExecutionEvent.Create(
+            header, journal.Events.Count + 1, journal.Projection.HeadDigest, "invalidate", "start",
+            WorkflowExecutionEventKind.WorkInvalidated, WorkflowExecutionState.Active, WorkflowExecutionState.Invalidated,
+            researcher, Clock.UtcNow, "source changed", invalidationSource: Ref("protocol-amendment", "amendment-1"));
+        var invalidationError = Assert.ThrowsExactly<WorkflowExecutionRuleException>(() => journal.Append(invalidation));
+        Assert.AreEqual(WorkflowExecutionErrorCodes.InvalidInvalidation, invalidationError.Category);
+    }
+
+    [TestMethod]
+    public void Execution_journal_rejects_stale_head_and_automation_human_authority()
+    {
+        var authority = BuildExecutionAuthority();
+        var policy = BuildExecutionPolicy(authority);
+        var researcher = new WorkflowExecutionActor("researcher-1", WorkflowExecutionActorKinds.Human, "methodologist");
+        var runner = new WorkflowExecutionActor("runner-1", WorkflowExecutionActorKinds.Automation, "runner");
+        var journal = WorkflowExecutionJournal.Create(
+            WorkflowExecutionHeader.Create("execution-negative", authority, policy, researcher, Clock.UtcNow), authority, policy);
+
+        Append(journal, "start-1", "start", WorkflowExecutionEventKind.WorkStarted,
+            WorkflowExecutionState.Ready, WorkflowExecutionState.Active, runner, attemptId: "attempt-1", attemptSequence: 1);
+        Append(journal, "complete-1", "start", WorkflowExecutionEventKind.WorkCompleted,
+            WorkflowExecutionState.Active, WorkflowExecutionState.Completed, runner, attemptId: "attempt-1", attemptSequence: 1,
+            outputs: new[] { Ref("artifact", "search-plan") });
+        Append(journal, "ready-approve", "approve", WorkflowExecutionEventKind.DependenciesSatisfied,
+            WorkflowExecutionState.Pending, WorkflowExecutionState.Ready, researcher);
+
+        var stale = WorkflowExecutionEvent.Create(
+            journal.Header, journal.Events.Count + 1, journal.Header.Digest, "stale", "approve",
+            WorkflowExecutionEventKind.WorkStarted, WorkflowExecutionState.Ready, WorkflowExecutionState.Active,
+            researcher, Clock.UtcNow, "stale append", "approval-attempt", 1);
+        var staleError = Assert.ThrowsExactly<WorkflowExecutionRuleException>(() => journal.Append(stale));
+        Assert.AreEqual(WorkflowExecutionErrorCodes.InvalidJournalChain, staleError.Category);
+
+        var automation = new WorkflowExecutionActor("runner-1", WorkflowExecutionActorKinds.Automation, "runner");
+        var forged = WorkflowExecutionEvent.Create(
+            journal.Header, journal.Events.Count + 1, journal.Projection.HeadDigest, "forged", "approve",
+            WorkflowExecutionEventKind.WorkStarted, WorkflowExecutionState.Ready, WorkflowExecutionState.Active,
+            automation, Clock.UtcNow, "automation cannot approve", "approval-attempt", 1);
+        var authorityError = Assert.ThrowsExactly<WorkflowExecutionRuleException>(() => journal.Append(forged));
+        Assert.AreEqual(WorkflowExecutionErrorCodes.AutomationHumanAuthority, authorityError.Category);
     }
 
     [TestMethod]
@@ -625,6 +767,80 @@ public sealed class WorkflowCompilerTests
         var error = Assert.ThrowsExactly<WorkflowRuleException>(() => new WorkflowCompiler().Compile(input));
         Assert.AreEqual(WorkflowErrorCodes.WorkflowIdMismatch, error.Category);
     }
+
+    private static VerifiedWorkflowDefinition BuildExecutionAuthority()
+    {
+        var protocol = BuildApprovedProtocol();
+        var source = BuildTemplate();
+        var nodes = source.Nodes.Select(node => node.NodeId == "start"
+            ? node with { Kind = WorkflowNodeKind.AutomatedTask, Mode = WorkflowNodeMode.Automated }
+            : node).ToArray();
+        var template = source with
+        {
+            Nodes = nodes,
+            Roles = source.Roles.Concat(new[]
+            {
+                new WorkflowTemplateRole("runner", "Runner", "Execute deterministic automated work")
+            }).ToArray()
+        };
+        template = template with { TemplateDigest = WorkflowCompiler.ComputeLocalTemplateDigest(template) };
+        var compiled = new WorkflowCompiler().Compile(BuildInput(protocol, template));
+        return WorkflowRehydrator.Rehydrate(
+            WorkflowRehydrator.FromCompiled(compiled),
+            new TestWorkflowAuthorityResolver(
+                ProtocolAuthorities.GetValue(protocol, _ => throw new InvalidOperationException()),
+                template));
+    }
+
+    private static WorkflowExecutionAuthorityPolicy BuildExecutionPolicy(VerifiedWorkflowDefinition authority) =>
+        WorkflowExecutionAuthorityPolicy.Create(
+            "execution-policy-1",
+            Ref("review", "review-1"),
+            authority,
+            new[]
+            {
+                new WorkflowExecutionRoleAssignment("researcher-1", "methodologist"),
+                new WorkflowExecutionRoleAssignment("runner-1", "runner")
+            },
+            new WorkflowExecutionActor("researcher-1", WorkflowExecutionActorKinds.Human, "methodologist"),
+            Clock.UtcNow);
+
+    private static WorkflowExecutionEvent Append(
+        WorkflowExecutionJournal journal,
+        string requestId,
+        string nodeId,
+        WorkflowExecutionEventKind kind,
+        WorkflowExecutionState expected,
+        WorkflowExecutionState result,
+        WorkflowExecutionActor actor,
+        string? attemptId = null,
+        int? attemptSequence = null,
+        IEnumerable<WorkflowExecutionRecordRef>? outputs = null,
+        string? errorCategory = null,
+        string? errorSummary = null)
+    {
+        var item = WorkflowExecutionEvent.Create(
+            journal.Header,
+            journal.Events.Count + 1,
+            journal.Projection.HeadDigest,
+            requestId,
+            nodeId,
+            kind,
+            expected,
+            result,
+            actor,
+            Clock.UtcNow,
+            $"{kind} for {nodeId}",
+            attemptId,
+            attemptSequence,
+            outputs: outputs,
+            errorCategory: errorCategory,
+            errorSummary: errorSummary);
+        return journal.Append(item);
+    }
+
+    private static WorkflowExecutionRecordRef Ref(string kind, string id) =>
+        new(kind, id, ContentDigest.Sha256Utf8($"{kind}:{id}"));
 
     private static WorkflowCompileInput BuildInput(
         ProtocolVersion protocol,
