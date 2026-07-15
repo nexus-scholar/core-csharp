@@ -17,6 +17,12 @@ public static class ScreeningConductCanonicalCodec
     public static byte[] Serialize(ScreeningConductDecision decision) =>
         CanonicalJsonSerializer.SerializeToUtf8Bytes((decision ?? throw new ArgumentNullException(nameof(decision))).ToCanonicalJson());
 
+    public static byte[] Serialize(ScreeningConductInvalidation invalidation) =>
+        CanonicalJsonSerializer.SerializeToUtf8Bytes((invalidation ?? throw new ArgumentNullException(nameof(invalidation))).ToCanonicalJson());
+
+    public static byte[] Serialize(ScreeningConductHandoff handoff) =>
+        CanonicalJsonSerializer.SerializeToUtf8Bytes((handoff ?? throw new ArgumentNullException(nameof(handoff))).ToCanonicalJson());
+
     public static ScreeningConductPolicy RehydratePolicy(
         byte[] bytes,
         ContentDigest expectedDigest,
@@ -81,6 +87,37 @@ public static class ScreeningConductCanonicalCodec
             Array(content, "evidence").Select(ParseEvidence));
         RequireReproduction(bytes, decision.Digest, expectedDigest, Serialize(decision), "Screening conduct decision");
         return decision;
+    }
+
+    public static ScreeningConductInvalidation RehydrateInvalidation(
+        byte[] bytes,
+        ContentDigest expectedDigest,
+        ScreeningConductHeader header)
+    {
+        var content = ParseEnvelope(bytes, expectedDigest, ScreeningConductInvalidation.SchemaId);
+        RequireExact(content,
+        [
+            "actor", "affected_decision_ids", "conduct_id", "invalidated_at", "invalidation_id", "ordinal",
+            "policy_digest", "policy_id", "previous_digest", "reason", "source"
+        ]);
+        var invalidation = ScreeningConductInvalidation.Create(
+            header, Integer(content, "ordinal"), Digest(content, "previous_digest"), Text(content, "invalidation_id"),
+            ParseEvidence(Object(content, "source")), Array(content, "affected_decision_ids").Select(Text),
+            ParseActor(Object(content, "actor")), Text(content, "reason"), Timestamp(content, "invalidated_at"));
+        RequireReproduction(bytes, invalidation.Digest, expectedDigest, Serialize(invalidation), "Screening conduct invalidation");
+        return invalidation;
+    }
+
+    public static ScreeningConductHandoff RehydrateHandoff(
+        byte[] bytes,
+        ContentDigest expectedDigest,
+        ScreeningConductJournal journal)
+    {
+        var content = ParseEnvelope(bytes, expectedDigest, ScreeningConductHandoff.SchemaId);
+        RequireExact(content, ["conduct_id", "created_at", "handoff_id", "journal_head_digest", "outcomes", "policy_digest"]);
+        var handoff = ScreeningConductHandoff.Create(Text(content, "handoff_id"), journal, Timestamp(content, "created_at"));
+        RequireReproduction(bytes, handoff.Digest, expectedDigest, Serialize(handoff), "Screening conduct handoff");
+        return handoff;
     }
 
     private static CanonicalJsonObject ParseEnvelope(byte[] bytes, ContentDigest expectedDigest, string schemaId)

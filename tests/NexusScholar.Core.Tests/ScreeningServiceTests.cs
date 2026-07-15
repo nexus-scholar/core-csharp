@@ -890,6 +890,57 @@ public sealed class ScreeningServiceTests
         Assert.AreEqual(ScreeningErrorCodes.UnverifiedConductAuthority, error.Category);
     }
 
+    [TestMethod]
+    public void Conduct_invalidation_removes_current_outcomes_and_stales_handoff()
+    {
+        var (policy, header) = BuildConductAuthority("invalidation", 1);
+        var decision = ScreeningConductDecision.Create(
+            header, 1, header.Digest, "request-before-invalidation", "candidate-1", ScreeningConductDecisionKind.Review,
+            ScreeningVerdicts.Include, new ScreeningConductActor("reviewer-1", ScreeningConductActorKinds.Human, "reviewer"),
+            "Candidate meets the criteria.", DateTimeOffset.UtcNow);
+        var journal = ScreeningConductJournal.Rehydrate(header, policy, [decision]);
+        var handoff = ScreeningConductHandoff.Create("handoff-before-invalidation", journal, DateTimeOffset.UtcNow);
+        var invalidation = ScreeningConductInvalidation.Create(
+            header, 2, decision.Digest, "invalidate-protocol-change",
+            new ScreeningConductEvidenceRef("protocol-version", policy.ProtocolVersionId, policy.ProtocolContentDigest),
+            [decision.DecisionId], new ScreeningConductActor("chair-1", ScreeningConductActorKinds.Human, "chair"),
+            "Protocol authority changed.", DateTimeOffset.UtcNow);
+
+        journal.Append(ScreeningConductCanonicalCodec.RehydrateInvalidation(
+            ScreeningConductCanonicalCodec.Serialize(invalidation), invalidation.Digest, header));
+
+        Assert.IsFalse(journal.Projection.HandoffReady);
+        Assert.IsFalse(journal.Projection.Outcomes.ContainsKey("candidate-1"));
+        Assert.IsTrue(journal.Projection.InvalidatedDecisionIds.Contains(decision.DecisionId));
+        Assert.ThrowsExactly<ScreeningRuleException>(() => ScreeningConductCanonicalCodec.RehydrateHandoff(
+            ScreeningConductCanonicalCodec.Serialize(handoff), handoff.Digest, journal));
+    }
+
+    [TestMethod]
+    public void Conduct_partial_invalidation_of_current_decisions_fails_closed()
+    {
+        var (policy, header) = BuildConductAuthority("partial-invalidation", 2);
+        var first = ScreeningConductDecision.Create(
+            header, 1, header.Digest, "request-partial-a", "candidate-1", ScreeningConductDecisionKind.Review,
+            ScreeningVerdicts.Include, new ScreeningConductActor("reviewer-1", ScreeningConductActorKinds.Human, "reviewer"),
+            "First review.", DateTimeOffset.UtcNow);
+        var second = ScreeningConductDecision.Create(
+            header, 2, first.Digest, "request-partial-b", "candidate-1", ScreeningConductDecisionKind.Review,
+            ScreeningVerdicts.Include, new ScreeningConductActor("reviewer-2", ScreeningConductActorKinds.Human, "reviewer"),
+            "Second review.", DateTimeOffset.UtcNow);
+        var journal = ScreeningConductJournal.Rehydrate(header, policy, [first, second]);
+        var partial = ScreeningConductInvalidation.Create(
+            header, 3, second.Digest, "invalidate-partial",
+            new ScreeningConductEvidenceRef("criteria", policy.Criteria.CriteriaId, policy.CriteriaDigest),
+            [first.DecisionId], new ScreeningConductActor("chair-1", ScreeningConductActorKinds.Human, "chair"),
+            "Criteria changed.", DateTimeOffset.UtcNow);
+
+        var error = Assert.ThrowsExactly<ScreeningRuleException>(() => journal.Append(partial));
+
+        Assert.AreEqual(ScreeningErrorCodes.MissingSourceDecision, error.Category);
+        Assert.IsTrue(journal.Projection.HandoffReady);
+    }
+
     private static (ScreeningConductPolicy Policy, ScreeningConductHeader Header) BuildConductAuthority(string suffix, int reviewCount)
     {
         var protocol = BuildVerifiedProtocol();
