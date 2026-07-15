@@ -183,6 +183,7 @@
         "type": "Project",
         "dependencies": {
           "NexusScholar.AI": "[0.1.0-alpha.2, )",
+          "NexusScholar.AppServices": "[0.1.0-alpha.2, )",
           "NexusScholar.Bundles": "[0.1.0-alpha.2, )",
           "NexusScholar.Extensibility": "[0.1.0-alpha.2, )",
           "NexusScholar.Kernel": "[0.1.0-alpha.2, )",
