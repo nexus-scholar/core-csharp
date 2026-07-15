@@ -18,6 +18,7 @@
     <None Include="../../fixtures/conformance/deduplication/*.json" Link="fixtures/deduplication/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../fixtures/conformance/screening/*.json" Link="fixtures/screening/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../fixtures/conformance/fulltext/*.json" Link="fixtures/fulltext/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../fixtures/conformance/fulltext-workflow/*.json" Link="fixtures/fulltext-workflow/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../fixtures/conformance/search/*.json" Link="fixtures/search/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../fixtures/conformance/artifacts/*.json" Link="fixtures/artifacts/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../fixtures/conformance/bundles/*.json" Link="fixtures/bundles/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
