@@ -132,7 +132,7 @@ public sealed class AuthorityGenerationTests
 
         var commit = ResearchWorkspaceTransaction.CommitDeduplicationDecision(
             workspace.Location, baseline.Project, source, command, target, Clock,
-            new FixedIdGenerator(Guid.Parse("00000000-0000-0000-0000-000000000711")));
+            new SequenceIdGenerator(711));
         var reopened = ResearchWorkspaceStore.ReadProject(workspace.Location.ProjectFilePath);
         var chain = ResearchWorkspaceAuthorityChainVerifier.VerifyCurrent(workspace.Location, reopened, source);
 
@@ -154,7 +154,7 @@ public sealed class AuthorityGenerationTests
         var (command, target) = BuildCommand(workspace, baseline.Project, source);
         var first = ResearchWorkspaceTransaction.CommitDeduplicationDecision(
             workspace.Location, baseline.Project, source, command, target, Clock,
-            new FixedIdGenerator(Guid.Parse("00000000-0000-0000-0000-000000000712")));
+            new SequenceIdGenerator(712));
 
         var replay = ResearchWorkspaceTransaction.CommitDeduplicationDecision(
             workspace.Location, first.Project, source, command, target, new ThrowingClock(), new ThrowingIdGenerator());
@@ -175,7 +175,7 @@ public sealed class AuthorityGenerationTests
 
         Assert.ThrowsExactly<InjectedFailure>(() => ResearchWorkspaceTransaction.CommitDeduplicationDecision(
             workspace.Location, baseline.Project, source, command, target, Clock,
-            new FixedIdGenerator(Guid.Parse("00000000-0000-0000-0000-000000000713")),
+            new SequenceIdGenerator(713),
             point => { if (point == ResearchWorkspaceAuthorityFaultPoint.AfterPromotion) throw new InjectedFailure(); }));
 
         var reopened = ResearchWorkspaceStore.ReadProject(workspace.Location.ProjectFilePath);
@@ -345,6 +345,12 @@ public sealed class AuthorityGenerationTests
     private sealed class ThrowingIdGenerator : IIdGenerator
     {
         public Guid NewId() => throw new InvalidOperationException("Replay consumed an id.");
+    }
+
+    private sealed class SequenceIdGenerator(int value) : IIdGenerator
+    {
+        private int _value = value;
+        public Guid NewId() => Guid.Parse($"00000000-0000-0000-0000-{_value++:000000000000}");
     }
 
     private sealed class InjectedFailure : Exception;

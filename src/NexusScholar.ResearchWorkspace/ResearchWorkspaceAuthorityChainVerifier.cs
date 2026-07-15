@@ -143,7 +143,7 @@ public static class ResearchWorkspaceAuthorityChainVerifier
         var invalidatedEvent = ResearchWorkspaceAuthorityArtifacts.VerifyResearchEventCanonicalRecord(artifactBytes["snapshot-invalidated-event"]);
         var publicationEvent = ResearchWorkspaceAuthorityArtifacts.VerifyResearchEventCanonicalRecord(artifactBytes["snapshot-publication-event"]);
 
-        VerifyManifestRecords(manifest, command, decision, predecessor.CurrentSnapshot, successor, invalidation,
+        VerifyManifestRecords(manifest, command, target, sourceResult, policy, decision, predecessor.CurrentSnapshot, successor, invalidation,
             decisionEvent, invalidatedEvent, publicationEvent);
         var transition = new ResearchWorkspaceVerifiedAuthorityTransition(manifest, command, decision, successor, invalidation,
             decisionEvent, invalidatedEvent, publicationEvent);
@@ -207,6 +207,9 @@ public static class ResearchWorkspaceAuthorityChainVerifier
     private static void VerifyManifestRecords(
         ResearchWorkspaceSuccessorAuthorityGenerationManifest manifest,
         VerifiedDeduplicationReviewCommand command,
+        VerifiedDeduplicationAuthorityReviewTargetDigest target,
+        VerifiedDeduplicationAuthorityResultDigest sourceResult,
+        VerifiedDeduplicationAuthorityPolicy policy,
         VerifiedDeduplicationAuthorityDecision decision,
         VerifiedCorpusSnapshot predecessor,
         VerifiedCorpusSnapshot successor,
@@ -228,8 +231,31 @@ public static class ResearchWorkspaceAuthorityChainVerifier
             (manifest.SnapshotPublicationEventDigest, publicationEvent.EventDigest.ToString())
         };
         if (checks.Any(item => !string.Equals(item.Item1, item.Item2, StringComparison.Ordinal))) throw new InvalidOperationException("Successor manifest and authority records disagree.");
-        if (decisionEvent.Activity.ActivityId != "deduplication-decision-recorded" || invalidatedEvent.Activity.ActivityId != "corpus-snapshot-invalidated" || publicationEvent.Activity.ActivityId != "corpus-snapshot-published" ||
-            decisionEvent.ProtocolBinding is not null || invalidatedEvent.ProtocolBinding is not null || publicationEvent.ProtocolBinding is not null)
+        var agent = new ProvenanceAgent(command.Material.ActorId, ProvenanceAgent.HumanKind);
+        var commandRef = new ProvenanceEntityRef(DeduplicationReviewCommandConstants.SchemaId, command.RequestId, command.RequestDigest);
+        var targetRef = new ProvenanceEntityRef(target.TargetKind, target.TargetId, target.TargetDigest);
+        var resultRef = new ProvenanceEntityRef("nexus.deduplication.result", sourceResult.Result.ResultId, sourceResult.ResultDigest);
+        var policyRef = new ProvenanceEntityRef(DeduplicationAuthorityPolicyConstants.LocalAuthoritySourceKind, policy.PolicyId, policy.PolicyDigest);
+        var predecessorRef = new ProvenanceEntityRef("nexus.corpus.snapshot", predecessor.SnapshotId, predecessor.RecordDigest);
+        var decisionRef = new ProvenanceEntityRef(DeduplicationDecisionConstants.SchemaId, decision.DecisionId, decision.DecisionDigest);
+        var successorRef = new ProvenanceEntityRef("nexus.corpus.snapshot", successor.SnapshotId, successor.RecordDigest);
+        var invalidationRef = new ProvenanceEntityRef(CorpusSnapshotInvalidationConstants.SchemaId, invalidation.InvalidationId, invalidation.RecordDigest);
+        var decisionSetRef = new ProvenanceEntityRef("deduplication-decision-set", $"decision-set-{successor.SnapshotId}", successor.DecisionSetDigest);
+        if (decisionEvent.Activity.ActivityId != "deduplication-decision-recorded" ||
+            decisionEvent.Subject != decisionRef || decisionEvent.Agent != agent ||
+            !decisionEvent.Inputs.SequenceEqual(new[] { commandRef, targetRef, resultRef, policyRef, predecessorRef }) ||
+            !decisionEvent.Outputs.SequenceEqual(new[] { decisionRef }) ||
+            invalidatedEvent.Activity.ActivityId != "corpus-snapshot-invalidated" ||
+            invalidatedEvent.Subject != predecessorRef || invalidatedEvent.Agent != agent ||
+            !invalidatedEvent.Inputs.SequenceEqual(new[] { decisionRef, predecessorRef, successorRef }) ||
+            !invalidatedEvent.Outputs.SequenceEqual(new[] { invalidationRef }) ||
+            publicationEvent.Activity.ActivityId != "corpus-snapshot-published" ||
+            publicationEvent.Subject != successorRef || publicationEvent.Agent != agent ||
+            !publicationEvent.Inputs.SequenceEqual(new[] { decisionRef, predecessorRef, invalidationRef, policyRef, decisionSetRef }) ||
+            !publicationEvent.Outputs.SequenceEqual(new[] { successorRef }) ||
+            new[] { decisionEvent.EventId, invalidatedEvent.EventId, publicationEvent.EventId }.Distinct().Count() != 3 ||
+            decisionEvent.ProtocolBinding is not null || invalidatedEvent.ProtocolBinding is not null || publicationEvent.ProtocolBinding is not null ||
+            decisionEvent.WorkflowBinding is not null || invalidatedEvent.WorkflowBinding is not null || publicationEvent.WorkflowBinding is not null)
             throw new InvalidOperationException("Successor provenance activities are invalid.");
     }
 
