@@ -208,7 +208,8 @@ public sealed class DependencyRulesTests
         {
             typeof(IClock).Assembly.GetName().Name,
             typeof(ScreeningConductJournal).Assembly.GetName().Name,
-            typeof(WorkflowExecutionJournal).Assembly.GetName().Name
+            typeof(WorkflowExecutionJournal).Assembly.GetName().Name,
+            typeof(WorkflowDefinition).Assembly.GetName().Name
         };
         var disallowed = assembly.GetReferencedAssemblies()
             .Select(reference => reference.Name ?? string.Empty)
@@ -410,7 +411,8 @@ public sealed class DependencyRulesTests
             typeof(CorpusSnapshotService).Assembly.GetName().Name,
             typeof(WorkspacePlan).Assembly.GetName().Name,
             typeof(WorkflowDefinition).Assembly.GetName().Name,
-            typeof(WorkflowExecutionJournal).Assembly.GetName().Name
+            typeof(WorkflowExecutionJournal).Assembly.GetName().Name,
+            typeof(ScreeningConductJournal).Assembly.GetName().Name
         };
         var disallowed = appServicesAssembly.GetReferencedAssemblies()
             .Select(reference => reference.Name ?? string.Empty)
@@ -473,7 +475,10 @@ public sealed class DependencyRulesTests
             typeof(WorkspacePlan).Assembly.GetName().Name,
             typeof(WorkId).Assembly.GetName().Name,
             typeof(WorkflowDefinition).Assembly.GetName().Name,
-            typeof(WorkflowExecutionJournal).Assembly.GetName().Name
+            typeof(WorkflowExecutionJournal).Assembly.GetName().Name,
+            typeof(ScreeningConductJournal).Assembly.GetName().Name,
+            typeof(ScreeningWorkflowExecutionBridge).Assembly.GetName().Name,
+            typeof(ProtocolVersion).Assembly.GetName().Name
         };
         var disallowed = researchWorkspaceAssembly.GetReferencedAssemblies()
             .Select(reference => reference.Name ?? string.Empty)

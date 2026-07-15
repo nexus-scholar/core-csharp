@@ -1,0 +1,7 @@
+{
+  "fixture_id": "screening-conduct-valid-single-review",
+  "scope": "local-csharp-contract",
+  "scenario": "one authorized human include decision produces a handoff-ready projection",
+  "expected": "accepted",
+  "non_claims": ["no-php-compatibility-claim", "no-production-claim"]
+}

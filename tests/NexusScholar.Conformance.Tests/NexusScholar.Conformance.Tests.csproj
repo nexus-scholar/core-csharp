@@ -11,6 +11,7 @@
     <None Include="../../fixtures/conformance/protocol/*.json" Link="fixtures/protocol/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../fixtures/conformance/workflow/*.json" Link="fixtures/workflow/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../fixtures/conformance/workflow-execution/*.json" Link="fixtures/workflow-execution/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../fixtures/conformance/screening-conduct/*.json" Link="fixtures/screening-conduct/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../fixtures/conformance/provenance/*.json" Link="fixtures/provenance/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../fixtures/conformance/provenance/*.ndjson" Link="fixtures/provenance/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../fixtures/conformance/shared-identity/*.json" Link="fixtures/shared-identity/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />

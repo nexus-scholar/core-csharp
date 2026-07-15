@@ -2,10 +2,10 @@
 
 Status: active successor roadmap after Hardening 30.
 
-Current state: FE-01 through FE-03 are complete. FE-03 completion evidence is in
-`docs/gates/FE-03-WORKFLOW-EXECUTION-JOURNAL-EVIDENCE.md`. FE-04 is the next
-planning target; FE-04 through FE-12 remain sequenced future work and are not
-implementation-authorized by this roadmap.
+Current state: FE-01 through FE-04 are complete. FE-03 and FE-04 completion
+evidence is in `docs/gates/`. FE-05 is the next planning target; FE-05 through
+FE-12 remain sequenced future work and are not implementation-authorized by this
+roadmap.
 
 ## Operating Decision
 
@@ -820,11 +820,9 @@ become compatibility obligations.
 
 ## Immediate Next Gate
 
-FE-04 Title and Abstract Screening is the next gate. It must bind human screening
-decisions, conflicts, and adjudication to FE-01 authority and FE-03 execution
-records without weakening either contract. Implementation remains locked until
-an accepted FE-04 gate and any required ADR revision define the conduct records,
-workspace authority resolution, CLI boundary, fixtures, and non-claims.
+FE-04 Title and Abstract Screening is complete under ADR 0031. The next gate is
+FE-05 Local Full Text Workflow, consuming only the verified FE-04 handoff and
+preserving digest-bound local artifact authority.
 
 ## Verification Baseline
 

@@ -7,5 +7,6 @@
     <ProjectReference Include="../NexusScholar.Kernel/NexusScholar.Kernel.csproj" />
     <ProjectReference Include="../NexusScholar.Screening/NexusScholar.Screening.csproj" />
     <ProjectReference Include="../NexusScholar.WorkflowExecution/NexusScholar.WorkflowExecution.csproj" />
+    <ProjectReference Include="../NexusScholar.Workflow/NexusScholar.Workflow.csproj" />
   </ItemGroup>
 </Project>

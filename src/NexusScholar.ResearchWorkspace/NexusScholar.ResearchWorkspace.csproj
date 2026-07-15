@@ -6,6 +6,8 @@
     <ProjectReference Include="../NexusScholar.CorpusSnapshots/NexusScholar.CorpusSnapshots.csproj" />
     <ProjectReference Include="../NexusScholar.Provenance/NexusScholar.Provenance.csproj" />
     <ProjectReference Include="../NexusScholar.WorkflowExecution/NexusScholar.WorkflowExecution.csproj" />
+    <ProjectReference Include="../NexusScholar.Screening/NexusScholar.Screening.csproj" />
+    <ProjectReference Include="../NexusScholar.Screening.WorkflowExecution/NexusScholar.Screening.WorkflowExecution.csproj" />
     <ProjectReference Include="../NexusScholar.Workflow/NexusScholar.Workflow.csproj" />
     <ProjectReference Include="../NexusScholar.AppServices/NexusScholar.AppServices.csproj" />
     <ProjectReference Include="../NexusScholar.UiContracts/NexusScholar.UiContracts.csproj" />

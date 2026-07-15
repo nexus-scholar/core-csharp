@@ -26,6 +26,14 @@
           "NexusScholar.Kernel": "[0.1.0-alpha.2, )"
         }
       },
+      "nexusscholar.screening": {
+        "type": "Project",
+        "dependencies": {
+          "NexusScholar.Deduplication": "[0.1.0-alpha.2, )",
+          "NexusScholar.Kernel": "[0.1.0-alpha.2, )",
+          "NexusScholar.Protocol": "[0.1.0-alpha.2, )"
+        }
+      },
       "nexusscholar.search": {
         "type": "Project",
         "dependencies": {

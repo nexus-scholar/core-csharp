@@ -1,0 +1,7 @@
+{
+  "fixture_id": "screening-conduct-invalidation-stales-handoff",
+  "scope": "local-csharp-contract",
+  "scenario": "complete digest-linked invalidation removes current outcomes and stales the prior handoff",
+  "expected": "handoff-rejected",
+  "non_claims": ["no-php-compatibility-claim", "no-database-claim"]
+}

@@ -1,0 +1,7 @@
+{
+  "fixture_id": "screening-conduct-dual-conflict-adjudication",
+  "scope": "local-csharp-contract",
+  "scenario": "independent disagreement blocks handoff until an authorized digest-linked adjudication",
+  "expected": "conflict-then-resolved",
+  "non_claims": ["no-php-compatibility-claim", "no-ai-authority-claim"]
+}

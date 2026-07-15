@@ -165,6 +165,20 @@ public static class ResearchWorkspaceStore
             throw new JsonException("Workflow execution journal pointer fields must be safe and workspace-relative.");
         }
 
+        if ((project.CurrentScreeningConductGenerationId is null) != (project.ScreeningConductManifestPath is null) ||
+            (project.CurrentScreeningConductGenerationId is null) != (project.ScreeningConductManifestSha256 is null))
+        {
+            throw new JsonException("Screening conduct pointer fields must be valid and supplied together.");
+        }
+
+        if (project.CurrentScreeningConductGenerationId is not null &&
+            (!IsSafeIdentifier(project.CurrentScreeningConductGenerationId) ||
+            !IsWorkspaceRelative(project.ScreeningConductManifestPath!) ||
+            !TryValidateRawDigest(project.ScreeningConductManifestSha256!)))
+        {
+            throw new JsonException("Screening conduct pointer fields must be safe and workspace-relative.");
+        }
+
     }
 
     private static bool IsSafeIdentifier(string? value) =>

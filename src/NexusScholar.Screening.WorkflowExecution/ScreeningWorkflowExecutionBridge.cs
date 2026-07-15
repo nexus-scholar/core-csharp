@@ -1,4 +1,5 @@
 using NexusScholar.Screening;
+using NexusScholar.Workflow;
 using NexusScholar.WorkflowExecution;
 
 namespace NexusScholar.Screening.WorkflowExecution;
@@ -41,6 +42,9 @@ public static class ScreeningWorkflowExecutionBridge
             throw new ScreeningRuleException(ScreeningErrorCodes.InvalidProtocolBinding, "Screening and Workflow execution must bind the same Protocol authority.");
         if (!executionJournal.Projection.NodeStates.TryGetValue(nodeId, out var state) || state != WorkflowExecutionState.Active)
             throw new WorkflowExecutionRuleException(WorkflowExecutionErrorCodes.InvalidTransition, "Screening human-task completion requires an active Workflow node.");
+        var node = executionJournal.Workflow.Definition.Nodes.SingleOrDefault(item => item.NodeId == nodeId);
+        if (node?.Kind != WorkflowNodeKind.HumanTask)
+            throw new WorkflowExecutionRuleException(WorkflowExecutionErrorCodes.InvalidTransition, "Screening conduct can complete only a compiled human-task node.");
         var attempt = executionJournal.Projection.Attempts[nodeId].LastOrDefault(item => item.EndedAt is null)
             ?? throw new WorkflowExecutionRuleException(WorkflowExecutionErrorCodes.InvalidAttempt, "Screening human-task completion requires one open attempt.");
         var reference = CreateHumanTaskDecisionReference(screeningJournal, decision, workflowActor);

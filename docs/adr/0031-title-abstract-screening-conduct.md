@@ -135,6 +135,19 @@ FE-04 gains deterministic, restart-safe conduct authority and an atomic bridge
 to workflow execution. The cost is canonical records, resolver-backed replay,
 explicit correction and invalidation commands, and stricter handoff creation.
 
+## Implementation State
+
+FE-04 is complete for the local Core authority boundary. Canonical conduct,
+strict replay, AppServices orchestration, immutable ResearchWorkspace
+generations, verified status projection, and the FE-03 human-task bridge are
+implemented. A paired Screening decision and Workflow completion can become
+authoritative under one workspace lock and one project revision.
+
+CLI mutation is intentionally deferred because the current process entry point
+cannot resolve a durable verified Protocol and compiled Workflow authority
+package. The CLI exposes manifest-and-artifact integrity verification only; it does not
+manufacture authority from ids, digest strings, or caller-supplied roles.
+
 ## Fixture Effect
 
 Add canonical valid fixtures for single review, dual agreement, conflict and

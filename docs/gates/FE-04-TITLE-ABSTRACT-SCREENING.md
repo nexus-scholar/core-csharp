@@ -1,6 +1,7 @@
 # FE-04: Title And Abstract Screening
 
-Status: active under accepted ADR 0031.
+Status: complete under accepted ADR 0031. Completion evidence:
+`FE-04-TITLE-ABSTRACT-SCREENING-EVIDENCE.md`.
 
 ## Goal
 
@@ -22,7 +23,8 @@ adjudication, explicit invalidation, and verified downstream handoff.
 2. FE-04.2: FE-03 human-task reference bridge and actor equality enforcement.
 3. FE-04.3: atomic ResearchWorkspace Screening plus workflow generations.
 4. FE-04.4: AppServices preview/commit and read projections.
-5. FE-04.5: CLI title/abstract review flow after durable authority resolution.
+5. FE-04.5: CLI manifest and artifact-integrity status; authority replay and
+   mutation remain behind verified ports until process-entry authority resolution exists.
 6. FE-04.6: conformance fixtures, evidence, architecture review, and closeout.
 
 ## Required Behavior

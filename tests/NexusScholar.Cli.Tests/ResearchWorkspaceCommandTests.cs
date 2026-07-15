@@ -1,5 +1,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NexusScholar.Cli;
+using NexusScholar.Kernel;
+using NexusScholar.ResearchWorkspace;
 
 namespace NexusScholar.Cli.Tests;
 
@@ -60,6 +62,64 @@ public sealed class ResearchWorkspaceCommandTests
             "Project file: nexus.project.json" + Environment.NewLine +
             "Run: nexus status" + Environment.NewLine,
             error);
+    }
+
+    [TestMethod]
+    public void Screening_status_reports_not_initialized_without_mutation()
+    {
+        using var workspace = TemporaryWorkspace.Create();
+        Assert.AreEqual(0, RunCli(workspace.Root, ["init", "--title", "AI screening tools review"], out _, out _));
+        var projectPath = Path.Combine(workspace.Root, "nexus.project.json");
+        var before = File.ReadAllBytes(projectPath);
+
+        var exitCode = RunCli(workspace.Root, ["screening", "status"], out var output, out var error);
+
+        Assert.AreEqual(0, exitCode, error);
+        Assert.AreEqual("Screening conduct: not initialized" + Environment.NewLine, output);
+        Assert.AreEqual(string.Empty, error);
+        CollectionAssert.AreEqual(before, File.ReadAllBytes(projectPath));
+    }
+
+    [TestMethod]
+    public void Screening_status_verifies_manifest_and_artifact_integrity_without_claiming_authority_replay()
+    {
+        using var workspace = TemporaryWorkspace.Create();
+        Assert.AreEqual(0, RunCli(workspace.Root, ["init", "--title", "AI screening tools review"], out _, out _));
+        var location = new ResearchWorkspaceLocation(workspace.Root, Path.Combine(workspace.Root, ResearchWorkspacePaths.ProjectFileName));
+        var project = ResearchWorkspaceStore.ReadProject(location.ProjectFilePath);
+        var root = "nexus-output/screening/conduct-status/screening-status-000000";
+        var policyPath = $"{root}/conduct-policy.json";
+        var headerPath = $"{root}/header.json";
+        Directory.CreateDirectory(Path.Combine(workspace.Root, root.Replace('/', Path.DirectorySeparatorChar)));
+        var policyBytes = "policy"u8.ToArray();
+        var headerBytes = "header"u8.ToArray();
+        File.WriteAllBytes(Path.Combine(workspace.Root, policyPath.Replace('/', Path.DirectorySeparatorChar)), policyBytes);
+        File.WriteAllBytes(Path.Combine(workspace.Root, headerPath.Replace('/', Path.DirectorySeparatorChar)), headerBytes);
+        var artifacts = new[]
+        {
+            new ResearchWorkspaceGenerationArtifact("conduct-policy", policyPath, ContentDigest.Sha256(policyBytes).ToString()),
+            new ResearchWorkspaceGenerationArtifact("header", headerPath, ContentDigest.Sha256(headerBytes).ToString())
+        };
+        var manifestPath = $"{root}/screening-conduct.manifest.json";
+        var manifest = new ResearchWorkspaceScreeningConductManifest(
+            ResearchWorkspaceScreeningConductManifest.CurrentSchema, "screening-status-000000", project.WorkspaceId,
+            project.Revision + 1, "conduct-status", ContentDigest.Sha256Utf8("policy").ToString(),
+            ContentDigest.Sha256Utf8("header").ToString(), ContentDigest.Sha256Utf8("head").ToString(),
+            ContentDigest.Sha256Utf8("head").ToString(), 0, 0, 0, null, null, null, null, null, null, null, artifacts);
+        var manifestBytes = ResearchWorkspaceScreeningConductManifestCodec.Serialize(manifest);
+        File.WriteAllBytes(Path.Combine(workspace.Root, manifestPath.Replace('/', Path.DirectorySeparatorChar)), manifestBytes);
+        var committed = project.CommitScreeningConductGeneration(
+            manifest.GenerationId, manifestPath, ContentDigest.Sha256(manifestBytes).ToString());
+        ResearchWorkspaceStore.WriteProject(location, committed);
+
+        var exitCode = RunCli(workspace.Root, ["screening", "status"], out var output, out var error);
+
+        Assert.AreEqual(0, exitCode, error);
+        StringAssert.Contains(output, "Verification: manifest-and-artifact-integrity-only (authority not rehydrated)");
+        File.AppendAllText(Path.Combine(workspace.Root, policyPath.Replace('/', Path.DirectorySeparatorChar)), "tamper");
+        var corruptExit = RunCli(workspace.Root, ["screening", "status"], out _, out var corruptError);
+        Assert.AreNotEqual(0, corruptExit);
+        StringAssert.Contains(corruptError, "failed digest verification");
     }
 
     [TestMethod]

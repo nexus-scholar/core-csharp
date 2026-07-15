@@ -1,0 +1,7 @@
+{
+  "fixture_id": "screening-conduct-same-actor-independent-review-negative",
+  "scope": "local-csharp-contract",
+  "scenario": "one actor attempts to satisfy two independent review slots",
+  "expected": "duplicate-independent-reviewer",
+  "non_claims": ["no-php-compatibility-claim", "no-institutional-policy-claim"]
+}

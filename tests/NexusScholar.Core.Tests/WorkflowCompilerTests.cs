@@ -2,9 +2,12 @@ using System;
 using System.Runtime.CompilerServices;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NexusScholar.AppServices;
+using NexusScholar.Deduplication;
 using NexusScholar.Kernel;
 using NexusScholar.Protocol;
 using NexusScholar.ResearchWorkspace;
+using NexusScholar.Screening;
+using NexusScholar.Screening.WorkflowExecution;
 using NexusScholar.Workflow;
 using NexusScholar.WorkflowExecution;
 using NexusScholar.WorkflowExecution.Provenance;
@@ -102,6 +105,91 @@ public sealed class WorkflowCompilerTests
         Assert.AreEqual(WorkflowExecutionState.Ready, replay.Projection.NodeStates["approve"]);
         Assert.AreEqual(1, replay.Projection.Attempts["start"].Count);
         Assert.AreEqual(WorkflowExecutionState.Completed, replay.Projection.Attempts["start"][0].State);
+    }
+
+    [TestMethod]
+    public void Screening_decision_and_human_task_completion_commit_as_one_workspace_revision()
+    {
+        var root = Path.Combine(Path.GetTempPath(), $"nexus-screening-workflow-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(root);
+        try
+        {
+            var location = new ResearchWorkspaceLocation(root, Path.Combine(root, ResearchWorkspacePaths.ProjectFileName));
+            var project = ResearchWorkspaceProject.Create("Screening workflow", Clock.UtcNow, "screening-workflow");
+            ResearchWorkspaceStore.WriteProject(location, project);
+            var workflow = BuildExecutionAuthority(automatedStart: false);
+            var protocol = workflow.ProtocolAuthority;
+            var workflowActor = new WorkflowExecutionActor("researcher-1", WorkflowExecutionActorKinds.Human, "methodologist");
+            var workflowPolicy = BuildExecutionPolicy(workflow);
+            var workflowHeader = WorkflowExecutionHeader.Create("execution-screening", workflow, workflowPolicy, workflowActor, Clock.UtcNow);
+            var resolver = new MutableExecutionRecordResolver();
+            resolver.Add(Ref("workflow-artifact", "search-plan"));
+            var workflowJournal = WorkflowExecutionJournal.Create(workflowHeader, workflow, workflowPolicy, resolver);
+            Append(workflowJournal, "start-screening", "start", WorkflowExecutionEventKind.WorkStarted,
+                WorkflowExecutionState.Ready, WorkflowExecutionState.Active, workflowActor, "attempt-1", 1);
+
+            var criteria = BuildScreeningCriteria(protocol);
+            var deduplication = BuildScreeningDeduplication();
+            var screeningActor = new ScreeningConductActor("researcher-1", ScreeningConductActorKinds.Human, "methodologist");
+            var screeningPolicy = ScreeningConductPolicy.Create(
+                "screening-policy-workflow", "candidate-set-workflow", deduplication, protocol, criteria, 1,
+                [new ScreeningConductRoleAssignment("researcher-1", "methodologist")], [], [], screeningActor, Clock.UtcNow);
+            var screeningHeader = ScreeningConductHeader.Create("conduct-workflow", screeningPolicy, screeningActor, Clock.UtcNow);
+            var decision = ScreeningConductDecision.Create(
+                screeningHeader, 1, screeningHeader.Digest, "screening-decision-request", "candidate-1",
+                ScreeningConductDecisionKind.Review, ScreeningVerdicts.Include, screeningActor,
+                "Candidate meets the approved title and abstract criteria.", Clock.UtcNow);
+            var screeningJournal = ScreeningConductJournal.Rehydrate(screeningHeader, screeningPolicy, [decision]);
+            resolver.Add(ScreeningWorkflowExecutionBridge.CreateHumanTaskDecisionReference(screeningJournal, decision, workflowActor));
+            var completion = ScreeningWorkflowExecutionBridge.CreateHumanTaskCompletion(
+                screeningJournal, decision, workflowJournal, workflowActor, "complete-screening", "start", Clock.UtcNow,
+                [Ref("workflow-artifact", "search-plan")]);
+            workflowJournal.Append(completion);
+            foreach (var faultPoint in new[]
+            {
+                ResearchWorkspaceAuthorityFaultPoint.AfterStaging,
+                ResearchWorkspaceAuthorityFaultPoint.AfterPromotion
+            })
+            {
+                var failedPreparation = ResearchWorkspaceWorkflowExecutionPreparation.Prepare(
+                    location, project, workflow, workflowPolicy, workflowHeader, workflowJournal.Events, resolver);
+                Assert.ThrowsExactly<InvalidOperationException>(() => ResearchWorkspaceScreeningConductTransaction.Commit(
+                    location, project, deduplication, protocol, criteria, screeningPolicy, screeningHeader, [decision],
+                    preparedWorkflow: failedPreparation, matchingDecision: decision, matchingWorkflowEvent: completion,
+                    faultInjector: point => { if (point == faultPoint) throw new InvalidOperationException("Injected paired-commit failure."); }));
+                var unchanged = ResearchWorkspaceStore.ReadProject(location.ProjectFilePath);
+                Assert.AreEqual(0L, unchanged.Revision);
+                Assert.IsNull(unchanged.CurrentScreeningConductGenerationId);
+                Assert.IsNull(unchanged.CurrentWorkflowExecutionJournalGenerationId);
+                Assert.IsFalse(Directory.Exists(failedPreparation.StagingRoot));
+                Assert.IsFalse(Directory.Exists(failedPreparation.FinalRoot));
+            }
+
+            var preparedWorkflow = ResearchWorkspaceWorkflowExecutionPreparation.Prepare(
+                location, project, workflow, workflowPolicy, workflowHeader, workflowJournal.Events, resolver);
+            Assert.IsTrue(Directory.Exists(preparedWorkflow.StagingRoot));
+            Assert.IsFalse(Directory.Exists(preparedWorkflow.FinalRoot));
+
+            var commit = ResearchWorkspaceScreeningConductTransaction.Commit(
+                location, project, deduplication, protocol, criteria, screeningPolicy, screeningHeader, [decision],
+                preparedWorkflow: preparedWorkflow, matchingDecision: decision, matchingWorkflowEvent: completion);
+
+            Assert.AreEqual(1L, commit.Project.Revision);
+            Assert.IsNotNull(commit.Project.CurrentScreeningConductGenerationId);
+            Assert.IsNotNull(commit.Project.CurrentWorkflowExecutionJournalGenerationId);
+            Assert.IsFalse(Directory.Exists(preparedWorkflow.StagingRoot));
+            Assert.IsTrue(Directory.Exists(preparedWorkflow.FinalRoot));
+            var reopenedScreening = ResearchWorkspaceScreeningConductVerifier.VerifyCurrent(
+                location, commit.Project, deduplication, protocol, criteria);
+            var reopenedWorkflow = ResearchWorkspaceWorkflowExecutionJournalVerifier.VerifyCurrent(
+                location, commit.Project, workflow, resolver);
+            Assert.AreEqual(completion.Digest.ToString(), reopenedScreening.Manifest.MatchingWorkflowEventDigest);
+            Assert.AreEqual(completion.Digest, reopenedWorkflow.Events[^1].Digest);
+        }
+        finally
+        {
+            if (Directory.Exists(root)) Directory.Delete(root, true);
+        }
     }
 
     [TestMethod]
@@ -1148,16 +1236,19 @@ public sealed class WorkflowCompilerTests
         Assert.AreEqual(WorkflowErrorCodes.WorkflowIdMismatch, error.Category);
     }
 
-    private static VerifiedWorkflowDefinition BuildExecutionAuthority(int minimumApprovals = 1)
+    private static VerifiedWorkflowDefinition BuildExecutionAuthority(int minimumApprovals = 1, bool automatedStart = true)
     {
         var protocol = BuildApprovedProtocol();
         var source = BuildTemplate();
-        var nodes = source.Nodes.Select(node => node.NodeId == "start"
+        var nodes = source.Nodes.Select(node => automatedStart && node.NodeId == "start"
             ? node with { Kind = WorkflowNodeKind.AutomatedTask, Mode = WorkflowNodeMode.Automated }
             : node).ToArray();
         var template = source with
         {
             Nodes = nodes,
+            Gates = automatedStart
+                ? source.Gates
+                : source.Gates.Select(gate => gate with { TargetNodeId = "start" }).ToArray(),
             ApprovalRequirements = source.ApprovalRequirements.Select(requirement =>
                 requirement with { MinimumApprovals = minimumApprovals }).ToArray(),
             Roles = source.Roles.Concat(new[]
@@ -1266,6 +1357,27 @@ public sealed class WorkflowCompilerTests
     private static WorkflowExecutionRecordRef Ref(string kind, string id) =>
         new(kind, id, ContentDigest.Sha256Utf8($"{kind}:{id}"));
 
+    private static VerifiedDeduplicationResult BuildScreeningDeduplication()
+    {
+        var candidate = new DedupCandidateRecord(
+            "candidate-1", "Candidate title", true, "work:candidate-1", ["work:candidate-1"], [],
+            new DedupSightingRef("search", "trace-1", "source-candidate-1", "search-provider"));
+        var result = new DeduplicationResult(
+            "dedup-screening-workflow", "nexus.deduplication.result", "1.0.0",
+            DeduplicationService.PolicyId, DeduplicationService.PolicyVersion, 0.95d,
+            new System.Collections.ObjectModel.ReadOnlyDictionary<string, int>(new Dictionary<string, int>(StringComparer.Ordinal)),
+            [], [], [candidate], [], [], [], [], [], [], ["no-php-compatibility-claim"]);
+        return DeduplicationRehydrator.Rehydrate(new UnverifiedDeduplicationResult(result));
+    }
+
+    private static ScreeningCriteria BuildScreeningCriteria(VerifiedProtocolVersion protocol) => new(
+        "criteria-workflow", "1.0.0", ScreeningStages.TitleAbstract,
+        CanonicalJsonValue.From("include"), CanonicalJsonValue.From("exclude"), true,
+        protocol.Version.Id, protocol.Version.ContentDigest.ToString(),
+        approvedProtocolDigestScope: DigestScope.ProtocolContent.ToString(),
+        approvedProtocolStatus: ScreeningProtocolBindingStatus.Approved,
+        currentProtocolContentDigest: protocol.Version.ContentDigest.ToString());
+
     private sealed class RecordingExecutionCommitPort(WorkflowExecutionJournalPreview preview)
         : IWorkflowExecutionJournalCommitPort
     {
@@ -1286,6 +1398,16 @@ public sealed class WorkflowCompilerTests
     private sealed class TestExecutionRecordResolver : IWorkflowExecutionRecordResolver
     {
         public WorkflowExecutionRecordRef Resolve(string kind, string id) => Ref(kind, id);
+    }
+
+    private sealed class MutableExecutionRecordResolver : IWorkflowExecutionRecordResolver
+    {
+        private readonly Dictionary<(string Kind, string Id), WorkflowExecutionRecordRef> records = [];
+
+        public void Add(WorkflowExecutionRecordRef record) => records[(record.Kind, record.Id)] = record;
+
+        public WorkflowExecutionRecordRef? Resolve(string kind, string id) =>
+            records.GetValueOrDefault((kind, id));
     }
 
     private sealed class MissingExecutionRecordResolver : IWorkflowExecutionRecordResolver
