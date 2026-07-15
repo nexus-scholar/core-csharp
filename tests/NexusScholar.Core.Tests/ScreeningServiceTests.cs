@@ -849,6 +849,47 @@ public sealed class ScreeningServiceTests
         Assert.AreEqual(adjudication.DecisionId, journal.Projection.Outcomes["candidate-1"].DecisionId);
     }
 
+    [TestMethod]
+    public void Conduct_canonical_records_round_trip_and_noncanonical_bytes_fail_closed()
+    {
+        var protocol = BuildVerifiedProtocol();
+        var criteria = BuildAuthorityCriteria(protocol);
+        var dedup = BuildDedupResult("dedup-conduct-codec", ["candidate-1"], []) with
+        {
+            PolicyId = DeduplicationService.PolicyId,
+            PolicyVersion = DeduplicationService.PolicyVersion
+        };
+        var verifiedDedup = DeduplicationRehydrator.Rehydrate(new UnverifiedDeduplicationResult(dedup));
+        var policy = ScreeningConductPolicy.Create(
+            "conduct-policy-codec", "candidate-set-codec", verifiedDedup, protocol, criteria, 1,
+            [new ScreeningConductRoleAssignment("reviewer-1", "reviewer")], [],
+            [new ScreeningExclusionReason("wrong-population", ScreeningStages.TitleAbstract)],
+            new ScreeningConductActor("reviewer-1", ScreeningConductActorKinds.Human, "reviewer"), DateTimeOffset.UtcNow);
+        var header = ScreeningConductHeader.Create(
+            "conduct-codec", policy,
+            new ScreeningConductActor("reviewer-1", ScreeningConductActorKinds.Human, "reviewer"), DateTimeOffset.UtcNow);
+        var decision = ScreeningConductDecision.Create(
+            header, 1, header.Digest, "request-codec", "candidate-1", ScreeningConductDecisionKind.Review,
+            ScreeningVerdicts.Exclude, new ScreeningConductActor("reviewer-1", ScreeningConductActorKinds.Human, "reviewer"),
+            "Population is outside the approved scope.", DateTimeOffset.UtcNow, "wrong-population",
+            evidence: [new ScreeningConductEvidenceRef("search-sighting", "sighting-1", ContentDigest.Sha256Utf8("sighting"))]);
+
+        var reopenedPolicy = ScreeningConductCanonicalCodec.RehydratePolicy(
+            ScreeningConductCanonicalCodec.Serialize(policy), policy.Digest, verifiedDedup, protocol, criteria);
+        var reopenedHeader = ScreeningConductCanonicalCodec.RehydrateHeader(
+            ScreeningConductCanonicalCodec.Serialize(header), header.Digest, reopenedPolicy);
+        var reopenedDecision = ScreeningConductCanonicalCodec.RehydrateDecision(
+            ScreeningConductCanonicalCodec.Serialize(decision), decision.Digest, reopenedHeader);
+        var reopened = ScreeningConductJournal.Rehydrate(reopenedHeader, reopenedPolicy, [reopenedDecision]);
+
+        Assert.AreEqual(decision.Digest, reopened.Projection.HeadDigest);
+        Assert.AreEqual("wrong-population", reopened.Projection.Outcomes["candidate-1"].ExclusionReasonCode);
+        var noncanonical = ScreeningConductCanonicalCodec.Serialize(decision).Concat([(byte)'\n']).ToArray();
+        var error = Assert.ThrowsExactly<ScreeningRuleException>(() =>
+            ScreeningConductCanonicalCodec.RehydrateDecision(noncanonical, decision.Digest, header));
+        Assert.AreEqual(ScreeningErrorCodes.UnverifiedConductAuthority, error.Category);
+    }
+
     private static (ScreeningConductPolicy Policy, ScreeningConductHeader Header) BuildConductAuthority(string suffix, int reviewCount)
     {
         var protocol = BuildVerifiedProtocol();
