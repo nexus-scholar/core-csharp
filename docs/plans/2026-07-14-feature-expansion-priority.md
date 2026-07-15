@@ -205,8 +205,9 @@ desktop shell is built.
 - representative selection is deterministic or explicitly human-overridden under
   a recorded policy;
 - every accepted action appends provenance and creates a successor snapshot;
-- affected Screening, Full Text, reports, and bundles become stale through
-  explicit invalidation records.
+- Screening, Full Text, report, and bundle records are not admitted FE-02
+  invalidation kinds and must not be claimed current against a successor snapshot;
+  explicit stale records move to their later domain gates.
 
 ### Work Packages And Owners
 
@@ -228,7 +229,7 @@ desktop shell is built.
 - evidence digest is missing or mismatched;
 - automatic or AI actor attempts a final merge;
 - partial write leaves the prior generation authoritative;
-- downstream artifacts are not invalidated after membership changes.
+- a downstream artifact is incorrectly claimed current against the successor.
 
 ### Exit Criteria
 
@@ -819,7 +820,7 @@ become compatibility obligations.
 
 ## Immediate Next Gate
 
-FE-02 is the active implementation gate. Its accepted ADR and gate close command
+FE-02 is the active implementation gate. Its accepted ADR and gate define command
 authority, decision append, action reduction, successor snapshots, invalidation,
 atomic persistence, recovery, fixtures, and non-claims. FE-03 remains locked until
 FE-02 completion evidence is accepted.

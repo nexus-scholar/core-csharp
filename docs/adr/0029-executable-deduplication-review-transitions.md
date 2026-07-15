@@ -24,9 +24,10 @@ enough cross-domain evidence for a generic command or decision framework.
 
 `NexusScholar.Deduplication` owns a UI-neutral decision request and preview. The
 request binds the exact authority generation manifest, predecessor snapshot id
-and record digest, result id and digest, review-target id and digest, policy id
-and digest, action, reason, rationale, actor and role, and optional superseded
-decision. It contains no time, random id, path, or persistence handle.
+and record digest, active decision-set digest, result id and digest, review-target
+id and digest, policy id and digest, action, reason, rationale, actor and role,
+and optional superseded decision id and digest. It contains no time, random id,
+path, or persistence handle.
 
 The request is a canonical `nexus.deduplication.review-command` version `1.0.0`
 record. Its digest derives `decision-{sha256}` and is the idempotency key.
@@ -34,6 +35,13 @@ Repeating the exact request returns the already committed transition. Reusing
 that decision id with different material is a conflict. A newer action
 for the same target must explicitly supersede the active decision; overwrite and
 implicit replacement are forbidden.
+
+The request digest and committed decision digest are distinct. The request digest
+is stable idempotency material and seeds the decision id. The decision remains the
+ADR 0028 `nexus.deduplication.decision` record and its digest includes the
+transaction clock's `decided_at`. An idempotent retry looks up the persisted
+request digest and returns the stored decision, snapshot, and generation; it
+never recreates a decision using a later clock value.
 
 ### Closed Action Semantics
 
@@ -56,6 +64,11 @@ cycles, implicit correction, and any merge violating an active keep-separate
 constraint. Active decisions are one per policy target. Superseded decisions
 remain in predecessor generations and are removed only from the active set.
 
+Keep-separate and mark-unresolved state is an active-decision projection, not a
+new mutable snapshot field. Reopen traverses the authority-generation chain,
+rehydrates every decision referenced by the current snapshot, and derives active
+separation constraints and unresolved targets from those verified records.
+
 ### Successor Records
 
 One accepted request creates, in order:
@@ -71,16 +84,34 @@ One accepted request creates, in order:
 No raw Search/import record or analysis generation is rewritten. Invalidation
 remains closed to `deduplication-decision` and `corpus-snapshot`; Screening, Full
 Text, report, bundle, and workflow records are not yet admitted authority kinds.
+Such downstream records must not be claimed current against the successor
+snapshot; their explicit stale records require their later domain gates.
 
 ### Atomic Persistence
 
 `NexusScholar.ResearchWorkspace` owns `CommitDeduplicationDecision`. It writes a
 new `nexus.workspace-authority-generation.v2` directory containing the canonical
 request, fixed policy, decision, successor snapshot, invalidation, three
-provenance events, and canonical manifest. The manifest binds the request digest, exact predecessor
-authority generation and manifest digest, source analysis and result, policy,
-decision, predecessor and successor snapshots, invalidation, active decision-set
-digest, and every raw artifact digest.
+provenance events, and canonical manifest.
+
+The canonical v2 manifest fields are: schema, authority generation id, workspace
+id, project revision, transition kind, source analysis generation id and raw
+manifest SHA-256, source result id and digest, predecessor authority generation id
+and raw manifest SHA-256, request id and digest, authority policy id and digest,
+decision id and digest, predecessor snapshot id and record digest, successor
+snapshot id plus content and record digests, invalidation id and record digest,
+active decision-set digest, the three named provenance-event digests, and artifact
+entries ordered by ordinal artifact name. The exact artifact names are
+`authority-policy`, `decision`, `decision-recorded-event`, `invalidation`,
+`review-command`, `snapshot-invalidated-event`, `snapshot-publication-event`, and
+`successor-snapshot`. Each entry binds its workspace-relative path and raw-file
+SHA-256. Manifest and artifacts are canonical UTF-8 JSON with no BOM or trailing
+newline.
+
+Predecessor traversal accepts the FE-01 v1 baseline as the chain root and v2
+successors thereafter. Every traversed manifest is verified against its project
+or child pointer, canonical bytes, raw artifact digests, record digests, event
+digests, predecessor snapshot, active decision set, and source/policy lineage.
 
 Before promotion and again under the workspace lock, the handler rehydrates all
 records, verifies the predecessor chain, and compares project revision, analysis
@@ -104,6 +135,10 @@ preview and performs no mutation. With `--confirm`, it executes that bound reque
 and reports committed or already-applied status. Actor, role, reason, rationale,
 and target are explicit. APP-01 placeholders are unlocked only for these three
 Deduplication actions.
+
+FE-02 authority is the explicit local Deduplication policy, not an approved
+protocol. Provenance protocol and workflow bindings remain absent, and FE-02
+cannot claim protocol compliance.
 
 ## Consequences
 

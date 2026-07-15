@@ -72,7 +72,7 @@ Hardening 30 corrected the post-phase review findings in AI proposal authority, 
 - AI/model calls and proposal acceptance under a dedicated governance ADR: FE-11;
 - database, API, cloud, synchronization, and multi-user operation: FE-12.
 
-APP-01 merge-gate actions are placeholders only. They must not mutate Core records, execute commands, write files, call services, or imply that the CLI/UI can finalize a scientific decision.
+APP-01 merge-gate actions remain non-authority display hints. They must not mutate Core records, write files, or call services. Only the accepted FE-02 `nexus dedup decide --confirm` boundary may execute the three admitted Deduplication actions; no generic UI action becomes authority.
 
 Do not implement a listed feature until its minimum dependencies are complete and its own gate is accepted. This roadmap is sequencing authority, not blanket implementation authority.
 

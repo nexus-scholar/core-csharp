@@ -29,14 +29,20 @@ preserving source evidence and predecessor authority.
 - fuzzy pair kept separate;
 - no-id pair marked unresolved;
 - repeated exact request returns already applied;
+- replay after a clock change returns stored records rather than recreating them;
+- non-canonical request, same derived decision id with different request material,
+  or mismatched superseded decision digest is rejected;
 - same target correction requires explicit supersession;
 - stale result, target, snapshot, generation, policy, evidence, or request;
 - automation, AI, import, plugin, or unknown actor attempts final action;
 - transitive merge attempts to violate active keep-separate;
+- v2 manifest, predecessor chain, or active decision-set digest is tampered;
 - partial write, stale writer, post-promotion failure, and orphan recovery;
 - reopen reconstructs the full predecessor, decision, invalidation, snapshot, and
   provenance chain;
-- preview without confirmation does not mutate the workspace.
+- preview without confirmation does not mutate the workspace;
+- APP-01 display placeholders cannot execute except through the admitted FE-02
+  command boundary.
 
 ## Allowed Paths
 
@@ -83,4 +89,3 @@ dotnet format NexusScholar.Core.slnx --verify-no-changes --no-restore
   provenance, invalidation, and predecessor history reproduce after reopen;
 - crash/concurrency tests leave exactly one authoritative project pointer;
 - all full validation commands pass and evidence is bound to the tested commit.
-
