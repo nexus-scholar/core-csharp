@@ -433,7 +433,9 @@ public sealed class DependencyRulesTests
             typeof(WorkspacePlan).Assembly.GetName().Name,
             typeof(WorkflowDefinition).Assembly.GetName().Name,
             typeof(WorkflowExecutionJournal).Assembly.GetName().Name,
-            typeof(ScreeningConductJournal).Assembly.GetName().Name
+            typeof(ScreeningConductJournal).Assembly.GetName().Name,
+            typeof(VerifiedFullTextAdmission).Assembly.GetName().Name,
+            typeof(FullTextInput).Assembly.GetName().Name
         };
         var disallowed = appServicesAssembly.GetReferencedAssemblies()
             .Select(reference => reference.Name ?? string.Empty)
@@ -499,6 +501,8 @@ public sealed class DependencyRulesTests
             typeof(WorkflowExecutionJournal).Assembly.GetName().Name,
             typeof(ScreeningConductJournal).Assembly.GetName().Name,
             typeof(ScreeningWorkflowExecutionBridge).Assembly.GetName().Name,
+            typeof(VerifiedFullTextAdmission).Assembly.GetName().Name,
+            typeof(FullTextInput).Assembly.GetName().Name,
             typeof(ProtocolVersion).Assembly.GetName().Name
         };
         var disallowed = researchWorkspaceAssembly.GetReferencedAssemblies()

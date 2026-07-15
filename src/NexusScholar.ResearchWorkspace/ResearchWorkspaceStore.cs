@@ -143,6 +143,16 @@ public static class ResearchWorkspaceStore
             throw new JsonException("Authority generation fields must be valid and supplied together.");
         }
 
+        if ((project.CurrentFullTextGenerationId is null) != (project.FullTextManifestPath is null) ||
+            (project.CurrentFullTextGenerationId is null) != (project.FullTextManifestSha256 is null) ||
+            project.CurrentFullTextGenerationId is not null &&
+            (!IsSafeIdentifier(project.CurrentFullTextGenerationId) ||
+             !IsWorkspaceRelative(project.FullTextManifestPath!) ||
+             !TryValidateRawDigest(project.FullTextManifestSha256!)))
+        {
+            throw new JsonException("Full Text generation pointer is incomplete or invalid.");
+        }
+
         if (project.CurrentAuthorityGenerationId is not null &&
             (!IsSafeIdentifier(project.CurrentAuthorityGenerationId) ||
             !IsWorkspaceRelative(project.AuthorityGenerationManifestPath!) ||

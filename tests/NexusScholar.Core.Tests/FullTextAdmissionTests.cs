@@ -7,6 +7,7 @@ using NexusScholar.Deduplication;
 using NexusScholar.FullText;
 using NexusScholar.Kernel;
 using NexusScholar.Protocol;
+using NexusScholar.ResearchWorkspace;
 using NexusScholar.Screening;
 using NexusScholar.Screening.FullText;
 
@@ -141,6 +142,96 @@ public sealed class FullTextAdmissionTests
         var first = VerifiedFullTextAdmission.Create(journal, handoff, "candidate-1");
         var second = VerifiedFullTextAdmission.Create(journal, handoff, "candidate-1");
         Assert.AreEqual(first.Digest, second.Digest);
+    }
+
+    [TestMethod]
+    public void Full_text_conduct_requires_human_authority_and_source_scoped_invalidation_blocks_handoff()
+    {
+        var (sourcePolicy, sourceHeader) = BuildConductAuthority("full-conduct", 1);
+        var sourceDecision = ScreeningConductDecision.Create(
+            sourceHeader, 1, sourceHeader.Digest, "source-include", "candidate-1", ScreeningConductDecisionKind.Review,
+            ScreeningVerdicts.Include, new ScreeningConductActor("reviewer-1", ScreeningConductActorKinds.Human, "reviewer"),
+            "Advance to full text", FixedTime);
+        var sourceJournal = ScreeningConductJournal.Rehydrate(sourceHeader, sourcePolicy, [sourceDecision]);
+        var sourceHandoff = ScreeningConductHandoff.Create("source-handoff", sourceJournal, FixedTime);
+        var admission = VerifiedFullTextAdmission.Create(sourceJournal, sourceHandoff, "candidate-1");
+        var protocol = BuildVerifiedProtocol();
+        var dedup = DeduplicationRehydrator.Rehydrate(new UnverifiedDeduplicationResult(
+            BuildDedupResult("dedup-full-conduct", ["candidate-1"], [])));
+        var criteria = new ScreeningCriteria(
+            "criteria-full", "1.0.0", ScreeningStages.FullText, CanonicalJsonValue.From("include"), CanonicalJsonValue.From("exclude"), true,
+            protocol.Version.Id, protocol.Version.ContentDigest.ToString(), approvedProtocolDigestScope: DigestScope.ProtocolContent.ToString(),
+            approvedProtocolStatus: ScreeningProtocolBindingStatus.Approved, currentProtocolContentDigest: protocol.Version.ContentDigest.ToString());
+        var rawDigest = ContentDigest.Sha256Utf8("raw-full-text");
+        var policy = FullTextScreeningConductPolicy.Create(
+            "full-policy", admission.CandidateSetId, dedup, protocol, criteria, admission, 1,
+            [new ScreeningConductRoleAssignment("reviewer-1", "reviewer")], ["reviewer"],
+            [new ScreeningExclusionReason("wrong-population-full", ScreeningStages.FullText)],
+            new ScreeningConductActor("reviewer-1", ScreeningConductActorKinds.Human, "reviewer"), FixedTime, rawDigest);
+        var header = FullTextScreeningConductHeader.Create(
+            "full-conduct", policy, new ScreeningConductActor("reviewer-1", ScreeningConductActorKinds.Human, "reviewer"), FixedTime);
+
+        Assert.ThrowsExactly<ScreeningRuleException>(() => FullTextScreeningConductDecision.Create(
+            header, 1, header.Digest, "automated", "candidate-1", ScreeningConductDecisionKind.Review, ScreeningVerdicts.Include,
+            new ScreeningConductActor("job-1", ScreeningConductActorKinds.Automation, "reviewer"), "Automated finalization", FixedTime));
+
+        var decision = FullTextScreeningConductDecision.Create(
+            header, 1, header.Digest, "human-review", "candidate-1", ScreeningConductDecisionKind.Review, ScreeningVerdicts.Include,
+            new ScreeningConductActor("reviewer-1", ScreeningConductActorKinds.Human, "reviewer"), "Eligible after full-text review", FixedTime,
+            evidence: [new ScreeningConductEvidenceRef(FullTextScreeningConductEvidenceKinds.FullTextArtifact, "artifact-1", rawDigest)]);
+        var journal = FullTextScreeningConductJournal.Create(policy, header);
+        journal.Append(decision);
+        Assert.IsTrue(journal.Projection.HandoffReady);
+
+        var fullTextHandoff = journal.CreateHandoff("full-handoff", FixedTime);
+        var rawBytes = System.Text.Encoding.UTF8.GetBytes("raw-full-text");
+        var acquisition = new FullTextAcquisitionRecord(
+            "acquisition-full", admission.Input, FullTextAcquisitionKinds.ManualAcquisition, "local", "operator-supplied",
+            new FullTextActor("reviewer-1", FullTextActorKinds.Human), FixedTime, FullTextAttemptStatuses.Success,
+            [new FullTextSourceAttempt("attempt-full", "local", 1, FullTextAcquisitionKinds.ManualAcquisition, FullTextAttemptStatuses.Success,
+                artifactKind: FullTextArtifactKinds.Text, mediaType: "text/plain", artifactEvidenceId: "artifact-full")],
+            artifactEvidenceId: "artifact-full");
+        var artifact = FullTextArtifactEvidence.FromBytes(
+            "artifact-full", admission.Input, acquisition, FullTextArtifactKinds.Text, "text/plain", rawBytes, 4096);
+        var authority = FullTextRehydrator.Rehydrate(new UnverifiedFullTextChain(admission.Input, acquisition, artifact, rawBytes, 4096));
+        var root = Path.Combine(Path.GetTempPath(), $"nexus-fulltext-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(root);
+        try
+        {
+            var location = new ResearchWorkspaceLocation(root, ResearchWorkspacePaths.ProjectFile(root));
+            var project = ResearchWorkspaceProject.Create("Full Text", FixedTime, "workspace-fulltext");
+            ResearchWorkspaceStore.WriteProject(location, project);
+            var commit = ResearchWorkspaceFullTextTransaction.Commit(
+                location, project, sourceJournal, sourceHandoff, admission, authority, rawBytes, 4096,
+                additionalRecords:
+                [
+                    new ResearchWorkspaceFullTextRecord("conduct-policy", CanonicalJsonSerializer.SerializeToUtf8Bytes(policy.ToCanonicalJson())),
+                    new ResearchWorkspaceFullTextRecord("conduct-header", CanonicalJsonSerializer.SerializeToUtf8Bytes(header.ToCanonicalJson())),
+                    new ResearchWorkspaceFullTextRecord("conduct-entry-000001", CanonicalJsonSerializer.SerializeToUtf8Bytes(decision.ToCanonicalJson())),
+                    new ResearchWorkspaceFullTextRecord("conduct-handoff", CanonicalJsonSerializer.SerializeToUtf8Bytes(fullTextHandoff.ToCanonicalJson()))
+                ]);
+            var reopened = ResearchWorkspaceStore.ReadProject(location.ProjectFilePath);
+            var verified = ResearchWorkspaceFullTextGenerationVerifier.VerifyCurrent(location, reopened, sourceJournal, sourceHandoff, 4096);
+            Assert.AreEqual(commit.Manifest.GenerationId, verified.Manifest.GenerationId);
+            Assert.AreEqual(admission.Digest, verified.Admission.Digest);
+            var rawPath = commit.Manifest.Artifacts.Single(item => item.Name == "raw-artifact").RelativePath;
+            File.WriteAllText(ResearchWorkspacePaths.InProject(root, rawPath), "tampered");
+            Assert.ThrowsExactly<InvalidOperationException>(() =>
+                ResearchWorkspaceFullTextGenerationVerifier.VerifyCurrent(location, reopened, sourceJournal, sourceHandoff, 4096));
+        }
+        finally
+        {
+            Directory.Delete(root, true);
+        }
+
+        var invalidation = FullTextScreeningConductInvalidation.Create(
+            header, 2, decision.Digest, "artifact-changed",
+            new ScreeningConductEvidenceRef(FullTextScreeningConductEvidenceKinds.FullTextArtifact, "artifact-1", rawDigest),
+            [decision.Digest], new ScreeningConductActor("reviewer-1", ScreeningConductActorKinds.Human, "reviewer"),
+            "Raw artifact authority changed.", FixedTime);
+        journal.Append(invalidation);
+        Assert.IsFalse(journal.Projection.HandoffReady);
+        Assert.ThrowsExactly<ScreeningRuleException>(() => journal.CreateHandoff("blocked", FixedTime));
     }
 
     private static (ScreeningConductPolicy Policy, ScreeningConductHeader Header) BuildConductAuthority(string suffix, int reviewCount)
