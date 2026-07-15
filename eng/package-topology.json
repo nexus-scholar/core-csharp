@@ -11,6 +11,7 @@
     "NexusScholar.Protocol",
     "NexusScholar.Provenance",
     "NexusScholar.Screening",
+    "NexusScholar.Screening.WorkflowExecution",
     "NexusScholar.Search",
     "NexusScholar.Shared",
     "NexusScholar.Workflow",
