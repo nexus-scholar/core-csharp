@@ -1,6 +1,7 @@
 # FE-02: Executable Deduplication Review
 
-Status: accepted for local implementation under ADR 0029; completion evidence is pending.
+Status: complete and accepted for the local FE-02 scope. See
+`FE-02-EXECUTABLE-DEDUPLICATION-REVIEW-EVIDENCE.md`.
 
 ## Goal
 

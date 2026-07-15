@@ -2,10 +2,10 @@
 
 Status: active successor roadmap after Hardening 30.
 
-Current state: FE-01 is complete. FE-02 is implementation-authorized under
-accepted ADR 0029 and `docs/gates/FE-02-EXECUTABLE-DEDUPLICATION-REVIEW.md`.
-FE-03 through FE-12 remain
-sequenced future work and are not implementation-authorized by this roadmap.
+Current state: FE-01 and FE-02 are complete. FE-02 completion evidence is in
+`docs/gates/FE-02-EXECUTABLE-DEDUPLICATION-REVIEW-EVIDENCE.md`. FE-03 is the
+next planning target; FE-03 through FE-12 remain sequenced future work and are
+not implementation-authorized by this roadmap.
 
 ## Operating Decision
 
