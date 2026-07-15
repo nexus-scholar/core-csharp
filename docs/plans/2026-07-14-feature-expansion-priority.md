@@ -2,10 +2,9 @@
 
 Status: active successor roadmap after Hardening 30.
 
-Current state: FE-01 is complete under accepted ADR 0028 and
-`docs/gates/FE-01-DECISION-SNAPSHOT-AUTHORITY.md`, with evidence in
-`docs/gates/FE-01-DECISION-SNAPSHOT-AUTHORITY-EVIDENCE.md`. FE-02 is next in
-sequence but is not implementation-authorized. FE-03 through FE-12 remain
+Current state: FE-01 is complete. FE-02 is implementation-authorized under
+accepted ADR 0029 and `docs/gates/FE-02-EXECUTABLE-DEDUPLICATION-REVIEW.md`.
+FE-03 through FE-12 remain
 sequenced future work and are not implementation-authorized by this roadmap.
 
 ## Operating Decision
@@ -820,11 +819,10 @@ become compatibility obligations.
 
 ## Immediate Next Gate
 
-FE-01 is complete. The next gate is FE-02: executable Deduplication decisions and
-snapshot transition. Before implementation, FE-02 requires an accepted gate that
-closes command authority, decision append, action reduction, successor snapshot,
-invalidation, atomic persistence, recovery, fixtures, and measurable non-claims.
-No FE-02 implementation is authorized by this roadmap alone.
+FE-02 is the active implementation gate. Its accepted ADR and gate close command
+authority, decision append, action reduction, successor snapshots, invalidation,
+atomic persistence, recovery, fixtures, and non-claims. FE-03 remains locked until
+FE-02 completion evidence is accepted.
 
 ## Verification Baseline
 
