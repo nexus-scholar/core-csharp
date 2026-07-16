@@ -1,20 +1,12 @@
 using System.Reflection;
+using System.Text.Json;
 
-string[] expectedAssemblies =
-[
-    "NexusScholar.Artifacts",
-    "NexusScholar.Bundles",
-    "NexusScholar.Deduplication",
-    "NexusScholar.Extensibility",
-    "NexusScholar.FullText",
-    "NexusScholar.Kernel",
-    "NexusScholar.Protocol",
-    "NexusScholar.Provenance",
-    "NexusScholar.Screening",
-    "NexusScholar.Search",
-    "NexusScholar.Shared",
-    "NexusScholar.Workflow"
-];
+var topologyPath = Path.Combine(AppContext.BaseDirectory, "package-topology.json");
+using var topology = JsonDocument.Parse(File.ReadAllBytes(topologyPath));
+var expectedAssemblies = topology.RootElement.GetProperty("packages")
+    .EnumerateArray()
+    .Select(package => package.GetString() ?? throw new InvalidDataException("Package id cannot be null."))
+    .ToArray();
 
 foreach (var assemblyName in expectedAssemblies)
 {

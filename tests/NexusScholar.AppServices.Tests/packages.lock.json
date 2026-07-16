@@ -157,12 +157,20 @@
         "dependencies": {
           "NexusScholar.CorpusSnapshots": "[0.1.0-alpha.2, )",
           "NexusScholar.Deduplication": "[0.1.0-alpha.2, )",
+          "NexusScholar.FullText": "[0.1.0-alpha.2, )",
           "NexusScholar.Kernel": "[0.1.0-alpha.2, )",
           "NexusScholar.Screening": "[0.1.0-alpha.2, )",
+          "NexusScholar.Screening.FullText": "[0.1.0-alpha.2, )",
           "NexusScholar.Search": "[0.1.0-alpha.2, )",
           "NexusScholar.UiContracts": "[0.1.0-alpha.2, )",
           "NexusScholar.Workflow": "[0.1.0-alpha.2, )",
           "NexusScholar.WorkflowExecution": "[0.1.0-alpha.2, )"
+        }
+      },
+      "nexusscholar.artifacts": {
+        "type": "Project",
+        "dependencies": {
+          "NexusScholar.Kernel": "[0.1.0-alpha.2, )"
         }
       },
       "nexusscholar.corpussnapshots": {
@@ -180,6 +188,13 @@
           "NexusScholar.Shared": "[0.1.0-alpha.2, )"
         }
       },
+      "nexusscholar.fulltext": {
+        "type": "Project",
+        "dependencies": {
+          "NexusScholar.Artifacts": "[0.1.0-alpha.2, )",
+          "NexusScholar.Kernel": "[0.1.0-alpha.2, )"
+        }
+      },
       "nexusscholar.kernel": {
         "type": "Project"
       },
@@ -195,6 +210,16 @@
           "NexusScholar.Deduplication": "[0.1.0-alpha.2, )",
           "NexusScholar.Kernel": "[0.1.0-alpha.2, )",
           "NexusScholar.Protocol": "[0.1.0-alpha.2, )"
+        }
+      },
+      "nexusscholar.screening.fulltext": {
+        "type": "Project",
+        "dependencies": {
+          "NexusScholar.Deduplication": "[0.1.0-alpha.2, )",
+          "NexusScholar.FullText": "[0.1.0-alpha.2, )",
+          "NexusScholar.Kernel": "[0.1.0-alpha.2, )",
+          "NexusScholar.Protocol": "[0.1.0-alpha.2, )",
+          "NexusScholar.Screening": "[0.1.0-alpha.2, )"
         }
       },
       "nexusscholar.search": {

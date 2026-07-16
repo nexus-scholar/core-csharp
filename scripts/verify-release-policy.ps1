@@ -27,6 +27,11 @@ $smokeVersions = @($smokeProject.Project.ItemGroup.PackageReference | ForEach-Ob
 if ($smokeVersions.Count -ne 1 -or $smokeVersions[0] -ne $packageVersion) {
     throw 'Package smoke references must exactly match the active package version.'
 }
+$smokePackageIds = @($smokeProject.Project.ItemGroup.PackageReference | ForEach-Object { $_.Include } | Sort-Object)
+$smokeRoots = @($topology.smokeRoots | Sort-Object)
+if (Compare-Object $smokeRoots $smokePackageIds) {
+    throw 'Package smoke references do not match eng/package-topology.json smokeRoots.'
+}
 
 $tagName = "v$packageVersion"
 & git show-ref --verify --quiet "refs/tags/$tagName"

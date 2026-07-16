@@ -317,6 +317,7 @@ public sealed class ResearchWorkspaceCommandTests
         "  dedup analysis: missing",
         "  workspace plan: missing",
         "  review report: missing",
+        "  full text generation: missing",
         "",
         "Review:",
         "  exact duplicate clusters: 0",

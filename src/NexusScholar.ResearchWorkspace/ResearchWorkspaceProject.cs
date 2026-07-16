@@ -23,7 +23,10 @@ public sealed record ResearchWorkspaceProject(
     string? WorkflowExecutionJournalManifestSha256 = null,
     string? CurrentScreeningConductGenerationId = null,
     string? ScreeningConductManifestPath = null,
-    string? ScreeningConductManifestSha256 = null)
+    string? ScreeningConductManifestSha256 = null,
+    string? CurrentFullTextGenerationId = null,
+    string? FullTextManifestPath = null,
+    string? FullTextManifestSha256 = null)
 {
     public const string CurrentSchema = "nexus.project.v0";
 
@@ -123,6 +126,17 @@ public sealed record ResearchWorkspaceProject(
             CurrentWorkflowExecutionJournalGenerationId = workflowGenerationId,
             WorkflowExecutionJournalManifestPath = workflowManifestPath,
             WorkflowExecutionJournalManifestSha256 = workflowManifestSha256
+        };
+
+    public ResearchWorkspaceProject CommitFullTextGeneration(
+        string generationId,
+        string manifestPath,
+        string manifestSha256) => this with
+        {
+            Revision = checked(Revision + 1),
+            CurrentFullTextGenerationId = generationId,
+            FullTextManifestPath = manifestPath,
+            FullTextManifestSha256 = manifestSha256
         };
 
     private static string CreateWorkspaceId(string title)

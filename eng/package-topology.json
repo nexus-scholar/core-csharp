@@ -11,6 +11,7 @@
     "NexusScholar.Protocol",
     "NexusScholar.Provenance",
     "NexusScholar.Screening",
+    "NexusScholar.Screening.FullText",
     "NexusScholar.Screening.WorkflowExecution",
     "NexusScholar.Search",
     "NexusScholar.Shared",
@@ -21,8 +22,10 @@
   "smokeRoots": [
     "NexusScholar.Bundles",
     "NexusScholar.Extensibility",
-    "NexusScholar.FullText",
-    "NexusScholar.Screening"
+    "NexusScholar.Screening.FullText",
+    "NexusScholar.Screening.WorkflowExecution",
+    "NexusScholar.Search",
+    "NexusScholar.WorkflowExecution.Provenance"
   ],
   "excluded": [
     "NexusScholar.AI",

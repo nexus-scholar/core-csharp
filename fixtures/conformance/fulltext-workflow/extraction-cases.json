@@ -1,0 +1,35 @@
+{
+  "schema": "nexus.fulltext-workflow.extraction-cases.v1",
+  "scope": "local-csharp-contract",
+  "cases": [
+    {
+      "id": "utf8-text-success",
+      "artifact_kind": "text",
+      "media_type": "text/plain",
+      "content": "Full text evidence",
+      "expected_status": "success",
+      "expected_output": "Full text evidence"
+    },
+    {
+      "id": "safe-xml-success",
+      "artifact_kind": "xml",
+      "media_type": "application/xml",
+      "content": "<article><title>Study</title><p>Result</p></article>",
+      "expected_status": "success",
+      "expected_output": "StudyResult"
+    },
+    {
+      "id": "pdf-parser-unsupported",
+      "artifact_kind": "pdf",
+      "media_type": "application/pdf",
+      "content": "%PDF-1.7\nbody",
+      "expected_status": "unsupported",
+      "expected_failure_category": "unsupported-file-type"
+    }
+  ],
+  "non_claims": [
+    "no-php-compatibility-claim",
+    "no-pdf-parser-claim",
+    "no-network-provider-behavior"
+  ]
+}

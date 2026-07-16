@@ -8,5 +8,7 @@
     <ProjectReference Include="../NexusScholar.Workflow/NexusScholar.Workflow.csproj" />
     <ProjectReference Include="../NexusScholar.WorkflowExecution/NexusScholar.WorkflowExecution.csproj" />
     <ProjectReference Include="../NexusScholar.Screening/NexusScholar.Screening.csproj" />
+    <ProjectReference Include="../NexusScholar.Screening.FullText/NexusScholar.Screening.FullText.csproj" />
+    <ProjectReference Include="../NexusScholar.FullText/NexusScholar.FullText.csproj" />
   </ItemGroup>
 </Project>

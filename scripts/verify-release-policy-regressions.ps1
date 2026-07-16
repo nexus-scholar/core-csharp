@@ -35,7 +35,7 @@ try {
     '{"sdk":{"version":"10.0.100","rollForward":"disable","allowPrerelease":false}}' |
         Set-Content (Join-Path $tempRoot 'global.json') -Encoding utf8
     'test license' | Set-Content (Join-Path $tempRoot 'LICENSE') -Encoding utf8
-    '{"version":"0.0.1-alpha.1","packages":["Test.Package"]}' |
+    '{"version":"0.0.1-alpha.1","packages":["Test.Package"],"smokeRoots":["Test.Package"]}' |
         Set-Content (Join-Path $tempRoot 'eng/package-topology.json') -Encoding utf8
     '<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><IsPackable>true</IsPackable></PropertyGroup></Project>' |
         Set-Content (Join-Path $tempRoot 'src/Test.Package/Test.Package.csproj') -Encoding utf8

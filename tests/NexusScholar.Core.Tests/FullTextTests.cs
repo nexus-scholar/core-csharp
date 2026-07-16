@@ -634,6 +634,85 @@ public sealed class FullTextTests
                 representationKind: FullTextExtractionRepresentations.PageText)).Category);
     }
 
+    [TestMethod]
+    public void Deterministic_text_and_xml_extraction_attempts_round_trip_canonically()
+    {
+        foreach (var sample in new[]
+        {
+            (Kind: FullTextArtifactKinds.Text, MediaType: "text/plain", Bytes: Encoding.UTF8.GetBytes("accepted full text"), Expected: "accepted full text"),
+            (Kind: FullTextArtifactKinds.Xml, MediaType: "application/xml", Bytes: Encoding.UTF8.GetBytes("<article><title>Study</title><p>Result</p></article>"), Expected: "StudyResult")
+        })
+        {
+            var input = BuildInput($"candidate-extract-{sample.Kind}");
+            var acquisition = BuildAcquisition(input, FullTextAcquisitionKinds.ManualAcquisition);
+            var artifact = FullTextArtifactEvidence.FromBytes(
+                $"artifact-extract-{sample.Kind}", input, acquisition, sample.Kind, sample.MediaType, sample.Bytes, 4096);
+            var source = FullTextRehydrator.Rehydrate(new UnverifiedFullTextChain(input, acquisition, artifact, sample.Bytes, 4096));
+
+            var attempt = FullTextDeterministicExtractor.Extract(
+                $"attempt-{sample.Kind}", source, sample.Bytes, FixedTime);
+            var reopened = FullTextExtractionAttemptCodec.Rehydrate(
+                FullTextExtractionAttemptCodec.Serialize(attempt), attempt.Digest, source);
+
+            Assert.AreEqual(FullTextExtractionAttemptStatuses.Success, reopened.Status);
+            Assert.AreEqual(sample.Expected, reopened.Values.Single());
+            Assert.AreEqual(attempt.OutputDigest, reopened.OutputDigest);
+            Assert.AreEqual(attempt.Configuration.Digest, reopened.Configuration.Digest);
+        }
+    }
+
+    [TestMethod]
+    public void Pdf_extraction_is_explicitly_unsupported_without_losing_raw_authority()
+    {
+        var bytes = Encoding.ASCII.GetBytes("%PDF-1.7\nbody");
+        var input = BuildInput("candidate-pdf-unsupported");
+        var acquisition = BuildAcquisition(input, FullTextAcquisitionKinds.ManualAcquisition);
+        var artifact = FullTextArtifactEvidence.FromBytes(
+            "artifact-pdf-unsupported", input, acquisition, FullTextArtifactKinds.Pdf, "application/pdf", bytes, 4096);
+        var source = FullTextRehydrator.Rehydrate(new UnverifiedFullTextChain(input, acquisition, artifact, bytes, 4096));
+
+        var attempt = FullTextDeterministicExtractor.Extract("attempt-pdf", source, bytes, FixedTime);
+
+        Assert.AreEqual(FullTextExtractionAttemptStatuses.Unsupported, attempt.Status);
+        Assert.AreEqual(FullTextErrorCodes.UnsupportedFileType, attempt.FailureCategory);
+        Assert.AreEqual(0, attempt.Values.Count);
+        Assert.AreEqual(artifact.RawByteDigest, source.Artifact.RawByteDigest);
+    }
+
+    [TestMethod]
+    public void Extraction_attempts_reject_source_tamper_invalid_partial_and_noncanonical_bytes()
+    {
+        var bytes = Encoding.UTF8.GetBytes("source text");
+        var input = BuildInput("candidate-extraction-negative");
+        var acquisition = BuildAcquisition(input, FullTextAcquisitionKinds.ManualAcquisition);
+        var artifact = FullTextArtifactEvidence.FromBytes(
+            "artifact-extraction-negative", input, acquisition, FullTextArtifactKinds.Text, "text/plain", bytes, 4096);
+        var source = FullTextRehydrator.Rehydrate(new UnverifiedFullTextChain(input, acquisition, artifact, bytes, 4096));
+        var configuration = FullTextExtractionConfiguration.Create(
+            "extractor", "1.0.0", FullTextExtractionRepresentations.PageText);
+
+        Assert.AreEqual(
+            FullTextErrorCodes.ExtractionSourceMismatch,
+            Assert.ThrowsExactly<FullTextRuleException>(() => FullTextDeterministicExtractor.Extract(
+                "attempt-tamper", source, Encoding.UTF8.GetBytes("changed"), FixedTime)).Category);
+        Assert.AreEqual(
+            FullTextErrorCodes.PartialExtraction,
+            Assert.ThrowsExactly<FullTextRuleException>(() => FullTextExtractionAttempt.Create(
+                "attempt-partial", source, configuration, FixedTime, FullTextExtractionAttemptStatuses.Partial,
+                ["partial"])).Category);
+        Assert.AreEqual(
+            FullTextErrorCodes.ExtractionFailure,
+            Assert.ThrowsExactly<FullTextRuleException>(() => FullTextExtractionAttempt.Create(
+                "attempt-failure", source, configuration, FixedTime, FullTextExtractionAttemptStatuses.Failure)).Category);
+
+        var valid = FullTextDeterministicExtractor.Extract("attempt-valid", source, bytes, FixedTime);
+        var noncanonical = FullTextExtractionAttemptCodec.Serialize(valid).Concat([(byte)'\n']).ToArray();
+        Assert.AreEqual(
+            FullTextErrorCodes.InvalidAuthorityChain,
+            Assert.ThrowsExactly<FullTextRuleException>(() => FullTextExtractionAttemptCodec.Rehydrate(
+                noncanonical, valid.Digest, source)).Category);
+    }
+
     private static FullTextInput BuildInput(string candidateId)
     {
         return FullTextInput.FromScreeningDecision(

@@ -1,4 +1,5 @@
 using System.Text.Json;
+using NexusScholar.Kernel;
 using NexusScholar.ResearchWorkspace;
 using NexusScholar.Search;
 using NexusScholar.UiContracts;
@@ -69,6 +70,7 @@ internal static class ResearchWorkspaceStatusCommand
         output.WriteLine($"  dedup analysis: {Presence(snapshot.DeduplicationResultPresent)}");
         output.WriteLine($"  workspace plan: {Presence(snapshot.WorkspacePlanPresent)}");
         output.WriteLine($"  review report: {Presence(snapshot.ReviewReportPresent)}");
+        output.WriteLine($"  full text generation: {snapshot.FullTextGenerationState}");
         output.WriteLine();
         output.WriteLine("Review:");
         output.WriteLine($"  exact duplicate clusters: {snapshot.ExactDuplicateClusters}");
@@ -84,6 +86,7 @@ internal static class ResearchWorkspaceStatusCommand
             output.WriteLine($"  Missing import traces: {snapshot.MissingImportTraces}");
             output.WriteLine($"  Invalid paths: {snapshot.InvalidPaths}");
             output.WriteLine($"  Missing generated outputs: {snapshot.MissingGeneratedOutputs}");
+            output.WriteLine($"  Full Text integrity failures: {snapshot.FullTextIntegrityFailures}");
         }
 
         output.WriteLine();
@@ -102,6 +105,7 @@ internal static class ResearchWorkspaceStatusCommand
         bool DeduplicationResultPresent,
         bool WorkspacePlanPresent,
         bool ReviewReportPresent,
+        string FullTextGenerationState,
         int ExactDuplicateClusters,
         int ReviewRequiredCandidates,
         int BlockingMergeGates,
@@ -110,6 +114,7 @@ internal static class ResearchWorkspaceStatusCommand
         int MissingImportTraces,
         int InvalidPaths,
         int MissingGeneratedOutputs,
+        int FullTextIntegrityFailures,
         string Next,
         int ExitCode)
     {
@@ -118,7 +123,8 @@ internal static class ResearchWorkspaceStatusCommand
             MissingFiles > 0 ||
             MissingImportTraces > 0 ||
             InvalidPaths > 0 ||
-            MissingGeneratedOutputs > 0;
+            MissingGeneratedOutputs > 0 ||
+            FullTextIntegrityFailures > 0;
 
         public static WorkspaceStatusSnapshot Create(
             ResearchWorkspaceLocation location,
@@ -132,10 +138,13 @@ internal static class ResearchWorkspaceStatusCommand
             var deduplicationResultPresent = File.Exists(ResearchWorkspacePaths.InProject(location.RootDirectory, project.Outputs.GetValueOrDefault("deduplicationResult") ?? ResearchWorkspacePaths.CurrentDeduplicationResult));
             var workspacePlanPresent = File.Exists(planPath);
             var reviewReportPresent = File.Exists(ResearchWorkspacePaths.InProject(location.RootDirectory, project.Outputs.GetValueOrDefault("reviewReport") ?? ResearchWorkspaceAnalyzer.ReviewReportPath));
+            var (fullTextGenerationState, fullTextIntegrityFailures) = ResolveFullTextGenerationState(location, project);
             var plan = workspacePlanPresent ? ReadWorkspacePlan(planPath) : null;
             var missingGeneratedOutputs = CountMissingGeneratedOutputs(location, project);
             var state = StateFor(report, searchExports, workspacePlanPresent, plan, missingGeneratedOutputs);
-            var exitCode = ExitCodeFor(report, missingGeneratedOutputs);
+            var exitCode = fullTextIntegrityFailures > 0
+                ? ResearchWorkspaceExitCodes.DigestMismatch
+                : ExitCodeFor(report, missingGeneratedOutputs);
 
             return new WorkspaceStatusSnapshot(
                 state,
@@ -147,6 +156,7 @@ internal static class ResearchWorkspaceStatusCommand
                 deduplicationResultPresent,
                 workspacePlanPresent,
                 reviewReportPresent,
+                fullTextGenerationState,
                 plan?.Blocks.Count(block => string.Equals(block.Kind, KnownBlockKinds.DedupCandidateCluster, StringComparison.Ordinal)) ?? 0,
                 plan?.Blocks.Count(block => string.Equals(block.Kind, KnownBlockKinds.DedupRecordComparison, StringComparison.Ordinal)) ?? 0,
                 plan?.Blocks.Count(block => string.Equals(block.Kind, KnownBlockKinds.HumanGateMergeDecision, StringComparison.Ordinal)) ?? 0,
@@ -155,8 +165,30 @@ internal static class ResearchWorkspaceStatusCommand
                 report.MissingImportTraces.Count,
                 report.InvalidPaths.Count,
                 missingGeneratedOutputs,
+                fullTextIntegrityFailures,
                 NextFor(state, report),
                 exitCode);
+        }
+
+        private static (string State, int Failures) ResolveFullTextGenerationState(
+            ResearchWorkspaceLocation location,
+            ResearchWorkspaceProject project)
+        {
+            if (project.CurrentFullTextGenerationId is null)
+                return ("missing", 0);
+            if (project.FullTextManifestPath is null || project.FullTextManifestSha256 is null ||
+                !ResearchWorkspaceVerifier.TryResolveWorkspaceRelativePath(location.RootDirectory, project.FullTextManifestPath, out var path) ||
+                !File.Exists(path))
+                return ("invalid", 1);
+            try
+            {
+                _ = ResearchWorkspaceFullTextGenerationVerifier.VerifyCurrentIntegrity(location, project);
+                return ("present", 0);
+            }
+            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or InvalidOperationException or JsonException)
+            {
+                return ("invalid", 1);
+            }
         }
 
         private static int CountSearchExports(ResearchWorkspaceProject project)

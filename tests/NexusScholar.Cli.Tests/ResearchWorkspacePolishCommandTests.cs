@@ -1,6 +1,8 @@
 using System.Text.Json;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NexusScholar.Cli;
+using NexusScholar.Kernel;
+using NexusScholar.ResearchWorkspace;
 
 namespace NexusScholar.Cli.Tests;
 
@@ -24,6 +26,73 @@ public sealed class ResearchWorkspacePolishCommandTests
         StringAssert.Contains(output, "Project location: parent workspace");
         AssertNoAbsoluteWorkspacePath(workspace.Root, output, error);
         Assert.AreEqual(string.Empty, error);
+    }
+
+    [TestMethod]
+    public void Status_reports_invalid_full_text_pointer_with_digest_exit_code()
+    {
+        using var workspace = TemporaryWorkspace.CreateInitialized();
+        var location = new ResearchWorkspaceLocation(workspace.Root, ResearchWorkspacePaths.ProjectFile(workspace.Root));
+        var project = ResearchWorkspaceStore.ReadProject(location.ProjectFilePath).CommitFullTextGeneration(
+            "fulltext-test", "nexus-output/fulltext-generations/test/fulltext.manifest.json", "sha256:" + new string('0', 64));
+        ResearchWorkspaceStore.WriteProject(location, project);
+
+        var exitCode = RunCli(workspace.Root, ["status"], out var output, out var error);
+
+        Assert.AreEqual(ResearchWorkspaceExitCodes.DigestMismatch, exitCode, error);
+        StringAssert.Contains(output, "  full text generation: invalid");
+        StringAssert.Contains(output, "  Full Text integrity failures: 1");
+    }
+
+    [TestMethod]
+    public void Status_reports_invalid_full_text_artifact_tamper()
+    {
+        using var workspace = TemporaryWorkspace.CreateInitialized();
+        var location = new ResearchWorkspaceLocation(workspace.Root, ResearchWorkspacePaths.ProjectFile(workspace.Root));
+        var project = ResearchWorkspaceStore.ReadProject(location.ProjectFilePath);
+        var generationId = "fulltext-integrity-test";
+        var relativeRoot = ResearchWorkspacePaths.FullTextGenerationRoot("candidate-1", generationId);
+        var generationRoot = ResearchWorkspacePaths.InProject(workspace.Root, relativeRoot);
+        Directory.CreateDirectory(generationRoot);
+        var payloads = new Dictionary<string, (string FileName, byte[] Bytes)>(StringComparer.Ordinal)
+        {
+            ["admission"] = ("admission.json", "admission"u8.ToArray()),
+            ["input"] = ("input.json", "input"u8.ToArray()),
+            ["acquisition"] = ("acquisition.json", "acquisition"u8.ToArray()),
+            ["artifact-evidence"] = ("artifact-evidence.json", "artifact"u8.ToArray()),
+            ["raw-artifact"] = ("raw-artifact.bin", "raw"u8.ToArray())
+        };
+        foreach (var payload in payloads.Values)
+            File.WriteAllBytes(Path.Combine(generationRoot, payload.FileName), payload.Bytes);
+        var artifacts = payloads.Select(pair => new ResearchWorkspaceFullTextArtifact(
+            pair.Key, $"{relativeRoot}/{pair.Value.FileName}", ContentDigest.Sha256(pair.Value.Bytes).ToString()))
+            .OrderBy(item => item.Name, StringComparer.Ordinal).ToArray();
+        var manifestPath = $"{relativeRoot}/fulltext.manifest.json";
+        var committed = project.CommitFullTextGeneration(generationId, manifestPath, "sha256:" + new string('0', 64));
+        var manifest = new ResearchWorkspaceFullTextManifest(
+            ResearchWorkspaceFullTextManifest.CurrentSchema, generationId, project.WorkspaceId, committed.Revision,
+            "candidate-1", artifacts.Single(item => item.Name == "admission").Sha256,
+            artifacts.Single(item => item.Name == "input").Sha256,
+            artifacts.Single(item => item.Name == "acquisition").Sha256,
+            artifacts.Single(item => item.Name == "artifact-evidence").Sha256,
+            artifacts.Single(item => item.Name == "raw-artifact").Sha256,
+            null, null, null, artifacts);
+        var manifestBytes = ResearchWorkspaceFullTextManifestCodec.Serialize(manifest);
+        File.WriteAllBytes(Path.Combine(generationRoot, "fulltext.manifest.json"), manifestBytes);
+        ResearchWorkspaceStore.WriteProject(location, committed with
+        {
+            FullTextManifestSha256 = ContentDigest.Sha256(manifestBytes).ToString()
+        });
+
+        Assert.AreEqual(0, RunCli(workspace.Root, ["status"], out var validOutput, out var validError), validError);
+        StringAssert.Contains(validOutput, "  full text generation: present");
+        File.WriteAllText(Path.Combine(generationRoot, "raw-artifact.bin"), "tampered");
+
+        var exitCode = RunCli(workspace.Root, ["status"], out var output, out var error);
+
+        Assert.AreEqual(ResearchWorkspaceExitCodes.DigestMismatch, exitCode, error);
+        StringAssert.Contains(output, "  full text generation: invalid");
+        StringAssert.Contains(output, "  Full Text integrity failures: 1");
     }
 
     [TestMethod]
