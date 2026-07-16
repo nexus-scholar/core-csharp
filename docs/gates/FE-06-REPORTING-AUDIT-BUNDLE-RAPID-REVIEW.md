@@ -1,7 +1,7 @@
 # FE-06: Reporting, Audit Bundle, And Rapid Review Profile
 
-Status: implementation complete locally under accepted ADR 0033; hosted CI and
-merge verification pending.
+Status: complete under accepted ADR 0033. Local and hosted validation passed;
+merge evidence is PR 59.
 
 ## Goal
 
@@ -252,7 +252,7 @@ FE-06.6.
 
 ### FE-06.6: Release Fixtures, Review, And Validation
 
-Status: complete locally; hosted CI and merge verification pending.
+Status: complete. Local validation and PR 59 hosted checks passed.
 
 - phase-wide local conformance fixtures pin Rapid Review/deviation, Bundle v2,
   and export-ledger contracts, required negative cases, source implementation
@@ -270,3 +270,5 @@ Status: complete locally; hosted CI and merge verification pending.
   strict persisted Full Text binding validation, format verification, release
   policy checks, deterministic package comparison,
   and clean smoke loading of all 19 packages at `0.1.0-alpha.2`.
+- PR 59 hosted checks passed on Windows and Ubuntu, together with CodeQL,
+  repository analysis, and review workflows.

@@ -96,5 +96,16 @@ identity, signature, or encryption claim. CLI report verification validates
 persisted canonical structure and ledger bindings; it explicitly does not claim
 full source-authority replay.
 
-Hosted CI and merge evidence are recorded in the FE-06 gate after the branch is
-published.
+## Hosted Validation
+
+PR 59: `https://github.com/nexus-scholar/core-csharp/pull/59`
+
+Hosted checks passed:
+
+- CodeQL: run `87672869905`;
+- analyze: workflow run `29513247195`, job `87671744854`;
+- review: workflow run `29513247185`, job `87671744736`;
+- Ubuntu verification: workflow run `29513247208`, job `87671745261`;
+- Windows verification: workflow run `29513247208`, job `87671745251`.
+
+GitHub PR state is the authoritative merge record.
