@@ -2,10 +2,9 @@
 
 Status: active successor roadmap after Hardening 30.
 
-Current state: FE-01 through FE-04 are complete. FE-03 and FE-04 completion
-evidence is in `docs/gates/`. FE-05 is the next planning target; FE-05 through
-FE-12 remain sequenced future work and are not implementation-authorized by this
-roadmap.
+Current state: FE-01 through FE-05 are complete with completion evidence in
+`docs/gates/`. FE-06 is active under ADR 0033; FE-07 through FE-12 remain
+sequenced future work and are not implementation-authorized by this roadmap.
 
 ## Operating Decision
 
