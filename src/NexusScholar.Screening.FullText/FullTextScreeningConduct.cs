@@ -10,6 +10,7 @@ namespace NexusScholar.Screening.FullText;
 public static class FullTextScreeningConductSchema
 {
     public const string PolicySchemaId = "nexus.fulltext.screening-policy";
+    public const string HeaderSchemaId = "nexus.fulltext.screening-header";
     public const string DecisionSchemaId = "nexus.fulltext.screening-decision";
     public const string InvalidationSchemaId = "nexus.fulltext.invalidation";
     public const string HandoffSchemaId = "nexus.fulltext.handoff";
@@ -25,6 +26,9 @@ public static class FullTextScreeningConductEvidenceKinds
 {
     public const string FullTextArtifact = "full-text-artifact";
     public const string FullTextExtractionAttempt = "full-text-extraction-attempt";
+    public const string FullTextAdmission = "full-text-admission";
+    public const string Criteria = "criteria";
+    public const string ProtocolVersion = "protocol-version";
 }
 
 public static class FullTextScreeningConductErrorCodes
@@ -272,6 +276,7 @@ public sealed class FullTextScreeningConductHeader
     public string PolicyId { get; }
     public ContentDigest PolicyDigest { get; }
     public string CandidateSetId { get; }
+    public ContentDigest CandidateSetDigest { get; }
     public IReadOnlyList<string> CandidateIds { get; }
     public ScreeningConductActor CreatedBy { get; }
     public DateTimeOffset CreatedAt { get; }
@@ -292,11 +297,8 @@ public sealed class FullTextScreeningConductHeader
         PolicyId = policy.PolicyId;
         PolicyDigest = policy.Digest;
         CandidateSetId = policy.CandidateSet.CandidateSetId;
-        CandidateIds = policy.CandidateSet.Candidates
-            .Select(item => item.CandidateId)
-            .OrderBy(value => value, StringComparer.Ordinal)
-            .ToList()
-            .AsReadOnly();
+        CandidateSetDigest = policy.CandidateSetDigest;
+        CandidateIds = Array.AsReadOnly(new[] { policy.AdmissionCandidateId });
         CreatedBy = createdBy;
         CreatedAt = createdAt;
         AdmissionConductId = policy.AdmissionConductId;
@@ -318,25 +320,26 @@ public sealed class FullTextScreeningConductHeader
 
     public CanonicalJsonObject ToCanonicalJson() => Envelope().ToCanonicalJsonObject();
 
-    internal DigestEnvelope Envelope() => new(
-        DigestScope.CanonicalJsonRecord,
-        ScreeningConductHeader.SchemaId,
-        ScreeningConductHeader.SchemaVersion,
-        new CanonicalJsonObject()
+    internal DigestEnvelope Envelope()
+    {
+        var content = new CanonicalJsonObject()
             .Add("conduct_id", ConductId)
             .Add("policy_id", PolicyId)
             .Add("policy_digest", PolicyDigest.ToString())
             .Add("candidate_set_id", CandidateSetId)
-            .Add("candidate_set_digest", policyDigestForHeader(PolicyDigest))
+            .Add("candidate_set_digest", CandidateSetDigest.ToString())
             .Add("candidate_ids", CanonicalJsonValue.Array(CandidateIds.Select(CanonicalJsonValue.From).ToArray()))
             .Add("created_by", CreatedBy.ToCanonicalJson())
             .AddTimestamp("created_at", CreatedAt)
             .Add("admission_conduct_id", AdmissionConductId)
             .Add("admission_handoff_id", AdmissionHandoffId)
             .Add("admission_digest", AdmissionDigest.ToString())
-            .Add("full_text_artifact_digest", FullTextArtifactDigest.ToString()));
-
-    private static string policyDigestForHeader(ContentDigest policyDigest) => policyDigest.ToString();
+            .Add("full_text_artifact_digest", FullTextArtifactDigest.ToString());
+        if (ExtractionAttemptDigest is not null)
+            content.Add("full_text_extraction_attempt_digest", ExtractionAttemptDigest.Value.ToString());
+        return new DigestEnvelope(DigestScope.CanonicalJsonRecord, FullTextScreeningConductSchema.HeaderSchemaId,
+            FullTextScreeningConductSchema.SchemaVersion, content);
+    }
 }
 
 public sealed class FullTextScreeningConductDecision : IFullTextScreeningConductEntry
@@ -425,9 +428,7 @@ public sealed class FullTextScreeningConductDecision : IFullTextScreeningConduct
             throw new ScreeningRuleException(FullTextScreeningConductErrorCodes.MissingFullTextAdmission, "Decision requires a verified FE-04 admission digest.");
 
         var effectiveExtractionAttemptDigest = extractionAttemptDigest ?? extractionAttempt?.Digest;
-        if (effectiveExtractionAttemptDigest is not null &&
-            header.ExtractionAttemptDigest is not null &&
-            header.ExtractionAttemptDigest != effectiveExtractionAttemptDigest)
+        if (effectiveExtractionAttemptDigest != header.ExtractionAttemptDigest)
             throw new ScreeningRuleException(FullTextScreeningConductErrorCodes.InvalidAuthorityChain, "Decision extraction evidence must match the policy extraction digest.");
 
         var evidenceValues = (evidence ?? Array.Empty<ScreeningConductEvidenceRef>()).ToArray();
@@ -454,6 +455,12 @@ public sealed class FullTextScreeningConductDecision : IFullTextScreeningConduct
             }
         }
 
+        if (!normalizedEvidence.Any(item =>
+            item.Kind == FullTextScreeningConductEvidenceKinds.FullTextArtifact &&
+            item.Digest == header.FullTextArtifactDigest))
+            throw new ScreeningRuleException(FullTextScreeningConductErrorCodes.InvalidStageEvidence,
+                "Full-text decisions must identify the exact raw artifact evidence reviewed.");
+
         if (ordinal < 1 || !previousDigest.IsValid || !header.CandidateIds.Contains(candidateId, StringComparer.Ordinal))
             throw new ScreeningRuleException(ScreeningErrorCodes.InvalidConductChain, "Decision chain position or candidate is invalid.");
         if (!ScreeningVerdicts.IsKnown(verdict))
@@ -466,6 +473,14 @@ public sealed class FullTextScreeningConductDecision : IFullTextScreeningConduct
         var sources = (sourceDecisionDigests ?? Array.Empty<ContentDigest>()).Distinct()
             .OrderBy(item => item.ToString(), StringComparer.Ordinal).ToArray();
         ContentDigest? supersedes = supersedesDecisionDigest is null ? null : ContentDigest.Parse(supersedesDecisionDigest);
+        if (kind == ScreeningConductDecisionKind.Correction && supersedes is null ||
+            kind != ScreeningConductDecisionKind.Correction && supersedes is not null)
+            throw new ScreeningRuleException(ScreeningErrorCodes.MissingSourceDecision,
+                "A Full Text correction must supersede exactly one current decision.");
+        if (kind == ScreeningConductDecisionKind.Adjudication && (sources.Length == 0 || string.IsNullOrWhiteSpace(resolvedConflictId)) ||
+            kind != ScreeningConductDecisionKind.Adjudication && (sources.Length != 0 || resolvedConflictId is not null))
+            throw new ScreeningRuleException(ScreeningErrorCodes.MissingSourceDecision,
+                "A Full Text adjudication must identify the exact conflict and source decisions.");
         return new FullTextScreeningConductDecision(header.ConductId, header.PolicyId, header.PolicyDigest, ordinal,
             previousDigest, Guard.NotBlank(requestId, nameof(requestId)), Guard.NotBlank(candidateId, nameof(candidateId)),
             kind, verdict, actor, Guard.NotBlank(rationale, nameof(rationale)), exclusionReasonCode, supersedes,
@@ -591,16 +606,38 @@ public sealed class FullTextScreeningConductJournal
         {
             throw new ScreeningRuleException(ScreeningErrorCodes.InvalidConductChain, "Decision does not extend full-text screening append-only state.");
         }
-        if (decision.ConductId != Header.ConductId)
-            throw new ScreeningRuleException(ScreeningErrorCodes.UnverifiedConductAuthority, "Decision belongs to a different full-text conduct.");
+        if (decision.ConductId != Header.ConductId || decision.PolicyId != Policy.PolicyId || decision.PolicyDigest != Policy.Digest)
+            throw new ScreeningRuleException(ScreeningErrorCodes.UnverifiedConductAuthority, "Decision belongs to stale or different Full Text authority.");
         if (!Policy.Authorizes(decision.Actor))
             throw new ScreeningRuleException(ScreeningErrorCodes.UnauthorizedReviewer, "Decision actor is not assigned by policy.");
         if (decision.Verdict == ScreeningVerdicts.Exclude && !Policy.AllowsReason(decision.ExclusionReasonCode!))
             throw new ScreeningRuleException(ScreeningErrorCodes.InvalidExclusionReason, "Exclusion reason is not allowed by policy.");
         if (_decisions.Any(item => item.RequestId == decision.RequestId))
             throw new ScreeningRuleException(ScreeningErrorCodes.DuplicateDecisionId, "Decision request id was already used.");
-        if (decision.Kind == ScreeningConductDecisionKind.Adjudication && !Policy.AuthorizesAdjudication(decision.Actor))
-            throw new ScreeningRuleException(ScreeningErrorCodes.UnauthorizedReviewer, "Actor is not authorized to adjudicate.");
+        var current = CurrentDecisionDigests();
+        if (decision.Kind == ScreeningConductDecisionKind.Review && _decisions.Any(item =>
+            current.Contains(item.Digest) && item.CandidateId == decision.CandidateId &&
+            item.Kind is ScreeningConductDecisionKind.Review or ScreeningConductDecisionKind.Correction &&
+            item.Actor.ActorId == decision.Actor.ActorId))
+            throw new ScreeningRuleException(ScreeningErrorCodes.DuplicateIndependentReviewer,
+                "One actor cannot satisfy two independent Full Text review slots.");
+        if (decision.Kind == ScreeningConductDecisionKind.Correction &&
+            (decision.SupersedesDecisionDigest is null || !current.Contains(decision.SupersedesDecisionDigest.Value) ||
+             !_decisions.Any(item => item.Digest == decision.SupersedesDecisionDigest.Value &&
+                 item.CandidateId == decision.CandidateId && item.Actor.ActorId == decision.Actor.ActorId &&
+                 item.Kind is ScreeningConductDecisionKind.Review or ScreeningConductDecisionKind.Correction)))
+            throw new ScreeningRuleException(ScreeningErrorCodes.MissingSourceDecision,
+                "A Full Text correction must supersede that actor's current decision for the candidate.");
+        if (decision.Kind == ScreeningConductDecisionKind.Adjudication)
+        {
+            if (!Policy.AuthorizesAdjudication(decision.Actor))
+                throw new ScreeningRuleException(ScreeningErrorCodes.UnauthorizedReviewer, "Actor is not authorized to adjudicate.");
+            var conflict = Projection.Conflicts.SingleOrDefault(item =>
+                item.CandidateId == decision.CandidateId && !item.Resolved && item.ConflictId == decision.ResolvedConflictId);
+            if (conflict is null || !conflict.SourceDecisionDigests.SequenceEqual(decision.SourceDecisionDigests))
+                throw new ScreeningRuleException(ScreeningErrorCodes.AdjudicationSourceMismatch,
+                    "Full Text adjudication must bind the exact unresolved conflict and source decisions.");
+        }
         _decisions.Add(decision);
     }
 
@@ -615,11 +652,13 @@ public sealed class FullTextScreeningConductJournal
             throw new ScreeningRuleException(ScreeningErrorCodes.UnauthorizedReviewer, "Invalidation actor is not assigned by policy.");
         if (_invalidations.Any(item => item.InvalidationId == invalidation.InvalidationId))
             throw new ScreeningRuleException(ScreeningErrorCodes.DuplicateDecisionId, "Invalidation id was already used.");
-        var current = CurrentDecisionDigests();
-        if (invalidation.AffectedDecisionDigests.Any(item => !current.Contains(item)))
-            throw new ScreeningRuleException(ScreeningErrorCodes.MissingSourceDecision, "Invalidation must name exact current decision digests.");
         if (!IsBoundSource(invalidation.Source))
             throw new ScreeningRuleException(FullTextScreeningConductErrorCodes.InvalidStageEvidence, "Invalidation source is not bound to this full-text policy.");
+        var affected = _decisions.Where(item => CurrentDecisionDigests().Contains(item.Digest) && DependsOn(item, invalidation.Source))
+            .Select(item => item.Digest).ToHashSet();
+        if (affected.Count == 0 || !affected.SetEquals(invalidation.AffectedDecisionDigests))
+            throw new ScreeningRuleException(ScreeningErrorCodes.MissingSourceDecision,
+                "Invalidation must name the complete current decision set affected by its exact source.");
         _invalidations.Add(invalidation);
     }
 
@@ -664,26 +703,35 @@ public sealed class FullTextScreeningConductJournal
         var current = _decisions.Where(item => !invalidated.Contains(item.Digest) && !superseded.Contains(item.Digest)).ToArray();
         var outcomes = new Dictionary<string, ScreeningConductOutcome>(StringComparer.Ordinal);
         var conflicts = new List<ScreeningConductConflict>();
-        foreach (var group in current.GroupBy(item => item.CandidateId, StringComparer.Ordinal))
+        foreach (var candidateId in Header.CandidateIds)
         {
-            var adjudication = group.Where(item => item.Kind == ScreeningConductDecisionKind.Adjudication)
-                .OrderByDescending(item => item.Ordinal).FirstOrDefault();
-            var support = adjudication is null ? group.Where(item => item.Kind != ScreeningConductDecisionKind.Adjudication).ToArray() : [adjudication];
-            var verdicts = support.Select(item => item.Verdict).Distinct(StringComparer.Ordinal).ToArray();
-            if (adjudication is null && verdicts.Length > 1)
+            var candidate = current.Where(item => item.CandidateId == candidateId).ToArray();
+            var adjudication = candidate.LastOrDefault(item => item.Kind == ScreeningConductDecisionKind.Adjudication);
+            var reviews = candidate.Where(item => item.Kind != ScreeningConductDecisionKind.Adjudication).ToArray();
+            if (reviews.Select(item => item.Verdict).Distinct(StringComparer.Ordinal).Count() > 1)
             {
-                conflicts.Add(new ScreeningConductConflict($"{Header.ConductId}:conflict:{group.Key}", group.Key,
-                    Array.AsReadOnly(support.Select(item => item.Digest).OrderBy(item => item.ToString(), StringComparer.Ordinal).ToArray()), false));
-                continue;
+                var conflictSources = reviews.Select(item => item.Digest).OrderBy(item => item.ToString(), StringComparer.Ordinal).ToArray();
+                var conflictId = $"fulltext-conflict-{ContentDigest.Sha256Utf8(string.Join("|", conflictSources)).Value[7..23]}";
+                var resolved = adjudication is not null && adjudication.ResolvedConflictId == conflictId &&
+                    conflictSources.SequenceEqual(adjudication.SourceDecisionDigests);
+                conflicts.Add(new ScreeningConductConflict(conflictId, candidateId, Array.AsReadOnly(conflictSources), resolved));
+                if (resolved)
+                {
+                    var support = conflictSources.Append(adjudication!.Digest).OrderBy(item => item.ToString(), StringComparer.Ordinal).ToArray();
+                    outcomes[candidateId] = new ScreeningConductOutcome(candidateId, adjudication.Verdict,
+                        Array.AsReadOnly(support), adjudication.ExclusionReasonCode);
+                }
             }
-            if (support.Length >= Policy.RequiredReviewCount && verdicts.Length == 1 && verdicts[0] != ScreeningVerdicts.NeedsReview)
+            else if (reviews.Length >= Policy.RequiredReviewCount)
             {
-                outcomes[group.Key] = new ScreeningConductOutcome(group.Key, verdicts[0],
-                    Array.AsReadOnly(support.Select(item => item.Digest).OrderBy(item => item.ToString(), StringComparer.Ordinal).ToArray()),
-                    support.Last().ExclusionReasonCode);
+                var latest = reviews[^1];
+                outcomes[candidateId] = new ScreeningConductOutcome(candidateId, latest.Verdict,
+                    Array.AsReadOnly(reviews.Select(item => item.Digest).OrderBy(item => item.ToString(), StringComparer.Ordinal).ToArray()),
+                    latest.ExclusionReasonCode);
             }
         }
-        var ready = outcomes.ContainsKey(Policy.AdmissionCandidateId) && conflicts.Count == 0;
+        var ready = Header.CandidateIds.All(outcomes.ContainsKey) && conflicts.All(item => item.Resolved) &&
+            outcomes.Values.All(item => item.Verdict != ScreeningVerdicts.NeedsReview);
         return new ScreeningConductProjection(CurrentHead(), outcomes, Array.AsReadOnly(conflicts.ToArray()), invalidated, ready);
     }
 
@@ -712,10 +760,31 @@ public sealed class FullTextScreeningConductJournal
             .Select(item => item.Digest).ToHashSet();
     }
 
-    private bool IsBoundSource(ScreeningConductEvidenceRef source) =>
-        source.Digest == Policy.FullTextArtifactDigest ||
-        (Policy.ExtractionAttemptDigest is not null && source.Digest == Policy.ExtractionAttemptDigest.Value) ||
-        source.Digest == Policy.CriteriaDigest || source.Digest == Policy.ProtocolContentDigest;
+    private bool IsBoundSource(ScreeningConductEvidenceRef source) => source.Kind switch
+    {
+        FullTextScreeningConductEvidenceKinds.FullTextArtifact => source.Digest == Policy.FullTextArtifactDigest,
+        FullTextScreeningConductEvidenceKinds.FullTextExtractionAttempt =>
+            Policy.ExtractionAttemptDigest is not null && source.Digest == Policy.ExtractionAttemptDigest.Value,
+        FullTextScreeningConductEvidenceKinds.FullTextAdmission =>
+            source.Id == Policy.AdmissionHandoffId && source.Digest == Policy.AdmissionDigest,
+        FullTextScreeningConductEvidenceKinds.Criteria =>
+            source.Id == Policy.Criteria.CriteriaId && source.Digest == Policy.CriteriaDigest,
+        FullTextScreeningConductEvidenceKinds.ProtocolVersion =>
+            source.Id == Policy.ProtocolVersionId && source.Digest == Policy.ProtocolContentDigest,
+        _ => false
+    };
+
+    private bool DependsOn(FullTextScreeningConductDecision decision, ScreeningConductEvidenceRef source)
+    {
+        if (source.Kind is FullTextScreeningConductEvidenceKinds.FullTextArtifact or
+            FullTextScreeningConductEvidenceKinds.FullTextAdmission or
+            FullTextScreeningConductEvidenceKinds.Criteria or
+            FullTextScreeningConductEvidenceKinds.ProtocolVersion)
+            return IsBoundSource(source);
+        if (source.Kind == FullTextScreeningConductEvidenceKinds.FullTextExtractionAttempt)
+            return decision.ExtractionAttemptDigest == source.Digest || decision.Evidence.Any(item => item == source);
+        return decision.Evidence.Any(item => item == source);
+    }
 
     internal static ScreeningRuleException Rule(string category, string message) => new(category, message);
 }

@@ -184,6 +184,21 @@ public sealed class FullTextAdmissionTests
         Assert.IsTrue(journal.Projection.HandoffReady);
 
         var fullTextHandoff = journal.CreateHandoff("full-handoff", FixedTime);
+        var policyBytes = FullTextScreeningConductCanonicalCodec.Serialize(policy);
+        var reopenedPolicy = FullTextScreeningConductCanonicalCodec.RehydratePolicy(
+            policyBytes, policy.Digest, dedup, protocol, criteria, admission, rawDigest);
+        var headerBytes = FullTextScreeningConductCanonicalCodec.Serialize(header);
+        var reopenedHeader = FullTextScreeningConductCanonicalCodec.RehydrateHeader(headerBytes, header.Digest, reopenedPolicy);
+        var decisionBytes = FullTextScreeningConductCanonicalCodec.Serialize(decision);
+        var reopenedDecision = FullTextScreeningConductCanonicalCodec.RehydrateDecision(decisionBytes, decision.Digest, reopenedHeader);
+        var reopenedJournal = FullTextScreeningConductJournal.RehydrateEntries(reopenedHeader, reopenedPolicy, [reopenedDecision]);
+        var handoffBytes = FullTextScreeningConductCanonicalCodec.Serialize(fullTextHandoff);
+        var reopenedHandoff = FullTextScreeningConductCanonicalCodec.RehydrateHandoff(
+            handoffBytes, fullTextHandoff.Digest, reopenedJournal);
+        Assert.AreEqual(fullTextHandoff.Digest, reopenedHandoff.Digest);
+        var unknownPolicy = Mutate(policyBytes, root => root["content"]!["unknown"] = true);
+        Assert.ThrowsExactly<ScreeningRuleException>(() => FullTextScreeningConductCanonicalCodec.RehydratePolicy(
+            unknownPolicy, ContentDigest.Sha256(unknownPolicy), dedup, protocol, criteria, admission, rawDigest));
         var rawBytes = System.Text.Encoding.UTF8.GetBytes("raw-full-text");
         var acquisition = new FullTextAcquisitionRecord(
             "acquisition-full", admission.Input, FullTextAcquisitionKinds.ManualAcquisition, "local", "operator-supplied",
@@ -209,21 +224,30 @@ public sealed class FullTextAdmissionTests
                     new ResearchWorkspaceFullTextRecord("conduct-header", CanonicalJsonSerializer.SerializeToUtf8Bytes(header.ToCanonicalJson())),
                     new ResearchWorkspaceFullTextRecord("conduct-entry-000001", CanonicalJsonSerializer.SerializeToUtf8Bytes(decision.ToCanonicalJson())),
                     new ResearchWorkspaceFullTextRecord("conduct-handoff", CanonicalJsonSerializer.SerializeToUtf8Bytes(fullTextHandoff.ToCanonicalJson()))
-                ]);
+                ], conductPolicy: policy);
             var reopened = ResearchWorkspaceStore.ReadProject(location.ProjectFilePath);
-            var verified = ResearchWorkspaceFullTextGenerationVerifier.VerifyCurrent(location, reopened, sourceJournal, sourceHandoff, 4096);
+            var verified = ResearchWorkspaceFullTextGenerationVerifier.VerifyCurrent(location, reopened, sourceJournal, sourceHandoff, 4096, policy);
             Assert.AreEqual(commit.Manifest.GenerationId, verified.Manifest.GenerationId);
             Assert.AreEqual(admission.Digest, verified.Admission.Digest);
+            Assert.AreEqual(decision.Digest, verified.ConductJournal!.Decisions.Single().Digest);
+            Assert.AreEqual(fullTextHandoff.Digest, verified.ConductHandoff!.Digest);
             var manifestPath = ResearchWorkspacePaths.InProject(root, reopened.FullTextManifestPath!);
             var extraPath = Path.Combine(Path.GetDirectoryName(manifestPath)!, "unmanifested.json");
             File.WriteAllText(extraPath, "{}");
             Assert.ThrowsExactly<InvalidOperationException>(() =>
-                ResearchWorkspaceFullTextGenerationVerifier.VerifyCurrent(location, reopened, sourceJournal, sourceHandoff, 4096));
+                ResearchWorkspaceFullTextGenerationVerifier.VerifyCurrent(location, reopened, sourceJournal, sourceHandoff, 4096, policy));
             File.Delete(extraPath);
+            var conductPath = ResearchWorkspacePaths.InProject(root,
+                commit.Manifest.Artifacts.Single(item => item.Name == "conduct-entry-000001").RelativePath);
+            var conductBytes = File.ReadAllBytes(conductPath);
+            File.WriteAllBytes(conductPath, conductBytes.Concat([(byte)'\n']).ToArray());
+            Assert.ThrowsExactly<InvalidOperationException>(() =>
+                ResearchWorkspaceFullTextGenerationVerifier.VerifyCurrent(location, reopened, sourceJournal, sourceHandoff, 4096, policy));
+            File.WriteAllBytes(conductPath, conductBytes);
             var rawPath = commit.Manifest.Artifacts.Single(item => item.Name == "raw-artifact").RelativePath;
             File.WriteAllText(ResearchWorkspacePaths.InProject(root, rawPath), "tampered");
             Assert.ThrowsExactly<InvalidOperationException>(() =>
-                ResearchWorkspaceFullTextGenerationVerifier.VerifyCurrent(location, reopened, sourceJournal, sourceHandoff, 4096));
+                ResearchWorkspaceFullTextGenerationVerifier.VerifyCurrent(location, reopened, sourceJournal, sourceHandoff, 4096, policy));
         }
         finally
         {
@@ -277,8 +301,58 @@ public sealed class FullTextAdmissionTests
             [decision.Digest], new ScreeningConductActor("reviewer-1", ScreeningConductActorKinds.Human, "reviewer"),
             "Raw artifact authority changed.", FixedTime);
         journal.Append(invalidation);
+        var invalidationBytes = FullTextScreeningConductCanonicalCodec.Serialize(invalidation);
+        var reopenedInvalidation = FullTextScreeningConductCanonicalCodec.RehydrateInvalidation(
+            invalidationBytes, invalidation.Digest, header);
+        Assert.AreEqual(invalidation.Digest, reopenedInvalidation.Digest);
         Assert.IsFalse(journal.Projection.HandoffReady);
         Assert.ThrowsExactly<ScreeningRuleException>(() => journal.CreateHandoff("blocked", FixedTime));
+
+        var dualPolicy = FullTextScreeningConductPolicy.Create(
+            "full-policy-dual", admission.CandidateSetId, dedup, protocol, criteria, admission, 2,
+            [new ScreeningConductRoleAssignment("reviewer-1", "reviewer"), new ScreeningConductRoleAssignment("reviewer-2", "reviewer")],
+            ["reviewer"], [new ScreeningExclusionReason("wrong-population-full", ScreeningStages.FullText)],
+            new ScreeningConductActor("reviewer-1", ScreeningConductActorKinds.Human, "reviewer"), FixedTime, rawDigest);
+        var dualHeader = FullTextScreeningConductHeader.Create(
+            "full-conduct-dual", dualPolicy, new ScreeningConductActor("reviewer-1", ScreeningConductActorKinds.Human, "reviewer"), FixedTime);
+        var first = FullTextScreeningConductDecision.Create(
+            dualHeader, 1, dualHeader.Digest, "dual-first", "candidate-1", ScreeningConductDecisionKind.Review, ScreeningVerdicts.Include,
+            new ScreeningConductActor("reviewer-1", ScreeningConductActorKinds.Human, "reviewer"), "Include", FixedTime,
+            evidence: [new ScreeningConductEvidenceRef(FullTextScreeningConductEvidenceKinds.FullTextArtifact, "artifact-1", rawDigest)]);
+        var dualJournal = FullTextScreeningConductJournal.Create(dualPolicy, dualHeader);
+        dualJournal.Append(first);
+        var repeatedActor = FullTextScreeningConductDecision.Create(
+            dualHeader, 2, first.Digest, "dual-repeat", "candidate-1", ScreeningConductDecisionKind.Review, ScreeningVerdicts.Include,
+            new ScreeningConductActor("reviewer-1", ScreeningConductActorKinds.Human, "reviewer"), "Repeated", FixedTime,
+            evidence: [new ScreeningConductEvidenceRef(FullTextScreeningConductEvidenceKinds.FullTextArtifact, "artifact-1", rawDigest)]);
+        Assert.ThrowsExactly<ScreeningRuleException>(() => dualJournal.Append(repeatedActor));
+        var second = FullTextScreeningConductDecision.Create(
+            dualHeader, 2, first.Digest, "dual-second", "candidate-1", ScreeningConductDecisionKind.Review, ScreeningVerdicts.Exclude,
+            new ScreeningConductActor("reviewer-2", ScreeningConductActorKinds.Human, "reviewer"), "Exclude", FixedTime,
+            exclusionReasonCode: "wrong-population-full",
+            evidence: [new ScreeningConductEvidenceRef(FullTextScreeningConductEvidenceKinds.FullTextArtifact, "artifact-1", rawDigest)]);
+        dualJournal.Append(second);
+        var conflict = dualJournal.Projection.Conflicts.Single();
+        var adjudication = FullTextScreeningConductDecision.Create(
+            dualHeader, 3, second.Digest, "dual-adjudication", "candidate-1", ScreeningConductDecisionKind.Adjudication, ScreeningVerdicts.Include,
+            new ScreeningConductActor("reviewer-1", ScreeningConductActorKinds.Human, "reviewer"), "Resolve conflict", FixedTime,
+            resolvedConflictId: conflict.ConflictId, sourceDecisionDigests: conflict.SourceDecisionDigests,
+            evidence: [new ScreeningConductEvidenceRef(FullTextScreeningConductEvidenceKinds.FullTextArtifact, "artifact-1", rawDigest)]);
+        dualJournal.Append(adjudication);
+        Assert.IsTrue(dualJournal.Projection.HandoffReady);
+
+        var sameVerdictJournal = FullTextScreeningConductJournal.Create(dualPolicy, dualHeader);
+        sameVerdictJournal.Append(first);
+        var secondInclude = FullTextScreeningConductDecision.Create(
+            dualHeader, 2, first.Digest, "dual-second-include", "candidate-1", ScreeningConductDecisionKind.Review, ScreeningVerdicts.Include,
+            new ScreeningConductActor("reviewer-2", ScreeningConductActorKinds.Human, "reviewer"), "Include", FixedTime,
+            evidence: [new ScreeningConductEvidenceRef(FullTextScreeningConductEvidenceKinds.FullTextArtifact, "artifact-1", rawDigest)]);
+        sameVerdictJournal.Append(secondInclude);
+        var incomplete = FullTextScreeningConductInvalidation.Create(
+            dualHeader, 3, secondInclude.Digest, "incomplete", new ScreeningConductEvidenceRef(
+                FullTextScreeningConductEvidenceKinds.FullTextArtifact, "artifact-1", rawDigest), [first.Digest],
+            new ScreeningConductActor("reviewer-1", ScreeningConductActorKinds.Human, "reviewer"), "Incomplete", FixedTime);
+        Assert.ThrowsExactly<ScreeningRuleException>(() => sameVerdictJournal.Append(incomplete));
     }
 
     private static (ScreeningConductPolicy Policy, ScreeningConductHeader Header) BuildConductAuthority(string suffix, int reviewCount)

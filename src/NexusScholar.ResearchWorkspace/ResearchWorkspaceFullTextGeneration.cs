@@ -38,7 +38,9 @@ public sealed record VerifiedResearchWorkspaceFullTextGeneration(
     VerifiedFullTextAdmission Admission,
     VerifiedFullTextChain Authority,
     FullTextExtractionAttempt? ExtractionAttempt,
-    IReadOnlyDictionary<string, byte[]> AdditionalRecords);
+    IReadOnlyDictionary<string, byte[]> AdditionalRecords,
+    FullTextScreeningConductJournal? ConductJournal,
+    FullTextScreeningConductHandoff? ConductHandoff);
 
 public sealed record ResearchWorkspaceFullTextCommit(
     ResearchWorkspaceProject Project,
@@ -117,7 +119,8 @@ public static class ResearchWorkspaceFullTextGenerationVerifier
 {
     public static VerifiedResearchWorkspaceFullTextGeneration VerifyCurrent(
         ResearchWorkspaceLocation location, ResearchWorkspaceProject project, ScreeningConductJournal journal,
-        ScreeningConductHandoff handoff, long maximumBytes)
+        ScreeningConductHandoff handoff, long maximumBytes,
+        FullTextScreeningConductPolicy? expectedConductPolicy = null)
     {
         if (project.CurrentFullTextGenerationId is null || project.FullTextManifestPath is null || project.FullTextManifestSha256 is null)
             throw new InvalidOperationException("The workspace has no current Full Text generation.");
@@ -146,8 +149,51 @@ public static class ResearchWorkspaceFullTextGenerationVerifier
         if (manifest.ExtractionAttemptDigest is not null)
             extraction = FullTextExtractionAttemptCodec.Rehydrate(bytes["extraction-attempt"], ContentDigest.Parse(manifest.ExtractionAttemptDigest), authority);
         var reserved = new HashSet<string>(["admission", "input", "acquisition", "artifact-evidence", "raw-artifact", "extraction-attempt"], StringComparer.Ordinal);
+        var additional = bytes.Where(pair => !reserved.Contains(pair.Key)).ToDictionary(pair => pair.Key, pair => pair.Value, StringComparer.Ordinal);
+        FullTextScreeningConductJournal? conductJournal = null;
+        FullTextScreeningConductHandoff? conductHandoff = null;
+        if (additional.Count > 0)
+        {
+            if (expectedConductPolicy is null || !additional.ContainsKey("conduct-policy") || !additional.ContainsKey("conduct-header"))
+                throw new InvalidOperationException("Full Text conduct records require the exact verified conduct policy and header.");
+            var policyArtifact = manifest.Artifacts.Single(item => item.Name == "conduct-policy");
+            var policy = FullTextScreeningConductCanonicalCodec.RehydratePolicy(
+                additional["conduct-policy"], ContentDigest.Parse(policyArtifact.Sha256), expectedConductPolicy);
+            var headerArtifact = manifest.Artifacts.Single(item => item.Name == "conduct-header");
+            var header = FullTextScreeningConductCanonicalCodec.RehydrateHeader(
+                additional["conduct-header"], ContentDigest.Parse(headerArtifact.Sha256), policy);
+            var entries = new List<IFullTextScreeningConductEntry>();
+            var entryArtifacts = manifest.Artifacts.Where(item => item.Name.StartsWith("conduct-entry-", StringComparison.Ordinal))
+                .OrderBy(item => item.Name, StringComparer.Ordinal).ToArray();
+            for (var index = 0; index < entryArtifacts.Length; index++)
+            {
+                if (entryArtifacts[index].Name != $"conduct-entry-{index + 1:D6}")
+                    throw new InvalidOperationException("Full Text conduct entry names must be contiguous and ordered.");
+                var payload = additional[entryArtifacts[index].Name];
+                using var entryDocument = JsonDocument.Parse(payload);
+                var schema = entryDocument.RootElement.GetProperty("schema").GetString();
+                var digest = ContentDigest.Parse(entryArtifacts[index].Sha256);
+                entries.Add(schema switch
+                {
+                    FullTextScreeningConductSchema.DecisionSchemaId => FullTextScreeningConductCanonicalCodec.RehydrateDecision(payload, digest, header),
+                    FullTextScreeningConductSchema.InvalidationSchemaId => FullTextScreeningConductCanonicalCodec.RehydrateInvalidation(payload, digest, header),
+                    _ => throw new InvalidOperationException("Unknown Full Text conduct entry schema.")
+                });
+            }
+            conductJournal = FullTextScreeningConductJournal.RehydrateEntries(header, policy, entries);
+            if (additional.TryGetValue("conduct-handoff", out var conductHandoffBytes))
+            {
+                var handoffArtifact = manifest.Artifacts.Single(item => item.Name == "conduct-handoff");
+                conductHandoff = FullTextScreeningConductCanonicalCodec.RehydrateHandoff(
+                    conductHandoffBytes, ContentDigest.Parse(handoffArtifact.Sha256), conductJournal);
+            }
+            var allowedConduct = entryArtifacts.Select(item => item.Name).Append("conduct-policy").Append("conduct-header")
+                .Concat(conductHandoff is null ? [] : ["conduct-handoff"]).ToHashSet(StringComparer.Ordinal);
+            if (additional.Keys.Any(key => !allowedConduct.Contains(key)))
+                throw new InvalidOperationException("Full Text generation contains an unknown conduct record.");
+        }
         return new VerifiedResearchWorkspaceFullTextGeneration(manifest, admission, authority, extraction,
-            bytes.Where(pair => !reserved.Contains(pair.Key)).ToDictionary(pair => pair.Key, pair => pair.Value, StringComparer.Ordinal));
+            additional, conductJournal, conductHandoff);
     }
 
     private static string Resolve(ResearchWorkspaceLocation location, string relative)
@@ -165,6 +211,7 @@ public static class ResearchWorkspaceFullTextTransaction
         ScreeningConductHandoff handoff, VerifiedFullTextAdmission admission, VerifiedFullTextChain authority,
         byte[] rawBytes, long maximumBytes, FullTextExtractionAttempt? extractionAttempt = null,
         IReadOnlyList<ResearchWorkspaceFullTextRecord>? additionalRecords = null,
+        FullTextScreeningConductPolicy? conductPolicy = null,
         Action<ResearchWorkspaceAuthorityFaultPoint>? faultInjector = null)
     {
         ArgumentNullException.ThrowIfNull(rawBytes);
@@ -199,7 +246,7 @@ public static class ResearchWorkspaceFullTextTransaction
         var generationId = $"fulltext-{stateDigest.Value[7..23]}";
         if (expectedProject.CurrentFullTextGenerationId == generationId)
         {
-            var current = ResearchWorkspaceFullTextGenerationVerifier.VerifyCurrent(location, expectedProject, journal, handoff, maximumBytes);
+            var current = ResearchWorkspaceFullTextGenerationVerifier.VerifyCurrent(location, expectedProject, journal, handoff, maximumBytes, conductPolicy);
             return new ResearchWorkspaceFullTextCommit(expectedProject, current.Manifest, true);
         }
         var relativeRoot = ResearchWorkspacePaths.FullTextGenerationRoot(admission.CandidateId, generationId);
@@ -245,7 +292,7 @@ public static class ResearchWorkspaceFullTextTransaction
                 }
                 throw;
             }
-            _ = ResearchWorkspaceFullTextGenerationVerifier.VerifyCurrent(location, committed, journal, handoff, maximumBytes);
+            _ = ResearchWorkspaceFullTextGenerationVerifier.VerifyCurrent(location, committed, journal, handoff, maximumBytes, conductPolicy);
             return new ResearchWorkspaceFullTextCommit(committed, manifest, false);
         }
         finally
@@ -284,7 +331,7 @@ public sealed class ResearchWorkspaceFullTextScreeningCommitPort(
                 $"fulltext-handoff-{journal.Projection.HeadDigest.Value[7..19]}", EntryTimestamp(entries[^1])).ToCanonicalJson()));
         var commit = ResearchWorkspaceFullTextTransaction.Commit(
             location, expectedProject, admissionJournal, admissionHandoff, admission, authority,
-            rawBytes, maximumBytes, extractionAttempt, records);
+            rawBytes, maximumBytes, extractionAttempt, records, policy);
         return new FullTextScreeningConductCommitResult(header.ConductId, journal.Projection.HeadDigest, entries.Count, commit.AlreadyApplied);
     }
 
