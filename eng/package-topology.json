@@ -11,6 +11,7 @@
     "NexusScholar.Kernel",
     "NexusScholar.Protocol",
     "NexusScholar.Provenance",
+    "NexusScholar.Reporting",
     "NexusScholar.Screening",
     "NexusScholar.Screening.CorpusSnapshots",
     "NexusScholar.Screening.FullText",
@@ -24,6 +25,7 @@
   "smokeRoots": [
     "NexusScholar.Bundles",
     "NexusScholar.Extensibility",
+    "NexusScholar.Reporting",
     "NexusScholar.Screening.CorpusSnapshots",
     "NexusScholar.Screening.FullText",
     "NexusScholar.Screening.WorkflowExecution",

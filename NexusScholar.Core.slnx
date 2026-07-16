@@ -16,6 +16,7 @@
     <Project Path="src/NexusScholar.Screening.WorkflowExecution/NexusScholar.Screening.WorkflowExecution.csproj" />
     <Project Path="src/NexusScholar.Screening.FullText/NexusScholar.Screening.FullText.csproj" />
     <Project Path="src/NexusScholar.FullText/NexusScholar.FullText.csproj" />
+    <Project Path="src/NexusScholar.Reporting/NexusScholar.Reporting.csproj" />
     <Project Path="src/NexusScholar.Bundles/NexusScholar.Bundles.csproj" />
     <Project Path="src/NexusScholar.Extensibility/NexusScholar.Extensibility.csproj" />
     <Project Path="src/NexusScholar.AI/NexusScholar.AI.csproj" />

@@ -127,3 +127,34 @@ Status: complete locally; independent scientific and test reviews accepted.
   the fixture now contains a two-member duplicate group, removal of only the
   non-representative member fails, root/nested unknown fields are isolated, and
   source-symbol architecture coverage protects the bridge boundary.
+
+### FE-06.1: Deterministic Reporting Projection
+
+Status: complete locally; final phase-wide review remains pending.
+
+- packable `NexusScholar.Reporting` consumes verified Protocol, Workflow,
+  Deduplication, corpus snapshot, snapshot-bound Screening, Full Text, and
+  provenance authorities without persistence, provider, UI, or model access;
+- `nexus.reporting.review-slice-binding / 1.0.0` records the exact authority and
+  workspace-generation cut, and `nexus.reporting.review-flow-report / 1.0.0`
+  records conserved counts, exclusion reasons, audit counts, disclosures, and
+  explicit non-claims;
+- projection counts only current conduct replay outcomes, requires one terminal
+  Full Text case per title/abstract include, exposes missing cases as gaps, and
+  rejects duplicate, extra, stale, mismatched, or non-terminal authorities;
+- finalization enforces all six flow equations and exact reason totals;
+  canonical JSON and Markdown are deterministic, and Markdown cannot introduce
+  content outside structured report fields;
+- focused tests cover the two-member duplicate group, complete conservation,
+  incomplete Full Text coverage, duplicate cases, deterministic replay, and
+  altered canonical bytes. Package topology now contains 19 libraries;
+- independent scientific and test reviews identified mutable presentation
+  state, missing explicit non-claims, opaque supplemental references, optional
+  extraction binding, and the old PHP Dissemination wording. The implementation
+  now snapshots presentation fields, requires non-claims, exactly matches
+  Workflow supplemental bindings, binds extraction attempts structurally,
+  includes structured report bindings, and distinguishes local review-flow
+  Reporting from unclaimed PHP export parity;
+- final local verification: Release build succeeded with zero warnings/errors;
+  751 tests passed; format verification passed; package verification packed,
+  restored, and smoke-loaded all 19 approved assemblies.

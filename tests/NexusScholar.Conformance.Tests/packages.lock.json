@@ -220,6 +220,21 @@
           "NexusScholar.Kernel": "[0.1.0-alpha.2, )"
         }
       },
+      "nexusscholar.reporting": {
+        "type": "Project",
+        "dependencies": {
+          "NexusScholar.CorpusSnapshots": "[0.1.0-alpha.2, )",
+          "NexusScholar.Deduplication": "[0.1.0-alpha.2, )",
+          "NexusScholar.FullText": "[0.1.0-alpha.2, )",
+          "NexusScholar.Kernel": "[0.1.0-alpha.2, )",
+          "NexusScholar.Protocol": "[0.1.0-alpha.2, )",
+          "NexusScholar.Provenance": "[0.1.0-alpha.2, )",
+          "NexusScholar.Screening": "[0.1.0-alpha.2, )",
+          "NexusScholar.Screening.CorpusSnapshots": "[0.1.0-alpha.2, )",
+          "NexusScholar.Screening.FullText": "[0.1.0-alpha.2, )",
+          "NexusScholar.Workflow": "[0.1.0-alpha.2, )"
+        }
+      },
       "nexusscholar.researchworkspace": {
         "type": "Project",
         "dependencies": {

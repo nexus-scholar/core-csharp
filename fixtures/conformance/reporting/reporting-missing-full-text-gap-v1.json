@@ -1,0 +1,74 @@
+{
+  "fixtureId": "reporting-missing-full-text-gap-v1",
+  "sourceKind": "local-fe06-reporting-contract",
+  "sourceCommit": "7818640",
+  "generatorCommand": "C:\\Users\\mouadh\\.dotnet\\dotnet.exe test tests/NexusScholar.Conformance.Tests/NexusScholar.Conformance.Tests.csproj -c Release --filter FullyQualifiedName~ReportingFixtureTests",
+  "generatorVersion": "fe06-reporting-local-v1",
+  "sourceRefs": [
+    "docs/adr/0033-reporting-audit-bundle-and-rapid-review-profile.md",
+    "docs/gates/FE-06-REPORTING-AUDIT-BUNDLE-RAPID-REVIEW.md"
+  ],
+  "comparisonRules": [
+    "replay-reporting-projection-through-csharp-authorities",
+    "no-php-compatibility-claim",
+    "no-prisma-certification-claim",
+    "no-blueprint-conformance-claim"
+  ],
+  "nonClaims": [
+    "no-php-compatibility-claim",
+    "no-prisma-certification-claim"
+  ],
+  "input": {
+    "includeFullText": false,
+    "disclosures": [
+      "Local-only review."
+    ],
+    "nonClaims": [
+      "No PRISMA certification claim."
+    ]
+  },
+  "expected": {
+    "finalizable": false,
+    "finalizationErrorCategory": "incomplete-reporting-slice",
+    "counts": {
+      "identified": 3,
+      "duplicatesConsolidated": 1,
+      "postDedup": 2,
+      "titleAbstractIncluded": 1,
+      "titleAbstractExcluded": 1,
+      "fullTextIncluded": 0,
+      "fullTextExcluded": 0,
+      "included": 0
+    },
+    "titleAbstractReasons": [
+      {
+        "code": "wrong-population",
+        "count": 1
+      }
+    ],
+    "fullTextReasons": [],
+    "gaps": [
+      {
+        "category": "missing-full-text-case",
+        "candidateId": "candidate-a",
+        "detail": "No terminal Full Text case is bound to this title/abstract include."
+      }
+    ],
+    "audit": {
+      "conflicts": 0,
+      "adjudications": 0,
+      "corrections": 0,
+      "invalidations": 0
+    },
+    "schemas": {
+      "slice": {
+        "schemaId": "nexus.reporting.review-slice-binding",
+        "schemaVersion": "1.0.0"
+      },
+      "report": {
+        "schemaId": "nexus.reporting.review-flow-report",
+        "schemaVersion": "1.0.0"
+      }
+    }
+  }
+}

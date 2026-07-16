@@ -273,7 +273,6 @@ public sealed class PhpCompatibilityEvidenceClosureTests
 
         var repositoryRoot = RepositoryRoot();
         Assert.IsFalse(Directory.Exists(Path.Combine(repositoryRoot, "src", "NexusScholar.Network")));
-        Assert.IsFalse(Directory.Exists(Path.Combine(repositoryRoot, "src", "NexusScholar.Reporting")));
         var productionSource = string.Join(
             Environment.NewLine,
             Directory.EnumerateFiles(Path.Combine(repositoryRoot, "src"), "*.cs", SearchOption.AllDirectories)
@@ -282,7 +281,6 @@ public sealed class PhpCompatibilityEvidenceClosureTests
         foreach (var forbiddenDeclaration in new[]
                  {
                      "namespace NexusScholar.Network",
-                     "namespace NexusScholar.Reporting",
                      "namespace NexusScholar.CitationNetwork",
                      "namespace NexusScholar.Dissemination",
                      "class CitationGraph",
