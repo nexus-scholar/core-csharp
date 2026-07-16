@@ -4,6 +4,7 @@
   "packages": [
     "NexusScholar.Artifacts",
     "NexusScholar.Bundles",
+    "NexusScholar.CorpusSnapshots",
     "NexusScholar.Deduplication",
     "NexusScholar.Extensibility",
     "NexusScholar.FullText",
@@ -11,6 +12,7 @@
     "NexusScholar.Protocol",
     "NexusScholar.Provenance",
     "NexusScholar.Screening",
+    "NexusScholar.Screening.CorpusSnapshots",
     "NexusScholar.Screening.FullText",
     "NexusScholar.Screening.WorkflowExecution",
     "NexusScholar.Search",
@@ -22,6 +24,7 @@
   "smokeRoots": [
     "NexusScholar.Bundles",
     "NexusScholar.Extensibility",
+    "NexusScholar.Screening.CorpusSnapshots",
     "NexusScholar.Screening.FullText",
     "NexusScholar.Screening.WorkflowExecution",
     "NexusScholar.Search",

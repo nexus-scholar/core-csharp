@@ -36,7 +36,7 @@ remain independent.
 Create packable `NexusScholar.Reporting` as a persistence-independent outward
 projection package. It may depend on Kernel, Protocol, Workflow,
 Deduplication, CorpusSnapshots, Screening, Screening.CorpusSnapshots, FullText,
-and Screening.FullText. Those packages never depend on Reporting.
+Screening.FullText, and Provenance. Those packages never depend on Reporting.
 
 Protocol owns verified deviation authority. Workflow owns the Rapid Review
 profile companion. Bundles owns Bundle v2. AppServices coordinates verified

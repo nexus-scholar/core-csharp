@@ -445,6 +445,11 @@ define authority through an editable template.
 
 ### Work Packages And Owners
 
+ADR 0033 and `docs/gates/FE-06-REPORTING-AUDIT-BUNDLE-RAPID-REVIEW.md`
+supersede the original numbering below. Execution now begins with FE-06.0
+snapshot-to-Screening binding and follows the dependency order in that gate;
+the list below is retained as historical planning context.
+
 - FE-06.1 reporting contract ADR: new `NexusScholar.Reporting` domain owner.
 - FE-06.2 bundle extension and verification: `NexusScholar.Bundles` owner.
 - FE-06.3 deterministic count projection: `NexusScholar.Reporting` owner.

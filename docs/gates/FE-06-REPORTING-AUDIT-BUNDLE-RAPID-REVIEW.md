@@ -1,6 +1,6 @@
 # FE-06: Reporting, Audit Bundle, And Rapid Review Profile
 
-Status: paused under accepted ADR 0033. Resume from
+Status: active under accepted ADR 0033. Work resumed from
 `docs/handoffs/2026-07-16-fe-06-pause-checkpoint.md`.
 
 ## Goal
@@ -99,3 +99,31 @@ ResearchWorkspace, CLI, architecture, conformance, and package-policy checks.
 - profile flexibility cannot weaken protected invariants;
 - independent scientific and test reviews report no remaining blocking defects;
 - all local and hosted validation passes and the branch merges.
+
+## Progress Evidence
+
+### FE-06.0: Snapshot-To-Screening Authority
+
+Status: complete locally; independent scientific and test reviews accepted.
+
+- `NexusScholar.CorpusSnapshots` is packable and the new packable
+  `NexusScholar.Screening.CorpusSnapshots` bridge depends only on its authority
+  inputs.
+- `nexus.screening.corpus-binding / 1.0.0` binds the verified Deduplication
+  result, snapshot record, decision set, groups, representatives, members, and
+  unresolved candidates through strict canonical bytes.
+- snapshot membership must cover every source candidate exactly once;
+  unresolved candidates become explicit Screening units.
+- only the bridge can call the internal verified-candidate-set conduct factory;
+  downstream code must require `VerifiedSnapshotBoundScreeningPolicy` and a
+  legacy raw-candidate policy fails verification.
+- deterministic local fixtures cover valid replay, stale source, altered
+  representative, duplicate/missing unit, wrong decision-set/snapshot digest,
+  and noncanonical order. They make no PHP or blueprint compatibility claim.
+- local verification: Release build succeeded with zero warnings/errors; 741
+  tests passed; format verification passed; package verification reproduced and
+  smoke-loaded all 18 approved packages.
+- the test review's grouped-conservation and strict-codec gaps were corrected:
+  the fixture now contains a two-member duplicate group, removal of only the
+  non-representative member fails, root/nested unknown fields are isolated, and
+  source-symbol architecture coverage protects the bridge boundary.

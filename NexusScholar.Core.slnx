@@ -12,6 +12,7 @@
     <Project Path="src/NexusScholar.Deduplication/NexusScholar.Deduplication.csproj" />
     <Project Path="src/NexusScholar.CorpusSnapshots/NexusScholar.CorpusSnapshots.csproj" />
     <Project Path="src/NexusScholar.Screening/NexusScholar.Screening.csproj" />
+    <Project Path="src/NexusScholar.Screening.CorpusSnapshots/NexusScholar.Screening.CorpusSnapshots.csproj" />
     <Project Path="src/NexusScholar.Screening.WorkflowExecution/NexusScholar.Screening.WorkflowExecution.csproj" />
     <Project Path="src/NexusScholar.Screening.FullText/NexusScholar.Screening.FullText.csproj" />
     <Project Path="src/NexusScholar.FullText/NexusScholar.FullText.csproj" />

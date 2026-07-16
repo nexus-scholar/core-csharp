@@ -22,6 +22,7 @@
     <ProjectReference Include="../../src/NexusScholar.Deduplication/NexusScholar.Deduplication.csproj" />
     <ProjectReference Include="../../src/NexusScholar.CorpusSnapshots/NexusScholar.CorpusSnapshots.csproj" />
     <ProjectReference Include="../../src/NexusScholar.Screening/NexusScholar.Screening.csproj" />
+    <ProjectReference Include="../../src/NexusScholar.Screening.CorpusSnapshots/NexusScholar.Screening.CorpusSnapshots.csproj" />
     <ProjectReference Include="../../src/NexusScholar.Screening.WorkflowExecution/NexusScholar.Screening.WorkflowExecution.csproj" />
     <ProjectReference Include="../../src/NexusScholar.Screening.FullText/NexusScholar.Screening.FullText.csproj" />
     <ProjectReference Include="../../src/NexusScholar.FullText/NexusScholar.FullText.csproj" />

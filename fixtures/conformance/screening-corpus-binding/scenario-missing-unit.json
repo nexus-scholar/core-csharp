@@ -1,0 +1,1 @@
+{"expected_category":"non-canonical-screening-corpus-binding","fixture_id":"screening-corpus-binding-missing-unit","non_claims":["no-php-compatibility-claim","no-blueprint-compatibility-claim"],"scenario":"missing-unit","scope":"local-csharp-contract"}

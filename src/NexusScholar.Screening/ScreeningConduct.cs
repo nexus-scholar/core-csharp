@@ -118,6 +118,27 @@ public sealed class ScreeningConductPolicy
         DateTimeOffset approvedAt)
     {
         ArgumentNullException.ThrowIfNull(deduplication);
+        var candidateSet = ScreeningCandidateSet.CreateFromDedupResult(
+            Guard.NotBlank(candidateSetId, nameof(candidateSetId)), deduplication.Result, true,
+            ScreeningSourceKinds.DeduplicationResult, [deduplication.Result.ResultId], null, deduplication.Result.NonClaims);
+        return CreateFromVerifiedCandidateSet(
+            policyId, candidateSet, protocol, criteria, requiredReviewCount, assignments,
+            adjudicatorRoles, exclusionReasons, approvedBy, approvedAt);
+    }
+
+    internal static ScreeningConductPolicy CreateFromVerifiedCandidateSet(
+        string policyId,
+        ScreeningCandidateSet candidateSet,
+        VerifiedProtocolVersion protocol,
+        ScreeningCriteria criteria,
+        int requiredReviewCount,
+        IEnumerable<ScreeningConductRoleAssignment> assignments,
+        IEnumerable<string>? adjudicatorRoles,
+        IEnumerable<ScreeningExclusionReason>? exclusionReasons,
+        ScreeningConductActor approvedBy,
+        DateTimeOffset approvedAt)
+    {
+        ArgumentNullException.ThrowIfNull(candidateSet);
         ArgumentNullException.ThrowIfNull(protocol);
         ArgumentNullException.ThrowIfNull(criteria);
         ArgumentNullException.ThrowIfNull(assignments);
@@ -148,9 +169,6 @@ public sealed class ScreeningConductPolicy
             reasons.Any(item => !string.Equals(item.Stage, ScreeningStages.TitleAbstract, StringComparison.Ordinal)))
             throw Rule(ScreeningErrorCodes.InvalidExclusionReason, "Exclusion reason codes must be unique and title/abstract scoped.");
 
-        var candidateSet = ScreeningCandidateSet.CreateFromDedupResult(
-            Guard.NotBlank(candidateSetId, nameof(candidateSetId)), deduplication.Result, true,
-            ScreeningSourceKinds.DeduplicationResult, [deduplication.Result.ResultId], null, deduplication.Result.NonClaims);
         return new ScreeningConductPolicy(
             Guard.NotBlank(policyId, nameof(policyId)), candidateSet, criteria, protocol, requiredReviewCount,
             Array.AsReadOnly(normalizedAssignments), Array.AsReadOnly(roles), Array.AsReadOnly(reasons), approvedBy, approvedAt);

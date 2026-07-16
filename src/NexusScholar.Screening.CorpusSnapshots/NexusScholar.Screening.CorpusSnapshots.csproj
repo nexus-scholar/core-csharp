@@ -4,6 +4,9 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../NexusScholar.Kernel/NexusScholar.Kernel.csproj" />
+    <ProjectReference Include="../NexusScholar.Protocol/NexusScholar.Protocol.csproj" />
     <ProjectReference Include="../NexusScholar.Deduplication/NexusScholar.Deduplication.csproj" />
+    <ProjectReference Include="../NexusScholar.CorpusSnapshots/NexusScholar.CorpusSnapshots.csproj" />
+    <ProjectReference Include="../NexusScholar.Screening/NexusScholar.Screening.csproj" />
   </ItemGroup>
 </Project>
