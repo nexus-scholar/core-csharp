@@ -1,7 +1,7 @@
 {
   "fixtureId": "reporting-missing-full-text-gap-v1",
   "sourceKind": "local-fe06-reporting-contract",
-  "sourceCommit": "7818640",
+  "sourceCommit": "4ab087a",
   "generatorCommand": "C:\\Users\\mouadh\\.dotnet\\dotnet.exe test tests/NexusScholar.Conformance.Tests/NexusScholar.Conformance.Tests.csproj -c Release --filter FullyQualifiedName~ReportingFixtureTests",
   "generatorVersion": "fe06-reporting-local-v1",
   "sourceRefs": [

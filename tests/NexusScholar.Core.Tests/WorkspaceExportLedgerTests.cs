@@ -17,6 +17,8 @@ public sealed class WorkspaceExportLedgerTests
     {
         using var workspace = CreateWorkspace();
         var request = BuildRequest("export-1");
+        request.ReportBytes[0] ^= 0xff;
+        request.ObservedInventory[0].Bytes[0] ^= 0xff;
         var before = File.ReadAllBytes(workspace.Location.ProjectFilePath);
 
         var commit = ReviewExportApplicationService.Commit(request, null,
@@ -208,6 +210,75 @@ public sealed class WorkspaceExportLedgerTests
         Assert.AreEqual(WorkspaceExportErrorCodes.InvalidLedger, error.Category);
     }
 
+    [TestMethod]
+    public void Retry_recovers_process_crash_orphan_before_republishing()
+    {
+        using var workspace = CreateWorkspace();
+        var request = BuildRequest("export-orphan");
+        _ = ResearchWorkspaceExportTransaction.Commit(workspace.Location, workspace.Project, request, null);
+        File.Delete(ResearchWorkspacePaths.InProject(workspace.Location.RootDirectory, ResearchWorkspacePaths.ExportLedgerHead));
+
+        var interrupted = ResearchWorkspaceExportLedgerVerifier.Replay(workspace.Location);
+        Assert.AreEqual(0, interrupted.Entries.Count);
+        CollectionAssert.AreEqual(new[] { "export-orphan" }, interrupted.UnreferencedExportIds.ToArray());
+
+        var recovered = ResearchWorkspaceExportTransaction.Commit(workspace.Location, workspace.Project, request, null);
+        Assert.IsFalse(recovered.AlreadyApplied);
+        Assert.AreEqual(1, ResearchWorkspaceExportLedgerVerifier.Replay(workspace.Location).Entries.Count);
+        Assert.IsTrue(Directory.EnumerateDirectories(ResearchWorkspacePaths.InProject(
+            workspace.Location.RootDirectory, ResearchWorkspacePaths.GenerationQuarantine), "export-export-orphan-*").Any());
+    }
+
+    [TestMethod]
+    public void Same_export_bytes_with_another_human_action_are_not_idempotent()
+    {
+        using var workspace = CreateWorkspace();
+        _ = ResearchWorkspaceExportTransaction.Commit(workspace.Location, workspace.Project, BuildRequest("export-human"), null);
+        var second = BuildRequest("export-human", new ReviewExportActor("reviewer-2", ReviewExportActorKinds.Human));
+
+        var error = Assert.ThrowsExactly<WorkspaceExportException>(() =>
+            ResearchWorkspaceExportTransaction.Commit(workspace.Location, workspace.Project, second, null));
+        Assert.AreEqual(WorkspaceExportErrorCodes.ExportCollision, error.Category);
+    }
+
+    [TestMethod]
+    public void Replay_rejects_internally_consistent_manifest_or_slice_rebinding()
+    {
+        using (var workspace = CreateWorkspace())
+        {
+            _ = ResearchWorkspaceExportTransaction.Commit(workspace.Location, workspace.Project, BuildRequest("export-manifest"), null);
+            var root = ResearchWorkspacePaths.InProject(workspace.Location.RootDirectory, ResearchWorkspacePaths.ExportRoot("export-manifest"));
+            var manifestPath = Path.Combine(root, "bundle", "manifest.json");
+            var replacement = CanonicalJsonSerializer.SerializeToUtf8Bytes(new CanonicalJsonObject().Add("invalid", "manifest"));
+            File.WriteAllBytes(manifestPath, replacement);
+            RewriteRequestEntryAndHead(workspace.Location, root, (request, entry) =>
+            {
+                var artifacts = request["artifacts"]!.AsArray();
+                var manifest = artifacts.Select(item => item!.AsObject()).Single(item => item["path"]!.GetValue<string>() == "manifest.json");
+                manifest["size_bytes"] = replacement.LongLength;
+                manifest["digest"] = ContentDigest.Sha256(replacement).ToString();
+                var inventoryDigest = InventoryDigest(artifacts);
+                request["observed_inventory_digest"] = inventoryDigest.ToString();
+                entry["observed_inventory_digest"] = inventoryDigest.ToString();
+            });
+            Assert.ThrowsExactly<WorkspaceExportException>(() => ResearchWorkspaceExportLedgerVerifier.Replay(workspace.Location));
+        }
+
+        using (var workspace = CreateWorkspace())
+        {
+            _ = ResearchWorkspaceExportTransaction.Commit(workspace.Location, workspace.Project, BuildRequest("export-slice"), null);
+            var root = ResearchWorkspacePaths.InProject(workspace.Location.RootDirectory, ResearchWorkspacePaths.ExportRoot("export-slice"));
+            var slicePath = Path.Combine(root, "review-slice.json");
+            var slice = JsonNode.Parse(File.ReadAllBytes(slicePath))!.AsObject();
+            slice["content"]!["workspace_id"] = "different-workspace";
+            var sliceBytes = CanonicalBytes(slice);
+            File.WriteAllBytes(slicePath, sliceBytes);
+            RewriteRequestEntryAndHead(workspace.Location, root, (request, _) =>
+                request["slice_digest"] = ContentDigest.Sha256(sliceBytes).ToString());
+            Assert.ThrowsExactly<WorkspaceExportException>(() => ResearchWorkspaceExportLedgerVerifier.Replay(workspace.Location));
+        }
+    }
+
     private static VerifiedReviewExportRequest BuildRequest(string exportId, ReviewExportActor? actor = null)
     {
         var report = BuildReport();
@@ -240,6 +311,34 @@ public sealed class WorkspaceExportLedgerTests
     {
         using var document = JsonDocument.Parse(JsonSerializer.SerializeToUtf8Bytes(node));
         return CanonicalJsonSerializer.SerializeToUtf8Bytes(CanonicalJsonValue.FromJsonElement(document.RootElement));
+    }
+
+    private static ContentDigest InventoryDigest(JsonArray artifacts)
+    {
+        var paths = artifacts.Select(item => item!.AsObject()).OrderBy(item => item["path"]!.GetValue<string>(), StringComparer.Ordinal)
+            .Select(item => new CanonicalJsonObject().Add("path", item["path"]!.GetValue<string>())
+                .Add("size_bytes", item["size_bytes"]!.GetValue<long>()).Add("digest", item["digest"]!.GetValue<string>())).ToArray();
+        return ContentDigest.Sha256CanonicalJson(new CanonicalJsonObject().Add("paths", CanonicalJsonValue.Array(paths)));
+    }
+
+    private static void RewriteRequestEntryAndHead(ResearchWorkspaceLocation location, string exportRoot,
+        Action<JsonObject, JsonObject> mutate)
+    {
+        var requestPath = Path.Combine(exportRoot, WorkspaceExportSchemas.RequestFileName);
+        var request = JsonNode.Parse(File.ReadAllBytes(requestPath))!.AsObject();
+        var entryPath = Path.Combine(exportRoot, WorkspaceExportSchemas.EntryFileName);
+        var entry = JsonNode.Parse(File.ReadAllBytes(entryPath))!.AsObject();
+        var content = entry["content"]!.AsObject();
+        mutate(request, content);
+        var requestBytes = CanonicalBytes(request);
+        File.WriteAllBytes(requestPath, requestBytes);
+        content["request_digest"] = ContentDigest.Sha256(requestBytes).ToString();
+        var entryBytes = CanonicalBytes(entry);
+        File.WriteAllBytes(entryPath, entryBytes);
+        var headPath = ResearchWorkspacePaths.InProject(location.RootDirectory, ResearchWorkspacePaths.ExportLedgerHead);
+        var head = JsonNode.Parse(File.ReadAllBytes(headPath))!.AsObject();
+        head["entry_digest"] = ContentDigest.Sha256(entryBytes).ToString();
+        File.WriteAllBytes(headPath, CanonicalBytes(head));
     }
 
     private static WorkspaceFixture CreateWorkspace()

@@ -2,9 +2,10 @@
 
 Status: active successor roadmap after Hardening 30.
 
-Current state: FE-01 through FE-05 are complete with completion evidence in
-`docs/gates/`. FE-06 is active under ADR 0033; FE-07 through FE-12 remain
-sequenced future work and are not implementation-authorized by this roadmap.
+Current state: FE-01 through FE-06 are complete with completion evidence in
+`docs/gates/` and `docs/release/FE-06-COMPLETION-EVIDENCE.md`. FE-07 through
+FE-12 remain sequenced future work and are not implementation-authorized by this
+roadmap.
 
 ## Operating Decision
 
@@ -415,6 +416,9 @@ without a trustworthy scientific target.
   is introduced under this gate.
 
 ## FE-06 - Reporting, Audit Bundle, And Rapid Review Profile
+
+Status: complete under ADR 0033. The accepted implementation order and evidence
+are recorded in `docs/gates/FE-06-REPORTING-AUDIT-BUNDLE-RAPID-REVIEW.md`.
 
 ### Outcome
 

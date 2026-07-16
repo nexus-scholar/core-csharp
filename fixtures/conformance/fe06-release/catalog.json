@@ -1,0 +1,26 @@
+{
+  "schema": "nexus.fe06.release.fixture-catalog.v1",
+  "canonicalizationProfile": "nexus-jcs-nfc-v1",
+  "sourceKind": "local-fe06-release-contract",
+  "sourceCommit": "2dd5859",
+  "generatorVersion": "fe06-release-local-v1",
+  "generatorCommand": "C:\\Users\\mouadh\\.dotnet\\dotnet.exe test tests/NexusScholar.Conformance.Tests/NexusScholar.Conformance.Tests.csproj -c Release --filter FullyQualifiedName~Fe06ReleaseFixtureTests",
+  "sourceRefs": [
+    "docs/adr/0033-reporting-audit-bundle-and-rapid-review-profile.md",
+    "docs/gates/FE-06-REPORTING-AUDIT-BUNDLE-RAPID-REVIEW.md"
+  ],
+  "comparisonRules": [
+    "no-blueprint-conformance-claim",
+    "no-php-compatibility-claim",
+    "no-prisma-certification-claim"
+  ],
+  "nonClaims": [
+    "no-php-compatibility-claim",
+    "no-prisma-certification-claim"
+  ],
+  "fixtures": [
+    "bundle-v2-contract-v1",
+    "export-ledger-contract-v1",
+    "rapid-review-contract-v1"
+  ]
+}

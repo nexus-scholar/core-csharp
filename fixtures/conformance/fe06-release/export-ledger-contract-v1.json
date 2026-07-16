@@ -1,0 +1,39 @@
+{
+  "fixtureId": "export-ledger-contract-v1",
+  "sourceKind": "local-fe06-release-contract",
+  "sourceCommit": "2dd5859",
+  "generatorVersion": "fe06-release-local-v1",
+  "generatorCommand": "C:\\Users\\mouadh\\.dotnet\\dotnet.exe test tests/NexusScholar.Conformance.Tests/NexusScholar.Conformance.Tests.csproj -c Release --filter FullyQualifiedName~Fe06ReleaseFixtureTests",
+  "sourceRefs": [
+    "docs/adr/0033-reporting-audit-bundle-and-rapid-review-profile.md",
+    "docs/gates/FE-06-REPORTING-AUDIT-BUNDLE-RAPID-REVIEW.md"
+  ],
+  "comparisonRules": [
+    "no-blueprint-conformance-claim",
+    "no-php-compatibility-claim",
+    "no-prisma-certification-claim"
+  ],
+  "nonClaims": [
+    "no-php-compatibility-claim",
+    "no-prisma-certification-claim"
+  ],
+  "expected": {
+    "entrySchemaId": "nexus.workspace-export-ledger-entry",
+    "entrySchemaVersion": "1.0.0",
+    "headSchemaId": "nexus.workspace-export-ledger-head",
+    "headSchemaVersion": "1.0.0",
+    "actorKind": "human",
+    "pointerLast": true,
+    "projectRevisionChanges": false,
+    "inventoryRecomputed": true,
+    "negativeCases": [
+      "false-inventory-digest-rejected",
+      "manifest-ledger-mismatch-rejected",
+      "process-crash-orphan-quarantined",
+      "report-slice-mismatch-rejected",
+      "source-generation-drift-rejected",
+      "stale-head-rejected",
+      "unmanifested-file-rejected"
+    ]
+  }
+}

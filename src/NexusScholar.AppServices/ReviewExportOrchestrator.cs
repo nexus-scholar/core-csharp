@@ -23,6 +23,13 @@ public sealed record ReviewExportActor(string ActorId, string ActorKind);
 
 public sealed class VerifiedReviewExportRequest
 {
+    private readonly byte[] _reportBytes;
+    private readonly byte[] _sliceBytes;
+    private readonly byte[] _reportMarkdownBytes;
+    private readonly byte[] _bundleManifestBytes;
+    private readonly BundleV2ObservedEntry[] _observedInventory;
+    private readonly byte[] _requestBytes;
+
     internal VerifiedReviewExportRequest(
         string exportId,
         string actor,
@@ -54,13 +61,12 @@ public sealed class VerifiedReviewExportRequest
         BundleManifestDigest = bundleManifestDigest;
         ObservedInventoryDigest = observedInventoryDigest;
         Sources = Array.AsReadOnly(sources.Select(item => item with { }).ToArray());
-        ReportBytes = reportBytes.ToArray();
-        SliceBytes = sliceBytes.ToArray();
-        ReportMarkdownBytes = reportMarkdownBytes.ToArray();
-        BundleManifestBytes = bundleManifestBytes.ToArray();
-        ObservedInventory = Array.AsReadOnly(observedInventory
-            .Select(item => new BundleV2ObservedEntry(item.Path, item.Bytes.ToArray())).ToArray());
-        RequestBytes = requestBytes.ToArray();
+        _reportBytes = reportBytes.ToArray();
+        _sliceBytes = sliceBytes.ToArray();
+        _reportMarkdownBytes = reportMarkdownBytes.ToArray();
+        _bundleManifestBytes = bundleManifestBytes.ToArray();
+        _observedInventory = observedInventory.Select(item => new BundleV2ObservedEntry(item.Path, item.Bytes.ToArray())).ToArray();
+        _requestBytes = requestBytes.ToArray();
         RequestDigest = requestDigest;
     }
 
@@ -75,12 +81,13 @@ public sealed class VerifiedReviewExportRequest
     public ContentDigest BundleManifestDigest { get; }
     public ContentDigest ObservedInventoryDigest { get; }
     public IReadOnlyList<ReviewExportSourceBinding> Sources { get; }
-    public byte[] ReportBytes { get; }
-    public byte[] SliceBytes { get; }
-    public byte[] ReportMarkdownBytes { get; }
-    public byte[] BundleManifestBytes { get; }
-    public IReadOnlyList<BundleV2ObservedEntry> ObservedInventory { get; }
-    public byte[] RequestBytes { get; }
+    public byte[] ReportBytes => _reportBytes.ToArray();
+    public byte[] SliceBytes => _sliceBytes.ToArray();
+    public byte[] ReportMarkdownBytes => _reportMarkdownBytes.ToArray();
+    public byte[] BundleManifestBytes => _bundleManifestBytes.ToArray();
+    public IReadOnlyList<BundleV2ObservedEntry> ObservedInventory => Array.AsReadOnly(_observedInventory
+        .Select(item => new BundleV2ObservedEntry(item.Path, item.Bytes.ToArray())).ToArray());
+    public byte[] RequestBytes => _requestBytes.ToArray();
     public ContentDigest RequestDigest { get; }
 }
 
@@ -171,6 +178,9 @@ public static partial class ReviewExportOrchestrator
             item.Role, item.GenerationId, item.ManifestDigest.Value, item.CandidateId)).ToArray();
         var content = new CanonicalJsonObject()
             .Add("export_id", id)
+            .Add("actor_id", human)
+            .Add("actor_kind", actor.ActorKind)
+            .Add("recorded_at", occurredAt)
             .Add("workspace_id", bundle.WorkspaceId)
             .Add("project_revision", bundle.ProjectRevision)
             .Add("report_digest", report.ReportDigest.ToString())

@@ -99,13 +99,38 @@ public sealed class ReviewArtifactVerificationCommandTests
         public static ExportFixture Create()
         {
             var fixture = CreateEmpty();
+            var authorityDigest = ContentDigest.Sha256Utf8("authority").ToString();
+            var empty = CanonicalJsonValue.Array();
+            var sliceContent = new CanonicalJsonObject().Add("protocol_version_id", "protocol-v1")
+                .Add("protocol_content_digest", authorityDigest).Add("workflow_id", "workflow-1").Add("workflow_digest", authorityDigest)
+                .Add("deduplication_result_id", "dedup-1").Add("deduplication_result_digest", authorityDigest)
+                .Add("snapshot_id", "snapshot-1").Add("snapshot_record_digest", authorityDigest)
+                .Add("screening_binding_digest", authorityDigest).Add("screening_policy_digest", authorityDigest)
+                .Add("screening_handoff_digest", authorityDigest).Add("full_text_cases", empty)
+                .Add("waiver_digests", empty).Add("amendment_digests", empty).Add("deviation_digests", empty)
+                .Add("provenance_event_digests", empty).Add("workspace_id", "workspace-cli-export").Add("project_revision", 0)
+                .Add("workspace_generations", CanonicalJsonValue.Array(new CanonicalJsonObject().Add("role", "reporting")
+                    .Add("generation_id", "generation-1").Add("manifest_digest", authorityDigest)))
+                .Add("workspace_cut_digest", authorityDigest);
+            var slice = new DigestEnvelope(DigestScope.CanonicalJsonRecord, ReportingSchemas.SliceBindingId, ReportingSchemas.Version, sliceContent);
+            var sliceBytes = slice.ToCanonicalJsonBytes();
+            var bindings = new CanonicalJsonObject().Add("slice_digest", slice.ComputeDigest().ToString())
+                .Add("protocol_content_digest", authorityDigest).Add("workflow_digest", authorityDigest)
+                .Add("deduplication_result_digest", authorityDigest).Add("snapshot_record_digest", authorityDigest)
+                .Add("screening_binding_digest", authorityDigest).Add("screening_handoff_digest", authorityDigest)
+                .Add("full_text_cases", empty).Add("waiver_digests", empty).Add("amendment_digests", empty)
+                .Add("deviation_digests", empty).Add("provenance_event_digests", empty).Add("workspace_cut_digest", authorityDigest);
+            var counts = new CanonicalJsonObject().Add("identified", 0).Add("duplicates_consolidated", 0).Add("post_dedup", 0)
+                .Add("title_abstract_included", 0).Add("title_abstract_excluded", 0).Add("full_text_included", 0)
+                .Add("full_text_excluded", 0).Add("included", 0);
+            var audit = new CanonicalJsonObject().Add("conflicts", 0).Add("adjudications", 0).Add("corrections", 0).Add("invalidations", 0);
             var report = new DigestEnvelope(DigestScope.CanonicalJsonRecord, ReportingSchemas.ReportId, ReportingSchemas.Version,
-                new CanonicalJsonObject().Add("fixture", "report"));
+                new CanonicalJsonObject().Add("bindings", bindings).Add("counts", counts)
+                    .Add("title_abstract_exclusion_reasons", empty).Add("full_text_exclusion_reasons", empty)
+                    .Add("audit_counts", audit).Add("disclosures", empty)
+                    .Add("non_claims", CanonicalJsonValue.Array(CanonicalJsonValue.From("Fixture-only report."))));
             var reportBytes = report.ToCanonicalJsonBytes();
             var reportDigest = report.ComputeDigest();
-            var slice = new DigestEnvelope(DigestScope.CanonicalJsonRecord, ReportingSchemas.SliceBindingId, ReportingSchemas.Version,
-                new CanonicalJsonObject().Add("fixture", "slice"));
-            var sliceBytes = slice.ToCanonicalJsonBytes();
             var markdownBytes = System.Text.Encoding.UTF8.GetBytes("# Fixture report\n");
             var sourceDigest = ContentDigest.Sha256Utf8("source-manifest");
             var source = new BundleV2SourceBinding("reporting", "generation-1",
@@ -129,7 +154,8 @@ public sealed class ReviewArtifactVerificationCommandTests
             var artifacts = CanonicalJsonValue.Array(observed.OrderBy(item => item.Path, StringComparer.Ordinal).Select(item =>
                 new CanonicalJsonObject().Add("path", item.Path).Add("size_bytes", item.Bytes.LongLength)
                     .Add("digest", ContentDigest.Sha256(item.Bytes).ToString())).ToArray());
-            var request = new CanonicalJsonObject().Add("export_id", "export-1").Add("workspace_id", "workspace-cli-export")
+            var request = new CanonicalJsonObject().Add("export_id", "export-1").Add("actor_id", "reviewer-1")
+                .Add("actor_kind", "human").Add("recorded_at", "2026-07-16T08:00:00Z").Add("workspace_id", "workspace-cli-export")
                 .Add("project_revision", 0).Add("report_digest", reportDigest.ToString())
                 .Add("workspace_cut_digest", workspaceCutDigest.ToString()).Add("bundle_manifest_digest", verification.ManifestDigest.ToString())
                 .Add("observed_inventory_digest", verification.InventoryDigest.ToString()).Add("slice_digest", slice.ComputeDigest().ToString())

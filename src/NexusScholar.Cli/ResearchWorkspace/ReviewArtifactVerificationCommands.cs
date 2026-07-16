@@ -17,11 +17,13 @@ internal static class ReviewArtifactVerificationCommands
             var (location, entry) = ResolveExport(workingDirectory, exportId!);
             var root = ExportRoot(location, entry.ExportId);
             var reportBytes = File.ReadAllBytes(Path.Combine(root, "report.json"));
-            VerifyEnvelope(reportBytes, entry.ReportDigest, ReportingSchemas.ReportId);
+            var reportVerification = PersistedReportingVerifier.VerifyReport(reportBytes, entry.ReportDigest);
             var request = ReadCanonicalObject(Path.Combine(root, WorkspaceExportSchemas.RequestFileName));
             var sliceDigest = ContentDigest.Parse(RequiredText(request, "slice_digest"));
+            if (sliceDigest != reportVerification.SliceDigest)
+                throw new InvalidOperationException("Report does not bind the persisted review slice.");
             var sliceBytes = File.ReadAllBytes(Path.Combine(root, "review-slice.json"));
-            VerifyEnvelope(sliceBytes, sliceDigest, ReportingSchemas.SliceBindingId);
+            _ = PersistedReportingVerifier.VerifySlice(sliceBytes, sliceDigest);
 
             output.WriteLine("Report verification");
             output.WriteLine($"Export: {entry.ExportId}");
@@ -105,6 +107,7 @@ internal static class ReviewArtifactVerificationCommands
             output.WriteLine("Export ledger status");
             output.WriteLine($"Count: {replay.Entries.Count}");
             output.WriteLine($"Head: {replay.Head?.EntryDigest.ToString() ?? "none"}");
+            output.WriteLine($"Unreferenced: {replay.UnreferencedExportIds.Count}");
             foreach (var entry in replay.Entries)
                 output.WriteLine($"{entry.Ordinal}: {entry.ExportId} {entry.EntrySummary()}");
             output.WriteLine("Verification: complete ledger replay");
@@ -134,15 +137,6 @@ internal static class ReviewArtifactVerificationCommands
 
     private static string ExportRoot(ResearchWorkspaceLocation location, string exportId) =>
         ResearchWorkspacePaths.InProject(location.RootDirectory, ResearchWorkspacePaths.ExportRoot(exportId));
-
-    private static void VerifyEnvelope(byte[] bytes, ContentDigest expectedDigest, string schemaId)
-    {
-        using var document = JsonDocument.Parse(bytes);
-        var verified = DigestEnvelope.RehydrateAndVerify(document.RootElement, expectedDigest,
-            DigestScope.CanonicalJsonRecord, schemaId, ReportingSchemas.Version);
-        if (!bytes.SequenceEqual(verified.Envelope.ToCanonicalJsonBytes()))
-            throw new InvalidOperationException("Record bytes are not canonical.");
-    }
 
     private static JsonElement ReadCanonicalObject(string path)
     {

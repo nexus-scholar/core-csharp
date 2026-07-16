@@ -126,6 +126,25 @@ public sealed class ReportingTests
         Assert.AreEqual(ReportingErrorCodes.IncompleteSlice, error.Category);
     }
 
+    [TestMethod]
+    public void Persisted_verifier_enforces_structured_shape_conservation_and_slice_binding()
+    {
+        var report = ReviewFlowProjector.Finalize(ReviewFlowProjector.Project(
+            BuildAuthorities(includeFullText: true), ["Local-only."], ["No certification claim."]));
+        var reportBytes = ReportingCanonicalCodec.SerializeReport(report);
+        var sliceBytes = ReportingCanonicalCodec.SerializeSlice(report);
+
+        var verified = PersistedReportingVerifier.VerifyReport(reportBytes, report.ReportDigest);
+        Assert.AreEqual(report.SliceDigest, verified.SliceDigest);
+        Assert.AreEqual(report.SliceDigest, PersistedReportingVerifier.VerifySlice(sliceBytes, report.SliceDigest));
+
+        var envelopeOnly = new DigestEnvelope(DigestScope.CanonicalJsonRecord, ReportingSchemas.ReportId,
+            ReportingSchemas.Version, new CanonicalJsonObject().Add("fixture", "not-a-report"));
+        var error = Assert.ThrowsExactly<ReportingRuleException>(() => PersistedReportingVerifier.VerifyReport(
+            envelopeOnly.ToCanonicalJsonBytes(), envelopeOnly.ComputeDigest()));
+        Assert.AreEqual(ReportingErrorCodes.NonCanonicalRecord, error.Category);
+    }
+
     internal static ReviewSliceAuthorities BuildAuthorities(bool includeFullText)
     {
         var protocol = BuildProtocol();

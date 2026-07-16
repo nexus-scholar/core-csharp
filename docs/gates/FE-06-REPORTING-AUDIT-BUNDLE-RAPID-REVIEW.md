@@ -1,7 +1,7 @@
 # FE-06: Reporting, Audit Bundle, And Rapid Review Profile
 
-Status: active under accepted ADR 0033. Work resumed from
-`docs/handoffs/2026-07-16-fe-06-pause-checkpoint.md`.
+Status: implementation complete locally under accepted ADR 0033; hosted CI and
+merge verification pending.
 
 ## Goal
 
@@ -249,3 +249,23 @@ FE-06.6.
 - focused CLI tests cover all valid commands, empty and populated status,
   tampered Bundle bytes, missing export identity, exact usage, and advertised
   command surface.
+
+### FE-06.6: Release Fixtures, Review, And Validation
+
+Status: complete locally; hosted CI and merge verification pending.
+
+- phase-wide local conformance fixtures pin Rapid Review/deviation, Bundle v2,
+  and export-ledger contracts, required negative cases, source implementation
+  commits, generator command, and explicit PHP/PRISMA/blueprint non-claims;
+- finalized Reporting fixtures pin canonical slice/report digests rather than
+  comparing only two live serializations;
+- independent architecture, scientific-invariant, conformance, and test reviews
+  found crash recovery, mutable verified bytes, Bundle-manifest binding,
+  report/slice linkage, structural report verification, root reparse, human
+  action digest, and fixture provenance defects; each was corrected and covered
+  by focused regression tests;
+- durable closeout evidence is recorded in
+  `docs/release/FE-06-COMPLETION-EVIDENCE.md`;
+- final local validation passed with a zero-warning Release build, 790 tests,
+  format verification, release policy checks, deterministic package comparison,
+  and clean smoke loading of all 19 packages at `0.1.0-alpha.2`.

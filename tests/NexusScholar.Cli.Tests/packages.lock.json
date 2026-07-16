@@ -277,6 +277,7 @@
           "NexusScholar.FullText": "[0.1.0-alpha.2, )",
           "NexusScholar.Kernel": "[0.1.0-alpha.2, )",
           "NexusScholar.Provenance": "[0.1.0-alpha.2, )",
+          "NexusScholar.Reporting": "[0.1.0-alpha.2, )",
           "NexusScholar.Screening": "[0.1.0-alpha.2, )",
           "NexusScholar.Screening.FullText": "[0.1.0-alpha.2, )",
           "NexusScholar.Screening.WorkflowExecution": "[0.1.0-alpha.2, )",

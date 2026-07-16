@@ -14,6 +14,7 @@
     <None Include="../../fixtures/conformance/screening-conduct/*.json" Link="fixtures/screening-conduct/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../fixtures/conformance/screening-corpus-binding/*.json" Link="fixtures/screening-corpus-binding/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../fixtures/conformance/reporting/*.json" Link="fixtures/reporting/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../fixtures/conformance/fe06-release/*.json" Link="fixtures/fe06-release/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../fixtures/conformance/provenance/*.json" Link="fixtures/provenance/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../fixtures/conformance/provenance/*.ndjson" Link="fixtures/provenance/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../fixtures/conformance/shared-identity/*.json" Link="fixtures/shared-identity/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />

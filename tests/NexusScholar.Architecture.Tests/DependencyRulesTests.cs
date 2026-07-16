@@ -606,7 +606,8 @@ public sealed class DependencyRulesTests
             typeof(VerifiedFullTextAdmission).Assembly.GetName().Name,
             typeof(FullTextInput).Assembly.GetName().Name,
             typeof(ProtocolVersion).Assembly.GetName().Name,
-            typeof(VerifiedReviewBundleV2).Assembly.GetName().Name
+            typeof(VerifiedReviewBundleV2).Assembly.GetName().Name,
+            typeof(VerifiedReviewFlowReport).Assembly.GetName().Name
         };
         var disallowed = researchWorkspaceAssembly.GetReferencedAssemblies()
             .Select(reference => reference.Name ?? string.Empty)

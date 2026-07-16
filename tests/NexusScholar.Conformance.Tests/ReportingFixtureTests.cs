@@ -17,7 +17,7 @@ public sealed class ReportingFixtureTests
 {
     private const string FixtureSchema = "nexus.fe06.reporting.fixture-catalog.v1";
     private const string RequiredSourceKind = "local-fe06-reporting-contract";
-    private const string RequiredSourceCommit = "7818640";
+    private const string RequiredSourceCommit = "4ab087a";
     private const string GeneratorVersion = "fe06-reporting-local-v1";
     private const string GeneratorCommand = "C:\\Users\\mouadh\\.dotnet\\dotnet.exe test tests/NexusScholar.Conformance.Tests/NexusScholar.Conformance.Tests.csproj -c Release --filter FullyQualifiedName~ReportingFixtureTests";
     private const string SchemaIdExpected = "nexus-jcs-nfc-v1";
@@ -108,6 +108,8 @@ public sealed class ReportingFixtureTests
                 Assert.AreEqual(ReportingSchemas.Version, report.ReportEnvelope.SchemaVersion);
                 var sliceBytes = ReportingCanonicalCodec.SerializeSlice(report);
                 var reportBytes = ReportingCanonicalCodec.SerializeReport(report);
+                Assert.AreEqual(expected.GetProperty("sliceDigest").GetString(), report.SliceDigest.ToString(), fixtureId);
+                Assert.AreEqual(expected.GetProperty("reportDigest").GetString(), report.ReportDigest.ToString(), fixtureId);
                 CollectionAssert.AreEqual(sliceBytes, ReportingCanonicalCodec.SerializeSlice(ReviewFlowProjector.Finalize(projection)), fixtureId);
                 CollectionAssert.AreEqual(reportBytes, ReportingCanonicalCodec.SerializeReport(ReviewFlowProjector.Finalize(projection)), fixtureId);
                 CollectionAssert.AreEqual(ReviewFlowMarkdownRenderer.Render(report),

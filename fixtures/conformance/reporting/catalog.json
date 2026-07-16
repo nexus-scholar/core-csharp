@@ -2,7 +2,7 @@
   "schema": "nexus.fe06.reporting.fixture-catalog.v1",
   "canonicalizationProfile": "nexus-jcs-nfc-v1",
   "sourceKind": "local-fe06-reporting-contract",
-  "sourceCommit": "7818640",
+  "sourceCommit": "4ab087a",
   "generatorVersion": "fe06-reporting-local-v1",
   "generatorCommand": "C:\\Users\\mouadh\\.dotnet\\dotnet.exe test tests/NexusScholar.Conformance.Tests/NexusScholar.Conformance.Tests.csproj -c Release --filter FullyQualifiedName~ReportingFixtureTests",
   "sourceRefs": [

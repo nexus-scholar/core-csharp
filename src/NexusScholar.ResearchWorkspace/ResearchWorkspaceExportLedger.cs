@@ -3,6 +3,7 @@ using System.Text.Json;
 using NexusScholar.AppServices;
 using NexusScholar.Bundles;
 using NexusScholar.Kernel;
+using NexusScholar.Reporting;
 
 namespace NexusScholar.ResearchWorkspace;
 
@@ -223,7 +224,8 @@ public sealed record WorkspaceExportLedgerHead(
 
 public sealed record WorkspaceExportLedgerReplay(
     WorkspaceExportLedgerHead? Head,
-    IReadOnlyList<VerifiedWorkspaceExportLedgerEntry> Entries);
+    IReadOnlyList<VerifiedWorkspaceExportLedgerEntry> Entries,
+    IReadOnlyList<string> UnreferencedExportIds);
 
 public static class ResearchWorkspaceExportLedgerVerifier
 {
@@ -247,43 +249,67 @@ public static class ResearchWorkspaceExportLedgerVerifier
         var headPath = ResearchWorkspacePaths.InProject(location.RootDirectory, ResearchWorkspacePaths.ExportLedgerHead);
         if (!File.Exists(headPath))
         {
-            if (Directory.Exists(exportsRoot) && Directory.EnumerateDirectories(exportsRoot).Any())
-                throw Invalid("Unpublished export directories exist without a ledger head.");
-            return new WorkspaceExportLedgerReplay(null, Array.Empty<VerifiedWorkspaceExportLedgerEntry>());
+            var unreferenced = Directory.Exists(exportsRoot)
+                ? Directory.EnumerateDirectories(exportsRoot).Select(Path.GetFileName).OrderBy(item => item, StringComparer.Ordinal).ToArray()
+                : Array.Empty<string>();
+            return new WorkspaceExportLedgerReplay(null, Array.Empty<VerifiedWorkspaceExportLedgerEntry>(), unreferenced!);
         }
         var head = ReadHead(File.ReadAllBytes(headPath));
         var directories = Directory.EnumerateDirectories(exportsRoot).OrderBy(path => path, StringComparer.Ordinal).ToArray();
-        var entries = new List<VerifiedWorkspaceExportLedgerEntry>();
+        var candidates = new List<(string Directory, VerifiedWorkspaceExportLedgerEntry Entry)>();
+        var unreferencedIds = new HashSet<string>(StringComparer.Ordinal);
         foreach (var directory in directories)
         {
             var entryPath = Path.Combine(directory, WorkspaceExportSchemas.EntryFileName);
-            if (!File.Exists(entryPath)) throw Invalid("Export directory is missing its ledger entry.");
-            var bytes = File.ReadAllBytes(entryPath);
-            var entry = WorkspaceExportLedgerEntryCodec.Rehydrate(bytes, ContentDigest.Sha256(bytes));
-            if (entry.ExportId != Path.GetFileName(directory)) throw Invalid("Ledger export id does not match its directory.");
-            try { VerifyExportDirectory(directory, entry); }
+            try
+            {
+                if (!File.Exists(entryPath)) throw new InvalidOperationException("Export directory is missing its ledger entry.");
+                var bytes = File.ReadAllBytes(entryPath);
+                var entry = WorkspaceExportLedgerEntryCodec.Rehydrate(bytes, ContentDigest.Sha256(bytes));
+                if (entry.ExportId != Path.GetFileName(directory)) throw new InvalidOperationException("Ledger export id does not match its directory.");
+                candidates.Add((directory, entry));
+            }
+            catch (Exception exception) when (exception is WorkspaceExportException or JsonException or InvalidOperationException or IOException or UnauthorizedAccessException or ArgumentException)
+            {
+                _ = exception;
+                unreferencedIds.Add(Path.GetFileName(directory));
+            }
+        }
+        if (head.Count <= 0) throw Invalid("Export ledger head cannot describe an empty history.");
+        var byDigest = candidates.GroupBy(item => item.Entry.Digest).ToDictionary(group => group.Key, group => group.ToArray());
+        var reversed = new List<(string Directory, VerifiedWorkspaceExportLedgerEntry Entry)>();
+        var nextDigest = head.EntryDigest;
+        for (var ordinal = head.Count; ordinal >= 1; ordinal--)
+        {
+            if (!byDigest.TryGetValue(nextDigest, out var matches) || matches.Length != 1)
+                throw Invalid("Export ledger head chain is missing or ambiguous.");
+            var match = matches[0];
+            if (match.Entry.Ordinal != ordinal) throw Invalid("Export ledger ordinal chain is invalid.");
+            reversed.Add(match);
+            nextDigest = match.Entry.PreviousEntryDigest;
+        }
+        if (nextDigest != ContentDigest.Parse(WorkspaceExportSchemas.GenesisPreviousDigest))
+            throw Invalid("Export ledger predecessor chain does not terminate at genesis.");
+        var chain = reversed.AsEnumerable().Reverse().ToArray();
+        foreach (var item in chain)
+        {
+            try { VerifyExportDirectory(item.Directory, item.Entry); }
             catch (WorkspaceExportException) { throw; }
             catch (Exception exception) when (exception is JsonException or InvalidOperationException or IOException or UnauthorizedAccessException or ArgumentException)
             {
-                throw new WorkspaceExportException(WorkspaceExportErrorCodes.InvalidLedger, "Export directory verification failed.", exception);
+                throw new WorkspaceExportException(WorkspaceExportErrorCodes.InvalidLedger, "Published export directory verification failed.", exception);
             }
-            entries.Add(entry);
         }
-        var ordered = entries.OrderBy(item => item.Ordinal).ToArray();
-        if (ordered.Length != head.Count || !ordered.Select(item => item.Ordinal).SequenceEqual(Enumerable.Range(1, ordered.Length).Select(value => (long)value)))
-            throw Invalid("Export ledger ordinals are incomplete.");
-        var previous = ContentDigest.Parse(WorkspaceExportSchemas.GenesisPreviousDigest);
-        foreach (var entry in ordered)
-        {
-            if (entry.PreviousEntryDigest != previous) throw Invalid("Export ledger predecessor chain is invalid.");
-            previous = entry.Digest;
-        }
-        if (head.Count <= 0 || ordered.Length == 0) throw Invalid("Export ledger head cannot describe an empty history.");
+        var publishedDirectories = chain.Select(item => item.Directory).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        foreach (var candidate in candidates.Where(item => !publishedDirectories.Contains(item.Directory)))
+            unreferencedIds.Add(candidate.Entry.ExportId);
+        var ordered = chain.Select(item => item.Entry).ToArray();
         var last = ordered[^1];
         if (head.EntryDigest != last.Digest || head.ExportId != last.ExportId || head.WorkspaceId != last.WorkspaceId ||
             head.EntryPath != $"{ResearchWorkspacePaths.ExportRoot(last.ExportId)}/{WorkspaceExportSchemas.EntryFileName}")
             throw Invalid("Export ledger head does not match replayed history.");
-        return new WorkspaceExportLedgerReplay(head, Array.AsReadOnly(ordered));
+        return new WorkspaceExportLedgerReplay(head, Array.AsReadOnly(ordered),
+            Array.AsReadOnly(unreferencedIds.OrderBy(item => item, StringComparer.Ordinal).ToArray()));
     }
 
     internal static byte[] SerializeHead(WorkspaceExportLedgerHead head) => CanonicalJsonSerializer.SerializeToUtf8Bytes(
@@ -314,7 +340,8 @@ public static class ResearchWorkspaceExportLedgerVerifier
 
     internal static void VerifyExportDirectory(string directory, VerifiedWorkspaceExportLedgerEntry entry)
     {
-        if (Directory.EnumerateFileSystemEntries(directory, "*", SearchOption.AllDirectories)
+        if (File.GetAttributes(directory).HasFlag(FileAttributes.ReparsePoint) ||
+            Directory.EnumerateFileSystemEntries(directory, "*", SearchOption.AllDirectories)
             .Any(path => File.GetAttributes(path).HasFlag(FileAttributes.ReparsePoint)))
             throw Invalid("Export directory contains a reparse point.");
         var requestPath = Path.Combine(directory, WorkspaceExportSchemas.RequestFileName);
@@ -325,9 +352,9 @@ public static class ResearchWorkspaceExportLedgerVerifier
         var canonical = CanonicalJsonSerializer.SerializeToUtf8Bytes(CanonicalJsonValue.FromJsonElement(request.RootElement));
         if (!requestBytes.SequenceEqual(canonical)) throw Invalid("Export request is not canonical.");
         var root = request.RootElement;
-        WorkspaceExportLedgerEntryCodec.Exact(root, "artifacts", "bundle_manifest_digest", "export_id",
+        WorkspaceExportLedgerEntryCodec.Exact(root, "actor_id", "actor_kind", "artifacts", "bundle_manifest_digest", "export_id",
             "observed_inventory_digest", "project_revision", "report_digest", "report_markdown_digest", "slice_digest",
-            "source_generations", "workspace_cut_digest", "workspace_id");
+            "source_generations", "recorded_at", "workspace_cut_digest", "workspace_id");
         if (WorkspaceExportLedgerEntryCodec.Text(root, "export_id") != entry.ExportId ||
             WorkspaceExportLedgerEntryCodec.Text(root, "workspace_id") != entry.WorkspaceId ||
             root.GetProperty("project_revision").GetInt64() != entry.ProjectRevision ||
@@ -336,6 +363,10 @@ public static class ResearchWorkspaceExportLedgerVerifier
             WorkspaceExportLedgerEntryCodec.Digest(root, "bundle_manifest_digest") != entry.BundleManifestDigest ||
             WorkspaceExportLedgerEntryCodec.Digest(root, "observed_inventory_digest") != entry.ObservedInventoryDigest)
             throw Invalid("Export request bindings do not match the ledger entry.");
+        if (WorkspaceExportLedgerEntryCodec.Text(root, "actor_id") != entry.Actor ||
+            WorkspaceExportLedgerEntryCodec.Text(root, "actor_kind") != entry.ActorKind ||
+            WorkspaceExportLedgerEntryCodec.Text(root, "recorded_at") != entry.RecordedAt)
+            throw Invalid("Export request human action does not match the ledger entry.");
         var requestSources = root.GetProperty("source_generations").EnumerateArray().Select(item =>
         {
             WorkspaceExportLedgerEntryCodec.Exact(item, "candidate_id", "generation_id", "manifest_digest", "role");
@@ -373,6 +404,27 @@ public static class ResearchWorkspaceExportLedgerVerifier
                 .Select(item => item.Record).ToArray())));
         if (recomputedInventoryDigest != entry.ObservedInventoryDigest)
             throw Invalid("Persisted Bundle inventory does not reproduce the ledger inventory digest.");
+        var manifestRecord = inventoryRecords.SingleOrDefault(item => item.Path == BundleV2Constants.ManifestPath);
+        if (manifestRecord.Record is null || WorkspaceExportLedgerEntryCodec.Digest(
+                root.GetProperty("artifacts").EnumerateArray().Single(item =>
+                    WorkspaceExportLedgerEntryCodec.Text(item, "path") == BundleV2Constants.ManifestPath), "digest") != entry.BundleManifestDigest)
+            throw Invalid("Persisted Bundle manifest does not reproduce the ledger manifest digest.");
+        var bundleRoot = Path.Combine(directory, "bundle");
+        var manifestBytes = File.ReadAllBytes(Path.Combine(bundleRoot, BundleV2Constants.ManifestPath));
+        var manifest = ReviewBundleV2CanonicalCodec.Rehydrate(manifestBytes, entry.BundleManifestDigest);
+        var observedBundle = inventoryRecords.OrderBy(item => item.Path, StringComparer.Ordinal).Select(item =>
+            new BundleV2ObservedEntry(item.Path, File.ReadAllBytes(Path.Combine(bundleRoot,
+                item.Path.Replace('/', Path.DirectorySeparatorChar))))).ToArray();
+        var bundleVerification = ReviewBundleV2Verifier.Verify(manifest, manifestBytes, observedBundle);
+        if (!bundleVerification.IsValid || bundleVerification.InventoryDigest != entry.ObservedInventoryDigest)
+            throw Invalid("Persisted Bundle v2 authority or exact inventory is invalid.");
+
+        var reportBytes = File.ReadAllBytes(Path.Combine(directory, "report.json"));
+        var reportVerification = PersistedReportingVerifier.VerifyReport(reportBytes, entry.ReportDigest);
+        var sliceDigest = WorkspaceExportLedgerEntryCodec.Digest(root, "slice_digest");
+        if (reportVerification.SliceDigest != sliceDigest)
+            throw Invalid("Persisted report does not bind the persisted review slice.");
+        _ = PersistedReportingVerifier.VerifySlice(File.ReadAllBytes(Path.Combine(directory, "review-slice.json")), sliceDigest);
         var observedPaths = Directory.EnumerateFiles(directory, "*", SearchOption.AllDirectories)
             .Select(path => Path.GetRelativePath(directory, path).Replace(Path.DirectorySeparatorChar, '/')).ToHashSet(StringComparer.Ordinal);
         if (!observedPaths.SetEquals(expected.Keys)) throw Invalid("Export directory inventory is not exact.");
@@ -438,6 +490,7 @@ public static class ResearchWorkspaceExportTransaction
             using var workspaceLock = AcquireLock(location);
             var current = ResearchWorkspaceExportLedgerVerifier.ReplayUnderLock(location);
             if (current.Head?.EntryDigest != expectedPreviousEntryDigest || current.Entries.Count != initial.Entries.Count) throw Stale();
+            QuarantineUnreferenced(location, current);
             var project = ResearchWorkspaceStore.ReadProject(location.ProjectFilePath);
             if (project.WorkspaceId != expectedProject.WorkspaceId || project.Revision != expectedProject.Revision ||
                 ResearchWorkspaceJson.Serialize(project) != ResearchWorkspaceJson.Serialize(expectedProject) ||
@@ -527,6 +580,15 @@ public static class ResearchWorkspaceExportTransaction
             $"{ResearchWorkspacePaths.GenerationQuarantine}/export-{exportId}-{Guid.NewGuid():N}");
         Directory.CreateDirectory(Path.GetDirectoryName(target)!);
         Directory.Move(root, target);
+    }
+
+    private static void QuarantineUnreferenced(ResearchWorkspaceLocation location, WorkspaceExportLedgerReplay replay)
+    {
+        foreach (var exportId in replay.UnreferencedExportIds)
+        {
+            var root = ResearchWorkspacePaths.InProject(location.RootDirectory, ResearchWorkspacePaths.ExportRoot(exportId));
+            if (Directory.Exists(root)) Quarantine(location, root, exportId);
+        }
     }
 
     private static WorkspaceExportException Stale() => new(WorkspaceExportErrorCodes.StaleHead, "Export ledger head changed during publication.");

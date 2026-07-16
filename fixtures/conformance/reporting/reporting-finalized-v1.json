@@ -1,7 +1,7 @@
 {
   "fixtureId": "reporting-finalized-v1",
   "sourceKind": "local-fe06-reporting-contract",
-  "sourceCommit": "7818640",
+  "sourceCommit": "4ab087a",
   "generatorCommand": "C:\\Users\\mouadh\\.dotnet\\dotnet.exe test tests/NexusScholar.Conformance.Tests/NexusScholar.Conformance.Tests.csproj -c Release --filter FullyQualifiedName~ReportingFixtureTests",
   "generatorVersion": "fe06-reporting-local-v1",
   "sourceRefs": [
@@ -29,6 +29,8 @@
   },
   "expected": {
     "finalizable": true,
+    "sliceDigest": "sha256:6c7823f92cc3fc3158ee2acdb5e7c62854e7b189fe63dbdc4b115a32819a0831",
+    "reportDigest": "sha256:01b7c994eac40a57588d87258c4ae06323992447ac0e2769f6217de531815aba",
     "counts": {
       "identified": 3,
       "duplicatesConsolidated": 1,
