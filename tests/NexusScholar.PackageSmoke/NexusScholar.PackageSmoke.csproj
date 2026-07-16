@@ -9,6 +9,8 @@
   <ItemGroup>
     <PackageReference Include="NexusScholar.Bundles" Version="0.1.0-alpha.2" />
     <PackageReference Include="NexusScholar.Extensibility" Version="0.1.0-alpha.2" />
+    <PackageReference Include="NexusScholar.Reporting" Version="0.1.0-alpha.2" />
+    <PackageReference Include="NexusScholar.Screening.CorpusSnapshots" Version="0.1.0-alpha.2" />
     <PackageReference Include="NexusScholar.Screening.FullText" Version="0.1.0-alpha.2" />
     <PackageReference Include="NexusScholar.Screening.WorkflowExecution" Version="0.1.0-alpha.2" />
     <PackageReference Include="NexusScholar.Search" Version="0.1.0-alpha.2" />

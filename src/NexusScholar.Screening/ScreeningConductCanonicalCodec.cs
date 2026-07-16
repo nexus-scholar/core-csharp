@@ -48,6 +48,28 @@ public static class ScreeningConductCanonicalCodec
         return policy;
     }
 
+    public static ScreeningConductPolicy RehydratePolicy(
+        byte[] bytes,
+        ContentDigest expectedDigest,
+        ScreeningConductPolicy expectedPolicy)
+    {
+        ArgumentNullException.ThrowIfNull(expectedPolicy);
+        var content = ParseEnvelope(bytes, expectedDigest, ScreeningConductPolicy.SchemaId);
+        RequireExact(content,
+        [
+            "adjudicator_roles", "approved_at", "approved_by", "assignments", "candidate_set_digest", "candidate_set_id",
+            "criteria_digest", "criteria_id", "exclusion_reasons", "policy_id", "protocol_content_digest",
+            "protocol_version_id", "required_review_count"
+        ]);
+        RequireReproduction(
+            bytes,
+            expectedPolicy.Digest,
+            expectedDigest,
+            Serialize(expectedPolicy),
+            "Screening conduct policy");
+        return expectedPolicy;
+    }
+
     public static ScreeningConductHeader RehydrateHeader(
         byte[] bytes,
         ContentDigest expectedDigest,

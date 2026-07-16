@@ -1,0 +1,1 @@
+{"expected_category":"non-canonical-screening-corpus-binding","fixture_id":"screening-corpus-binding-noncanonical-order","non_claims":["no-php-compatibility-claim","no-blueprint-compatibility-claim"],"scenario":"noncanonical-order","scope":"local-csharp-contract"}

@@ -14,5 +14,6 @@
     <ProjectReference Include="../NexusScholar.UiContracts/NexusScholar.UiContracts.csproj" />
     <ProjectReference Include="../NexusScholar.ResearchWorkspace/NexusScholar.ResearchWorkspace.csproj" />
     <ProjectReference Include="../NexusScholar.AppServices/NexusScholar.AppServices.csproj" />
+    <ProjectReference Include="../NexusScholar.Reporting/NexusScholar.Reporting.csproj" />
   </ItemGroup>
 </Project>

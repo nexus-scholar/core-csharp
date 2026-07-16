@@ -1,0 +1,26 @@
+{
+  "schema": "nexus.fe06.reporting.fixture-catalog.v1",
+  "canonicalizationProfile": "nexus-jcs-nfc-v1",
+  "sourceKind": "local-fe06-reporting-contract",
+  "sourceCommit": "4ab087a",
+  "generatorVersion": "fe06-reporting-local-v1",
+  "generatorCommand": "C:\\Users\\mouadh\\.dotnet\\dotnet.exe test tests/NexusScholar.Conformance.Tests/NexusScholar.Conformance.Tests.csproj -c Release --filter FullyQualifiedName~ReportingFixtureTests",
+  "sourceRefs": [
+    "docs/adr/0033-reporting-audit-bundle-and-rapid-review-profile.md",
+    "docs/gates/FE-06-REPORTING-AUDIT-BUNDLE-RAPID-REVIEW.md"
+  ],
+  "comparisonRules": [
+    "replay-reporting-projection-through-csharp-authorities",
+    "no-php-compatibility-claim",
+    "no-prisma-certification-claim",
+    "no-blueprint-conformance-claim"
+  ],
+  "nonClaims": [
+    "no-php-compatibility-claim",
+    "no-prisma-certification-claim"
+  ],
+  "fixtures": [
+    "reporting-finalized-v1",
+    "reporting-missing-full-text-gap-v1"
+  ]
+}

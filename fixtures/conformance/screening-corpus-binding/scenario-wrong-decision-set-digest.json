@@ -1,0 +1,1 @@
+{"expected_category":"stale-screening-corpus-binding","fixture_id":"screening-corpus-binding-wrong-decision-set-digest","non_claims":["no-php-compatibility-claim","no-blueprint-compatibility-claim"],"scenario":"wrong-decision-set-digest","scope":"local-csharp-contract"}

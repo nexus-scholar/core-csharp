@@ -10,5 +10,7 @@
     <ProjectReference Include="../NexusScholar.Screening/NexusScholar.Screening.csproj" />
     <ProjectReference Include="../NexusScholar.Screening.FullText/NexusScholar.Screening.FullText.csproj" />
     <ProjectReference Include="../NexusScholar.FullText/NexusScholar.FullText.csproj" />
+    <ProjectReference Include="../NexusScholar.Reporting/NexusScholar.Reporting.csproj" />
+    <ProjectReference Include="../NexusScholar.Bundles/NexusScholar.Bundles.csproj" />
   </ItemGroup>
 </Project>

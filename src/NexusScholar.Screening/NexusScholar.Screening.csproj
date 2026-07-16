@@ -10,5 +10,6 @@
   <ItemGroup>
     <InternalsVisibleTo Include="NexusScholar.Core.Tests" />
     <InternalsVisibleTo Include="NexusScholar.Conformance.Tests" />
+    <InternalsVisibleTo Include="NexusScholar.Screening.CorpusSnapshots" />
   </ItemGroup>
 </Project>

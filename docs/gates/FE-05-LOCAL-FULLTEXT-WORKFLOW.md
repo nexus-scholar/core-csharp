@@ -1,7 +1,6 @@
 # FE-05: Local Full Text Workflow
 
-Status: implementation and local verification complete under accepted ADR 0032;
-hosted CI and merge pending.
+Status: complete under accepted ADR 0032; hosted CI passed and PR 58 merged.
 
 ## Goal
 

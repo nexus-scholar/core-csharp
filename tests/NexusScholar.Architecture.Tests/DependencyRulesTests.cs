@@ -13,8 +13,10 @@ using NexusScholar.FullText;
 using NexusScholar.Kernel;
 using NexusScholar.Protocol;
 using NexusScholar.Provenance;
+using NexusScholar.Reporting;
 using NexusScholar.ResearchWorkspace;
 using NexusScholar.Screening;
+using NexusScholar.Screening.CorpusSnapshots;
 using NexusScholar.Screening.FullText;
 using NexusScholar.Screening.WorkflowExecution;
 using NexusScholar.Search;
@@ -423,6 +425,102 @@ public sealed class DependencyRulesTests
     }
 
     [TestMethod]
+    public void Screening_CorpusSnapshots_bridge_depends_only_on_its_authority_inputs()
+    {
+        var assembly = typeof(VerifiedScreeningCorpusBinding).Assembly;
+        var allowed = new[]
+        {
+            typeof(IClock).Assembly.GetName().Name,
+            typeof(ProtocolVersion).Assembly.GetName().Name,
+            typeof(DeduplicationService).Assembly.GetName().Name,
+            typeof(CorpusSnapshotService).Assembly.GetName().Name,
+            typeof(ScreeningConductPolicy).Assembly.GetName().Name
+        };
+        var disallowed = assembly.GetReferencedAssemblies()
+            .Select(reference => reference.Name ?? string.Empty)
+            .Where(name => name.StartsWith("NexusScholar.", StringComparison.Ordinal))
+            .Where(name => !allowed.Contains(name, StringComparer.Ordinal))
+            .ToArray();
+
+        Assert.AreEqual(0, disallowed.Length,
+            $"NexusScholar.Screening.CorpusSnapshots has disallowed Nexus dependencies: {string.Join(", ", disallowed)}");
+    }
+
+    [TestMethod]
+    public void Screening_CorpusSnapshots_source_contains_no_host_storage_provider_or_model_symbols()
+    {
+        var sourceRoot = Path.Combine(FindRepositoryRoot(), "src", "NexusScholar.Screening.CorpusSnapshots");
+        var source = string.Join(
+            "\n",
+            Directory.GetFiles(sourceRoot, "*.cs", SearchOption.AllDirectories)
+                .Where(path => !path.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}", StringComparison.Ordinal) &&
+                    !path.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}", StringComparison.Ordinal))
+                .OrderBy(path => path, StringComparer.Ordinal)
+                .Select(File.ReadAllText));
+        var forbidden = new[]
+        {
+            string.Concat("Http", "Client"),
+            string.Concat("System.", "Net.", "Http"),
+            string.Concat("File", "."),
+            string.Concat("Directory", "."),
+            "DbContext",
+            string.Concat("Ava", "lonia"),
+            "OpenAI",
+            "Anthropic",
+            "SemanticKernel",
+            "ProviderSdk",
+            "ProviderClient"
+        };
+        var matches = forbidden.Where(item => source.Contains(item, StringComparison.Ordinal)).ToArray();
+
+        Assert.AreEqual(0, matches.Length,
+            $"Forbidden Screening.CorpusSnapshots source symbols: {string.Join(", ", matches)}");
+    }
+
+    [TestMethod]
+    public void Reporting_depends_only_on_verified_authority_inputs()
+    {
+        var assembly = typeof(NexusScholar.Reporting.VerifiedReviewFlowReport).Assembly;
+        var allowed = new[]
+        {
+            typeof(IClock).Assembly.GetName().Name,
+            typeof(ProtocolVersion).Assembly.GetName().Name,
+            typeof(WorkflowDefinition).Assembly.GetName().Name,
+            typeof(DeduplicationService).Assembly.GetName().Name,
+            typeof(CorpusSnapshotService).Assembly.GetName().Name,
+            typeof(ScreeningConductPolicy).Assembly.GetName().Name,
+            typeof(VerifiedScreeningCorpusBinding).Assembly.GetName().Name,
+            typeof(FullTextInput).Assembly.GetName().Name,
+            typeof(VerifiedFullTextAdmission).Assembly.GetName().Name,
+            typeof(NexusScholar.Provenance.ResearchEvent).Assembly.GetName().Name
+        };
+        var disallowed = assembly.GetReferencedAssemblies()
+            .Select(reference => reference.Name ?? string.Empty)
+            .Where(name => name.StartsWith("NexusScholar.", StringComparison.Ordinal))
+            .Where(name => !allowed.Contains(name, StringComparer.Ordinal))
+            .ToArray();
+
+        Assert.AreEqual(0, disallowed.Length,
+            $"NexusScholar.Reporting has disallowed Nexus dependencies: {string.Join(", ", disallowed)}");
+    }
+
+    [TestMethod]
+    public void Reporting_source_contains_no_host_storage_provider_or_model_symbols()
+    {
+        var sourceRoot = Path.Combine(FindRepositoryRoot(), "src", "NexusScholar.Reporting");
+        var source = string.Join("\n", Directory.GetFiles(sourceRoot, "*.cs", SearchOption.AllDirectories)
+            .Where(path => !path.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}", StringComparison.Ordinal) &&
+                !path.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}", StringComparison.Ordinal))
+            .OrderBy(path => path, StringComparer.Ordinal).Select(File.ReadAllText));
+        var forbidden = new[] { string.Concat("Http", "Client"), string.Concat("System.", "Net.", "Http"),
+            string.Concat("File", "."), string.Concat("Directory", "."), "DbContext", string.Concat("Ava", "lonia"),
+            "OpenAI", "Anthropic", "SemanticKernel", "ProviderSdk", "ProviderClient" };
+        var matches = forbidden.Where(item => source.Contains(item, StringComparison.Ordinal)).ToArray();
+
+        Assert.AreEqual(0, matches.Length, $"Forbidden Reporting source symbols: {string.Join(", ", matches)}");
+    }
+
+    [TestMethod]
     public void AppServices_project_references_only_allowed_nexus_projects()
     {
         var appServicesAssembly = typeof(SearchDedupWorkspacePlanComposer).Assembly;
@@ -437,7 +535,9 @@ public sealed class DependencyRulesTests
             typeof(WorkflowExecutionJournal).Assembly.GetName().Name,
             typeof(ScreeningConductJournal).Assembly.GetName().Name,
             typeof(VerifiedFullTextAdmission).Assembly.GetName().Name,
-            typeof(FullTextInput).Assembly.GetName().Name
+            typeof(FullTextInput).Assembly.GetName().Name,
+            typeof(VerifiedReviewFlowReport).Assembly.GetName().Name,
+            typeof(VerifiedReviewBundleV2).Assembly.GetName().Name
         };
         var disallowed = appServicesAssembly.GetReferencedAssemblies()
             .Select(reference => reference.Name ?? string.Empty)
@@ -505,7 +605,9 @@ public sealed class DependencyRulesTests
             typeof(ScreeningWorkflowExecutionBridge).Assembly.GetName().Name,
             typeof(VerifiedFullTextAdmission).Assembly.GetName().Name,
             typeof(FullTextInput).Assembly.GetName().Name,
-            typeof(ProtocolVersion).Assembly.GetName().Name
+            typeof(ProtocolVersion).Assembly.GetName().Name,
+            typeof(VerifiedReviewBundleV2).Assembly.GetName().Name,
+            typeof(VerifiedReviewFlowReport).Assembly.GetName().Name
         };
         var disallowed = researchWorkspaceAssembly.GetReferencedAssemblies()
             .Select(reference => reference.Name ?? string.Empty)

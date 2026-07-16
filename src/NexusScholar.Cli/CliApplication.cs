@@ -9,7 +9,7 @@ namespace NexusScholar.Cli;
 
 public static class CliApplication
 {
-    public const string Usage = "Usage: dotnet run --project src/NexusScholar.Cli -- [doctor|sample|demo|init|status|import|verify|analyze|review|clusters|dedup decide|screening status]";
+    public const string Usage = "Usage: dotnet run --project src/NexusScholar.Cli -- [doctor|sample|demo|init|status|import|verify|analyze|review|clusters|dedup decide|screening status|report verify|bundle verify|export verify|export status]";
 
     public static int Run(string[] args, TextWriter output, TextWriter error)
     {
@@ -47,6 +47,14 @@ public static class CliApplication
                 DeduplicationDecideCommand.Run(args.Skip(2).ToArray(), output, error, workingDirectory, utcNow),
             "screening" when args.Skip(1).FirstOrDefault()?.Equals("status", StringComparison.OrdinalIgnoreCase) == true =>
                 ScreeningStatusCommand.Run(output, error, workingDirectory),
+            "report" when args.Skip(1).FirstOrDefault()?.Equals("verify", StringComparison.OrdinalIgnoreCase) == true =>
+                ReviewArtifactVerificationCommands.VerifyReport(args.Skip(2).ToArray(), output, error, workingDirectory),
+            "bundle" when args.Skip(1).FirstOrDefault()?.Equals("verify", StringComparison.OrdinalIgnoreCase) == true =>
+                ReviewArtifactVerificationCommands.VerifyBundle(args.Skip(2).ToArray(), output, error, workingDirectory),
+            "export" when args.Skip(1).FirstOrDefault()?.Equals("verify", StringComparison.OrdinalIgnoreCase) == true =>
+                ReviewArtifactVerificationCommands.VerifyExport(args.Skip(2).ToArray(), output, error, workingDirectory),
+            "export" when args.Skip(1).FirstOrDefault()?.Equals("status", StringComparison.OrdinalIgnoreCase) == true =>
+                ReviewArtifactVerificationCommands.ExportStatus(args.Skip(2).ToArray(), output, error, workingDirectory),
             _ => ShowHelp(error)
         };
     }

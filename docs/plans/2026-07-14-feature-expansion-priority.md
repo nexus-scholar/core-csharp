@@ -2,8 +2,8 @@
 
 Status: active successor roadmap after Hardening 30.
 
-Current state: FE-01 through FE-04 are complete. FE-03 and FE-04 completion
-evidence is in `docs/gates/`. FE-05 is the next planning target; FE-05 through
+Current state: FE-01 through FE-06 are complete with completion evidence in
+`docs/gates/` and `docs/release/FE-06-COMPLETION-EVIDENCE.md`. FE-07 through
 FE-12 remain sequenced future work and are not implementation-authorized by this
 roadmap.
 
@@ -417,6 +417,9 @@ without a trustworthy scientific target.
 
 ## FE-06 - Reporting, Audit Bundle, And Rapid Review Profile
 
+Status: complete under ADR 0033. The accepted implementation order and evidence
+are recorded in `docs/gates/FE-06-REPORTING-AUDIT-BUNDLE-RAPID-REVIEW.md`.
+
 ### Outcome
 
 Produce a portable, verifiable account of the local review slice from protocol
@@ -445,6 +448,11 @@ define authority through an editable template.
 - generated narrative is a presentation, not canonical scientific state.
 
 ### Work Packages And Owners
+
+ADR 0033 and `docs/gates/FE-06-REPORTING-AUDIT-BUNDLE-RAPID-REVIEW.md`
+supersede the original numbering below. Execution now begins with FE-06.0
+snapshot-to-Screening binding and follows the dependency order in that gate;
+the list below is retained as historical planning context.
 
 - FE-06.1 reporting contract ADR: new `NexusScholar.Reporting` domain owner.
 - FE-06.2 bundle extension and verification: `NexusScholar.Bundles` owner.

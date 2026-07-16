@@ -6,6 +6,7 @@ public static class ProtocolSupplementalTargetTypes
 {
     public const string Waiver = "protocol-waiver";
     public const string Amendment = "protocol-amendment";
+    public const string Deviation = "protocol-deviation";
 }
 
 public sealed record UnverifiedProtocolSupplementalApproval(
@@ -225,7 +226,7 @@ public sealed class VerifiedProtocolAmendment
     public IReadOnlyList<ProtocolInvalidationNotice> InvalidationNotices { get; }
 }
 
-public static class ProtocolSupplementalAuthorityRehydrator
+public static partial class ProtocolSupplementalAuthorityRehydrator
 {
     public static VerifiedProtocolSupplementalApproval RehydrateApproval(
         UnverifiedProtocolSupplementalApproval input,
@@ -327,7 +328,7 @@ public static class ProtocolSupplementalAuthorityRehydrator
         return new VerifiedProtocolAmendment(amendment, digest, policy, previous, produced, approvals);
     }
 
-    private static VerifiedProtocolSupplementalApproval[] ResolveAndValidateApprovals(
+    internal static VerifiedProtocolSupplementalApproval[] ResolveAndValidateApprovals(
         IReadOnlyList<string> approvalIds,
         string targetType,
         string targetId,

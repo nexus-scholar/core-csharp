@@ -1,7 +1,7 @@
 # FE-05 Local Full Text Workflow Completion Evidence
 
 Date: 2026-07-16  
-Status: local gate complete; hosted CI and merge pending  
+Status: complete; hosted CI passed and PR 58 merged
 Authority: ADR 0032
 
 ## Delivered Behavior
@@ -63,6 +63,9 @@ tests with zero failures. Format verification is clean. Release-policy
 regressions pass, sixteen packages reproduce normalized content, and a clean
 local-source smoke installation loads all sixteen assemblies under Windows
 PowerShell 5.1 without a PATH override.
+
+Hosted Windows, Ubuntu, review, CodeQL, and analysis checks passed on PR 58.
+The feature merged to `main` as commit `3d8ec37`.
 
 ## Claims
 

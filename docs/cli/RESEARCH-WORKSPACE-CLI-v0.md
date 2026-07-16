@@ -200,9 +200,33 @@ Expected behavior:
 
 APP-01 merge actions remain placeholders.
 
-The CLI may display action labels from `WorkspacePlan` blocks, but it must not execute `AcceptMerge`, `RejectMerge`, `MarkUnresolved`, Screening include/exclude, workflow continuation, or export-bundle commands in this CLI version.
+The CLI may display action labels from `WorkspacePlan` blocks, but it must not execute `AcceptMerge`, `RejectMerge`, `MarkUnresolved`, Screening include/exclude, workflow continuation, or report/bundle/export creation commands in this CLI version.
 
 Human decisions require a later accepted boundary for actor identity, persistence/provenance semantics, and mutation rules.
+
+## Persisted Review Artifact Verification
+
+ADR 0033 adds four read-only commands over exports already committed by the
+AppServices and ResearchWorkspace authority boundary:
+
+```text
+nexus report verify <export-id>
+nexus bundle verify <export-id>
+nexus export verify <export-id>
+nexus export status
+```
+
+`report verify` reopens the canonical report and slice envelopes and checks
+their ledger-bound digests. `bundle verify` rehydrates Bundle v2 and compares
+the exact persisted inventory. `export verify` replays the complete ledger and
+selects one immutable export. `export status` reports the verified history and
+head.
+
+These commands do not accept protocol ids, workflow ids, generation ids,
+digest text, actor text, role text, or report counts from the caller. They do
+not create reports, bundles, exports, human decisions, or scientific authority.
+Report verification explicitly states that full source-authority replay was not
+performed.
 
 ## Exit Codes
 

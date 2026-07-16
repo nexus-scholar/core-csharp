@@ -16,6 +16,8 @@ public static class ResearchWorkspacePaths
     public const string WorkflowExecutionJournals = "nexus-output/workflow-executions";
     public const string ScreeningConducts = "nexus-output/screening-conducts";
     public const string FullTextGenerations = "nexus-output/fulltext-generations";
+    public const string Exports = "nexus-output/exports";
+    public const string ExportLedgerHead = "nexus-output/exports/ledger-head.json";
     public const string GenerationStaging = "nexus-output/.staging";
     public const string GenerationQuarantine = "nexus-output/quarantine";
     public const string ProjectLockFileName = "nexus.project.lock";
@@ -51,4 +53,6 @@ public static class ResearchWorkspacePaths
 
     public static string FullTextGenerationRoot(string candidateId, string generationId) =>
         $"{FullTextGenerations}/candidate-{ContentDigest.Sha256Utf8(candidateId).Value[..24]}/{generationId}";
+
+    public static string ExportRoot(string exportId) => $"{Exports}/{exportId}";
 }

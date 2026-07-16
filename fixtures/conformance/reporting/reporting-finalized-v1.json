@@ -1,0 +1,69 @@
+{
+  "fixtureId": "reporting-finalized-v1",
+  "sourceKind": "local-fe06-reporting-contract",
+  "sourceCommit": "4ab087a",
+  "generatorCommand": "C:\\Users\\mouadh\\.dotnet\\dotnet.exe test tests/NexusScholar.Conformance.Tests/NexusScholar.Conformance.Tests.csproj -c Release --filter FullyQualifiedName~ReportingFixtureTests",
+  "generatorVersion": "fe06-reporting-local-v1",
+  "sourceRefs": [
+    "docs/adr/0033-reporting-audit-bundle-and-rapid-review-profile.md",
+    "docs/gates/FE-06-REPORTING-AUDIT-BUNDLE-RAPID-REVIEW.md"
+  ],
+  "comparisonRules": [
+    "replay-reporting-projection-through-csharp-authorities",
+    "no-php-compatibility-claim",
+    "no-prisma-certification-claim",
+    "no-blueprint-conformance-claim"
+  ],
+  "nonClaims": [
+    "no-php-compatibility-claim",
+    "no-prisma-certification-claim"
+  ],
+  "input": {
+    "includeFullText": true,
+    "disclosures": [
+      "Local-only review."
+    ],
+    "nonClaims": [
+      "No PRISMA certification claim."
+    ]
+  },
+  "expected": {
+    "finalizable": true,
+    "sliceDigest": "sha256:6c7823f92cc3fc3158ee2acdb5e7c62854e7b189fe63dbdc4b115a32819a0831",
+    "reportDigest": "sha256:01b7c994eac40a57588d87258c4ae06323992447ac0e2769f6217de531815aba",
+    "counts": {
+      "identified": 3,
+      "duplicatesConsolidated": 1,
+      "postDedup": 2,
+      "titleAbstractIncluded": 1,
+      "titleAbstractExcluded": 1,
+      "fullTextIncluded": 1,
+      "fullTextExcluded": 0,
+      "included": 1
+    },
+    "titleAbstractReasons": [
+      {
+        "code": "wrong-population",
+        "count": 1
+      }
+    ],
+    "fullTextReasons": [],
+    "gaps": [],
+    "audit": {
+      "conflicts": 0,
+      "adjudications": 0,
+      "corrections": 0,
+      "invalidations": 0
+    },
+    "schemas": {
+      "slice": {
+        "schemaId": "nexus.reporting.review-slice-binding",
+        "schemaVersion": "1.0.0"
+      },
+      "report": {
+        "schemaId": "nexus.reporting.review-flow-report",
+        "schemaVersion": "1.0.0"
+      }
+    }
+  }
+}

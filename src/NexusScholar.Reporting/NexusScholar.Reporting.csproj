@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <IsPackable>true</IsPackable>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../NexusScholar.Kernel/NexusScholar.Kernel.csproj" />
+    <ProjectReference Include="../NexusScholar.Protocol/NexusScholar.Protocol.csproj" />
+    <ProjectReference Include="../NexusScholar.Workflow/NexusScholar.Workflow.csproj" />
+    <ProjectReference Include="../NexusScholar.Deduplication/NexusScholar.Deduplication.csproj" />
+    <ProjectReference Include="../NexusScholar.CorpusSnapshots/NexusScholar.CorpusSnapshots.csproj" />
+    <ProjectReference Include="../NexusScholar.Screening/NexusScholar.Screening.csproj" />
+    <ProjectReference Include="../NexusScholar.Screening.CorpusSnapshots/NexusScholar.Screening.CorpusSnapshots.csproj" />
+    <ProjectReference Include="../NexusScholar.FullText/NexusScholar.FullText.csproj" />
+    <ProjectReference Include="../NexusScholar.Screening.FullText/NexusScholar.Screening.FullText.csproj" />
+    <ProjectReference Include="../NexusScholar.Provenance/NexusScholar.Provenance.csproj" />
+  </ItemGroup>
+</Project>
