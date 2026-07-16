@@ -251,6 +251,17 @@ public sealed class FullTextAdmissionTests
         var rawEvidence = new ScreeningConductEvidenceRef(
             FullTextScreeningConductEvidenceKinds.FullTextArtifact, "artifact-full", rawDigest);
         Assert.ThrowsExactly<ScreeningRuleException>(() => FullTextScreeningConductDecision.Create(
+            header, 1, header.Digest, "generic-extraction-smuggle", "candidate-1",
+            ScreeningConductDecisionKind.Review, ScreeningVerdicts.Exclude,
+            new ScreeningConductActor("reviewer-1", ScreeningConductActorKinds.Human, "reviewer"),
+            "Exclude using unverified generic extraction evidence", FixedTime, "wrong-population-full",
+            evidence:
+            [
+                rawEvidence,
+                new ScreeningConductEvidenceRef(FullTextScreeningConductEvidenceKinds.FullTextExtractionAttempt,
+                    unsupportedExtraction.AttemptId, unsupportedExtraction.Digest)
+            ]));
+        Assert.ThrowsExactly<ScreeningRuleException>(() => FullTextScreeningConductDecision.Create(
             extractionHeader, 1, extractionHeader.Digest, "unsupported-exclusion", "candidate-1",
             ScreeningConductDecisionKind.Review, ScreeningVerdicts.Exclude,
             new ScreeningConductActor("reviewer-1", ScreeningConductActorKinds.Human, "reviewer"),

@@ -448,6 +448,23 @@ public sealed class FullTextScreeningConductDecision : IFullTextScreeningConduct
                 normalizedEvidence.Add(attemptRef);
         }
 
+        var extractionEvidence = normalizedEvidence
+            .Where(item => item.Kind == FullTextScreeningConductEvidenceKinds.FullTextExtractionAttempt)
+            .ToArray();
+        if (effectiveExtractionAttemptDigest is null)
+        {
+            if (extractionEvidence.Length != 0)
+                throw new ScreeningRuleException(FullTextScreeningConductErrorCodes.InvalidStageEvidence,
+                    "Extraction evidence requires a policy-bound verified extraction attempt.");
+        }
+        else if (extractionAttempt is null || extractionEvidence.Length != 1 ||
+            extractionEvidence[0].Id != extractionAttempt.AttemptId ||
+            extractionEvidence[0].Digest != extractionAttempt.Digest)
+        {
+            throw new ScreeningRuleException(FullTextScreeningConductErrorCodes.InvalidStageEvidence,
+                "Decision extraction evidence must identify exactly the policy-bound verified extraction attempt.");
+        }
+
         if (extractionAttempt is not null &&
             IsExtractionFailure(extractionAttempt.Status) &&
             string.Equals(verdict, ScreeningVerdicts.Exclude, StringComparison.Ordinal))
