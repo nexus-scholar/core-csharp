@@ -2,9 +2,9 @@
 
 Status: active successor roadmap after Hardening 30.
 
-Current state: FE-01 through FE-07 are complete. FE-08 slices 1 and 2 are
-implemented and independently accepted locally under ADR 0035 and await hosted
-merge validation under `docs/gates/FE-08-LOCAL-PRODUCT-DESKTOP-SLICES-1-2.md`.
+Current state: FE-01 through FE-07 and FE-08 slices 1 and 2 are complete. FE-08
+slices 1 and 2 merged through PR 62 under ADR 0035 with branch and post-merge
+validation recorded in `docs/release/FE-08-SLICES-1-2-COMPLETION-EVIDENCE.md`.
 FE-09 through FE-12 remain sequenced future work and are not implementation-
 authorized by this roadmap.
 
@@ -547,9 +547,9 @@ fixtures, and package-boundary justification.
 
 ## FE-08 - Local Product Desktop Shell
 
-Status: slices 1 and 2 implemented and independently accepted locally; hosted
-merge validation remains open under ADR 0035 and
-`docs/gates/FE-08-LOCAL-PRODUCT-DESKTOP-SLICES-1-2.md`.
+Status: slices 1 and 2 complete under ADR 0035 and
+`docs/gates/FE-08-LOCAL-PRODUCT-DESKTOP-SLICES-1-2.md`; merged through PR 62 at
+`b40bba6` with branch and post-merge validation passed.
 
 ### Outcome
 

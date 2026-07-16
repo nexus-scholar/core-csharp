@@ -58,7 +58,14 @@ high-severity code, architecture, test, or authority finding.
 
 ## Hosted Validation
 
-Pending branch push, pull request, protected merge, and post-merge checks.
+- implementation commit: `d95cf3b`;
+- protected PR: `#62`;
+- merge commit on `main`: `b40bba64807b15bb088dcffbb197a5462babc73e`;
+- branch Gate 01: run `29537423473`, Ubuntu and Windows passed;
+- branch CodeQL: run `29537423478`, passed;
+- dependency review: run `29537423524`, passed;
+- post-merge Gate 01: run `29537771256`, Ubuntu and Windows passed;
+- post-merge CodeQL: run `29537771198`, passed.
 
 ## Claim Boundary
 

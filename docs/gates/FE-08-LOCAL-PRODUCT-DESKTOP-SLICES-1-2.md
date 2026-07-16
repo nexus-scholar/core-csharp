@@ -1,7 +1,7 @@
 # FE-08: Local Product Desktop Shell - Slices 1 And 2
 
-Status: implemented and independently accepted locally under ADR 0035; hosted
-merge validation remains open.
+Status: complete under ADR 0035. Merged through PR 62 at `b40bba6`; branch and
+post-merge validation passed.
 
 ## Progress Evidence
 
