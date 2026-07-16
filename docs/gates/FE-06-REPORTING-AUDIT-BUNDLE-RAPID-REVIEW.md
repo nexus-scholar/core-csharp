@@ -1,6 +1,7 @@
 # FE-06: Reporting, Audit Bundle, And Rapid Review Profile
 
-Status: active under accepted ADR 0033.
+Status: paused under accepted ADR 0033. Resume from
+`docs/handoffs/2026-07-16-fe-06-pause-checkpoint.md`.
 
 ## Goal
 
