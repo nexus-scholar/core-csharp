@@ -37,5 +37,7 @@
     <ProjectReference Include="../../src/NexusScholar.UiContracts/NexusScholar.UiContracts.csproj" />
     <ProjectReference Include="../../src/NexusScholar.AppServices/NexusScholar.AppServices.csproj" />
     <ProjectReference Include="../../src/NexusScholar.ResearchWorkspace/NexusScholar.ResearchWorkspace.csproj" />
+    <ProjectReference Include="../../src/NexusScholar.Desktop.AppServices/NexusScholar.Desktop.AppServices.csproj" />
+    <ProjectReference Include="../../src/NexusScholar.Desktop/NexusScholar.Desktop.csproj" />
   </ItemGroup>
 </Project>

@@ -28,22 +28,24 @@ internal static class ResearchWorkspaceInitCommand
                 return ResearchWorkspaceExitCodes.UsageOrValidationFailure;
             }
 
-            var projectFile = ResearchWorkspacePaths.ProjectFile(workingDirectory);
-            if (File.Exists(projectFile))
+            var result = ResearchWorkspaceLocalOperations.Initialize(new ResearchWorkspaceInitializeRequest(
+                workingDirectory,
+                options.Title,
+                options.WorkspaceId,
+                utcNow()));
+            if (!result.Completed)
             {
-                error.WriteLine("A Nexus research workspace already exists in this folder.");
-                error.WriteLine("Project file: nexus.project.json");
-                error.WriteLine("Run: nexus status");
-                return ResearchWorkspaceExitCodes.UsageOrValidationFailure;
+                error.WriteLine(result.Message);
+                if (File.Exists(ResearchWorkspacePaths.ProjectFile(workingDirectory)))
+                {
+                    error.WriteLine("Project file: nexus.project.json");
+                    error.WriteLine("Run: nexus status");
+                }
+
+                return result.ExitCode;
             }
 
-            foreach (var relativeDirectory in ResearchWorkspacePaths.RequiredDirectories)
-            {
-                Directory.CreateDirectory(ResearchWorkspacePaths.InProject(workingDirectory, relativeDirectory));
-            }
-
-            var project = ResearchWorkspaceProject.Create(options.Title, utcNow(), options.WorkspaceId);
-            ResearchWorkspaceJson.WriteProjectFile(projectFile, project);
+            var project = result.Project!;
 
             output.WriteLine("Nexus research workspace initialized");
             output.WriteLine($"Project: {project.Title}");
@@ -62,11 +64,6 @@ internal static class ResearchWorkspaceInitCommand
         {
             error.WriteLine(exception.Message);
             return ResearchWorkspaceExitCodes.UsageOrValidationFailure;
-        }
-        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
-        {
-            error.WriteLine($"Unable to initialize Nexus research workspace: {exception.Message}");
-            return ResearchWorkspaceExitCodes.UnexpectedRuntimeFailure;
         }
     }
 

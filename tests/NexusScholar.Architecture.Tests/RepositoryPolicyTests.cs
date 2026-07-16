@@ -172,6 +172,10 @@ public sealed class RepositoryPolicyTests
             || string.Equals(
                 relative,
                 "samples/NexusScholar.Desktop.Preview/NexusScholar.Desktop.Preview.csproj",
+                StringComparison.OrdinalIgnoreCase)
+            || string.Equals(
+                relative,
+                "src/NexusScholar.Desktop/NexusScholar.Desktop.csproj",
                 StringComparison.OrdinalIgnoreCase);
     }
 

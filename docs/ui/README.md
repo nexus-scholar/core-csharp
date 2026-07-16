@@ -2,7 +2,11 @@
 
 This folder tracks UI and UX work for Nexus Scholar without changing Core scientific authority. Authoritative scientific behavior remains in `specs/`, accepted ADRs, fixtures, observable pinned PHP behavior, and the current C# implementation.
 
-The current UI lane has moved past planning-only docs. `main` now includes renderer-neutral UI contracts, sample block plans, an Avalonia block renderer prototype, a sample visual host, shared ResearchWorkspace read models, and a desktop preview sample with safe local verify/analyze actions. These pieces are still non-authoritative: they render workflow plans and local workspace evidence summaries, but they do not approve protocols, mutate Core records, persist app state, run AI, execute merge decisions, or claim product desktop behavior.
+The current UI lane has moved past preview-only work. FE-08 slices 1 and 2 add a
+local product host, structured desktop command facade, and safe open, initialize,
+local Search import, verify, and analyze workflows. The earlier preview remains a
+sample. Neither host is scientific authority, and scientific decisions remain
+unavailable.
 
 ## Documents
 
@@ -34,12 +38,31 @@ The current UI lane has moved past planning-only docs. `main` now includes rende
 - `samples/block-plans`: sample-only workspace plan JSON files.
 - `samples/NexusScholar.Avalonia.Blocks.SampleHost`: local visual inspection host for those samples.
 - `samples/NexusScholar.Desktop.Preview`: Avalonia preview over local Research Workspace outputs, with UI-02A verify/analyze actions only.
-- `tests/NexusScholar.UiContracts.Tests`, `tests/NexusScholar.Avalonia.Blocks.Tests`, `tests/NexusScholar.Avalonia.Blocks.SampleHost.Tests`, `tests/NexusScholar.ResearchWorkspace.Tests`, and `tests/NexusScholar.Desktop.Preview.Tests`: serialization, view-model, architecture, loader, read-model, and preview coverage.
+- `src/NexusScholar.Desktop.AppServices`: deterministic preview/confirmation and
+  stale-safe command facade for admitted desktop operations.
+- `src/NexusScholar.Desktop`: Windows-first local product host for FE-08 slices 1
+  and 2.
+- `tests/NexusScholar.UiContracts.Tests`, `tests/NexusScholar.Avalonia.Blocks.Tests`,
+  `tests/NexusScholar.Avalonia.Blocks.SampleHost.Tests`,
+  `tests/NexusScholar.ResearchWorkspace.Tests`,
+  `tests/NexusScholar.Desktop.Preview.Tests`,
+  `tests/NexusScholar.Desktop.AppServices.Tests`, and
+  `tests/NexusScholar.Desktop.Tests`: serialization, view-model, architecture,
+  loader, read-model, command-facade, and product-host coverage.
 
 ## Boundary
 
 Core projects must not reference `NexusScholar.UiContracts`, Avalonia, renderer packages, app services, persistence, or AI/model clients.
 
-`NexusScholar.UiContracts` must remain UI-framework-free. `NexusScholar.Avalonia.Blocks` may reference Avalonia and `NexusScholar.UiContracts`, but it must not reference Core domain packages. The sample host may load only sample plans and render placeholder actions. The desktop preview may read existing local Research Workspace outputs and run safe local verify/analyze actions through `NexusScholar.ResearchWorkspace`, but it must not run init/import, execute merge decisions, call providers, or become a product desktop shell.
+`NexusScholar.UiContracts` remains UI-framework-free. The product host reaches
+workspace behavior only through `NexusScholar.Desktop.AppServices`; it must not
+reference ResearchWorkspace or Core domain projects directly. No desktop path may
+execute scientific decisions, call providers, or store UI state as authority.
+
+Run the product host locally with:
+
+```powershell
+C:\Users\mouadh\.dotnet\dotnet.exe run --project src/NexusScholar.Desktop/NexusScholar.Desktop.csproj -c Release
+```
 
 Any future UI work that affects scientific authority, record schemas, digest material, provenance, AI acceptance, app persistence, or PHP compatibility requires the normal ADR, fixture, and verification path.

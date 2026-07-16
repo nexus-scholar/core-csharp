@@ -8,6 +8,7 @@ using NexusScholar.Avalonia.Blocks.SampleHost;
 using NexusScholar.Bundles;
 using NexusScholar.CorpusSnapshots;
 using NexusScholar.Deduplication;
+using NexusScholar.Desktop.AppServices;
 using NexusScholar.Desktop.Preview;
 using NexusScholar.Extensibility;
 using NexusScholar.Extraction;
@@ -833,6 +834,43 @@ public sealed class DependencyRulesTests
             .ToArray();
 
         Assert.AreEqual(0, matches.Length, $"Forbidden Desktop Preview source symbols: {string.Join(", ", matches)}");
+    }
+
+    [TestMethod]
+    public void Desktop_appservices_is_the_only_product_workspace_command_bridge()
+    {
+        var assembly = typeof(DesktopWorkspaceCommandFacade).Assembly;
+        var allowed = new[]
+        {
+            typeof(ContentDigest).Assembly.GetName().Name,
+            typeof(ResearchWorkspaceProject).Assembly.GetName().Name,
+            typeof(WorkspacePlan).Assembly.GetName().Name
+        };
+        var disallowed = assembly.GetReferencedAssemblies()
+            .Select(reference => reference.Name ?? string.Empty)
+            .Where(name => name.StartsWith("NexusScholar.", StringComparison.Ordinal))
+            .Where(name => !allowed.Contains(name, StringComparer.Ordinal))
+            .ToArray();
+
+        Assert.AreEqual(0, disallowed.Length,
+            $"Desktop.AppServices has disallowed Nexus dependencies: {string.Join(", ", disallowed)}");
+        Assert.IsFalse(assembly.GetReferencedAssemblies()
+            .Any(reference => (reference.Name ?? string.Empty).StartsWith("Avalonia", StringComparison.Ordinal)));
+    }
+
+    [TestMethod]
+    public void Desktop_product_host_references_facade_without_researchworkspace_or_core_domains()
+    {
+        var assembly = typeof(NexusScholar.Desktop.MainWindow).Assembly;
+        var references = assembly.GetReferencedAssemblies()
+            .Select(reference => reference.Name ?? string.Empty)
+            .ToArray();
+
+        CollectionAssert.Contains(references, typeof(DesktopWorkspaceCommandFacade).Assembly.GetName().Name);
+        Assert.IsFalse(references.Contains(typeof(ResearchWorkspaceProject).Assembly.GetName().Name, StringComparer.Ordinal));
+        Assert.IsFalse(references.Contains(typeof(ProtocolDraft).Assembly.GetName().Name, StringComparer.Ordinal));
+        Assert.IsFalse(references.Contains(typeof(DeduplicationService).Assembly.GetName().Name, StringComparer.Ordinal));
+        Assert.IsTrue(references.Any(name => name.StartsWith("Avalonia", StringComparison.Ordinal)));
     }
 
     [TestMethod]

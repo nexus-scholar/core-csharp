@@ -12,9 +12,9 @@ public static class ResearchWorkspaceAnalyzer
     public const string WorkspacePlanPath = "nexus-output/workspace/current.workspace-plan.json";
     public const string ReviewReportPath = "nexus-output/reports/review.md";
 
-    private const string ParserId = "nexus.cli.analyze";
+    private const string ParserId = "nexus.local-workspace.analyze";
     private const string ParserVersion = "1.0.0";
-    private const string ImportedBy = "nexus-cli-local-analyze";
+    private const string ImportedBy = "nexus-local-workspace-analyze";
 
     public static ResearchWorkspaceAnalysisResult Analyze(
         ResearchWorkspaceLocation location,
@@ -43,7 +43,7 @@ public static class ResearchWorkspaceAnalyzer
                 project.Title,
                 aggregateTrace,
                 deduplicationResult,
-                "Read-only local CLI analysis from imported Search evidence. Not Core authority."));
+                "Read-only local workspace analysis from imported Search evidence. Not Core authority."));
 
         return new ResearchWorkspaceAnalysisResult(traces, deduplicationResult, plan);
     }
@@ -109,7 +109,7 @@ public static class ResearchWorkspaceAnalyzer
             SearchImportMetadata.AcquisitionKindImportedExport,
             "local-workspace-imports",
             "mixed-local-imports",
-            "nexus.cli.analyze.aggregate",
+            "nexus.local-workspace.analyze.aggregate",
             "1.0.0",
             sourceDigest,
             "local-workspace-import-digests",

@@ -2,9 +2,11 @@
 
 Status: active successor roadmap after Hardening 30.
 
-Current state: FE-01 through FE-06 are complete. FE-07 is implemented locally
-under independent review and hosted validation. FE-08 through FE-12 remain
-sequenced future work and are not implementation-authorized by this roadmap.
+Current state: FE-01 through FE-07 are complete. FE-08 slices 1 and 2 are
+implemented and independently accepted locally under ADR 0035 and await hosted
+merge validation under `docs/gates/FE-08-LOCAL-PRODUCT-DESKTOP-SLICES-1-2.md`.
+FE-09 through FE-12 remain sequenced future work and are not implementation-
+authorized by this roadmap.
 
 ## Operating Decision
 
@@ -544,6 +546,10 @@ fixtures, and package-boundary justification.
 - no unsupported statistical, clinical, causal, or certainty claim is made.
 
 ## FE-08 - Local Product Desktop Shell
+
+Status: slices 1 and 2 implemented and independently accepted locally; hosted
+merge validation remains open under ADR 0035 and
+`docs/gates/FE-08-LOCAL-PRODUCT-DESKTOP-SLICES-1-2.md`.
 
 ### Outcome
 

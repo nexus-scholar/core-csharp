@@ -12,6 +12,246 @@ namespace NexusScholar.ResearchWorkspace.Tests;
 public sealed class ResearchWorkspaceServiceTests
 {
     [TestMethod]
+    public void Initialize_creates_workspace_when_absent()
+    {
+        using var workspace = TemporaryUninitializedWorkspace.Create();
+        var result = ResearchWorkspaceLocalOperations.Initialize(new ResearchWorkspaceInitializeRequest(
+            workspace.Root,
+            "AI screening tools review",
+            null,
+            new DateTimeOffset(2026, 7, 1, 0, 0, 0, TimeSpan.Zero)));
+
+        var project = result.Project;
+
+        Assert.AreEqual(ResearchWorkspaceOperationStatus.Succeeded, result.Status);
+        Assert.AreEqual(ResearchWorkspaceExitCodes.Success, result.ExitCode);
+        Assert.IsNotNull(project);
+        Assert.IsTrue(File.Exists(Path.Combine(workspace.Root, ResearchWorkspacePaths.ProjectFileName)));
+        foreach (var relativeDirectory in ResearchWorkspacePaths.RequiredDirectories)
+        {
+            Assert.IsTrue(Directory.Exists(ResearchWorkspacePaths.InProject(workspace.Root, relativeDirectory)));
+        }
+        Assert.AreEqual("AI screening tools review", project!.Title);
+        Assert.AreEqual("workspace-ai-screening-tools-review", project!.WorkspaceId);
+        Assert.AreEqual(0, project.Revision);
+        Assert.IsFalse(File.ReadAllText(Path.Combine(workspace.Root, ResearchWorkspacePaths.ProjectFileName))
+            .Contains(workspace.Root, StringComparison.OrdinalIgnoreCase));
+    }
+
+    [TestMethod]
+    public void Initialize_rejects_existing_project_file()
+    {
+        using var workspace = TemporaryWorkspace.Create();
+        var result = ResearchWorkspaceLocalOperations.Initialize(new ResearchWorkspaceInitializeRequest(
+            workspace.Root,
+            "AI screening tools review",
+            null,
+            new DateTimeOffset(2026, 7, 1, 0, 0, 0, TimeSpan.Zero)));
+
+        Assert.AreEqual(ResearchWorkspaceOperationStatus.Failed, result.Status);
+        Assert.AreEqual(ResearchWorkspaceExitCodes.UsageOrValidationFailure, result.ExitCode);
+        Assert.IsNotNull(result.Message);
+        Assert.AreEqual("A Nexus research workspace already exists in this folder.", result.Message);
+        Assert.IsNull(result.Project);
+    }
+
+    [TestMethod]
+    public void Initialize_reports_recovery_when_workspace_lock_is_held()
+    {
+        using var workspace = TemporaryUninitializedWorkspace.Create();
+        var lockPath = Path.Combine(workspace.Root, ResearchWorkspacePaths.ProjectLockFileName);
+        using var heldLock = new FileStream(lockPath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
+
+        var result = ResearchWorkspaceLocalOperations.Initialize(new ResearchWorkspaceInitializeRequest(
+            workspace.Root,
+            "Concurrent initialization",
+            null,
+            new DateTimeOffset(2026, 7, 1, 0, 0, 0, TimeSpan.Zero)));
+
+        Assert.AreEqual(ResearchWorkspaceOperationStatus.RecoveryRequired, result.Status);
+        StringAssert.Contains(result.Message, "locked by another initialization or mutation");
+        Assert.IsFalse(File.Exists(Path.Combine(workspace.Root, ResearchWorkspacePaths.ProjectFileName)));
+    }
+
+    [TestMethod]
+    public void Initialize_rejects_unsafe_workspace_id_before_project_write()
+    {
+        using var workspace = TemporaryUninitializedWorkspace.Create();
+
+        var result = ResearchWorkspaceLocalOperations.Initialize(new ResearchWorkspaceInitializeRequest(
+            workspace.Root,
+            "Unsafe workspace",
+            "..\\bad",
+            new DateTimeOffset(2026, 7, 1, 0, 0, 0, TimeSpan.Zero)));
+
+        Assert.AreEqual(ResearchWorkspaceOperationStatus.Failed, result.Status);
+        Assert.AreEqual(ResearchWorkspaceExitCodes.UsageOrValidationFailure, result.ExitCode);
+        StringAssert.Contains(result.Message, "safe identifier");
+        Assert.IsFalse(File.Exists(Path.Combine(workspace.Root, ResearchWorkspacePaths.ProjectFileName)));
+    }
+
+    [TestMethod]
+    public void ImportSearch_imports_search_file_and_commits_project_state()
+    {
+        using var workspace = TemporaryWorkspace.CreateInitialized();
+        var sourcePath = CreateSourceFile(workspace.Root, "source.csv", ScopusCsv);
+        var result = Import(
+            workspace.Root,
+            sourcePath,
+            "scopus",
+            "csv",
+            "search-001");
+
+        Assert.AreEqual(ResearchWorkspaceOperationStatus.Succeeded, result.Status);
+        Assert.AreEqual(ResearchWorkspaceExitCodes.Success, result.ExitCode);
+        Assert.AreEqual("search-001", result.InputId);
+        Assert.AreEqual("scopus", result.Source);
+        Assert.AreEqual("csv", result.Format);
+        Assert.AreEqual("inputs/search/search-001/source.csv", result.RelativeSourcePath);
+        Assert.AreEqual(Sha256(File.ReadAllBytes(sourcePath)), result.SourceDigest);
+        Assert.AreEqual(2, result.ImportedRecordCount);
+        Assert.AreEqual(0, result.ParserWarningCount);
+        Assert.AreEqual(0, result.SkippedRecordCount);
+        Assert.AreEqual("inputs/search/search-001/import-trace.json", result.TraceRelativePath);
+        var tracePath = ResearchWorkspacePaths.InProject(workspace.Root, result.TraceRelativePath!);
+        using var trace = JsonDocument.Parse(File.ReadAllText(tracePath));
+        Assert.AreEqual(
+            "nexus.local-workspace.search-import",
+            trace.RootElement.GetProperty("metadata").GetProperty("parserId").GetString());
+        Assert.IsTrue(result.Project is not null);
+        Assert.AreEqual(1, result.Project!.Inputs.Count);
+        Assert.AreEqual(1, result.Project!.Revision);
+        Assert.IsNotNull(result.TraceRelativePath);
+        Assert.IsFalse(File.ReadAllText(Path.Combine(workspace.Root, result.TraceRelativePath!))
+            .Contains(workspace.Root, StringComparison.OrdinalIgnoreCase));
+    }
+
+    [TestMethod]
+    public void ImportSearch_rejects_duplicate_input_id()
+    {
+        using var workspace = TemporaryWorkspace.CreateInitialized();
+        var sourcePath = CreateSourceFile(workspace.Root, "source.csv", ScopusCsv);
+
+        var first = Import(workspace.Root, sourcePath, "scopus", "csv", "search-001");
+        Assert.AreEqual(ResearchWorkspaceOperationStatus.Succeeded, first.Status);
+
+        var second = Import(workspace.Root, sourcePath, "scopus", "csv", "search-001");
+
+        Assert.AreEqual(ResearchWorkspaceOperationStatus.Failed, second.Status);
+        Assert.AreEqual(ResearchWorkspaceExitCodes.UsageOrValidationFailure, second.ExitCode);
+        Assert.AreEqual("A search export with input id 'search-001' already exists.", second.Message);
+    }
+
+    [TestMethod]
+    public void ImportSearch_reports_stale_when_preview_digest_changed()
+    {
+        using var workspace = TemporaryWorkspace.CreateInitialized();
+        var sourcePath = CreateSourceFile(workspace.Root, "source.csv", ScopusCsv);
+
+        var result = Import(
+            workspace.Root,
+            sourcePath,
+            "scopus",
+            "csv",
+            "search-001",
+            expectedSourceDigest: "sha256:00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000");
+
+        Assert.AreEqual(ResearchWorkspaceOperationStatus.Stale, result.Status);
+        Assert.AreEqual(ResearchWorkspaceExitCodes.DigestMismatch, result.ExitCode);
+        Assert.AreEqual("stale-import-source: the selected Search export changed after preview.", result.Message);
+        Assert.IsNull(result.Project);
+    }
+
+    [TestMethod]
+    public void ImportSearch_reports_stale_when_project_revision_changed()
+    {
+        using var workspace = TemporaryWorkspace.CreateInitialized();
+        var firstSourcePath = CreateSourceFile(workspace.Root, "first.csv", ScopusCsv);
+        var first = Import(workspace.Root, firstSourcePath, "scopus", "csv", "search-001");
+        Assert.AreEqual(ResearchWorkspaceOperationStatus.Succeeded, first.Status);
+
+        var secondSourcePath = CreateSourceFile(workspace.Root, "second.csv", ScopusCsv);
+        var result = Import(
+            workspace.Root,
+            secondSourcePath,
+            "scopus",
+            "csv",
+            "search-002",
+            expectedProjectRevision: 0);
+
+        Assert.AreEqual(ResearchWorkspaceOperationStatus.Stale, result.Status);
+        Assert.AreEqual(ResearchWorkspaceExitCodes.UsageOrValidationFailure, result.ExitCode);
+        StringAssert.Contains(result.Message, "stale-workspace-revision: expected revision 0, but found 1.");
+    }
+
+    [TestMethod]
+    public void ImportSearch_distinguishes_workspace_lock_from_stale_revision()
+    {
+        using var workspace = TemporaryWorkspace.CreateInitialized();
+        var sourcePath = CreateSourceFile(workspace.Root, "source.csv", ScopusCsv);
+        var lockPath = Path.Combine(workspace.Root, ResearchWorkspacePaths.ProjectLockFileName);
+        using var heldLock = new FileStream(lockPath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
+
+        var result = Import(workspace.Root, sourcePath, "scopus", "csv", "search-001");
+
+        Assert.AreEqual(ResearchWorkspaceOperationStatus.RecoveryRequired, result.Status);
+        StringAssert.Contains(result.Message, "locked by another mutation");
+    }
+
+    [TestMethod]
+    public void Read_models_surface_parser_warning_summary_without_absolute_paths()
+    {
+        using var workspace = TemporaryWorkspace.CreateInitialized();
+        var warningFixture = Path.Combine(
+            RepositoryRoot(),
+            "tests",
+            "NexusScholar.Cli.Tests",
+            "Fixtures",
+            "ResearchWorkspaceImportSearch",
+            "pr03-warning-missing-title.ris");
+        var warningSourcePath = CreateSourceFile(workspace.Root, "warnings.ris", File.ReadAllText(warningFixture));
+        var imported = Import(
+            workspace.Root,
+            warningSourcePath,
+            "web-of-science",
+            "ris",
+            "search-warning");
+
+        Assert.AreEqual(ResearchWorkspaceOperationStatus.Succeeded, imported.Status);
+        Assert.IsTrue(imported.ParserWarningCount > 0);
+        Assert.IsFalse(File.ReadAllText(Path.Combine(workspace.Root, "nexus.project.json"))
+            .Contains(workspace.Root, StringComparison.OrdinalIgnoreCase));
+
+        var model = ResearchWorkspaceReadModelBuilder.Build(workspace.Root);
+
+        Assert.AreEqual(WorkspaceState.ImportedWithWarnings, model.State);
+        Assert.AreEqual(imported.ParserWarningCount, model.Verification.ParserWarningCount);
+        Assert.AreEqual(0, model.AttentionItems.Count);
+        Assert.IsTrue(model.Verification.InputCount > 0);
+    }
+
+    [TestMethod]
+    public void ImportSearch_reports_recovery_required_when_authority_generation_active()
+    {
+        using var workspace = TemporaryWorkspace.CreateInitialized();
+        var sourcePath = CreateSourceFile(workspace.Root, "source.csv", ScopusCsv);
+        var project = workspace.Project with
+        {
+            CurrentAuthorityGenerationId = "authority-active",
+            AuthorityGenerationManifestPath = $"{ResearchWorkspacePaths.AuthorityGenerations}/authority-active/authority-generation.manifest.json",
+            AuthorityGenerationManifestSha256 = Sha256(Encoding.UTF8.GetBytes("active-authority-manifest"))
+        };
+        ResearchWorkspaceStore.WriteProject(workspace.Location, project);
+
+        var result = Import(workspace.Root, sourcePath, "scopus", "csv", "search-001");
+
+        Assert.AreEqual(ResearchWorkspaceOperationStatus.RecoveryRequired, result.Status);
+        Assert.AreEqual(ResearchWorkspaceExitCodes.UsageOrValidationFailure, result.ExitCode);
+        Assert.AreEqual("authority-generation-active: import and analysis are locked while an authority generation is active.", result.Message);
+        Assert.IsNull(result.Project);
+    }
+
+    [TestMethod]
     public void Store_finds_workspace_from_child_folder()
     {
         using var workspace = TemporaryWorkspace.Create();
@@ -365,6 +605,60 @@ eid,title,author names,year,source title,doi
         return $"sha256:{Convert.ToHexString(SHA256.HashData(bytes)).ToLowerInvariant()}";
     }
 
+    private static string CreateSourceFile(string root, string fileName, string content)
+    {
+        var path = Path.Combine(root, fileName);
+        File.WriteAllText(path, content, Encoding.UTF8);
+        return path;
+    }
+
+    private static ResearchWorkspaceSearchImportResult Import(
+        string workingDirectory,
+        string sourcePath,
+        string source,
+        string format,
+        string queryId,
+        long? expectedProjectRevision = null,
+        string? expectedSourceDigest = null)
+    {
+        return ResearchWorkspaceLocalOperations.ImportSearch(new ResearchWorkspaceSearchImportRequest(
+            workingDirectory,
+            sourcePath,
+            source,
+            format,
+            queryId,
+            null,
+            "nexus-cli-local-test",
+            new DateTimeOffset(2026, 7, 1, 0, 0, 0, TimeSpan.Zero),
+            expectedProjectRevision,
+            expectedSourceDigest));
+    }
+
+    private sealed class TemporaryUninitializedWorkspace : IDisposable
+    {
+        private TemporaryUninitializedWorkspace(string root) => Root = root;
+
+        public string Root { get; }
+
+        public static TemporaryUninitializedWorkspace Create()
+        {
+            var root = Path.Combine(
+                Path.GetTempPath(),
+                "nexus-rw-service-tests-init",
+                Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(root);
+            return new TemporaryUninitializedWorkspace(root);
+        }
+
+        public void Dispose()
+        {
+            if (Directory.Exists(Root))
+            {
+                Directory.Delete(Root, recursive: true);
+            }
+        }
+    }
+
     private static string RepositoryRoot()
     {
         var directory = new DirectoryInfo(AppContext.BaseDirectory);
@@ -410,6 +704,11 @@ eid,title,author names,year,source title,doi
             var root = Path.Combine(Path.GetTempPath(), $"nexus-rw-tests-{Guid.NewGuid():N}");
             Directory.CreateDirectory(root);
             return new TemporaryWorkspace(root);
+        }
+
+        public static TemporaryWorkspace CreateInitialized()
+        {
+            return Create();
         }
 
         public void Dispose()

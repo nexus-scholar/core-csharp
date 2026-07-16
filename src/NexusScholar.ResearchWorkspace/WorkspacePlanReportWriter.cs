@@ -10,7 +10,7 @@ public static class WorkspacePlanReportWriter
             "\n",
             "# Nexus workspace review report",
             string.Empty,
-            "This report is a read-only local CLI analysis projection. It is not Core scientific authority.",
+            "This report is a read-only local workspace analysis projection. It is not Core scientific authority.",
             string.Empty,
             $"Mode: {result.WorkspacePlan.Mode}",
             $"Import traces: {result.ImportTraces.Count}",
