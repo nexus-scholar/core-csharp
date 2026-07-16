@@ -12,6 +12,7 @@ public static class FullTextSchemas
     public const string AcquisitionRecordSchemaId = "nexus.fulltext.acquisition-record";
     public const string ArtifactEvidenceSchemaId = "nexus.fulltext.artifact-evidence";
     public const string ExtractionRecordSchemaId = "nexus.fulltext.extraction-record";
+    public const string EvidenceLocationSchemaId = "nexus.fulltext.evidence-location";
     public const string SchemaVersion = "1.0.0";
 }
 

@@ -1,5 +1,6 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NexusScholar.AI;
+using NexusScholar.Appraisal;
 using NexusScholar.AppServices;
 using NexusScholar.Artifacts;
 using NexusScholar.Avalonia.Blocks;
@@ -9,6 +10,7 @@ using NexusScholar.CorpusSnapshots;
 using NexusScholar.Deduplication;
 using NexusScholar.Desktop.Preview;
 using NexusScholar.Extensibility;
+using NexusScholar.Extraction;
 using NexusScholar.FullText;
 using NexusScholar.Kernel;
 using NexusScholar.Protocol;
@@ -21,10 +23,12 @@ using NexusScholar.Screening.FullText;
 using NexusScholar.Screening.WorkflowExecution;
 using NexusScholar.Search;
 using NexusScholar.Shared;
+using NexusScholar.Synthesis;
 using NexusScholar.UiContracts;
 using NexusScholar.Workflow;
 using NexusScholar.WorkflowExecution;
 using NexusScholar.WorkflowExecution.Provenance;
+using NexusScholar.WorkflowExecution.ScientificRecords;
 
 namespace NexusScholar.Architecture.Tests;
 
@@ -829,6 +833,50 @@ public sealed class DependencyRulesTests
             .ToArray();
 
         Assert.AreEqual(0, matches.Length, $"Forbidden Desktop Preview source symbols: {string.Join(", ", matches)}");
+    }
+
+    [TestMethod]
+    public void Fe07_projects_depend_only_on_accepted_inward_owners()
+    {
+        var kernel = typeof(ContentDigest).Assembly.GetName().Name!;
+        var protocol = typeof(ProtocolVersion).Assembly.GetName().Name!;
+        var fullText = typeof(FullTextInput).Assembly.GetName().Name!;
+        var extraction = typeof(ExtractionForm).Assembly.GetName().Name!;
+        var appraisal = typeof(AppraisalInstrument).Assembly.GetName().Name!;
+        var synthesis = typeof(VerifiedSynthesisPlan).Assembly.GetName().Name!;
+        var execution = typeof(WorkflowExecutionEvent).Assembly.GetName().Name!;
+        var cases = new[]
+        {
+            (Assembly: typeof(ExtractionForm).Assembly, Allowed: new[] { kernel, protocol, fullText }),
+            (Assembly: typeof(AppraisalInstrument).Assembly, Allowed: new[] { kernel, protocol, fullText }),
+            (Assembly: typeof(VerifiedSynthesisPlan).Assembly, Allowed: new[] { kernel, protocol, extraction, appraisal }),
+            (Assembly: typeof(VerifiedScientificRecordInvalidationBinding).Assembly, Allowed: new[] { kernel, protocol, execution, extraction, appraisal, synthesis })
+        };
+
+        foreach (var item in cases)
+        {
+            var disallowed = item.Assembly.GetReferencedAssemblies().Select(name => name.Name!)
+                .Where(name => name.StartsWith("NexusScholar.", StringComparison.Ordinal) &&
+                    !item.Allowed.Contains(name, StringComparer.Ordinal)).ToArray();
+            Assert.AreEqual(0, disallowed.Length, $"{item.Assembly.GetName().Name} has disallowed dependencies: {string.Join(", ", disallowed)}");
+        }
+    }
+
+    [TestMethod]
+    public void Fe07_domain_sources_contain_no_host_storage_provider_ui_or_model_symbols()
+    {
+        var root = FindRepositoryRoot();
+        var forbidden = new[] { "Microsoft.EntityFrameworkCore", "Avalonia", "HttpClient", "SqlConnection", "DbContext", "OpenAI", "Azure." };
+        var matches = new List<string>();
+        foreach (var project in new[] { "NexusScholar.Extraction", "NexusScholar.Appraisal", "NexusScholar.Synthesis" })
+        {
+            foreach (var file in Directory.EnumerateFiles(Path.Combine(root, "src", project), "*.cs", SearchOption.AllDirectories))
+            {
+                var source = File.ReadAllText(file);
+                matches.AddRange(forbidden.Where(source.Contains).Select(symbol => $"{project}:{symbol}"));
+            }
+        }
+        Assert.AreEqual(0, matches.Count, $"Forbidden FE-07 source symbols: {string.Join(", ", matches)}");
     }
 
     [TestMethod]

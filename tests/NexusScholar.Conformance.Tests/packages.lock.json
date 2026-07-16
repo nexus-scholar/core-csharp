@@ -152,6 +152,14 @@
         "resolved": "13.0.3",
         "contentHash": "HrC5BXdl00IP9zeV+0Z848QWPAoCr9P3bDEZguI+gkLcBKAOxix/tLEAAHC+UvDNPv4a2d18lOReHMOagPa+zQ=="
       },
+      "nexusscholar.appraisal": {
+        "type": "Project",
+        "dependencies": {
+          "NexusScholar.FullText": "[0.1.0-alpha.2, )",
+          "NexusScholar.Kernel": "[0.1.0-alpha.2, )",
+          "NexusScholar.Protocol": "[0.1.0-alpha.2, )"
+        }
+      },
       "nexusscholar.appservices": {
         "type": "Project",
         "dependencies": {
@@ -198,6 +206,14 @@
           "NexusScholar.Kernel": "[0.1.0-alpha.2, )",
           "NexusScholar.Search": "[0.1.0-alpha.2, )",
           "NexusScholar.Shared": "[0.1.0-alpha.2, )"
+        }
+      },
+      "nexusscholar.extraction": {
+        "type": "Project",
+        "dependencies": {
+          "NexusScholar.FullText": "[0.1.0-alpha.2, )",
+          "NexusScholar.Kernel": "[0.1.0-alpha.2, )",
+          "NexusScholar.Protocol": "[0.1.0-alpha.2, )"
         }
       },
       "nexusscholar.fulltext": {
@@ -307,6 +323,15 @@
           "NexusScholar.Kernel": "[0.1.0-alpha.2, )"
         }
       },
+      "nexusscholar.synthesis": {
+        "type": "Project",
+        "dependencies": {
+          "NexusScholar.Appraisal": "[0.1.0-alpha.2, )",
+          "NexusScholar.Extraction": "[0.1.0-alpha.2, )",
+          "NexusScholar.Kernel": "[0.1.0-alpha.2, )",
+          "NexusScholar.Protocol": "[0.1.0-alpha.2, )"
+        }
+      },
       "nexusscholar.uicontracts": {
         "type": "Project"
       },
@@ -322,6 +347,16 @@
         "dependencies": {
           "NexusScholar.Kernel": "[0.1.0-alpha.2, )",
           "NexusScholar.Workflow": "[0.1.0-alpha.2, )"
+        }
+      },
+      "nexusscholar.workflowexecution.scientificrecords": {
+        "type": "Project",
+        "dependencies": {
+          "NexusScholar.Appraisal": "[0.1.0-alpha.2, )",
+          "NexusScholar.Extraction": "[0.1.0-alpha.2, )",
+          "NexusScholar.Kernel": "[0.1.0-alpha.2, )",
+          "NexusScholar.Synthesis": "[0.1.0-alpha.2, )",
+          "NexusScholar.WorkflowExecution": "[0.1.0-alpha.2, )"
         }
       }
     }

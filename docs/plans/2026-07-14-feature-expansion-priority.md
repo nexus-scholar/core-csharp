@@ -2,10 +2,9 @@
 
 Status: active successor roadmap after Hardening 30.
 
-Current state: FE-01 through FE-06 are complete with completion evidence in
-`docs/gates/` and `docs/release/FE-06-COMPLETION-EVIDENCE.md`. FE-07 through
-FE-12 remain sequenced future work and are not implementation-authorized by this
-roadmap.
+Current state: FE-01 through FE-06 are complete. FE-07 is implemented locally
+under independent review and hosted validation. FE-08 through FE-12 remain
+sequenced future work and are not implementation-authorized by this roadmap.
 
 ## Operating Decision
 
@@ -480,6 +479,10 @@ the list below is retained as historical planning context.
   conclusions remain separate gates.
 
 ## FE-07 - Extraction, Appraisal, And Synthesis
+
+Status: implementation, independent local review, and hosted branch validation
+accepted under ADR 0034; protected merge validation remains open under
+`docs/gates/FE-07-EXTRACTION-APPRAISAL-SYNTHESIS.md`.
 
 ### Outcome
 

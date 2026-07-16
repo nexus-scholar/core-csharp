@@ -1,0 +1,68 @@
+{
+  "version": 2,
+  "dependencies": {
+    "net10.0": {
+      "nexusscholar.appraisal": {
+        "type": "Project",
+        "dependencies": {
+          "NexusScholar.FullText": "[0.1.0-alpha.2, )",
+          "NexusScholar.Kernel": "[0.1.0-alpha.2, )",
+          "NexusScholar.Protocol": "[0.1.0-alpha.2, )"
+        }
+      },
+      "nexusscholar.artifacts": {
+        "type": "Project",
+        "dependencies": {
+          "NexusScholar.Kernel": "[0.1.0-alpha.2, )"
+        }
+      },
+      "nexusscholar.extraction": {
+        "type": "Project",
+        "dependencies": {
+          "NexusScholar.FullText": "[0.1.0-alpha.2, )",
+          "NexusScholar.Kernel": "[0.1.0-alpha.2, )",
+          "NexusScholar.Protocol": "[0.1.0-alpha.2, )"
+        }
+      },
+      "nexusscholar.fulltext": {
+        "type": "Project",
+        "dependencies": {
+          "NexusScholar.Artifacts": "[0.1.0-alpha.2, )",
+          "NexusScholar.Kernel": "[0.1.0-alpha.2, )"
+        }
+      },
+      "nexusscholar.kernel": {
+        "type": "Project"
+      },
+      "nexusscholar.protocol": {
+        "type": "Project",
+        "dependencies": {
+          "NexusScholar.Kernel": "[0.1.0-alpha.2, )"
+        }
+      },
+      "nexusscholar.synthesis": {
+        "type": "Project",
+        "dependencies": {
+          "NexusScholar.Appraisal": "[0.1.0-alpha.2, )",
+          "NexusScholar.Extraction": "[0.1.0-alpha.2, )",
+          "NexusScholar.Kernel": "[0.1.0-alpha.2, )",
+          "NexusScholar.Protocol": "[0.1.0-alpha.2, )"
+        }
+      },
+      "nexusscholar.workflow": {
+        "type": "Project",
+        "dependencies": {
+          "NexusScholar.Kernel": "[0.1.0-alpha.2, )",
+          "NexusScholar.Protocol": "[0.1.0-alpha.2, )"
+        }
+      },
+      "nexusscholar.workflowexecution": {
+        "type": "Project",
+        "dependencies": {
+          "NexusScholar.Kernel": "[0.1.0-alpha.2, )",
+          "NexusScholar.Workflow": "[0.1.0-alpha.2, )"
+        }
+      }
+    }
+  }
+}

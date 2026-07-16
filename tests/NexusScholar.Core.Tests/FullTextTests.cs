@@ -635,6 +635,45 @@ public sealed class FullTextTests
     }
 
     [TestMethod]
+    public void Evidence_locations_bind_exact_verified_representation_elements()
+    {
+        var input = BuildInput("candidate-evidence-location");
+        var acquisition = BuildAcquisition(input, FullTextAcquisitionKinds.ManualAcquisition);
+        var bytes = Encoding.UTF8.GetBytes("source artifact text");
+        var artifact = FullTextArtifactEvidence.FromBytes(
+            "artifact-evidence-location", input, acquisition, FullTextArtifactKinds.Text, "text/plain", bytes, 1024);
+        var chain = FullTextRehydrator.Rehydrate(new UnverifiedFullTextChain(input, acquisition, artifact, bytes, 1024));
+        var pages = new[] { "Methods", "The treatment effect was 4.2 units in Table 2." };
+        var record = new FullTextExtractionRecord(
+            "extraction-evidence-location", artifact.ArtifactId, artifact.RawByteDigest, artifact.RawByteDigestScope,
+            "extractor", "1.0.0", FixedTime, "derived-text", FullTextExtractionStatuses.Success,
+            FullTextExtractionRecord.ComputeRepresentationDigest(FullTextExtractionRepresentations.PageText, pages).ToString(),
+            DigestScope.CanonicalJsonRecord.ToString(), pageText: pages,
+            representationKind: FullTextExtractionRepresentations.PageText);
+        var verified = FullTextExtractionRehydrator.Rehydrate(chain, record);
+
+        var location = FullTextEvidenceLocation.Create(
+            "location-1", verified, FullTextEvidenceLocationKinds.Table, 2, "Table 2", "effect was 4.2 units");
+
+        Assert.AreEqual(record.ExtractionId, location.ExtractionId);
+        Assert.AreEqual(2, location.ElementOrdinal);
+        Assert.AreEqual(ContentDigest.Parse(record.ExtractedTextDigest!), location.ExtractionDigest);
+        var reopened = FullTextEvidenceLocationCodec.Rehydrate(
+            FullTextEvidenceLocationCodec.Serialize(location), location.Digest, verified);
+        Assert.AreEqual(location.Digest, reopened.Digest);
+        var altered = FullTextEvidenceLocationCodec.Serialize(location).ToArray();
+        altered[^2] = altered[^2] == (byte)'1' ? (byte)'2' : (byte)'1';
+        Assert.AreEqual(
+            FullTextEvidenceLocationErrorCodes.InvalidLocation,
+            Assert.ThrowsExactly<FullTextRuleException>(() => FullTextEvidenceLocationCodec.Rehydrate(
+                altered, location.Digest, verified)).Category);
+        Assert.AreEqual(
+            FullTextEvidenceLocationErrorCodes.InvalidLocation,
+            Assert.ThrowsExactly<FullTextRuleException>(() => FullTextEvidenceLocation.Create(
+                "location-bad", verified, FullTextEvidenceLocationKinds.Table, 1, "Table 2", "4.2 units")).Category);
+    }
+
+    [TestMethod]
     public void Deterministic_text_and_xml_extraction_attempts_round_trip_canonically()
     {
         foreach (var sample in new[]

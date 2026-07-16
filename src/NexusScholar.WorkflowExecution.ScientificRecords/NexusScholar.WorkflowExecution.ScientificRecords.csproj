@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><IsPackable>true</IsPackable></PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../NexusScholar.Kernel/NexusScholar.Kernel.csproj" />
+    <ProjectReference Include="../NexusScholar.WorkflowExecution/NexusScholar.WorkflowExecution.csproj" />
+    <ProjectReference Include="../NexusScholar.Extraction/NexusScholar.Extraction.csproj" />
+    <ProjectReference Include="../NexusScholar.Appraisal/NexusScholar.Appraisal.csproj" />
+    <ProjectReference Include="../NexusScholar.Synthesis/NexusScholar.Synthesis.csproj" />
+  </ItemGroup>
+</Project>

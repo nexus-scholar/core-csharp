@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><IsPackable>true</IsPackable></PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../NexusScholar.Kernel/NexusScholar.Kernel.csproj" />
+    <ProjectReference Include="../NexusScholar.Protocol/NexusScholar.Protocol.csproj" />
+    <ProjectReference Include="../NexusScholar.FullText/NexusScholar.FullText.csproj" />
+  </ItemGroup>
+  <ItemGroup><InternalsVisibleTo Include="NexusScholar.Core.Tests" /></ItemGroup>
+</Project>

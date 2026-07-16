@@ -2,10 +2,12 @@
   "schema": "nexus.package-topology.v1",
   "version": "0.1.0-alpha.2",
   "packages": [
+    "NexusScholar.Appraisal",
     "NexusScholar.Artifacts",
     "NexusScholar.Bundles",
     "NexusScholar.CorpusSnapshots",
     "NexusScholar.Deduplication",
+    "NexusScholar.Extraction",
     "NexusScholar.Extensibility",
     "NexusScholar.FullText",
     "NexusScholar.Kernel",
@@ -18,9 +20,11 @@
     "NexusScholar.Screening.WorkflowExecution",
     "NexusScholar.Search",
     "NexusScholar.Shared",
+    "NexusScholar.Synthesis",
     "NexusScholar.Workflow",
     "NexusScholar.WorkflowExecution",
-    "NexusScholar.WorkflowExecution.Provenance"
+    "NexusScholar.WorkflowExecution.Provenance",
+    "NexusScholar.WorkflowExecution.ScientificRecords"
   ],
   "smokeRoots": [
     "NexusScholar.Bundles",
@@ -30,7 +34,9 @@
     "NexusScholar.Screening.FullText",
     "NexusScholar.Screening.WorkflowExecution",
     "NexusScholar.Search",
-    "NexusScholar.WorkflowExecution.Provenance"
+    "NexusScholar.Synthesis",
+    "NexusScholar.WorkflowExecution.Provenance",
+    "NexusScholar.WorkflowExecution.ScientificRecords"
   ],
   "excluded": [
     "NexusScholar.AI",

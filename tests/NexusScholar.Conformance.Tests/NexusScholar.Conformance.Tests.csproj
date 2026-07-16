@@ -15,6 +15,7 @@
     <None Include="../../fixtures/conformance/screening-corpus-binding/*.json" Link="fixtures/screening-corpus-binding/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../fixtures/conformance/reporting/*.json" Link="fixtures/reporting/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../fixtures/conformance/fe06-release/*.json" Link="fixtures/fe06-release/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../fixtures/conformance/fe07/*.json" Link="fixtures/fe07/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../fixtures/conformance/provenance/*.json" Link="fixtures/provenance/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../fixtures/conformance/provenance/*.ndjson" Link="fixtures/provenance/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../fixtures/conformance/shared-identity/*.json" Link="fixtures/shared-identity/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
@@ -52,5 +53,9 @@
     <ProjectReference Include="../../src/NexusScholar.Screening.CorpusSnapshots/NexusScholar.Screening.CorpusSnapshots.csproj" />
     <ProjectReference Include="../../src/NexusScholar.Reporting/NexusScholar.Reporting.csproj" />
     <ProjectReference Include="../../src/NexusScholar.FullText/NexusScholar.FullText.csproj" />
+    <ProjectReference Include="../../src/NexusScholar.Extraction/NexusScholar.Extraction.csproj" />
+    <ProjectReference Include="../../src/NexusScholar.Appraisal/NexusScholar.Appraisal.csproj" />
+    <ProjectReference Include="../../src/NexusScholar.Synthesis/NexusScholar.Synthesis.csproj" />
+    <ProjectReference Include="../../src/NexusScholar.WorkflowExecution.ScientificRecords/NexusScholar.WorkflowExecution.ScientificRecords.csproj" />
   </ItemGroup>
 </Project>

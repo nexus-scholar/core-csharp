@@ -159,6 +159,14 @@
           "NexusScholar.Provenance": "[0.1.0-alpha.2, )"
         }
       },
+      "nexusscholar.appraisal": {
+        "type": "Project",
+        "dependencies": {
+          "NexusScholar.FullText": "[0.1.0-alpha.2, )",
+          "NexusScholar.Kernel": "[0.1.0-alpha.2, )",
+          "NexusScholar.Protocol": "[0.1.0-alpha.2, )"
+        }
+      },
       "nexusscholar.appservices": {
         "type": "Project",
         "dependencies": {
@@ -211,6 +219,14 @@
         "type": "Project",
         "dependencies": {
           "NexusScholar.Kernel": "[0.1.0-alpha.2, )"
+        }
+      },
+      "nexusscholar.extraction": {
+        "type": "Project",
+        "dependencies": {
+          "NexusScholar.FullText": "[0.1.0-alpha.2, )",
+          "NexusScholar.Kernel": "[0.1.0-alpha.2, )",
+          "NexusScholar.Protocol": "[0.1.0-alpha.2, )"
         }
       },
       "nexusscholar.fulltext": {
@@ -318,6 +334,15 @@
         "type": "Project",
         "dependencies": {
           "NexusScholar.Kernel": "[0.1.0-alpha.2, )"
+        }
+      },
+      "nexusscholar.synthesis": {
+        "type": "Project",
+        "dependencies": {
+          "NexusScholar.Appraisal": "[0.1.0-alpha.2, )",
+          "NexusScholar.Extraction": "[0.1.0-alpha.2, )",
+          "NexusScholar.Kernel": "[0.1.0-alpha.2, )",
+          "NexusScholar.Protocol": "[0.1.0-alpha.2, )"
         }
       },
       "nexusscholar.uicontracts": {

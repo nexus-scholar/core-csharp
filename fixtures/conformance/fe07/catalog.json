@@ -1,0 +1,37 @@
+{
+  "schema": "nexus.fe07.fixture-catalog.v1",
+  "sourceKind": "local-fe07-contract",
+  "generatorVersion": "fe07-local-v1",
+  "compatibilityClaim": "none",
+  "schemas": [
+    "nexus.fulltext.evidence-location/1.0.0",
+    "nexus.extraction.form/1.0.0",
+    "nexus.extraction.record/1.0.0",
+    "nexus.appraisal.instrument/1.0.0",
+    "nexus.appraisal.record/1.0.0",
+    "nexus.synthesis.plan/1.0.0",
+    "nexus.workflow-execution.scientific-record-invalidation/1.0.0"
+  ],
+  "positiveCases": [
+    "exact-page-section-table-text-location",
+    "human-extraction-correction-resolution",
+    "versioned-evidence-bound-appraisal",
+    "plan-only-synthesis-with-library-configuration",
+    "amendment-invalidation-workflow-binding"
+  ],
+  "negativeCases": [
+    "changed-fulltext-evidence-rejected",
+    "automation-finalization-rejected",
+    "stale-correction-target-rejected",
+    "unknown-instrument-version-rejected",
+    "judgment-without-evidence-rejected",
+    "stale-synthesis-source-rejected",
+    "effect-measure-unit-mismatch-rejected",
+    "cross-amendment-invalidation-rejected"
+  ],
+  "nonClaims": [
+    "no-php-or-blueprint-compatibility",
+    "no-statistical-execution-or-correctness",
+    "no-clinical-causal-or-certainty-conclusion"
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "fixtureId": "fe07-authority-replay-v1",
+  "recordedAt": "2026-07-16T12:00:00Z",
+  "expectedDigests": {
+    "evidenceLocation": "sha256:e7ae3b71dc0c6c929720bdb5ec3417a3a4088f6e976d9283d4cd07517d493d9c",
+    "extractionForm": "sha256:d092451e561d7a700512856dfd35c3965274701b226fa42275f124c5d107d59e",
+    "extractionRecord": "sha256:a188156dbd5d474b7dd7a92288d7f02c54a06463c49ba9ffe57d357a52a7a150",
+    "appraisalInstrument": "sha256:066b3f01f40bf573bdd13bcd94cb0ac2a76275fcd70f15539a3529dca9c7335b",
+    "appraisalRecord": "sha256:90a8040120fcf91c3ba239d5191f64a8be797f3acfdc78d8c5cb9071de00dd9e",
+    "synthesisPlan": "sha256:ba05d01bac562b2efbc7049b4965ff7a91e597345cb5c1756a2d00f252ccd637",
+    "workflowInvalidationBinding": "sha256:07109a8da62de1ce1d899eaf4aff1524c700b792833b6493551da828b6fcf386"
+  },
+  "expectedErrors": {
+    "automationExtraction": "extraction-automation-cannot-finalize",
+    "unknownInstrumentVersion": "unknown-instrument-version",
+    "measureMismatch": "synthesis-effect-measure-mismatch",
+    "crossProtocolInvalidation": "extraction-record-binding-invalid"
+  }
+}
