@@ -143,6 +143,23 @@ public sealed class ResearchWorkspaceCommandTests
     }
 
     [TestMethod]
+    public void Init_rejects_unsafe_workspace_id_without_writing_project()
+    {
+        using var workspace = TemporaryWorkspace.Create();
+
+        var exitCode = RunCli(
+            workspace.Root,
+            new[] { "init", "--title", "Unsafe workspace", "--workspace-id", "..\\bad" },
+            out var output,
+            out var error);
+
+        Assert.AreEqual(1, exitCode);
+        Assert.AreEqual(string.Empty, output);
+        StringAssert.Contains(error, "Project workspaceId must be a safe identifier.");
+        Assert.IsFalse(File.Exists(Path.Combine(workspace.Root, "nexus.project.json")));
+    }
+
+    [TestMethod]
     public void Status_reports_initialized_project_without_mutating_files()
     {
         using var workspace = TemporaryWorkspace.Create();

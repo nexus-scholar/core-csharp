@@ -28,6 +28,8 @@
     <Project Path="src/NexusScholar.AppServices/NexusScholar.AppServices.csproj" />
     <Project Path="src/NexusScholar.ResearchWorkspace/NexusScholar.ResearchWorkspace.csproj" />
     <Project Path="src/NexusScholar.Avalonia.Blocks/NexusScholar.Avalonia.Blocks.csproj" />
+    <Project Path="src/NexusScholar.Desktop.AppServices/NexusScholar.Desktop.AppServices.csproj" />
+    <Project Path="src/NexusScholar.Desktop/NexusScholar.Desktop.csproj" />
     <Project Path="src/NexusScholar.Cli/NexusScholar.Cli.csproj" />
   </Folder>
   <Folder Name="/samples/">
@@ -45,5 +47,7 @@
     <Project Path="tests/NexusScholar.Avalonia.Blocks.Tests/NexusScholar.Avalonia.Blocks.Tests.csproj" />
     <Project Path="tests/NexusScholar.Avalonia.Blocks.SampleHost.Tests/NexusScholar.Avalonia.Blocks.SampleHost.Tests.csproj" />
     <Project Path="tests/NexusScholar.Desktop.Preview.Tests/NexusScholar.Desktop.Preview.Tests.csproj" />
+    <Project Path="tests/NexusScholar.Desktop.Tests/NexusScholar.Desktop.Tests.csproj" />
+    <Project Path="tests/NexusScholar.Desktop.AppServices.Tests/NexusScholar.Desktop.AppServices.Tests.csproj" />
   </Folder>
 </Solution>
