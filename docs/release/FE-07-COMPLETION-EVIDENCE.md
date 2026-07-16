@@ -85,4 +85,13 @@ plans, not results or conclusions.
 
 ## Hosted Validation
 
-Pending branch push, pull request, protected merge, and post-merge hosted checks.
+Pull request: `#60`.
+
+Branch validation for implementation commit `64b69fb` passed:
+
+- gate-01 run `29524787914`: Ubuntu job `87710394666` and Windows job
+  `87710394658` passed;
+- dependency-review run `29524787975`, job `87710394673`, passed;
+- codeql run `29524787944`, analyze job `87710394462`, passed.
+
+Protected merge and post-merge hosted validation remain pending.

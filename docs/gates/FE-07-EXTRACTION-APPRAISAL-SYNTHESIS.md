@@ -1,7 +1,7 @@
 # FE-07: Extraction, Appraisal, And Synthesis
 
-Status: implementation and independent local review accepted under ADR 0034;
-hosted merge validation remains open.
+Status: implementation, independent local review, and hosted branch validation
+accepted under ADR 0034; protected merge validation remains open.
 
 ## Goal
 
