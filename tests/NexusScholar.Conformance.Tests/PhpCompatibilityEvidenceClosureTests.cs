@@ -272,7 +272,12 @@ public sealed class PhpCompatibilityEvidenceClosureTests
         }
 
         var repositoryRoot = RepositoryRoot();
-        Assert.IsFalse(Directory.Exists(Path.Combine(repositoryRoot, "src", "NexusScholar.Network")));
+        Assert.IsTrue(Directory.Exists(Path.Combine(repositoryRoot, "src", "NexusScholar.Network")));
+        Assert.IsTrue(File.Exists(Path.Combine(
+            repositoryRoot,
+            "docs",
+            "adr",
+            "0043-citation-graph-snapshot-and-basic-metrics.md")));
         var productionSource = string.Join(
             Environment.NewLine,
             Directory.EnumerateFiles(Path.Combine(repositoryRoot, "src"), "*.cs", SearchOption.AllDirectories)
@@ -280,7 +285,6 @@ public sealed class PhpCompatibilityEvidenceClosureTests
                 .Select(File.ReadAllText));
         foreach (var forbiddenDeclaration in new[]
                  {
-                     "namespace NexusScholar.Network",
                      "namespace NexusScholar.CitationNetwork",
                      "namespace NexusScholar.Dissemination",
                      "class CitationGraph",

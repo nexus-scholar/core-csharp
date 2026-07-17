@@ -436,6 +436,13 @@
       "nexusscholar.kernel": {
         "type": "Project"
       },
+      "nexusscholar.network": {
+        "type": "Project",
+        "dependencies": {
+          "NexusScholar.Kernel": "[0.1.0-alpha.2, )",
+          "NexusScholar.Shared": "[0.1.0-alpha.2, )"
+        }
+      },
       "nexusscholar.protocol": {
         "type": "Project",
         "dependencies": {
@@ -526,6 +533,12 @@
         "dependencies": {
           "NexusScholar.Kernel": "[0.1.0-alpha.2, )",
           "NexusScholar.Shared": "[0.1.0-alpha.2, )"
+        }
+      },
+      "nexusscholar.search.providers.cache": {
+        "type": "Project",
+        "dependencies": {
+          "NexusScholar.Search": "[0.1.0-alpha.2, )"
         }
       },
       "nexusscholar.search.providers.crossref": {

@@ -21,6 +21,7 @@
     <ProjectReference Include="../../src/NexusScholar.Shared/NexusScholar.Shared.csproj" />
     <ProjectReference Include="../../src/NexusScholar.Search/NexusScholar.Search.csproj" />
     <ProjectReference Include="../../src/NexusScholar.Search.Providers.Crossref/NexusScholar.Search.Providers.Crossref.csproj" />
+    <ProjectReference Include="../../src/NexusScholar.Search.Providers.Cache/NexusScholar.Search.Providers.Cache.csproj" />
     <ProjectReference Include="../../src/NexusScholar.Search.Providers.Live/NexusScholar.Search.Providers.Live.csproj" />
     <ProjectReference Include="../../src/NexusScholar.Search.Providers.OpenAlex/NexusScholar.Search.Providers.OpenAlex.csproj" />
     <ProjectReference Include="../../src/NexusScholar.Search.Providers.SemanticScholar/NexusScholar.Search.Providers.SemanticScholar.csproj" />
@@ -32,6 +33,7 @@
     <ProjectReference Include="../../src/NexusScholar.Screening.WorkflowExecution/NexusScholar.Screening.WorkflowExecution.csproj" />
     <ProjectReference Include="../../src/NexusScholar.Screening.FullText/NexusScholar.Screening.FullText.csproj" />
     <ProjectReference Include="../../src/NexusScholar.FullText/NexusScholar.FullText.csproj" />
+    <ProjectReference Include="../../src/NexusScholar.Network/NexusScholar.Network.csproj" />
     <ProjectReference Include="../../src/NexusScholar.Extraction/NexusScholar.Extraction.csproj" />
     <ProjectReference Include="../../src/NexusScholar.Appraisal/NexusScholar.Appraisal.csproj" />
     <ProjectReference Include="../../src/NexusScholar.Synthesis/NexusScholar.Synthesis.csproj" />

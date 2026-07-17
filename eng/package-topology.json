@@ -11,6 +11,7 @@
     "NexusScholar.Extensibility",
     "NexusScholar.FullText",
     "NexusScholar.Kernel",
+    "NexusScholar.Network",
     "NexusScholar.Protocol",
     "NexusScholar.Provenance",
     "NexusScholar.Reporting",
@@ -29,6 +30,7 @@
   "smokeRoots": [
     "NexusScholar.Bundles",
     "NexusScholar.Extensibility",
+    "NexusScholar.Network",
     "NexusScholar.Reporting",
     "NexusScholar.Screening.CorpusSnapshots",
     "NexusScholar.Screening.FullText",
@@ -44,6 +46,7 @@
     "NexusScholar.Avalonia.Blocks",
     "NexusScholar.Cli",
     "NexusScholar.ResearchWorkspace",
+    "NexusScholar.Search.Providers.Cache",
     "NexusScholar.UiContracts"
   ]
 }

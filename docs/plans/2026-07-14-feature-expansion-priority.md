@@ -842,9 +842,11 @@ become compatibility obligations.
 
 ## Immediate Next Gate
 
-Close FE-08, FE-09A, and the stacked FE-09F branch through hosted CI and merge.
-Then plan FE-09E provider evidence caching under a dedicated retention and
-invalidation gate before citation-network or broader production integration.
+FE-09B, FE-09C, and FE-09E are complete locally under ADRs 0042, 0043, and
+0041. Close the stacked FE-09 branch through hosted CI and protected merge.
+After merge, begin FE-10 plugin-runtime design; do not widen provider retention,
+live Full Text transport, citation metrics, exports, or PHP compatibility
+without their successor gates.
 
 ## Verification Baseline
 
