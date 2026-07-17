@@ -177,7 +177,7 @@ public sealed class ScreeningAuthorityPackageTests
     }
 
     [TestMethod]
-    public void Package_rejects_stale_project_revision()
+    public void Package_remains_current_across_later_revision_when_all_authority_pointers_are_unchanged()
     {
         using var workspace = TestWorkspace.Create();
         var protocol = BuildProtocol();
@@ -187,12 +187,12 @@ public sealed class ScreeningAuthorityPackageTests
 
         var readiness = ResearchWorkspaceScreeningAuthorityPackage.Inspect(workspace.Root);
 
-        Assert.AreEqual(ResearchWorkspaceOperationStatus.Stale, readiness.Status);
-        Assert.AreEqual(ResearchWorkspaceScreeningAuthorityPackage.StaleCategory, readiness.Category);
+        Assert.AreEqual(ResearchWorkspaceOperationStatus.Succeeded, readiness.Status);
+        Assert.AreEqual(ResearchWorkspaceScreeningAuthorityPackage.ReadyCategory, readiness.Category);
     }
 
     [TestMethod]
-    public void Package_can_publish_fresh_generation_after_project_revision_makes_prior_package_stale()
+    public void Package_commit_is_idempotent_after_unrelated_project_revision()
     {
         using var workspace = TestWorkspace.Create();
         var protocol = BuildProtocol();
@@ -204,9 +204,9 @@ public sealed class ScreeningAuthorityPackageTests
 
         var replacement = ResearchWorkspaceScreeningAuthorityPackage.Commit(workspace.Root, protocol, criteria);
 
-        Assert.IsFalse(replacement.AlreadyApplied);
-        Assert.AreNotEqual(first.Package.Manifest.GenerationId, replacement.Package.Manifest.GenerationId);
-        Assert.AreEqual(replacement.Project.Revision, replacement.Package.Manifest.ProjectRevision);
+        Assert.IsTrue(replacement.AlreadyApplied);
+        Assert.AreEqual(first.Package.Manifest.GenerationId, replacement.Package.Manifest.GenerationId);
+        Assert.AreEqual(first.Package.Manifest.ProjectRevision, replacement.Package.Manifest.ProjectRevision);
         Assert.IsTrue(ResearchWorkspaceScreeningAuthorityPackage.Inspect(workspace.Root).Ready);
     }
 

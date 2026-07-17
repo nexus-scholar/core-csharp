@@ -247,7 +247,7 @@ public static class ResearchWorkspaceScreeningAuthorityPackage
         var manifest = ParseManifest(manifestBytes);
         if (manifest.GenerationId != project.CurrentScreeningAuthorityPackageGenerationId ||
             manifest.WorkspaceId != project.WorkspaceId ||
-            manifest.ProjectRevision != project.Revision ||
+            manifest.ProjectRevision > project.Revision ||
             manifest.SourceAuthorityGenerationId != project.CurrentAuthorityGenerationId ||
             manifest.SourceAuthorityManifestSha256 != project.AuthorityGenerationManifestSha256 ||
             manifest.SourceResultId != state.Source.Result.ResultId ||
