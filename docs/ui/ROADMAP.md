@@ -1,144 +1,174 @@
 # UI Roadmap
 
-This roadmap stages future UI/UX work without changing Core scientific behavior.
+Status: FE-08 slices 1 through 4 complete. Slice 5 is the next gate candidate and
+is not implementation-authorized.
 
-## Phase 0: Docs And UI Philosophy
+This roadmap describes product delivery without changing the rule that
+scientific authority belongs to verified domain records and explicit human
+actions, never UI state.
 
-Phase 0 is the planning layer for product philosophy, block concepts, cockpit layout, AI boundaries, portability, and initial workflow prototypes.
+## Architecture
 
-## Phase 1: UiContracts Only
+```text
+Domain authority
+    <- application commands and verified read models
+    <- Desktop.AppServices
+    <- UiContracts and Avalonia renderers
+    <- product host
+```
 
-Status: implemented as the first contract layer.
+Dependencies point inward. Rendering and interaction state may simplify a
+workflow, but cannot weaken identity, Protocol binding, actor authority,
+provenance, invalidation, or reproducibility.
 
-Created package:
+## Completed Foundation
 
-- `src/NexusScholar.UiContracts`
+### Phase 0: philosophy and product design
 
-Created tests:
+Completed documentation covers product positioning, typed blocks, research
+cockpit, portability, beginner/audit modes, and AI interaction rules.
 
-- `tests/NexusScholar.UiContracts.Tests`
+### Phase 1: renderer-neutral contracts
 
-Scope:
+Implemented `NexusScholar.UiContracts` with:
 
-- workspace plan id, title, mode, block list, optional description, and context references;
-- research block id, extensible string kind, title, mode, severity, source kind, evidence refs, validation refs, actions, optional summary, and optional object-root JSON payload;
-- lightweight evidence refs;
-- lightweight validation refs;
-- action descriptors with human-confirmation and destructive-action flags;
-- beginner, audit, review, and repair mode vocabulary;
-- severity, source-kind, and action-kind vocabulary;
-- JSON serialization round-trip tests;
-- architecture guard that Core assemblies do not reference `NexusScholar.UiContracts`.
+- workspace plans and ordered research blocks;
+- display modes, severity, source kind, and action kind;
+- evidence and validation references;
+- human-confirmation and destructive-action flags;
+- JSON round-trip and architecture coverage.
 
-Phase 1 deliberately did not add Avalonia, app services, renderers, AI execution, persistence, or Core behavior changes. `NexusScholar.UiContracts` has no project references and no UI-framework dependency.
+It remains UI-framework-free and contains no domain authority.
 
-## Phase 2: Sample Block Plans
+### Phase 2: sample plans
 
-Status: implemented as contract-backed samples.
+Implemented illustrative Import warning, Deduplication review, and Bundle
+verification plans under `samples/block-plans`.
 
-Created sample plans under `samples/block-plans` using `NexusScholar.UiContracts` JSON shape for:
+They are samples, not scientific records, conformance fixtures, or compatibility
+evidence.
 
-- import warning;
-- dedup review;
-- bundle verification.
+### Phase 3: Avalonia renderer
 
-The samples deserialize into `WorkspacePlan`, round-trip through the contract test layer, preserve block order, validate object-root `PayloadJson`, and avoid renderer-specific fields. They remain illustrative. They are not Core authority, not ADRs, not scientific fixtures, and not PHP compatibility fixtures.
+Implemented `NexusScholar.Avalonia.Blocks` to render plans, blocks, evidence,
+validation, action descriptors, flags, and structured payloads.
 
-No Screening sample was added in Phase 2 because Screening Core is still outside this UI sample task.
+The renderer accepts caller-supplied callbacks. It does not call Core mutations.
 
-## Phase 3: Avalonia Block Renderer Prototype
+### Phase 3.5: visual harness
 
-Status: implemented as a renderer-only prototype.
+Implemented `samples/NexusScholar.Avalonia.Blocks.SampleHost` for manual
+inspection of the sample plans.
 
-Created package:
+### UI-01 and UI-02A: historical preview
 
-- `NexusScholar.Avalonia.Blocks`
+Implemented `samples/NexusScholar.Desktop.Preview` over ResearchWorkspace read
+models, followed by safe local verify/analyze operations. This preview remains
+useful for regression and architectural history but is not the current product
+host.
 
-Created tests:
+## FE-08 Product Delivery
 
-- `tests/NexusScholar.Avalonia.Blocks.Tests`
+### Slices 1-2: local product shell
 
-Scope:
+Status: complete under ADR 0035.
 
-- deserialize sample `WorkspacePlan` JSON through `NexusScholar.UiContracts`;
-- project plans into renderer view models;
-- render workspace plans, blocks, evidence refs, validation refs, action placeholders, human-confirmation flags, destructive-action flags, and payload JSON;
-- preserve block order;
-- keep action buttons as no-op or caller-supplied callbacks only;
-- keep Core behavior, scientific records, app services, AI execution, persistence, CLI, web, and mobile renderers out of scope.
+Delivered:
 
-No desktop shell was added. Renderer actions must route through application services later. They must not call Core mutation directly.
+- Windows-first `NexusScholar.Desktop` host;
+- `NexusScholar.Desktop.AppServices` facade;
+- open and inspect existing workspaces;
+- initialize local workspaces;
+- import researcher-supplied local Search exports;
+- verify and analyze;
+- deterministic status, attention, failure, stale, and recovery states;
+- architecture guards against direct host-to-domain/workspace references.
 
-## Phase 3.5: Visual Harness
+### Slice 3: desktop Deduplication review
 
-Status: implemented as a sample-only inspection host.
+Status: complete under ADR 0036.
 
-Created sample host:
+Delivered:
 
-- `samples/NexusScholar.Avalonia.Blocks.SampleHost`
+- first human-authorized desktop scientific action;
+- actor/role-bound preview and confirmation;
+- canonical request digest and stale-safe commit;
+- exact source result, policy, predecessor snapshot, and effect bindings;
+- durable authority generation and provenance through ResearchWorkspace;
+- refresh and already-applied/recovery behavior;
+- native Windows visual QA.
 
-Created tests:
+The desktop invokes the accepted FE-02 command. It does not define
+Deduplication authority.
 
-- `tests/NexusScholar.Avalonia.Blocks.SampleHost.Tests`
+### Slice 4: Screening authority resolution
 
-Scope:
+Status: complete under ADR 0037.
 
-- load the three Phase 2 sample `WorkspacePlan` JSON files from `samples/block-plans`;
-- deserialize through `NexusScholar.UiContracts`;
-- render through `NexusScholar.Avalonia.Blocks`;
-- switch between the three sample workspaces;
-- surface sample/non-authoritative status;
-- keep action callbacks as host-local placeholders only.
+Delivered:
 
-Phase 3.5 deliberately does not add a product desktop shell, app services, Core calls, Core mutation, persistence, AI execution, or additional renderer targets.
+- strict canonical approved-Protocol authority package;
+- strict canonical title/abstract criteria;
+- immutable pointer-last Screening authority generations;
+- exact workspace, FE-01 generation, result, decision set, and snapshot binding;
+- ready, unavailable, stale, invalid, and recovery-required projections;
+- read-only Desktop.AppServices readiness facade;
+- cross-generation revision handling.
 
-## Phase UI-01: Read-Only Desktop Preview
+No desktop Screening decision is admitted.
 
-Status: implemented as a sample preview over ResearchWorkspace read models.
+### Slice 5: first desktop Screening mutation
 
-Created sample:
+Status: next gate candidate; not authorized.
 
-- `samples/NexusScholar.Desktop.Preview`
+The proposed slice must define and verify:
 
-Created tests:
+1. explicit human actor and admitted Screening role;
+2. exact approved Protocol, criteria, candidate, corpus snapshot, and workflow
+   task;
+3. previewed verdict, rationale, exclusion reason, conflicts, and effects;
+4. a canonical confirmation token over complete request and authority material;
+5. stale view, stale package, changed criteria, changed snapshot, and concurrent
+   writer rejection;
+6. correction, conflict, adjudication, supersession, invalidation, and handoff
+   effects;
+7. atomic local generation, lock discipline, crash recovery, idempotency, and
+   provenance;
+8. component, architecture, full-solution, visual, keyboard, and accessibility
+   validation.
 
-- `tests/NexusScholar.Desktop.Preview.Tests`
+The slice must use a dedicated application command. A generic block action,
+callback, or view-model mutation is insufficient.
 
-Scope:
+## Later UI Work
 
-- open an existing local Research Workspace folder;
-- display project overview, evidence records, imports, verification, analysis, review queue, duplicate clusters, duplicate detail, report references, and diagnostics;
-- render APP-01 merge actions as locked/disabled;
-- keep status and generated-output references project-relative where read models provide them;
-- keep architecture guardrails around provider, persistence, cloud/API, model-client, and direct Core/AppServices dependency boundaries.
+After Slice 5, additional desktop work should follow demonstrated user need and
+accepted gates:
 
-UI-01 deliberately does not run `init`, `import`, `verify`, or `analyze`; does not write project files; does not store UI preferences; does not execute merge decisions; and does not add providers, PDF/OCR, AI/model calls, persistence, cloud/API, Core mutation, or PHP compatibility claims.
+- workflow-task completion and navigation;
+- full-text intake and Screening conduct;
+- reporting, audit-bundle, and export workflows;
+- Extraction, Appraisal, and Synthesis workspaces;
+- workspace recovery and integrity repair UX;
+- end-to-end keyboard and accessibility hardening;
+- installer and update strategy.
 
-## Phase UI-02A: Safe Local Verify/Analyze Actions
+These are not automatically authorized by their appearance here.
 
-Status: implemented as a preview-only local workflow action layer.
+FE-09 through FE-12 may later add provider, plugin, governed-AI, and
+collaboration surfaces. Their UI must remain downstream of the corresponding
+domain/application gates.
 
-Scope:
+## Product Non-Claims
 
-- run local workspace verification through `NexusScholar.ResearchWorkspace`;
-- run local evidence analysis through `NexusScholar.ResearchWorkspace`;
-- write only the existing generated analysis outputs:
-  - `nexus-output/dedup/current.deduplication-result.json`;
-  - `nexus-output/workspace/current.workspace-plan.json`;
-  - `nexus-output/reports/review.md`;
-- refresh desktop read models after each action;
-- show recovery guidance for verification attention items;
-- keep APP-01 merge actions locked/display-only.
+The current desktop does not claim:
 
-UI-02A deliberately does not run `init` or `import`; does not copy user-selected files; does not store UI preferences; does not execute merge decisions; and does not add providers, PDF/OCR, AI/model calls, persistence, cloud/API, Core mutation beyond existing generated-output writes, or PHP compatibility claims.
+- production readiness or accessibility certification;
+- live provider access, scraping, PDF parsing, or OCR;
+- plugin execution or arbitrary-code sandboxing;
+- live model execution or AI decision authority;
+- database, API, cloud sync, authentication, tenancy, or multi-user work;
+- broad PHP compatibility.
 
-## Later Phases
-
-- Safe local init/import actions only after a separate accepted task.
-- Screening workspace after Core Screening implementation and fixtures are ready.
-- CLI renderer for the same contracts.
-- Persistence and app state separation.
-- AI proposal layer.
-- Web/mobile exploration after desktop/CLI contract loops are proven.
-
-Do not build mobile first. Do not connect AI mutation directly to Core.
+The application has durable local file persistence. It does not yet have
+database or cloud persistence.

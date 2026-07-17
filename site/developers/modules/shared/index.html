@@ -1,129 +1,81 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Shared Module - Nexus Scholar Core</title>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Developer guide to Nexus Scholar shared scholarly-work identity, identifier namespaces, transitive membership, and corpus slices.">
+  <title>Shared identity developer guide - Nexus Scholar Core</title>
   <link rel="stylesheet" href="../../../assets/css/site.css">
 </head>
 <body>
-  <div class="release-status" role="status">Early alpha. Not production-ready. No package publication or PHP compatibility claim.</div>
-  <header class="site-header">
-    <nav class="nav" aria-label="Primary navigation">
-      <a class="brand" href="../../../"><span class="brand-mark">NS</span><span>Nexus Scholar Core</span></a>
-      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-links">Menu</button>
-      <div class="nav-links" id="nav-links">
-        <a href="../../../developers/" aria-current="page">Developers</a>
-        <a href="../../../tutorials/">Tutorials</a>
-        <a href="../../../blog/">Blog</a>
-        <a href="../../../about/">About</a>
-        <a href="https://github.com/nexus-scholar/core-csharp">GitHub</a>
-      </div>
-    </nav>
-  </header>
-  <main class="page doc-page">
-    <p class="eyebrow">Module documentation</p>
-    <h1>Shared</h1>
-    <p class="lede">Stable scholarly identity primitives and corpus membership rules that let later modules talk about the same work without relying on titles, object identity, or app-specific fallback hashes.</p>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <div class="release-status" role="status">Early alpha. Not production-ready. No package publication or broad PHP compatibility claim.</div>
+  <header class="site-header"><nav class="nav" aria-label="Primary navigation">
+    <a class="brand" href="../../../"><span class="brand-mark">NS</span><span>Nexus Scholar Core</span></a><button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-links">Menu</button>
+    <div class="nav-links" id="nav-links"><a href="../../../status/">Status</a><a href="../../../developers/" aria-current="page">Developers</a><a href="../../../tutorials/">Tutorials</a><a href="../../../roadmap/">Roadmap</a><a href="../../../about/">About</a><a href="https://github.com/nexus-scholar-org/core-csharp">GitHub</a></div>
+  </nav></header>
+  <main class="page doc-page" id="main">
+    <nav class="breadcrumbs" aria-label="Breadcrumb"><a href="../../../developers/">Developers</a><span aria-hidden="true">/</span><a href="../">Modules</a><span aria-hidden="true">/</span><span aria-current="page">Shared identity</span></nav>
+    <p class="eyebrow">Scientific identity · NexusScholar.Shared</p>
+    <h1>Shared identity</h1>
+    <p class="lede">Normalized scholarly identifiers and transitive membership semantics that let Search, Deduplication, and Bundles refer to works without falling back to titles or object identity.</p>
     <div class="doc-shell">
       <div class="doc-main">
-        <section class="content-section">
-          <h2>Scope and ownership</h2>
-          <p>Shared owns the local scientific identity surface: approved namespaces, strict <code>&lt;namespace&gt;:&lt;value&gt;</code> parsing, namespace-specific normalization, stable ordering, overlap checks, and the distinction between identified works and unresolved candidates. The main types are <code>WorkIdNamespace</code>, <code>WorkId</code>, <code>WorkIdSet</code>, <code>ScholarlyWork</code>, and <code>CorpusSlice</code>.</p>
-          <p class="section-intro">This module matters because many later modules need to speak about “the same work” without inventing their own heuristics. Shared is where the repo draws the hard line that title-only equality is not scientific identity.</p>
+        <section class="content-section" id="boundary">
+          <h2>Purpose and authority boundary</h2>
+          <p>Shared owns cross-module identity primitives, not provider records or deduplication decisions. <code>WorkId</code> expresses a stable namespace/value pair. <code>ScholarlyWork</code> groups identifiers and metadata. <code>CorpusSlice</code> defines membership through identifier overlap and connected components.</p>
+          <p class="section-note">Titles, authors, publication year, array position, and runtime object identity are not stable work identity. A record with no accepted stable identifier remains unresolved; Shared does not fabricate one.</p>
         </section>
-        <section class="content-section">
-          <h2>Gate and ADR status</h2>
-          <p>The accepted boundary comes from <a href="https://github.com/nexus-scholar/core-csharp/blob/main/docs/adr/0007-shared-scientific-identity.md">ADR 0007</a> and the local Gate 9 shared-identity work. The current implementation is intentionally local in scope. It resolves how C# Core handles stable scholarly identifiers without claiming that surrounding applications or PHP projections are canonical.</p>
-          <p class="section-note">The approved namespaces are explicit in code: <code>doi</code>, <code>arxiv</code>, <code>openalex</code>, <code>s2</code>, <code>pubmed</code>, <code>pmcid</code>, <code>ieee</code>, <code>doaj</code>, and <code>internal</code>. Namespace text outside that list is rejected, not silently stored.</p>
+        <section class="content-section" id="surface">
+          <h2>Key types</h2>
+          <ul>
+            <li><code>WorkIdNamespace</code> closes the accepted set to DOI, arXiv, OpenAlex, Semantic Scholar (<code>s2</code>), PubMed, PMCID, IEEE, DOAJ, and internal identifiers.</li>
+            <li><code>WorkId</code> parses and canonicalizes namespace/value pairs; namespace-specific rules normalize DOI prefixes/URLs and other provider forms.</li>
+            <li><code>WorkIdSet</code> rejects empty/default/duplicate identity and exposes deterministic primary-id selection.</li>
+            <li><code>ScholarlyWork</code> carries an immutable identifier set plus bibliographic metadata. Metadata enriches display and comparison but does not replace identifiers.</li>
+            <li><code>CorpusSlice</code> closes over transitive identifier overlap: if A shares with B and B shares with C, all three belong to one identity component even when A and C do not directly overlap.</li>
+          </ul>
+          <p>Source: <a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/src/NexusScholar.Shared/SharedIdentity.cs">SharedIdentity.cs</a>. Contract: <a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/docs/adr/0007-shared-scientific-identity.md">ADR 0007</a>.</p>
         </section>
-        <section class="content-section">
-          <h2>Diagrams</h2>
-          <div class="diagram-grid">
-            <article class="diagram-card">
-              <h3>Class map</h3>
-              <p>Identity starts from approved namespaces and grows into works and corpus slices. Unresolved candidates remain explicit.</p>
-              <svg viewBox="0 0 520 244" role="img" aria-label="Shared class map">
-                <defs><marker id="arrow-shared-a" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#0b4f4a"></path></marker></defs>
-                <rect x="40" y="24" width="120" height="56" rx="8" fill="#fff" stroke="#0f766e"></rect>
-                <text x="100" y="49" text-anchor="middle">WorkIdNamespace</text>
-                <text x="100" y="67" text-anchor="middle" class="diagram-muted">approved vocab</text>
-                <rect x="200" y="24" width="120" height="56" rx="8" fill="#fff" stroke="#0f766e"></rect>
-                <text x="260" y="49" text-anchor="middle">WorkId</text>
-                <text x="260" y="67" text-anchor="middle" class="diagram-muted">normalized id</text>
-                <rect x="360" y="24" width="120" height="56" rx="8" fill="#fff" stroke="#0f766e"></rect>
-                <text x="420" y="49" text-anchor="middle">WorkIdSet</text>
-                <text x="420" y="67" text-anchor="middle" class="diagram-muted">ordered identity set</text>
-                <rect x="124" y="148" width="120" height="56" rx="8" fill="#fff" stroke="#0f766e"></rect>
-                <text x="184" y="173" text-anchor="middle">ScholarlyWork</text>
-                <text x="184" y="191" text-anchor="middle" class="diagram-muted">identified or unresolved</text>
-                <rect x="280" y="148" width="120" height="56" rx="8" fill="#fff" stroke="#0f766e"></rect>
-                <text x="340" y="173" text-anchor="middle">CorpusSlice</text>
-                <text x="340" y="191" text-anchor="middle" class="diagram-muted">membership rules</text>
-                <line x1="160" y1="52" x2="200" y2="52" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-shared-a)"></line>
-                <line x1="320" y1="52" x2="360" y2="52" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-shared-a)"></line>
-                <line x1="260" y1="80" x2="184" y2="148" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-shared-a)"></line>
-                <line x1="420" y1="80" x2="340" y2="148" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-shared-a)"></line>
-              </svg>
-            </article>
-            <article class="diagram-card">
-              <h3>Use case flow</h3>
-              <p>The module’s practical value is the strict normalization and overlap path that later modules can trust.</p>
-              <svg viewBox="0 0 520 210" role="img" aria-label="Shared use case flow">
-                <defs><marker id="arrow-shared-b" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#0b4f4a"></path></marker></defs>
-                <rect x="16" y="72" width="102" height="60" rx="8" fill="#fff" stroke="#0f766e"></rect>
-                <text x="67" y="98" text-anchor="middle">raw identifier</text>
-                <text x="67" y="116" text-anchor="middle" class="diagram-muted">source text</text>
-                <rect x="150" y="72" width="102" height="60" rx="8" fill="#fff" stroke="#0f766e"></rect>
-                <text x="201" y="98" text-anchor="middle">normalize</text>
-                <text x="201" y="116" text-anchor="middle" class="diagram-muted">approved namespace</text>
-                <rect x="284" y="72" width="102" height="60" rx="8" fill="#fff" stroke="#0f766e"></rect>
-                <text x="335" y="98" text-anchor="middle">work / overlap</text>
-                <text x="335" y="116" text-anchor="middle" class="diagram-muted">stable identity</text>
-                <rect x="418" y="72" width="86" height="60" rx="8" fill="#f4f1ea" stroke="#b7791f"></rect>
-                <text x="461" y="98" text-anchor="middle">reuse</text>
-                <text x="461" y="116" text-anchor="middle" class="diagram-muted">Search, Dedup</text>
-                <line x1="118" y1="102" x2="150" y2="102" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-shared-b)"></line>
-                <line x1="252" y1="102" x2="284" y2="102" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-shared-b)"></line>
-                <line x1="386" y1="102" x2="418" y2="102" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-shared-b)"></line>
-              </svg>
-            </article>
-          </div>
+        <section class="content-section" id="model">
+          <h2>Transitive identity model</h2>
+          <pre><code>A = {doi:10.x/a, scopus:1}
+B = {scopus:1, pmid:2}
+C = {pmid:2, openalex:W3}
+
+A ↔ B ↔ C  ⇒ one connected identity component
+
+No stable ID ⇒ unresolved candidate, not title-derived membership</code></pre>
+          <p>Primary-id precedence and canonical string forms make ordering reproducible. Set equality is based on normalized identities rather than input order. Hardening protects against adding a bridge record that would silently collapse previously distinct components through transitive overlap.</p>
         </section>
-        <section class="content-section">
-          <h2>Code surface and dependencies</h2>
-          <p>The main implementation lives in <a href="https://github.com/nexus-scholar/core-csharp/blob/main/src/NexusScholar.Shared/SharedIdentity.cs">SharedIdentity.cs</a>. The dependency surface is intentionally tiny: the project depends on Kernel only. That is exactly right for a foundational identity module.</p>
-          <p class="section-intro">A few implementation details are especially important. DOI and arXiv values are normalized by namespace-specific prefix stripping, work ids are deduplicated and sorted by precedence, identified works require at least one stable identifier, and unresolved candidates can exist but cannot silently become immutable corpus members without accepted evidence.</p>
+        <section class="content-section" id="flow">
+          <h2>Typical developer flow</h2>
+          <ol class="step-list">
+            <li>Normalize provider identifiers at ingestion into <code>WorkId</code> values.</li>
+            <li>Retain all observed stable identifiers; do not discard aliases after choosing a primary id.</li>
+            <li>Create immutable <code>ScholarlyWork</code> records and a <code>CorpusSlice</code>.</li>
+            <li>Compare membership through normalized identifier components.</li>
+            <li>Route no-id records to the owning unresolved-candidate workflow instead of assigning a title hash.</li>
+          </ol>
         </section>
-        <section class="content-section">
-          <h2>Related modules and current risks</h2>
-          <p>Shared is upstream of Search, Deduplication, Bundles, and Screening. The main risk is pressure to admit app-local fallback keys, titles, or runtime object identity into this module. That would immediately weaken every downstream claim about identity.</p>
-          <p class="section-intro">The current implementation holds the line correctly. If a record lacks a stable identifier, it stays unresolved.</p>
+        <section class="content-section" id="refusals">
+          <h2>Failure and refusal behavior</h2>
+          <p>Stable rules reject unknown/blank namespaces, malformed or empty values, duplicate IDs, default identities, empty work sets, inconsistent primary IDs, no-ID records entering canonical membership, and transitive bridge additions that would change authority without an explicit owning decision.</p>
+        </section>
+        <section class="content-section" id="evidence">
+          <h2>Tests, extension points, and nonclaims</h2>
+          <p><a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/tests/NexusScholar.Core.Tests/SharedIdentityTests.cs">SharedIdentityTests</a> exercise normalization, immutable sets, transitive membership, and bridge rejection. <a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/tests/NexusScholar.Conformance.Tests/SharedIdentityFixtureTests.cs">SharedIdentityFixtureTests</a> replay the <a href="https://github.com/nexus-scholar-org/core-csharp/tree/main/fixtures/conformance/shared-identity">shared identity fixtures</a>. Narrow PHP comparator evidence, where present, is fixture-scoped rather than a broad compatibility claim.</p>
+          <p>Adding a namespace requires explicit normalization, canonical rendering, precedence, collisions, and fixtures. Shared provides no fuzzy matching, DOI resolution, provider lookup, title similarity, deduplication decision, corpus snapshot publication, or guarantee that two provider identifiers truly describe the same real-world work beyond the accepted evidence.</p>
         </section>
       </div>
       <aside class="doc-aside">
-        <section class="doc-card">
-          <h2>At a glance</h2>
-          <ul class="link-list">
-            <li>Primary ADR: `ADR 0007`</li>
-            <li>Status: implemented local identity contract</li>
-            <li>Depends on: `NexusScholar.Kernel`</li>
-            <li>Key rule: title-only is not identity</li>
-          </ul>
-        </section>
-        <section class="doc-card">
-          <h2>Primary consumers</h2>
-          <ul class="link-list">
-            <li><a href="../search/">Search</a></li>
-            <li><a href="../deduplication/">Deduplication</a></li>
-            <li><a href="../screening/">Screening</a></li>
-            <li><a href="../bundles/">Bundles</a></li>
-          </ul>
-        </section>
+        <section class="doc-card"><h2>Implementation status</h2><p>Implemented normalized identity contract. Fuzzy matching and external identifier resolution are not part of Shared.</p></section>
+        <section class="doc-card"><h2>Identity hierarchy</h2><ul class="link-list"><li>Stable identifiers</li><li>Normalized identifier set</li><li>Connected component</li><li>Unresolved no-id candidate</li></ul></section>
+        <section class="doc-card"><h2>Depends inward</h2><p><a href="../kernel/">Kernel</a> only.</p></section>
+        <section class="doc-card"><h2>Key consumers</h2><ul class="link-list"><li><a href="../search/">Search</a></li><li><a href="../deduplication/">Deduplication</a></li><li><a href="../bundles/">Bundles</a></li></ul></section>
       </aside>
     </div>
   </main>
-  <footer class="site-footer"><p>Shared module documentation.</p></footer>
+  <footer class="site-footer"><p>Shared identity guide · stable identifiers before convenient metadata.</p></footer>
   <script src="../../../assets/js/site.js"></script>
 </body>
 </html>

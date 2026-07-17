@@ -3,244 +3,189 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Getting Started - Nexus Scholar Core</title>
+  <title>Getting Started — Nexus Scholar Core</title>
+  <meta name="description" content="Validate Nexus Scholar Core, run the local fixture-backed CLI workflow, and inspect the FE-08 desktop product host.">
+  <link rel="icon" href="../../favicon.ico">
   <link rel="stylesheet" href="../../assets/css/site.css">
 </head>
 <body>
-  <div class="release-status" role="status">Early alpha. Not production-ready. No package publication or PHP compatibility claim.</div>
+  <div class="release-status" role="status">First-tester walkthrough · Local fixtures only · Not a production research workflow</div>
   <a class="skip-link" href="#main">Skip to content</a>
   <header class="site-header">
     <nav class="nav" aria-label="Primary navigation">
       <a class="brand" href="../../"><span class="brand-mark">NS</span><span>Nexus Scholar Core</span></a>
       <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-links">Menu</button>
       <div class="nav-links" id="nav-links">
-        <a href="../../developers/">Developers</a>
-        <a href="../../tutorials/" aria-current="page">Tutorials</a>
-        <a href="../../blog/">Blog</a>
-        <a href="../../about/">About</a>
-        <a href="https://github.com/nexus-scholar/core-csharp">GitHub</a>
+        <a href="../../status/">Status</a><a href="../../developers/">Developers</a>
+        <a href="../../tutorials/" aria-current="page">Tutorials</a><a href="../../roadmap/">Roadmap</a>
+        <a href="../../about/">About</a><a href="https://github.com/nexus-scholar-org/core-csharp">GitHub</a>
       </div>
     </nav>
   </header>
+
   <main id="main" class="page doc-page">
-    <p class="eyebrow">First-tester walkthrough</p>
-    <h1>Run Nexus Scholar Core in 10 to 15 minutes</h1>
-    <p class="lede">This walkthrough is for developers, methodologists, and early research-tool testers who want to inspect the current local Core surface and report useful feedback. It is not a researcher production workflow.</p>
+    <div class="breadcrumbs"><a href="../../">Home</a><span>/</span><a href="../">Tutorials</a><span>/</span><span>Getting started</span></div>
+    <p class="eyebrow">Protected-main walkthrough</p>
+    <h1>Validate the repository, inspect a local workspace, and open the desktop host</h1>
+    <p class="lede">This path demonstrates current software boundaries using generated local fixtures. It does not create a publishable systematic review, contact providers, retrieve papers, or authorize scientific conduct for you.</p>
 
     <div class="doc-shell">
       <div class="doc-main">
-        <section class="content-section" id="before-you-start">
-          <h2>Before you start</h2>
-          <p>You need Git, PowerShell or another terminal, and a .NET SDK that can build <code>net10.0</code>. The commands below use PowerShell syntax, but the same <code>dotnet</code> commands work from other shells.</p>
-          <p class="section-note">Use the repository's current <code>main</code> branch. The issue templates, deterministic local demo, and local Research Workspace CLI workflow are merged there.</p>
+        <section class="content-section" id="prerequisites">
+          <h2>1. Prerequisites</h2>
+          <ul class="check-list">
+            <li>Windows, Linux, or macOS for the .NET repository and CLI.</li>
+            <li>The exact .NET SDK pinned by <code>global.json</code>.</li>
+            <li>Git and PowerShell 7 or Bash.</li>
+            <li>Windows for the current product-desktop validation target.</li>
+          </ul>
+          <div class="callout info">
+            <strong>Baseline used by this tutorial</strong>
+            Protected <code>main</code> at <code>805f3d6</code>, where FE-01 through FE-07 and FE-08 slices 1–4 are complete.
+          </div>
         </section>
 
         <section class="content-section" id="clone">
-          <h2>1. Clone the repository</h2>
-          <pre><code>git clone https://github.com/nexus-scholar/core-csharp.git
+          <h2>2. Clone and bootstrap</h2>
+          <pre><code>git clone https://github.com/nexus-scholar-org/core-csharp.git
 cd core-csharp
 git switch main
-git pull origin main</code></pre>
-          <p>This gives you the C# Core workspace, the CLI, the sample host, module docs, tests, and local conformance fixtures.</p>
+git pull --ff-only origin main
+pwsh ./scripts/bootstrap.ps1</code></pre>
+          <p>On Bash, use <code>bash scripts/bootstrap.sh</code>. The bootstrap checks prerequisites and restores repository-local tools without turning the project into a globally installed product.</p>
         </section>
 
         <section class="content-section" id="verify">
-          <h2>2. Verify the workspace</h2>
+          <h2>3. Verify before exploring</h2>
           <pre><code>dotnet restore NexusScholar.Core.slnx
 dotnet build NexusScholar.Core.slnx -c Release --no-restore
 dotnet test NexusScholar.Core.slnx -c Release --no-build
 dotnet format NexusScholar.Core.slnx --verify-no-changes --no-restore</code></pre>
-          <p>If one of these commands fails, open a bug report and include the exact command, operating system, .NET SDK version, expected result, and actual result.</p>
+          <p>For the repository-wide release baseline, run:</p>
+          <pre><code>powershell -ExecutionPolicy Bypass -File ./scripts/verify.ps1</code></pre>
+          <p>The full verifier adds release policy, locked restore, reproducible package builds, clean local-source package smoke, SBOM and release evidence, CLI smoke, and formatting checks.</p>
         </section>
 
-        <section class="content-section" id="cli">
-          <h2>3. Run the CLI path</h2>
-          <p>The CLI is a local inspection surface. It is useful for first feedback because it exercises implemented contracts without calling live services.</p>
+        <section class="content-section" id="smoke">
+          <h2>4. Run the deterministic CLI smoke paths</h2>
           <pre><code>dotnet run --project src/NexusScholar.Cli -- doctor
 dotnet run --project src/NexusScholar.Cli -- sample
 dotnet run --project src/NexusScholar.Cli -- demo</code></pre>
-          <p>The <code>doctor</code> command prints local environment and policy information. The <code>sample</code> command walks a small protocol, workflow, provenance, and bundle-verification path. The <code>demo</code> command shows deterministic local Search-import and Deduplication evidence using embedded sample bytes.</p>
-          <p>Expected stable <code>demo</code> summary:</p>
-          <pre><code>Nexus Scholar Core local demo
-Mode: deterministic local sample
-Network: none
-Live providers: none
-Persistence: none
-Import source: scopus-csv
-Imported records: 5
-Search sightings: 4
-Parser warnings: 2
-Source digest scope: raw-artifact-bytes
-Dedup raw candidates: 4
-Dedup exact clusters: 1
-Dedup review-required pairs: 1
-Non-claims: no live providers; no provider SDKs; no persistence/API/cloud; no PDF/OCR; no PHP compatibility</code></pre>
+          <ul class="check-list">
+            <li><code>doctor</code> reports the runtime and the human-authority policy reminder.</li>
+            <li><code>sample</code> walks approved Protocol → compiled Workflow → Provenance → Bundle verification.</li>
+            <li><code>demo</code> exercises deterministic local Search-import and Deduplication evidence from embedded sample bytes.</li>
+          </ul>
+          <div class="callout warning">
+            <strong>Demo output is not scientific authority</strong>
+            The smoke commands prove code paths and contract behavior. They do not prove that a real review is complete, valid, or methodologically adequate.
+          </div>
         </section>
 
-        <section class="content-section" id="research-workspace-cli">
-          <h2>4. Run the local Research Workspace workflow</h2>
-          <p>This path creates a throwaway local Nexus project folder, imports generated local Search-export fixtures, verifies the files, analyzes Search and Deduplication evidence, then shows the read-only review queue and duplicate clusters.</p>
-          <p class="section-note">The fixture files are generated local test data. They are not Scopus exports, not Web of Science exports, not Google Scholar scrapes, not conformance fixtures, and not scientific authority.</p>
-          <pre><code>Remove-Item -Recurse -Force .nexus-demo -ErrorAction SilentlyContinue
-New-Item -ItemType Directory -Force .nexus-demo/workspace | Out-Null
+        <section class="content-section" id="workspace">
+          <h2>5. Create a disposable Research Workspace</h2>
+          <p>The repository includes generated fixture exports for onboarding. They resemble common export shapes but are not real Scopus, Web of Science, or Google Scholar evidence.</p>
+          <pre><code>New-Item -ItemType Directory -Force .nexus-demo/workspace | Out-Null
 Push-Location .nexus-demo/workspace
 
-dotnet run --project ../../src/NexusScholar.Cli -- init --title "APP-01 demo review"
-
+dotnet run --project ../../src/NexusScholar.Cli -- init --title "Nexus local demo"
 dotnet run --project ../../src/NexusScholar.Cli -- import search ../../tests/NexusScholar.AppServices.Tests/Fixtures/App01GeneratedLocalBundles/bundles/FB07-combined-app01-demo/combined_scopus_like.csv --source scopus --format csv --query-id search-001 --query "systematic review screening software"
-
-dotnet run --project ../../src/NexusScholar.Cli -- import search ../../tests/NexusScholar.AppServices.Tests/Fixtures/App01GeneratedLocalBundles/bundles/FB07-combined-app01-demo/combined_wos_like.ris --source web-of-science --format ris --query-id search-002 --query "systematic review screening software"
-
-dotnet run --project ../../src/NexusScholar.Cli -- import search ../../tests/NexusScholar.AppServices.Tests/Fixtures/App01GeneratedLocalBundles/bundles/FB07-combined-app01-demo/combined_scholar_style.bib --source google-scholar --format bibtex --query-id search-003 --query "systematic review screening software"
-
-dotnet run --project ../../src/NexusScholar.Cli -- import search ../../tests/NexusScholar.AppServices.Tests/Fixtures/App01GeneratedLocalBundles/bundles/FB07-combined-app01-demo/combined_wos_like_source_specific.csv --source web-of-science --format csv --query-id search-004 --query "systematic review screening software"
-
 dotnet run --project ../../src/NexusScholar.Cli -- verify
 dotnet run --project ../../src/NexusScholar.Cli -- analyze
+dotnet run --project ../../src/NexusScholar.Cli -- status
 dotnet run --project ../../src/NexusScholar.Cli -- review
-dotnet run --project ../../src/NexusScholar.Cli -- clusters
-dotnet run --project ../../src/NexusScholar.Cli -- clusters exact
 dotnet run --project ../../src/NexusScholar.Cli -- clusters review
-dotnet run --project ../../src/NexusScholar.Cli -- clusters show dedup-candidate-0001
 
 Pop-Location</code></pre>
-
-          <p>The combined demo bundle intentionally includes parser warnings and skipped records. <code>verify</code> surfaces those issues before <code>analyze</code>; continue so you can inspect warning, deduplication, and human-gate blocks.</p>
-
-          <pre><code>Workspace analysis complete
-Mode: Review
-WorkspacePlan: nexus-output/workspace/current.workspace-plan.json
-Deduplication result: nexus-output/dedup/current.deduplication-result.json
-Review report: nexus-output/reports/review.md
-Next: nexus review
-
-Review queue
-Mode: Review
-Blocking
-  4 human merge decisions require review
-
-Review-required duplicate candidates
-[dedup-candidate-0001]
-  Show: nexus clusters show dedup-candidate-0001
-
-Candidate: dedup-candidate-0001
-Status: review required
-APP-01 action
-  Human merge decision required.
-  This CLI version only displays the decision gate.</code></pre>
-
-          <p class="section-note">The review and cluster commands are read-only. They display APP-01 merge gates but do not accept, reject, mark unresolved, or execute merge decisions.</p>
+          <p>This onboarding path produces inspectable Search and Deduplication projections. It does not manufacture the verified FE-01 authority package required to commit a deduplication decision.</p>
         </section>
 
-        <section class="content-section" id="sample-host">
-          <h2>5. Inspect the sample host</h2>
-          <pre><code>dotnet run --project samples/NexusScholar.Avalonia.Blocks.SampleHost</code></pre>
-          <p>The sample host is a visual inspection harness for non-authoritative <code>WorkspacePlan</code> JSON rendered through <code>NexusScholar.UiContracts</code> and <code>NexusScholar.Avalonia.Blocks</code>. It is not a product desktop app, not an app-service layer, and not a Core command surface.</p>
-          <figure class="screenshot-frame">
-            <img src="../../assets/img/sample-host-first-tester.png" alt="Nexus Scholar Core sample host showing a non-authoritative import warning review sample." loading="lazy">
-            <figcaption>Current sample host view. It is sample-only visual inspection output; actions are placeholder callbacks and do not call Core.</figcaption>
-          </figure>
-          <p>Look for whether the blocks, evidence references, validation references, and placeholder action labels make sense to you. If the visual language is confusing, file documentation or UI feedback rather than treating the sample host as a finished workflow.</p>
+        <section class="content-section" id="command-families">
+          <h2>6. Understand the command families</h2>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Family</th><th>Purpose</th><th>Authority posture</th></tr></thead>
+              <tbody>
+                <tr><td><code>init</code>, <code>import search</code>, <code>verify</code>, <code>analyze</code></td><td>Local workspace and evidence operations.</td><td>Operational writes and projections; not final scientific decisions.</td></tr>
+                <tr><td><code>review</code>, <code>clusters …</code></td><td>Inspect deduplication evidence and review targets.</td><td>Read-only.</td></tr>
+                <tr><td><code>dedup decide</code></td><td>Preview and optionally commit an admitted FE-02 action.</td><td>Requires verified policy, actor/role assignment, exact authority generation, and explicit <code>--confirm</code>.</td></tr>
+                <tr><td><code>screening status</code></td><td>Inspect persisted Screening conduct artifacts when present.</td><td>Integrity status; does not invent or approve conduct.</td></tr>
+                <tr><td><code>report verify</code>, <code>bundle verify</code>, <code>export verify/status</code></td><td>Reopen and verify persisted FE-06 outputs.</td><td>Verification only.</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="callout boundary">
+            <strong>Preview is not permission</strong>
+            Supplying <code>--actor</code> or <code>--role</code> text does not grant authority. The command checks those values against the exact verified local policy and fails closed when the workspace cannot prove them.
+          </div>
         </section>
 
-        <section class="content-section" id="desktop-preview">
-          <h2>6. Inspect the desktop preview</h2>
-          <p>After the local Research Workspace workflow has produced <code>.nexus-demo/workspace</code>, you can inspect the same generated local outputs in the desktop preview and run the safe local UI-02A actions.</p>
-          <pre><code>dotnet run --project samples/NexusScholar.Desktop.Preview -- ".nexus-demo/workspace"</code></pre>
-          <p class="section-note">The desktop preview can run local <code>Verify</code> and <code>Analyze</code> actions through shared ResearchWorkspace services. It does not run <code>init</code>, run <code>import</code>, accept/reject merge decisions, mark records unresolved, mutate Core records beyond existing generated-output writes, call providers, or create a product desktop shell.</p>
-
-          <figure class="screenshot-frame">
-            <img src="../../assets/img/desktop-preview-overview.png" alt="Nexus Scholar desktop preview overview showing review-ready workspace state and local output summaries." loading="lazy">
-            <figcaption>Overview screen with local project state, generated output summaries, and the UI-02A <code>Verify</code> / <code>Analyze</code> buttons visible.</figcaption>
-          </figure>
-
-          <figure class="screenshot-frame">
-            <img src="../../assets/img/desktop-preview-verification-actions.png" alt="Nexus Scholar desktop preview verification tab showing local verification metrics and UI-02A action buttons." loading="lazy">
-            <figcaption>Verification tab after local workspace verification. The action surface stays limited to local verify/analyze; import and merge decisions remain outside the preview.</figcaption>
-          </figure>
-
-          <figure class="screenshot-frame">
-            <img src="../../assets/img/desktop-preview-review-queue.png" alt="Nexus Scholar desktop preview review queue tab showing display-only human merge gates." loading="lazy">
-            <figcaption>Review queue tab. APP-01 merge gates are shown as display-only placeholders; the preview cannot execute decisions.</figcaption>
-          </figure>
-
-          <figure class="screenshot-frame">
-            <img src="../../assets/img/desktop-preview-duplicate-detail.png" alt="Nexus Scholar desktop preview duplicate detail tab comparing two records for human review." loading="lazy">
-            <figcaption>Duplicate detail view for a review-required candidate. The comparison is for inspection and feedback, not merge execution.</figcaption>
-          </figure>
-        </section>
-
-        <section class="content-section" id="what-this-proves">
-          <h2>What this proves</h2>
+        <section class="content-section" id="desktop">
+          <h2>7. Launch the FE-08 product desktop</h2>
+          <p>The product host is distinct from the older sample renderer and read-only preview. It reaches local workspace behavior through <code>NexusScholar.Desktop.AppServices</code> and uses preview/confirm boundaries for admitted writes.</p>
+          <pre><code>dotnet run --project src/NexusScholar.Desktop/NexusScholar.Desktop.csproj -c Release -- ".nexus-demo/workspace"</code></pre>
+          <p>On the protected baseline, the desktop can:</p>
           <ul class="check-list">
-            <li>The repository builds and tests locally on your machine.</li>
-            <li>The Core contracts can be exercised without network access.</li>
-            <li>The CLI can show environment policy, a small protocol/workflow/bundle path, deterministic import/dedup evidence, and a read-only local Research Workspace review queue.</li>
-            <li>The sample host can render contract-shaped workspace blocks without giving the renderer Core authority.</li>
-            <li>The desktop preview can inspect generated local Research Workspace outputs and run safe local verify/analyze actions without executing merge decisions.</li>
-            <li>The project is ready for architecture, onboarding, methodology, and workflow-boundary feedback.</li>
+            <li>open and verify a local workspace;</li>
+            <li>preview and confirm initialization, local Search import, and analysis;</li>
+            <li>display a verified deduplication authority queue and commit an authorized human decision after exact-effect confirmation;</li>
+            <li>report whether the durable title/abstract Screening authority package is ready after restart.</li>
           </ul>
+          <p>Most simple demo workspaces will show scientific decision paths as unavailable because they do not contain the verified authority chain. That is expected fail-closed behavior.</p>
         </section>
 
-        <section class="content-section" id="what-this-does-not-prove">
-          <h2>What this does not prove</h2>
+        <section class="content-section" id="inspect">
+          <h2>8. What to inspect</h2>
           <ul class="check-list">
-            <li>It does not prove production readiness for running a real systematic review.</li>
-            <li>It does not prove live provider access, provider SDK support, Scopus or Web of Science API support, or Google Scholar scraping.</li>
-            <li>It does not prove HTTP download, paywall bypass, shadow-library behavior, PDF extraction, or OCR.</li>
-            <li>It does not prove persistence, API, cloud sync, collaboration, or a product desktop shell.</li>
-            <li>It does not make the desktop preview an init/import wizard.</li>
-            <li>It does not execute merge accept, reject, or mark-unresolved decisions from APP-01 blocks.</li>
-            <li>It does not make the desktop preview a source of scientific authority.</li>
-            <li>It does not prove PHP compatibility. That requires generated fixtures and semantic comparators.</li>
-            <li>It does not make AI outputs scientifically authoritative. Suggestions remain proposals until an authorized human action accepts them.</li>
+            <li>Can you distinguish evidence, a proposal, a preview, and an authoritative decision?</li>
+            <li>Does every failure explain what authority or evidence is missing?</li>
+            <li>Are file paths shown as local references rather than scientific identities?</li>
+            <li>Does confirmation expose the exact effects before a local mutation?</li>
+            <li>Can you find the record, digest, actor, and policy that justify a state?</li>
           </ul>
         </section>
 
         <section class="content-section" id="feedback">
-          <h2>Send useful feedback</h2>
-          <p>After running the walkthrough, open the issue type that best matches what you found. Include exact commands and outputs when possible.</p>
+          <h2>9. Report useful feedback</h2>
           <ul class="link-list">
-            <li><a href="https://github.com/nexus-scholar/core-csharp/issues/new?template=first-tester-run.yml">First tester run</a> for setup, command, or walkthrough feedback.</li>
-            <li><a href="https://github.com/nexus-scholar/core-csharp/issues/new?template=architecture-boundary-review.yml">Architecture boundary review</a> for Core authority, dependency, or non-claim concerns.</li>
-            <li><a href="https://github.com/nexus-scholar/core-csharp/issues/new?template=research-workflow-use-case.yml">Research workflow use case</a> for real workflow pain points Nexus should eventually understand.</li>
-            <li><a href="https://github.com/nexus-scholar/core-csharp/issues/new?template=documentation-confusion.yml">Documentation confusion</a> for unclear, stale, or contradictory docs.</li>
-            <li><a href="https://github.com/nexus-scholar/core-csharp/issues/new?template=bug-report.yml">Bug report</a> for reproducible local failures.</li>
+            <li><a href="https://github.com/nexus-scholar-org/core-csharp/issues/new?template=first-tester-run.yml">First-tester run</a></li>
+            <li><a href="https://github.com/nexus-scholar-org/core-csharp/issues/new?template=architecture-boundary-review.yml">Architecture boundary review</a></li>
+            <li><a href="https://github.com/nexus-scholar-org/core-csharp/issues/new?template=research-workflow-use-case.yml">Research workflow use case</a></li>
+            <li><a href="https://github.com/nexus-scholar-org/core-csharp/issues/new?template=documentation-confusion.yml">Documentation confusion</a></li>
+            <li><a href="https://github.com/nexus-scholar-org/core-csharp/issues/new?template=bug-report.yml">Reproducible bug</a></li>
           </ul>
+          <p>Include the commit, operating system, SDK version, exact command or screen, expected behavior, actual behavior, and whether any local workspace files were produced.</p>
         </section>
       </div>
 
-      <aside class="doc-aside">
+      <aside class="doc-aside" aria-label="Tutorial navigation">
         <section class="doc-card">
-          <h2>Walkthrough steps</h2>
+          <h2>On this page</h2>
           <ul class="link-list">
-            <li><a href="#clone">Clone</a></li>
-            <li><a href="#verify">Verify</a></li>
-            <li><a href="#cli">Run CLI commands</a></li>
-            <li><a href="#research-workspace-cli">Research Workspace CLI</a></li>
-            <li><a href="#sample-host">Inspect sample host</a></li>
-            <li><a href="#desktop-preview">Desktop preview</a></li>
-            <li><a href="#feedback">File feedback</a></li>
+            <li><a href="#prerequisites">Prerequisites</a></li><li><a href="#clone">Clone</a></li>
+            <li><a href="#verify">Verify</a></li><li><a href="#smoke">CLI smoke</a></li>
+            <li><a href="#workspace">Workspace</a></li><li><a href="#command-families">Commands</a></li>
+            <li><a href="#desktop">Desktop</a></li><li><a href="#feedback">Feedback</a></li>
           </ul>
         </section>
         <section class="doc-card">
-          <h2>Best feedback</h2>
-          <ul>
-            <li>Exact commands run</li>
-            <li>Expected result</li>
-            <li>Actual result</li>
-            <li>Confusing docs or wording</li>
-            <li>Boundary claims that seem too broad</li>
-          </ul>
+          <h2>Current non-claims</h2>
+          <ul><li>No live providers</li><li>No PDF parsing/OCR</li><li>No database/cloud</li><li>No model execution</li><li>No plugin runtime</li><li>No production readiness</li></ul>
         </section>
         <section class="doc-card">
-          <h2>Boundary reminder</h2>
-          <p>Local and deterministic means no live providers, no provider SDKs, no persistence/API/cloud, no PDF/OCR, no product desktop shell, and no PHP compatibility claim.</p>
+          <h2>Go deeper</h2>
+          <ul class="link-list"><li><a href="../../status/">Implementation status</a></li><li><a href="../../developers/modules/">Module reference</a></li><li><a href="../../developers/architecture/">Architecture</a></li></ul>
         </section>
       </aside>
     </div>
   </main>
-  <footer class="site-footer"><p>Nexus Scholar Core first-tester walkthrough.</p></footer>
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div><h2>First-tester walkthrough</h2><p>Use local fixtures, keep claims narrow, and report the exact evidence behind feedback.</p></div>
+      <div><h3>Reference</h3><ul><li><a href="../../status/">Status</a></li><li><a href="../../developers/modules/">Modules</a></li></ul></div>
+      <div><h3>Community</h3><ul><li><a href="https://github.com/nexus-scholar-org/core-csharp/issues">Issues</a></li><li><a href="../../about/">About</a></li></ul></div>
+    </div>
+  </footer>
   <script src="../../assets/js/site.js"></script>
 </body>
 </html>

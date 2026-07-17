@@ -4,24 +4,28 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Architecture - Nexus Scholar Core</title>
+  <meta name="description" content="Architecture guide to Nexus Scholar Core dependency direction, scientific authority, workflow records, product surfaces, plugins, and governed AI.">
   <link rel="stylesheet" href="../../assets/css/site.css">
 </head>
 <body>
-  <div class="release-status" role="status">Early alpha. Not production-ready. No package publication or PHP compatibility claim.</div>
+  <div class="release-status" role="status">Early alpha · Local-first · No package publication or broad PHP compatibility claim</div>
+  <a class="skip-link" href="#main">Skip to content</a>
   <header class="site-header">
     <nav class="nav" aria-label="Primary navigation">
       <a class="brand" href="../../"><span class="brand-mark">NS</span><span>Nexus Scholar Core</span></a>
       <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-links">Menu</button>
       <div class="nav-links" id="nav-links">
+        <a href="../../status/">Status</a>
         <a href="../../developers/" aria-current="page">Developers</a>
         <a href="../../tutorials/">Tutorials</a>
-        <a href="../../blog/">Blog</a>
+        <a href="../../roadmap/">Roadmap</a>
         <a href="../../about/">About</a>
-        <a href="https://github.com/nexus-scholar/core-csharp">GitHub</a>
+        <a href="https://github.com/nexus-scholar-org/core-csharp">GitHub</a>
       </div>
     </nav>
   </header>
-  <main class="page doc-page">
+  <main id="main" class="page doc-page">
+    <div class="breadcrumbs"><a href="../../">Home</a><span>/</span><a href="../">Developers</a><span>/</span><span>Architecture</span></div>
     <p class="eyebrow">Architecture</p>
     <h1>Domain inward, applications outward</h1>
     <p class="lede">Nexus Scholar Core is shaped as a strict research workflow kernel. Apps, renderers, AI assistants, providers, and storage can make the system useful, but they must not become scientific authority by accident.</p>
@@ -111,7 +115,7 @@
 
         <section class="content-section">
           <h2>Authority pipeline</h2>
-          <p>The architecture is easiest to understand as a pipeline of records. Each stage has a bounded job and a clear non-claim. Search observes. Deduplication structures duplicate evidence. Screening records human decisions. Full Text binds artifact bytes. Bundles export verifiable packages. Provenance ties the history together.</p>
+          <p>The architecture is easiest to understand as a pipeline of records. Each stage has a bounded job and a clear non-claim. Search observes. Deduplication structures duplicate evidence. Screening records human decisions. Full Text binds artifact bytes. Reporting derives checkable outputs. Bundles export verifiable packages. Provenance ties the history together.</p>
           <div class="diagram-grid">
             <article class="diagram-card">
               <h3>Research workflow records</h3>
@@ -285,6 +289,8 @@
           <h2>Related docs</h2>
           <ul class="link-list">
             <li><a href="../modules/">Module documentation</a></li>
+            <li><a href="../../status/">Protected-main status</a></li>
+            <li><a href="../../roadmap/">Feature sequence</a></li>
             <li><a href="../modules/uicontracts/">UiContracts module</a></li>
             <li><a href="../modules/avalonia-blocks/">Avalonia Blocks module</a></li>
             <li><a href="../contributing/">Contributing guide</a></li>
@@ -302,7 +308,7 @@
       </aside>
     </div>
   </main>
-  <footer class="site-footer"><p>Nexus Scholar Core architecture.</p></footer>
+  <footer class="site-footer"><p>Nexus Scholar Core architecture · Protected-main baseline <code>805f3d6</code>.</p></footer>
   <script src="../../assets/js/site.js"></script>
 </body>
 </html>

@@ -1,2 +1,3 @@
 User-agent: *
 Allow: /
+Sitemap: https://nexus.mouadh.org/sitemap.xml

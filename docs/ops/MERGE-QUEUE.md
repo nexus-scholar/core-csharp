@@ -4,39 +4,39 @@ Status date: 2026-07-17
 
 ## Current Queue
 
-FE-08 Slice 5 is ready for closeout review on `cdx/fe-08-remaining-slices`
-under ADR 0038 and the accepted FE-08 remaining-slices gate. Hosted validation
-and a PR are not yet recorded.
+| PR | Scope | State |
+| --- | --- | --- |
+| #69 | Complete FE-09 provider cache, recorded Full Text retrieval, and citation graph | Hosted validation pending |
 
-Recently landed:
+## Recent Feature Delivery
 
-| PR | Gate | Result |
-|---|---|---|
-| #42 | Hardening 19 release policy | Landed |
-| #43 | Hardening 20 package topology | Landed |
-| #44 | Hardening 21 locked restore and release evidence | Landed |
-| #45 | Hardening 22 release and security workflows | Landed |
-| #46 | Hardening 23 Pages and operations | Landed |
-| #47 | Hardening 24 governance verifier | Landed |
-| #48 | Phase 6 closeout | Landed |
-| #49 | Hardening 25 shared-identity compatibility evidence | Landed |
-| #50 | Hardening 26 Search compatibility evidence | Landed |
-| #51 | Hardening 27 Deduplication compatibility evidence | Landed |
-| #52 | Hardening 28 Screening/Full Text compatibility evidence | Landed |
-| #53 | Hardening 29 Phase 7 closeout | Landed |
-| #54 | Hardening 30 post-Phase 7 remediation | Landed |
-| #55 | Hardening 30 protected-main closeout | Landed |
-| #62 | FE-08 desktop slices 1 and 2 | Landed |
-| #64 | FE-08 Slice 3 desktop deduplication review | Landed |
-| #65 | FE-08 Slice 3 closeout | Landed |
-| #66 | FE-08 Slice 4 durable Screening authority resolution | Landed |
-| #67 | FE-08 Slice 4 evidence closeout | Landed |
+| PR | Scope | Result |
+| --- | --- | --- |
+| #54-55 | Hardening 30 remediation and protected-main closeout | Landed |
+| #56 | FE-02 executable Deduplication review | Landed |
+| #57 | FE-03 workflow execution and FE-04 title/abstract Screening | Landed |
+| #58 | FE-05 local Full Text workflow | Landed |
+| #59 | FE-06 reporting, audit bundle, and Rapid Review | Landed |
+| #60-61 | FE-07 Extraction, Appraisal, Synthesis, and closeout | Landed |
+| #62-67 | FE-08 desktop slices 1-4 and closeouts | Landed |
+| #68 | Public documentation and Pages closeout | Landed |
+
+## Admission Rule
+
+A future branch enters the queue only when it has:
+
+1. an accepted ADR or an explicit accepted determination that existing ADRs
+   authorize the behavior;
+2. one coherent gate and primary owner;
+3. schemas, digest scopes, rehydration, authority, invalidation, and recovery
+   rules;
+4. positive, adversarial, restart, tamper, stale-state, and architecture tests
+   appropriate to the boundary;
+5. explicit non-claims and completion evidence.
 
 ## Do Not Queue
 
-ADR 0038 authorizes the dependency-ordered FE-08 remaining slices. Do not queue
-Slice 6 correction/adjudication/handoff as complete, or queue Full Text,
-reporting/export, Workflow completion, Protocol or criteria authoring, live
-providers, scraping, API/cloud, AI, plugin execution, package publication, or
-broader compatibility claims without their required implementation and
-verification evidence.
+Do not queue wider provider retention, live Full Text downloads, scraping,
+paywall bypass, citation exports, broad PHP parity, plugin execution, model
+calls, database/API/cloud, multi-user work, or package publication without their
+own accepted gates.

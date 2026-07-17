@@ -2,46 +2,47 @@
 
 Status date: 2026-07-17
 
-## Current Repository State
+## Protected Main
 
-- `main`: FE-08 Slice 4 closeout is complete at `805f3d6`.
-- `gh-pages`: retained as historical static-site source at `9a76975`; new Pages deployments are sourced from `site/` on `main`.
-- Active feature branch: `cdx/fe-08-remaining-slices`.
-- Active plan: `docs/plans/2026-07-14-feature-expansion-priority.md`.
-- Immediate job: close and merge FE-08 Slice 5 from
-  `cdx/fe-08-remaining-slices`, then continue Slice 6.
+- `origin/main`: `5d6e2ff` (PR #68 public documentation and Pages closeout).
+- `gh-pages`: retained as historical static-site source; deployments use
+  `site/` on `main`.
+- Active feature branch: `cdx/fe-09-complete`.
+- Active pull request: #69.
+- Active roadmap: `docs/plans/2026-07-14-feature-expansion-priority.md`.
 
-## Completed Hardening
+## Verified Baseline
 
-- Phases 1-7 and post-review Hardening 30 are complete on protected `main`.
-- Phase 6 has accepted release policy, a 12-package validation topology, 30 locked solution restore graphs, normalized package reproducibility, clean local-source package smoke, SPDX SBOM and release evidence, retained test artifacts, dependency review, CodeQL SARIF, and validation-only artifact attestation.
-- Current protected-main verification baseline is 906 tests on Windows and Linux.
-
-## Current Closeout
-
-- Pages is built through workflow run `29231264071`.
-- `main`, private reporting, security analysis, and the tag-only `release` environment pass `scripts/verify-github-governance.ps1`.
-- Tag `v0.1.0-alpha.1` completed attested clean-machine run `29231634501`.
-- Phase 7 fixture-backed compatibility evidence landed through PRs #49-#53 with case-scoped claims only.
-- Hardening 30 landed through PR #54 with green Windows/Linux gates, dependency review, and CodeQL checks.
-- Hardening 30 closeout landed through PR #55; final `main` Gate 01 and CodeQL runs passed.
-- FE-08 Slice 4 landed through PR #66 and its evidence closeout through PR #67
-  with green Windows/Linux gates, dependency review, and CodeQL checks.
-- FE-08 Slice 5 is complete locally on `cdx/fe-08-remaining-slices`; hosted
-  validation and merge remain pending.
-- The active validation package identity is `0.1.0-alpha.2`; `v0.1.0-alpha.1` remains the historical attested rehearsal and no NuGet package is published.
+- Hardening Phases 1-7 and Hardening 30: complete.
+- FE-01 through FE-08: complete within accepted local scopes.
+- FE-09A, FE-09F, FE-09B, FE-09C, and FE-09E: complete locally on the active
+  stacked branch.
+- Full solution: 1,011 passed, 0 failed, 2 opt-in live smokes skipped.
+- Package graph: 24 validation-only packages with reproducible pack and clean
+  local-source restore/load.
+- Release build and formatting: green.
+- Package identity: `0.1.0-alpha.2`; publication disabled.
 
 ## Product Boundary
 
-The roadmap sequences later product work but does not authorize it automatically.
-FE-08 Slice 4 adds readiness resolution only. Desktop Screening mutation,
-Workflow completion, live providers, scraping, API/cloud, AI, plugins, and
-package publication remain unauthorized until their accepted gates. Slice 5
-admits only local human title/abstract review.
+Scientific authority remains in immutable, digest-bound Core records and local
+workspace generations. The desktop and provider hosts invoke admitted commands;
+they do not own scientific authority.
 
-## Protected References
+FE-09 admits bounded Search transport, provider evidence caching, recorded Full
+Text retrieval verification, and local citation snapshots. Semantic Scholar
+body retention remains digest-only by default. Live Full Text transport,
+scraping, paywall bypass, citation exports, PHP parity, plugin execution,
+database/API/cloud, authentication, tenancy, and multi-user operation remain
+outside the accepted scope.
 
-- `main`
-- `gh-pages` historical branch
-- `origin/main`
-- `origin/gh-pages`
+## Next
+
+Close PR #69 through hosted CI and protected merge. After merge, begin FE-10
+plugin-runtime design under a new accepted gate.
+
+## Pages
+
+- Deployable GitHub Pages source: `site/` on `main`.
+- Deployment workflow: `.github/workflows/pages.yml`.
+- `gh-pages` is retained only as historical branch state.

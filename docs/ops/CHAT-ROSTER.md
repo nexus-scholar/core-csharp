@@ -1,26 +1,58 @@
 # Chat Roster
 
-Status date: 2026-07-14
+Status date: 2026-07-17
 
 ## Active Lanes
 
-- Main development lane: `main` at the Hardening 30 closeout merge `f0e5806`.
-- Current manager lane: FE-01 implementation and integration on `cdx/fe-01-decision-snapshot-authority`.
-- Compatibility evidence lane: Phase 7 complete; future additions remain case-scoped and ADR-mediated.
-- Historical public-site lane: `gh-pages`; deployable site source now moves to `site/` on `main`.
+- Main integration lane: protected `main` at `805f3d6`.
+- Product planning lane: FE-08 Slice 5 ADR/gate design; no implementation yet.
+- Public documentation lane: current project docs and `site/` on `main`.
+- Compatibility lane: case-scoped fixture evidence only; no broad PHP claim.
+- Release/security lane: validation-only packages, governance, dependency
+  review, CodeQL, and release evidence.
 
 ## Ownership
 
-- Release manager: package policy, release evidence, validation workflow, governance settings, and final rehearsal.
-- Security lane: dependency review, CodeQL, private vulnerability reporting, and security policy.
-- Documentation lane: Pages source, maturity non-claims, branch board, merge queue, roster, and port matrix.
-- Compatibility lane: preserve pinned fixtures, semantic classifications, and explicit non-claims; do not broaden evidence into package-wide PHP compatibility.
+- Gate manager: dependency order, accepted ADR/gate status, completion evidence,
+  and protected-main closeout.
+- Scientific owner: human authority, Protocol and criteria binding, immutable
+  history, invalidation, and claim boundaries.
+- Application owner: command contracts, durable local transactions, stale-state
+  checks, recovery, and projections.
+- Desktop owner: composition root, interaction states, accessibility, and
+  routing only through admitted application commands.
+- Release manager: package policy, reproducibility, SBOM, validation workflows,
+  governance verification, and rehearsal artifacts.
+- Security owner: dependency review, CodeQL, threat boundaries, private
+  vulnerability reporting, and security policy.
+- Documentation owner: README, roadmap, Pages, module maps, CLI references,
+  branch board, merge queue, and roster.
 
-## Current Boundaries
+## Current Authority Boundary
 
-- Phase 6 artifacts are unsigned and validation-only.
-- Model outputs remain proposals; human authorization boundaries are unchanged.
-- No live provider, persistence, cloud, PDF/OCR, product UI, publication, or signing implementation is authorized before its accepted feature gate.
-- The active operating roadmap is `docs/plans/2026-07-14-feature-expansion-priority.md`.
-- Tag `v0.1.0-alpha.1` is a validated and attested rehearsal artifact set, not a published NuGet release.
-- Active validation package identity is `0.1.0-alpha.2`; publication and signing remain disabled.
+- FE-01 through FE-07 and FE-08 slices 1 through 4 are complete.
+- The desktop can execute accepted FE-02 Deduplication commands through
+  `NexusScholar.Desktop.AppServices`.
+- FE-08 Slice 4 resolves durable Screening authority and exposes readiness
+  read-only. It does not admit a desktop Screening decision.
+- UI state, paths, row ids, selection, and action descriptors are never
+  scientific authority.
+- Local file-backed generations and ledgers are durable persistence. Database,
+  API, cloud, synchronization, authentication, and multi-user behavior remain
+  absent.
+
+## Current Non-Claims
+
+- early alpha, not production-ready;
+- no published or signed NuGet packages;
+- no broad PHP compatibility;
+- no live providers, scraping, or built-in PDF/OCR;
+- no plugin runtime or arbitrary-code sandbox;
+- no live model execution or AI decision authority;
+- no database, server API, cloud sync, authentication, tenancy, or multi-user
+  collaboration.
+
+## Historical Lane
+
+The `gh-pages` branch is historical. Current Pages deployments use `site/` on
+`main` through `.github/workflows/pages.yml`.

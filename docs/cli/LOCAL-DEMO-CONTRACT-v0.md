@@ -1,6 +1,9 @@
 # Local CLI Demo Contract v0
 
-Status: implemented by CLI-02 and documented for first-tester feedback by CLI-03. The command remains local-only, deterministic, and non-authoritative.
+Status: historical CLI-02/CLI-03 demo contract. The `demo` command remains local-only, deterministic, and non-authoritative, but this file is not the current full CLI inventory.
+
+Current command routing lives in `README.md`, `CODEX-START-HERE.md`, and
+`site/developers/modules/cli/index.html`.
 
 ## Goal
 
@@ -25,9 +28,9 @@ Exit code:
 - `0` when the local demo completes and produces the expected summary.
 - non-zero only for command parsing or unexpected local validation failure.
 
-## Current CLI Baseline
+## CLI Baseline When This Contract Was Accepted
 
-Current `src/NexusScholar.Cli/Program.cs` dispatches:
+At contract acceptance, `src/NexusScholar.Cli/Program.cs` dispatched:
 
 - `doctor`
 - `sample`
