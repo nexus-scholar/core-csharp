@@ -41,9 +41,10 @@ Hardening Phases 1-7 and the Hardening 30 corrective closeout are complete on pr
 - `docs/plans/2026-07-14-feature-expansion-priority.md`
 
 The roadmap establishes the dependency-ordered feature sequence FE-01 through
-FE-12. FE-01 through FE-07 and FE-08 slices 1 and 2 are complete. FE-08 Slice 3
-desktop deduplication review is active under ADR 0036; later scientific desktop
-commands remain unauthorized.
+FE-12. FE-01 through FE-07 and FE-08 slices 1 through 4 are complete. FE-08
+Slice 4 adds durable, fail-closed Screening authority resolution under ADR 0037.
+The first desktop Screening mutation remains unauthorized until Slice 5 accepts
+its own gate.
 
 Completed hardening references remain:
 
@@ -63,8 +64,7 @@ The completed dependency order was:
 Hardening 30 corrected the post-phase review findings in AI proposal authority,
 Full Text rehydration, Search import parsing, compatibility-evidence guards,
 package version identity, and operating documentation. FE-01 through FE-07 and
-FE-08 slices 1 and 2 are complete. FE-08 Slice 3 is the active implementation
-gate.
+FE-08 slices 1 through 4 are complete. FE-08 Slice 5 is the next gate candidate.
 
 ## Deferred Until Their Feature Gate
 

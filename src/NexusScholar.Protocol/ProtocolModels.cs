@@ -56,6 +56,7 @@ public static class ProtocolErrorCodes
     public const string NonHumanApprovalActor = "non-human-approval-actor";
     public const string ApprovalTargetMismatch = "approval-target-mismatch";
     public const string InsufficientApprovalPolicy = "insufficient-approval-policy";
+    public const string InvalidAuthorityPackage = "invalid-authority-package";
 }
 
 public sealed class ProtocolRuleException : DomainRuleException

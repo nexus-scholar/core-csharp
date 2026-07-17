@@ -19,6 +19,7 @@ public static class ScreeningErrorCodes
     public const string MissingCriteriaDigest = "missing-criteria-digest";
     public const string InvalidCriteriaDigestScope = "invalid-criteria-digest-scope";
     public const string CriteriaDigestMismatch = "criteria-digest-mismatch";
+    public const string InvalidCriteriaCanonicalRecord = "invalid-criteria-canonical-record";
     public const string DuplicateDecisionId = "duplicate-decision-id";
     public const string DecisionNotAppendOnly = "decision-not-append-only";
     public const string UnresolvedConflict = "unresolved-conflict";

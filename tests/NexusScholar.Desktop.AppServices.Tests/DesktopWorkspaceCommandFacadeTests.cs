@@ -43,6 +43,34 @@ public sealed class DesktopWorkspaceCommandFacadeTests
     }
 
     [TestMethod]
+    public void InspectScreeningAuthority_reports_unavailable_without_exposing_domain_authority()
+    {
+        var facade = new DesktopWorkspaceCommandFacade();
+        using var workspace = TemporaryInitializedWorkspace.Create();
+
+        var result = facade.InspectScreeningAuthority(workspace.Root);
+
+        Assert.AreEqual(DesktopWorkspaceCommandStatus.Failed, result.Status);
+        Assert.AreEqual(ResearchWorkspaceScreeningAuthorityPackage.UnavailableCategory, result.Category);
+        Assert.IsFalse(result.Ready);
+        CollectionAssert.Contains(result.NonClaims.ToArray(), "not-screening-decision");
+        AssertNoAbsolutePathsIn(result.Message);
+    }
+
+    [TestMethod]
+    public void InspectScreeningAuthority_reports_failed_for_missing_workspace()
+    {
+        var facade = new DesktopWorkspaceCommandFacade();
+        var path = Path.Combine(Path.GetTempPath(), $"nexus-screening-authority-missing-{Guid.NewGuid():N}");
+
+        var result = facade.InspectScreeningAuthority(path);
+
+        Assert.AreEqual(DesktopWorkspaceCommandStatus.Failed, result.Status);
+        Assert.IsFalse(result.Ready);
+        AssertNoAbsolutePathsIn(result.Message);
+    }
+
+    [TestMethod]
     public void PreviewInitialize_is_non_mutating_and_execute_writes_workspace()
     {
         var facade = new DesktopWorkspaceCommandFacade();
