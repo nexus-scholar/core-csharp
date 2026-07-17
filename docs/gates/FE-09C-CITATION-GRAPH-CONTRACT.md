@@ -1,6 +1,6 @@
 # FE-09C: Citation Graph Contract
 
-Status: Complete locally
+Status: Complete; merged through PR #69 to protected `main`
 
 Date: 2026-07-17
 

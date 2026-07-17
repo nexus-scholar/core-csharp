@@ -2,13 +2,13 @@
 
 Status: active successor roadmap after Hardening 30.
 
-Current state: FE-01 through FE-08 are complete locally. FE-09A's retained-local-
-fixture contract and Crossref normalization adapter are complete locally under
-ADR 0039; hosted CI and merge remain pending on a stacked branch. FE-09D host,
-credential, and runtime-evidence policy is accepted under ADR 0040. FE-09F
-OpenAlex/Semantic Scholar transport is complete locally; OpenAlex live smoke
-passed, while authenticated S2 bulk/batch smoke remains credential-blocked.
-Remaining FE-09 slices and FE-10 through FE-12 stay dependency-ordered.
+Current state: FE-01 through FE-09 are complete within their accepted scopes on
+protected `main` at `ea665eb`. FE-09 adds recorded Crossref parsing, bounded
+OpenAlex and Semantic Scholar Search transport, policy-specific provider
+evidence caching, recorded-byte Full Text retrieval verification, and immutable
+direct-citation snapshots. Authenticated Semantic Scholar live smoke remains
+credential-blocked. FE-10 plugin-runtime design is the immediate next gate;
+FE-11 and FE-12 remain dependency-ordered.
 
 ## Operating Decision
 
@@ -549,12 +549,11 @@ fixtures, and package-boundary justification.
 
 ## FE-08 - Local Product Desktop Shell
 
-Status: slices 1 through 5 complete locally. Slices 1 and 2 are governed by ADR 0035,
-Slice 3 desktop deduplication review by ADR 0036, and Slice 4 durable Screening
-authority resolution by ADR 0037 and
-`docs/gates/FE-08-SCREENING-AUTHORITY-RESOLUTION-SLICE-4.md`. Slice 5 desktop
-title/abstract Screening is implemented under ADR 0038 and
-`docs/gates/FE-08-REMAINING-SLICES-5-9.md`.
+Status: complete within the accepted local desktop scope on protected `main`.
+Slices 1 and 2 are governed by ADR 0035, Slice 3 desktop deduplication review by
+ADR 0036, Slice 4 durable Screening authority resolution by ADR 0037 and
+`docs/gates/FE-08-SCREENING-AUTHORITY-RESOLUTION-SLICE-4.md`, and Slices 5
+through 9 by ADR 0038 and `docs/gates/FE-08-REMAINING-SLICES-5-9.md`.
 
 ### Outcome
 
@@ -610,6 +609,9 @@ domain behavior into UI state.
 - no API, cloud sync, provider, or AI requirement is hidden inside the shell.
 
 ## FE-09 - Live Providers And Citation Networks
+
+Status: complete within the accepted FE-09A through FE-09F scopes on protected
+`main` at `ea665eb`. See `docs/release/FE-09-COMPLETION-EVIDENCE.md`.
 
 ### Outcome
 
@@ -842,11 +844,12 @@ become compatibility obligations.
 
 ## Immediate Next Gate
 
-FE-09B, FE-09C, and FE-09E are complete locally under ADRs 0042, 0043, and
-0041. Close the stacked FE-09 branch through hosted CI and protected merge.
-After merge, begin FE-10 plugin-runtime design; do not widen provider retention,
-live Full Text transport, citation metrics, exports, or PHP compatibility
-without their successor gates.
+Begin FE-10 plugin-runtime design and the capability-security gate. Do not
+implement extension execution until the manifest, capability grant, process,
+credential, network, staged-output, validation, provenance, and human-adoption
+boundaries are accepted. Do not widen provider retention, live Full Text
+transport, citation metrics, exports, or PHP compatibility without their
+successor gates.
 
 ## Verification Baseline
 

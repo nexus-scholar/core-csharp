@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Developer guide to Nexus Scholar Search traces, provider attempts, imported exports, raw sightings, cache identity, and closed search plans.">
+  <title>Search developer guide - Nexus Scholar Core</title>
+  <link rel="stylesheet" href="../../../assets/css/site.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <div class="release-status" role="status">Early alpha. Not production-ready. No package publication or broad PHP compatibility claim.</div>
+  <header class="site-header"><nav class="nav" aria-label="Primary navigation">
+    <a class="brand" href="../../../"><span class="brand-mark">NS</span><span>Nexus Scholar Core</span></a><button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-links">Menu</button>
+    <div class="nav-links" id="nav-links"><a href="../../../status/">Status</a><a href="../../../developers/" aria-current="page">Developers</a><a href="../../../tutorials/">Tutorials</a><a href="../../../roadmap/">Roadmap</a><a href="../../../about/">About</a><a href="https://github.com/nexus-scholar-org/core-csharp">GitHub</a></div>
+  </nav></header>
+  <main class="page doc-page" id="main">
+    <nav class="breadcrumbs" aria-label="Breadcrumb"><a href="../../../developers/">Developers</a><span aria-hidden="true">/</span><a href="../">Modules</a><span aria-hidden="true">/</span><span aria-current="page">Search</span></nav>
+    <p class="eyebrow">Evidence acquisition · NexusScholar.Search</p>
+    <h1>Search</h1>
+    <p class="lede">Raw, reconstructable acquisition traces from local imports, recorded provider bytes, or bounded OpenAlex and Semantic Scholar adapters—before any deduplication decision.</p>
+    <div class="doc-shell">
+      <div class="doc-main">
+        <section class="content-section" id="boundary">
+          <h2>Purpose and authority boundary</h2>
+          <p>Search records what was asked, attempted, observed, normalized, skipped, and warned about. Its primary output is a <code>SearchTrace</code>, not a deduplicated corpus. Duplicate sightings stay visible; no-ID records stay unresolved. Search never elects a representative or calls Deduplication.</p>
+          <p class="section-note"><strong>Acquisition modes:</strong> deterministic stubs; user-supplied RIS, BibTeX, and Scopus-like CSV; retained Crossref fixtures; and opt-in OpenAlex or Semantic Scholar transport through exact-host outward adapters. There is no live Crossref adapter, Google Scholar scraping, or provider-completeness claim.</p>
+        </section>
+        <section class="content-section" id="surface">
+          <h2>Key types and services</h2>
+          <ul>
+            <li><code>SearchQueryInput</code>, <code>SearchTraceRequest</code>, and <code>SearchPlanBinding</code> capture explicit request and plan origin.</li>
+            <li><code>SearchService</code> validates provider selection/year bounds, builds provider-order-insensitive cache identity, executes <code>ISearchProvider</code> adapters, and preserves attempts, failures, stats, and sightings.</li>
+            <li><code>SearchProviderCatalog</code> holds local providers; <code>DataProvider</code> and <code>FailingProvider</code> support deterministic fixture scenarios.</li>
+            <li><code>SearchTrace</code>, <code>SearchSighting</code>, <code>SearchProviderAttempt</code>, and <code>SearchSummary</code> are the raw trace surface.</li>
+            <li><code>SearchPlanParser</code> parses the schema-closed local plan and an explicitly separate legacy-import profile.</li>
+            <li><code>SearchImportService</code> parses user-supplied RIS, BibTeX, and Scopus-like CSV bytes into <code>SearchImportTrace</code> with source-file/raw-record digests and parser notices.</li>
+            <li><code>ProviderAcquisitionRequest</code>, <code>ProviderPageRequest</code>, <code>ProviderAttemptEvidence</code>, and <code>RuntimeProviderResponseEvidence</code> bind sanitized requests, page continuity, observed response facts, parser identity, exact response digests, timestamps, and completeness.</li>
+            <li><code>ProviderEvidenceCacheKey</code>, <code>ProviderEvidenceCachePolicy</code>, and <code>ProviderEvidenceCacheEntry</code> define provider- and operation-specific retention without making cache state scientific authority.</li>
+          </ul>
+          <p>Core source: <a href="https://github.com/nexus-scholar-org/core-csharp/tree/main/src/NexusScholar.Search">NexusScholar.Search</a>. Outward adapters: <a href="https://github.com/nexus-scholar-org/core-csharp/tree/main/src/NexusScholar.Search.Providers.Crossref">Crossref</a>, <a href="https://github.com/nexus-scholar-org/core-csharp/tree/main/src/NexusScholar.Search.Providers.OpenAlex">OpenAlex</a>, <a href="https://github.com/nexus-scholar-org/core-csharp/tree/main/src/NexusScholar.Search.Providers.SemanticScholar">Semantic Scholar</a>, <a href="https://github.com/nexus-scholar-org/core-csharp/tree/main/src/NexusScholar.Search.Providers.Live">live host</a>, and <a href="https://github.com/nexus-scholar-org/core-csharp/tree/main/src/NexusScholar.Search.Providers.Cache">cache store</a>. Contracts: <a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/docs/adr/0039-live-search-provider-acquisition-contract.md">ADR 0039</a>, <a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/docs/adr/0040-live-provider-host-credential-and-retention-policy.md">ADR 0040</a>, and <a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/docs/adr/0041-provider-evidence-cache-retention-and-invalidation.md">ADR 0041</a>.</p>
+        </section>
+        <section class="content-section" id="trace">
+          <h2>Trace and import model</h2>
+          <pre><code>query + selected active providers
+  → ordered attempts (success / partial failure / all failed)
+  → ordered raw sightings + normalized stable identifiers
+  → SearchTrace with explicit nonclaims
+
+user export bytes
+  → raw source-file digest
+  → versioned parser + per-record raw digest/notices
+  → SearchImportTrace
+  → Deduplication input later
+
+sanitized provider request
+  → exact-host transport + bounded identity-encoded response
+  → response digest + parser/pagination/attempt evidence
+  → normalized raw sightings
+  → optional policy-admitted immutable cache entry</code></pre>
+          <p>Provider-local result order and cross-provider attempt order are semantic. Raw payload material is included only when requested. Source-specific IDs such as Scopus EID or Web of Science accession remain source evidence unless the Shared identity contract admits their namespace.</p>
+        </section>
+        <section class="content-section" id="identity">
+          <h2>Two cache identities, two responsibilities</h2>
+          <p>Cache identity includes query, year range, language, limit, offset, sorted active provider aliases, and <code>include_raw_data</code>. It excludes generated trace/query IDs, runtime duration, failure prose, raw bytes, app IDs, paths, URLs, configuration, and credentials. Including raw-data intent intentionally differs from PHP behavior because it changes the evidence surface.</p>
+          <p>Imported source identity is the exact source-file byte digest plus parser id/version and source metadata. Local path is not identity. Each raw record can carry its own digest. Parser output is a projection over preserved raw evidence, not a replacement for it.</p>
+          <p>FE-09E’s provider evidence cache is separate from Search result identity. Its key binds provider, operation, sanitized request digest, page request digest, and parser id/version. Only complete <code>200</code> responses are eligible. OpenAlex <code>openalex.works</code> may retain exact bodies for 14 days; Semantic Scholar bulk and batch are digest-only; Crossref runtime caching is denied. Expiry prevents a fresh hit but does not erase the verifiable evidence entry.</p>
+        </section>
+        <section class="content-section" id="flow">
+          <h2>Typical developer flows</h2>
+          <ol class="step-list">
+            <li>For local provider scenarios, construct a catalog and explicit validation year/clock, then call <code>SearchService</code>.</li>
+            <li>For imported evidence, read bytes in an adapter and call <code>SearchImportService</code> with format, source tool/database, query/export metadata, and actor/time.</li>
+            <li>For provider acquisition, build a sanitized request and page descriptor; select a recorded adapter or an exact-host live host; then preserve the returned attempt, response, parser, and pagination evidence.</li>
+            <li>Resolve credentials outside Core. The live host injects them only at send time and never emits them into descriptors, records, errors, or logs.</li>
+            <li>Evaluate the provider/operation cache policy before any body write. Treat a cache hit as replay of the original request/receipt evidence, not as a new provider observation.</li>
+            <li>Persist source bytes or their raw-byte identity alongside the trace.</li>
+            <li>Display warnings and failed attempts without hiding successful sightings.</li>
+            <li>Pass the complete verified trace/import records to Deduplication; do not pre-collapse them.</li>
+          </ol>
+        </section>
+        <section class="content-section" id="refusals">
+          <h2>Failure and refusal behavior</h2>
+          <p>Search rejects blank query, invalid/inverted year range, unknown provider alias, invalid limits/offsets, schema-open authoritative plans, unsupported import formats, empty or malformed source data, duplicate source record IDs, and Google Scholar scraping. Provider paths additionally reject wrong scheme/host/port/path/method, redirects, IP literals, user info, fragments, credential-shaped descriptors, encoded or oversized bodies, parser drift, pagination drift, and response-order assumptions. Parser failures retain bounded response evidence but produce no successful page.</p>
+        </section>
+        <section class="content-section" id="evidence">
+          <h2>Tests, extension points, and nonclaims</h2>
+          <p><a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/tests/NexusScholar.Core.Tests/SearchServiceTests.cs">SearchServiceTests</a> and <a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/tests/NexusScholar.Core.Tests/SearchImportServiceTests.cs">SearchImportServiceTests</a> cover local selection, imports, warnings, and trace identity. Provider-specific suites cover <a href="https://github.com/nexus-scholar-org/core-csharp/tree/main/tests/NexusScholar.Search.Providers.Crossref.Tests">recorded Crossref</a>, <a href="https://github.com/nexus-scholar-org/core-csharp/tree/main/tests/NexusScholar.Search.Providers.OpenAlex.Tests">OpenAlex</a>, <a href="https://github.com/nexus-scholar-org/core-csharp/tree/main/tests/NexusScholar.Search.Providers.SemanticScholar.Tests">Semantic Scholar</a>, <a href="https://github.com/nexus-scholar-org/core-csharp/tree/main/tests/NexusScholar.Search.Providers.Live.Tests">transport security</a>, and <a href="https://github.com/nexus-scholar-org/core-csharp/tree/main/tests/NexusScholar.Search.Providers.Cache.Tests">cache invariants</a>. Live smokes are opt-in and excluded from CI.</p>
+          <p>Current code makes no live Crossref, automatic retry, background refresh, Semantic Scholar body-retention right, Google Scholar scraping, provider coverage/completeness/parity, Search-time deduplication, corpus membership, API, cloud, production, or broad PHP compatibility claim.</p>
+        </section>
+      </div>
+      <aside class="doc-aside">
+        <section class="doc-card"><h2>Implementation status</h2><p>FE-09 is complete within its accepted scope: local imports, recorded Crossref, bounded OpenAlex/Semantic Scholar adapters, secure host policy, and provider-specific caching.</p></section>
+        <section class="doc-card"><h2>Implemented sources</h2><ul class="link-list"><li>Deterministic stubs</li><li>RIS / BibTeX / Scopus-like CSV</li><li>Crossref recorded bytes</li><li>OpenAlex live + recorded</li><li>Semantic Scholar live + recorded</li></ul></section>
+        <section class="doc-card"><h2>Depends inward</h2><p><a href="../kernel/">Kernel</a> and <a href="../shared/">Shared identity</a>.</p></section>
+        <section class="doc-card"><h2>Downstream</h2><p><a href="../deduplication/">Deduplication</a> consumes raw sightings. <a href="../network/">Network</a> consumes separately evidenced citation relationships; it does not infer them from Search rank.</p></section>
+      </aside>
+    </div>
+  </main>
+  <footer class="site-footer"><p>Search developer guide · acquisition evidence before consolidation.</p></footer>
+  <script is:inline src="../../../assets/js/site.js"></script>
+</body>
+</html>

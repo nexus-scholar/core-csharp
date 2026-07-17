@@ -4,19 +4,18 @@ Status date: 2026-07-17
 
 ## Protected Main
 
-- `origin/main`: `5d6e2ff` (PR #68 public documentation and Pages closeout).
+- `origin/main`: `ea665eb` (PR #69 FE-09 protected-main closeout).
 - `gh-pages`: retained as historical static-site source; deployments use
   `site/` on `main`.
-- Active feature branch: `cdx/fe-09-complete`.
-- Active pull request: #69.
+- Active feature branch: none; FE-10 design has not started.
 - Active roadmap: `docs/plans/2026-07-14-feature-expansion-priority.md`.
 
 ## Verified Baseline
 
 - Hardening Phases 1-7 and Hardening 30: complete.
 - FE-01 through FE-08: complete within accepted local scopes.
-- FE-09A, FE-09F, FE-09B, FE-09C, and FE-09E: complete locally on the active
-  stacked branch.
+- FE-09A through FE-09F: complete within accepted scope and merged through
+  PR #69.
 - Full solution: 1,011 passed, 0 failed, 2 opt-in live smokes skipped.
 - Package graph: 24 validation-only packages with reproducible pack and clean
   local-source restore/load.
@@ -38,11 +37,12 @@ outside the accepted scope.
 
 ## Next
 
-Close PR #69 through hosted CI and protected merge. After merge, begin FE-10
-plugin-runtime design under a new accepted gate.
+Begin FE-10 plugin-runtime design and capability-security review under a new
+accepted gate.
 
 ## Pages
 
-- Deployable GitHub Pages source: `site/` on `main`.
+- GitHub Pages source: Astro project under `site/` on `main`.
+- Generated deployment artifact: `site/dist/` in CI only; never committed.
 - Deployment workflow: `.github/workflows/pages.yml`.
 - `gh-pages` is retained only as historical branch state.

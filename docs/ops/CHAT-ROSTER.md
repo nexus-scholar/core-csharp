@@ -4,8 +4,9 @@ Status date: 2026-07-17
 
 ## Active Lanes
 
-- Main integration lane: protected `main` at `805f3d6`.
-- Product planning lane: FE-08 Slice 5 ADR/gate design; no implementation yet.
+- Main integration lane: protected `main` at `ea665eb`.
+- Product planning lane: FE-10 plugin-runtime design and capability security;
+  no runtime implementation yet.
 - Public documentation lane: current project docs and `site/` on `main`.
 - Compatibility lane: case-scoped fixture evidence only; no broad PHP claim.
 - Release/security lane: validation-only packages, governance, dependency
@@ -30,11 +31,14 @@ Status date: 2026-07-17
 
 ## Current Authority Boundary
 
-- FE-01 through FE-07 and FE-08 slices 1 through 4 are complete.
-- The desktop can execute accepted FE-02 Deduplication commands through
-  `NexusScholar.Desktop.AppServices`.
-- FE-08 Slice 4 resolves durable Screening authority and exposes readiness
-  read-only. It does not admit a desktop Screening decision.
+- FE-01 through FE-09 are complete within accepted scope.
+- The desktop routes the accepted local review continuation through
+  `NexusScholar.Desktop.AppServices`, including title/abstract Screening,
+  corrections and adjudication, local Full Text conduct, reporting, Bundle v2,
+  and export verification.
+- FE-09 admits bounded live Search providers, policy-specific provider cache
+  evidence, recorded-byte Full Text retrieval verification, and local
+  direct-citation snapshots.
 - UI state, paths, row ids, selection, and action descriptors are never
   scientific authority.
 - Local file-backed generations and ledgers are durable persistence. Database,
@@ -46,7 +50,8 @@ Status date: 2026-07-17
 - early alpha, not production-ready;
 - no published or signed NuGet packages;
 - no broad PHP compatibility;
-- no live providers, scraping, or built-in PDF/OCR;
+- no live Crossref or Full Text retrieval, scraping, or built-in PDF/OCR;
+- no unrestricted provider caching, provider parity, or live citation graph;
 - no plugin runtime or arbitrary-code sandbox;
 - no live model execution or AI decision authority;
 - no database, server API, cloud sync, authentication, tenancy, or multi-user

@@ -4,7 +4,7 @@ Status: validation-only early alpha. No package publication or signing is
 enabled.
 
 The accepted graph is machine-readable in `eng/package-topology.json`. The
-current version is `0.1.0-alpha.2` and contains 23 packable libraries.
+current version is `0.1.0-alpha.2` and contains 24 packable libraries.
 
 ## Packable Libraries
 
@@ -35,9 +35,10 @@ current version is `0.1.0-alpha.2` and contains 23 packable libraries.
 - `NexusScholar.WorkflowExecution.ScientificRecords`
 - `NexusScholar.Screening.WorkflowExecution`
 
-### Reporting and analysis
+### Reporting, network, and analysis
 
 - `NexusScholar.Reporting`
+- `NexusScholar.Network`
 - `NexusScholar.Extraction`
 - `NexusScholar.Appraisal`
 - `NexusScholar.Synthesis`
@@ -53,7 +54,7 @@ compatibility claim.
 ## Non-Packaged Projects
 
 Application, orchestration, executable, policy-only, and UI projects are not
-part of the 23-package graph:
+part of the 24-package graph:
 
 - `NexusScholar.AI`
 - `NexusScholar.AppServices`
@@ -61,6 +62,11 @@ part of the 23-package graph:
 - `NexusScholar.Cli`
 - `NexusScholar.UiContracts`
 - `NexusScholar.Avalonia.Blocks`
+- `NexusScholar.Search.Providers.Cache`
+- `NexusScholar.Search.Providers.Crossref`
+- `NexusScholar.Search.Providers.Live`
+- `NexusScholar.Search.Providers.OpenAlex`
+- `NexusScholar.Search.Providers.SemanticScholar`
 - `NexusScholar.Desktop.AppServices`
 - `NexusScholar.Desktop`
 - sample hosts and all test projects
@@ -77,12 +83,12 @@ dotnet build NexusScholar.Core.slnx -c Release
 
 The verifier:
 
-1. packs the approved 23-project graph twice;
+1. packs the approved 24-project graph twice;
 2. rejects missing or extra package IDs;
 3. validates version, MIT license, README, and LICENSE metadata;
 4. compares normalized package content digests across both packs;
 5. restores the smoke application using only the generated local package source;
-6. loads all 23 expected assemblies;
+6. loads all 24 expected assemblies;
 7. writes `artifacts/packages/package-manifest.json` with raw and normalized
    SHA-256 values.
 
@@ -91,6 +97,6 @@ relationship and core-property metadata. The normalized digest excludes only
 that container metadata and covers the nuspec, documentation, license,
 assemblies, XML documentation, and other package payload entries.
 
-The FE-08 Slice 4 repository verification passed this 23-package gate. No package
-is published, signed, supported for production, or advertised as broadly PHP
-compatible.
+The FE-09 protected-main closeout passed this 24-package gate, including
+`NexusScholar.Network`. No package is published, signed, supported for
+production, or advertised as broadly PHP compatible.

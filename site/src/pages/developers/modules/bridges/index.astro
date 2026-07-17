@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bridge Assemblies - Nexus Scholar Core</title>
+  <meta name="description" content="Developer guide to Nexus Scholar bridge assemblies that translate scientific records across workflow, screening, provenance, and application boundaries.">
+  <link rel="stylesheet" href="../../../assets/css/site.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <div class="release-status" role="status">Early alpha. Not production-ready. No package publication or broad PHP compatibility claim.</div>
+  <header class="site-header"><nav class="nav" aria-label="Primary navigation">
+    <a class="brand" href="../../../"><span class="brand-mark">NS</span><span>Nexus Scholar Core</span></a><button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-links">Menu</button>
+    <div class="nav-links" id="nav-links"><a href="../../../status/">Status</a><a href="../../../developers/" aria-current="page">Developers</a><a href="../../../tutorials/">Tutorials</a><a href="../../../roadmap/">Roadmap</a><a href="../../../about/">About</a><a href="https://github.com/nexus-scholar-org/core-csharp">GitHub</a></div>
+  </nav></header>
+  <main id="main" class="page doc-page">
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+      <a href="../../../developers/">Developers</a><span aria-hidden="true">/</span><a href="../">Modules</a><span aria-hidden="true">/</span><span aria-current="page">Bridge assemblies</span>
+    </nav>
+    <p class="eyebrow">Dependency-direction guide</p>
+    <h1>Bridge assemblies</h1>
+    <p class="lede">Small outward packages that combine verified authorities without forcing domain owners to depend on Workflow, Provenance, snapshots, or downstream stages.</p>
+    <div class="doc-shell">
+      <div class="doc-main">
+        <section class="content-section">
+          <h2>Why bridges exist</h2>
+          <p>Nexus keeps domain ownership narrow. Screening should not depend outward on WorkflowExecution; Extraction should not depend on Workflow; Provenance should not need to know every workflow transition. A bridge references both owners, verifies the cross-module invariants, and emits a typed, digest-bound handoff.</p>
+          <p class="section-note">A bridge does not become a generic service layer. It may connect exact accepted records. It must not invent missing authority, reconstruct truth from ids alone, or mutate either owner behind its back.</p>
+        </section>
+
+        <section class="content-section">
+          <h2>Bridge map</h2>
+          <pre><code>Deduplication + CorpusSnapshots + Screening
+    -- Screening.CorpusSnapshots --&gt; exact Screening corpus
+
+Screening + WorkflowExecution
+    -- Screening.WorkflowExecution --&gt; human-task completion
+
+Screening + FullText
+    -- Screening.FullText --&gt; admitted candidate and conduct
+
+WorkflowExecution + Provenance
+    -- WorkflowExecution.Provenance --&gt; ResearchEvent
+
+Extraction + Appraisal + Synthesis + WorkflowExecution
+    -- WorkflowExecution.ScientificRecords --&gt; invalidation ref</code></pre>
+        </section>
+
+        <section class="content-section">
+          <h2>Screening.CorpusSnapshots</h2>
+          <p><a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/src/NexusScholar.Screening.CorpusSnapshots/ScreeningCorpusBinding.cs"><code>ScreeningCorpusBindingAuthority</code></a> converts one verified Deduplication result and one verified corpus snapshot into an exact Screening membership binding. It verifies source-result identity, group representatives, member coverage, unresolved candidate digests, no duplicates, and complete coverage.</p>
+          <p><code>CreateConductPolicy</code> then creates a locked Screening candidate set whose source refs bind the result, snapshot, decision set, and corpus-binding digest. Strict canonical rehydration rejects unknown fields, noncanonical ordering, altered membership, and stale source bindings.</p>
+          <p>Authority: <a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/docs/adr/0033-reporting-audit-bundle-and-rapid-review-profile.md">ADR 0033</a>. Tests: <a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/tests/NexusScholar.Core.Tests/ScreeningCorpusBindingTests.cs">unit</a> and <a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/tests/NexusScholar.Conformance.Tests/ScreeningCorpusBindingFixtureTests.cs">conformance fixtures</a>.</p>
+        </section>
+
+        <section class="content-section">
+          <h2>Screening.WorkflowExecution</h2>
+          <p><a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/src/NexusScholar.Screening.WorkflowExecution/ScreeningWorkflowExecutionBridge.cs"><code>ScreeningWorkflowExecutionBridge</code></a> can create a Workflow decision reference only for a decision already accepted by the supplied Screening journal. The Workflow actor must be the same authorized human actor, role, and kind.</p>
+          <p>Human-task completion additionally requires matching Protocol authority, an active compiled human-task node, and one open attempt. The resulting event moves that exact node from Active to Completed and binds the Screening decision digest.</p>
+          <p>Authority: <a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/docs/adr/0030-workflow-execution-journal.md">ADR 0030</a> and <a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/docs/adr/0031-title-abstract-screening-conduct.md">ADR 0031</a>.</p>
+        </section>
+
+        <section class="content-section">
+          <h2>Screening.FullText</h2>
+          <p>This bridge has two responsibilities. <a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/src/NexusScholar.Screening.FullText/VerifiedFullTextAdmission.cs"><code>VerifiedFullTextAdmission</code></a> admits only a candidate with a current <code>include</code> title/abstract outcome, exact current decision digests, and a current handoff from the same conduct and policy. It produces the verified <code>FullTextInput</code> binding.</p>
+          <p><code>FullTextScreeningConductPolicy</code>, header, decision, invalidation, journal, handoff, and canonical codec implement the Full Text screening stage. They require verified artifacts/extractions and preserve reviewer/adjudicator authority, conflict replay, invalidation, and handoff readiness.</p>
+          <p>Authority: <a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/docs/adr/0032-local-fulltext-workflow-authority.md">ADR 0032</a>. Tests include <a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/tests/NexusScholar.Core.Tests/FullTextAdmissionTests.cs">FullTextAdmissionTests</a> plus FE-05 conduct and conformance coverage.</p>
+        </section>
+
+        <section class="content-section">
+          <h2>WorkflowExecution.Provenance</h2>
+          <p><a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/src/NexusScholar.WorkflowExecution.Provenance/WorkflowExecutionProvenanceProjector.cs"><code>WorkflowExecutionProvenanceProjector.Project</code></a> accepts only an event present in the supplied verified journal and matching its execution, Workflow, and Protocol header. It projects deterministic activity names, subject, actor, chain-head input, record refs, approvals, decision, invalidation, successor, and the event itself into one <code>ResearchEvent</code>.</p>
+          <p>The event digest deterministically supplies the provenance id, and event time supplies the fixed clock. The bridge projects accepted history; it cannot append to either journal or manufacture an execution event.</p>
+        </section>
+
+        <section class="content-section">
+          <h2>WorkflowExecution.ScientificRecords</h2>
+          <p><a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/src/NexusScholar.WorkflowExecution.ScientificRecords/ScientificRecordInvalidationBinding.cs"><code>VerifiedScientificRecordInvalidationBinding.Create</code></a> combines optional Extraction, Appraisal, and Synthesis invalidations only when all supplied records bind one exact Protocol amendment.</p>
+          <p>Targets must be unique valid digests and at least one affected Workflow node is required. The result emits one <code>WorkflowExecutionRecordRef</code>; it does not create, infer, or apply any package-owned invalidation.</p>
+          <p>Authority and tests: <a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/docs/adr/0034-extraction-appraisal-and-synthesis-authority.md">ADR 0034</a> and <a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/tests/NexusScholar.Conformance.Tests/Fe07AuthorityReplayTests.cs">FE-07 authority replay</a>.</p>
+        </section>
+
+        <section class="content-section">
+          <h2>Extension rules and nonclaims</h2>
+          <p>Add a bridge only when two accepted owner contracts must meet and a dependency from either owner would point outward or create a cycle. Keep its API focused on verified objects, exact digests, and one handoff. Add architecture tests for the allowed dependency set.</p>
+          <p>These assemblies are not plugins, event buses, dependency-injection containers, persistence adapters, or security boundaries. They make no broad PHP compatibility claim and never transfer scientific authority to a renderer or workflow engine.</p>
+        </section>
+      </div>
+      <aside class="doc-aside">
+        <section class="doc-card"><h2>Five bridges</h2><ul class="link-list">
+          <li>Screening.CorpusSnapshots</li><li>Screening.WorkflowExecution</li>
+          <li>Screening.FullText</li><li>WorkflowExecution.Provenance</li>
+          <li>WorkflowExecution.ScientificRecords</li>
+        </ul></section>
+        <section class="doc-card"><h2>Design rule</h2><p>Verify exact owner authorities, emit a narrow handoff, and never invent or own the underlying scientific record.</p></section>
+      </aside>
+    </div>
+  </main>
+  <footer class="site-footer"><p>Bridge-assembly developer guide.</p></footer>
+  <script is:inline src="../../../assets/js/site.js"></script>
+</body>
+</html>

@@ -1,6 +1,6 @@
 # FE-09A: Search Provider Contract And Crossref Recorded Adapter
 
-Status: Complete locally; hosted CI and merge pending
+Status: Complete; merged through PR #69 to protected `main`
 
 Date: 2026-07-17
 

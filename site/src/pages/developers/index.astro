@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Developer Documentation — Nexus Scholar Core</title>
+  <meta name="description" content="Architecture, module contracts, integration boundaries, validation, and contributor guidance for Nexus Scholar Core developers.">
+  <link rel="icon" href="../favicon.ico">
+  <link rel="stylesheet" href="../assets/css/site.css">
+</head>
+<body>
+  <div class="release-status" role="status">Developer reference · Protected-main baseline <code>ea665eb</code></div>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header">
+    <nav class="nav" aria-label="Primary navigation">
+      <a class="brand" href="../"><span class="brand-mark">NS</span><span>Nexus Scholar Core</span></a>
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-links">Menu</button>
+      <div class="nav-links" id="nav-links">
+        <a href="../status/">Status</a><a href="../developers/" aria-current="page">Developers</a><a href="../tutorials/">Tutorials</a>
+        <a href="../roadmap/">Roadmap</a><a href="../about/">About</a>
+        <a href="https://github.com/nexus-scholar-org/core-csharp">GitHub</a>
+      </div>
+    </nav>
+  </header>
+  <main id="main" class="page wide">
+    <div class="breadcrumbs"><a href="../">Home</a><span>/</span><span>Developers</span></div>
+    <p class="eyebrow">Developer documentation</p>
+    <h1>Build on the kernel without weakening its authority model.</h1>
+    <p class="lede">The developer reference connects source code to accepted architecture decisions, module ownership, deterministic identities, application boundaries, refusal behavior, tests, and explicit non-claims.</p>
+
+    <section class="content-section">
+      <div class="audience-grid">
+        <article class="audience-card"><span class="tag">Start here</span><h2><a href="architecture/">Architecture</a></h2><p>Dependency direction, authority ownership, canonical records, ports, adapters, UI boundaries, and the trust model.</p></article>
+        <article class="audience-card"><span class="tag">Reference</span><h2><a href="modules/">Module map</a></h2><p>Deep guides for the scientific, workflow, evidence, analysis, application, desktop, extension, and AI assemblies.</p></article>
+        <article class="audience-card"><span class="tag">Contribute</span><h2><a href="contributing/">Contributing</a></h2><p>Source-of-truth order, gate workflow, test expectations, documentation standards, and safe change boundaries.</p></article>
+      </div>
+    </section>
+
+    <section class="content-section">
+      <h2>Architecture in one minute</h2>
+      <div class="flow" aria-label="Nexus dependency direction">
+        <div class="flow-step"><strong>Domain</strong><br>authority and immutable records</div>
+        <span class="flow-arrow" aria-hidden="true">←</span>
+        <div class="flow-step"><strong>Application</strong><br>verified orchestration and commands</div>
+        <span class="flow-arrow" aria-hidden="true">←</span>
+        <div class="flow-step"><strong>Infrastructure</strong><br>files, CLI, desktop, provider adapters</div>
+      </div>
+      <p>Dependencies point inward. Domain assemblies do not reference EF Core, ASP.NET Core, Avalonia, provider SDKs, storage SDKs, or concrete model clients. UI state, file paths, database rows, and URLs are references or projections—not scientific identity.</p>
+      <div class="callout boundary">
+        <strong>Human authority stays explicit</strong>
+        Application and UI code may invoke an accepted command. They cannot fabricate the actor, policy, evidence, protocol, or expected prior state that makes the command authoritative.
+      </div>
+    </section>
+
+    <section class="content-section">
+      <h2>Fast paths</h2>
+      <div class="feature-grid">
+        <article class="feature"><h3>Understand Workflow</h3><p>Separate the immutable compiled DAG from the FE-03 execution state machine.</p><p><a href="modules/workflow/">Compiler guide</a> · <a href="modules/workflow-execution/">Execution guide</a></p></article>
+        <article class="feature"><h3>Integrate a workspace</h3><p>Use ResearchWorkspace and AppServices rather than making file paths or UI rows authoritative.</p><p><a href="modules/researchworkspace/">Workspace guide</a> · <a href="modules/appservices/">Application guide</a></p></article>
+        <article class="feature"><h3>Build a surface</h3><p>Keep renderer-neutral contracts, desktop orchestration, and scientific modules in their correct layers.</p><p><a href="modules/uicontracts/">UI contracts</a> · <a href="modules/desktop/">Desktop host</a></p></article>
+        <article class="feature"><h3>Integrate acquisition</h3><p>Keep provider transport and cache storage outward while preserving sanitized request, exact-response, parser, rights, and citation evidence.</p><p><a href="modules/search/">Search providers</a> · <a href="modules/fulltext/">Full Text retrieval</a> · <a href="modules/network/">Citation network</a></p></article>
+      </div>
+    </section>
+
+    <section class="content-section">
+      <h2>Verification baseline</h2>
+      <pre><code>dotnet restore NexusScholar.Core.slnx
+dotnet build NexusScholar.Core.slnx -c Release --no-restore
+dotnet test NexusScholar.Core.slnx -c Release --no-build
+dotnet format NexusScholar.Core.slnx --verify-no-changes --no-restore
+powershell -ExecutionPolicy Bypass -File ./scripts/verify.ps1</code></pre>
+      <p>The repository-wide verifier also checks release policy, locked restore, package reproducibility, local-source package smoke, SBOM and release evidence, CLI smoke, and formatting.</p>
+    </section>
+
+    <section class="content-section">
+      <h2>Primary source order</h2>
+      <ol class="step-list">
+        <li>Approved files in <code>specs/</code>.</li>
+        <li>Accepted ADRs in <code>docs/adr/</code>.</li>
+        <li>Golden and conformance fixtures.</li>
+        <li>Observable behavior of the pinned PHP reference.</li>
+        <li>Current C# implementation.</li>
+        <li>Informal notes, UI concepts, and comments.</li>
+      </ol>
+      <p>When those sources conflict, record the conflict and stop the affected behavior until authority is resolved. Do not choose the most convenient interpretation.</p>
+    </section>
+  </main>
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div><h2>Developer reference</h2><p>Read contracts with their ADR, evidence, tests, and explicit non-claims.</p></div>
+      <div><h3>Reference</h3><ul><li><a href="architecture/">Architecture</a></li><li><a href="modules/">Modules</a></li></ul></div>
+      <div><h3>Contribute</h3><ul><li><a href="contributing/">Guide</a></li><li><a href="https://github.com/nexus-scholar-org/core-csharp/issues">Issues</a></li></ul></div>
+    </div>
+  </footer>
+  <script is:inline src="../assets/js/site.js"></script>
+</body>
+</html>

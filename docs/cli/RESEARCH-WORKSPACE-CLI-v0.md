@@ -4,7 +4,7 @@ Status: historical implemented-v0 snapshot; not the current command-surface refe
 
 Date: 2026-07-01
 
-This document records the first implemented researcher-facing Nexus CLI workflow. It is preserved as a dated first-tester contract, not as the current feature or command inventory. For the current CLI family map use `README.md`, `CODEX-START-HERE.md`, and `site/developers/modules/cli/index.html`; for current implementation scope use `docs/ops/BRANCH-BOARD.md` and `site/status/index.html`.
+This document records the first implemented researcher-facing Nexus CLI workflow. It is preserved as a dated first-tester contract, not as the current feature or command inventory. For the current CLI family map use `README.md`, `CODEX-START-HERE.md`, and `site/src/pages/developers/modules/cli/index.astro`; for current implementation scope use `docs/ops/BRANCH-BOARD.md` and `site/src/pages/status/index.astro`.
 
 The historical workflow below was local first-tester behavior, not production systematic-review conduct. Its commands used local folder state and generated or researcher-supplied local files.
 

@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Implementation Status — Nexus Scholar Core</title>
+  <meta name="description" content="Dated, evidence-linked status of the Nexus Scholar Core protected-main implementation.">
+  <link rel="icon" href="../favicon.ico">
+  <link rel="stylesheet" href="../assets/css/site.css">
+</head>
+<body>
+  <div class="release-status" role="status">Early alpha · Dated status, not a production-readiness claim</div>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header">
+    <nav class="nav" aria-label="Primary navigation">
+      <a class="brand" href="../"><span class="brand-mark">NS</span><span>Nexus Scholar Core</span></a>
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-links">Menu</button>
+      <div class="nav-links" id="nav-links">
+        <a href="../status/" aria-current="page">Status</a>
+        <a href="../developers/">Developers</a>
+        <a href="../tutorials/">Tutorials</a>
+        <a href="../roadmap/">Roadmap</a>
+        <a href="../about/">About</a>
+        <a href="https://github.com/nexus-scholar-org/core-csharp">GitHub</a>
+      </div>
+    </nav>
+  </header>
+  <main id="main" class="page wide">
+    <div class="breadcrumbs"><a href="../">Home</a><span>/</span><span>Implementation status</span></div>
+    <p class="eyebrow">Protected-main snapshot · 17 July 2026</p>
+    <h1>What exists, what is verified, and what is still out of scope</h1>
+    <p class="lede">This page describes commit <code>ea665eb</code> on protected <code>main</code>. It deliberately excludes unmerged feature branches and converts completion claims into links to accepted ADRs, gates, and release evidence.</p>
+
+    <section class="content-section">
+      <div class="metric-grid">
+        <article class="metric"><strong>FE-01–09</strong><span>completed within accepted scopes</span></article>
+        <article class="metric"><strong>FE-08 · 1–9</strong><span>completed local desktop slices</span></article>
+        <article class="metric"><strong>1,011</strong><span>tests passed at FE-09 closeout</span></article>
+        <article class="metric"><strong>24</strong><span>packages in reproducibility smoke</span></article>
+      </div>
+    </section>
+
+    <section class="content-section">
+      <h2>Implemented feature sequence</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Feature</th><th>Delivered behavior</th><th>Evidence</th></tr></thead>
+          <tbody>
+            <tr><td><span class="status-badge complete">FE-01 complete</span></td><td>Human-authorized decision records, immutable corpus snapshots, provenance, and atomic local generation publication.</td><td><a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/docs/gates/FE-01-DECISION-SNAPSHOT-AUTHORITY-EVIDENCE.md">Gate evidence</a></td></tr>
+            <tr><td><span class="status-badge complete">FE-02 complete</span></td><td>Executable deduplication review with preview, explicit confirmation, correction, invalidation, and successor snapshots.</td><td><a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/docs/gates/FE-02-EXECUTABLE-DEDUPLICATION-REVIEW-EVIDENCE.md">Gate evidence</a></td></tr>
+            <tr><td><span class="status-badge complete">FE-03 complete</span></td><td>Append-only workflow execution journal and deterministic state-machine replay bound to approved protocol and compiled workflow.</td><td><a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/docs/gates/FE-03-WORKFLOW-EXECUTION-JOURNAL-EVIDENCE.md">Gate evidence</a></td></tr>
+            <tr><td><span class="status-badge complete">FE-04 complete</span></td><td>Title/abstract screening decisions, independent review, conflict detection, adjudication, and invalidation.</td><td><a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/docs/gates/FE-04-TITLE-ABSTRACT-SCREENING-EVIDENCE.md">Gate evidence</a></td></tr>
+            <tr><td><span class="status-badge complete">FE-05 complete</span></td><td>Local, no-network full-text intake, byte identity, extraction evidence, full-text decisions, verification, and replay.</td><td><a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/docs/gates/FE-05-LOCAL-FULLTEXT-WORKFLOW-EVIDENCE.md">Gate evidence</a></td></tr>
+            <tr><td><span class="status-badge complete">FE-06 complete</span></td><td>Deterministic reporting, review Bundle v2, Rapid Review governance, export ledger, and persisted verification commands.</td><td><a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/docs/release/FE-06-COMPLETION-EVIDENCE.md">Completion evidence</a></td></tr>
+            <tr><td><span class="status-badge complete">FE-07 complete</span></td><td>Structured Extraction, Appraisal, plan-only Synthesis, exact evidence locations, corrections, and amendment invalidation.</td><td><a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/docs/release/FE-07-COMPLETION-EVIDENCE.md">Completion evidence</a></td></tr>
+            <tr><td><span class="status-badge complete">FE-08 slices 1–9</span></td><td>Windows-first product host with preview/confirm Deduplication, Screening resolution, local Full Text conduct, reporting, Bundle v2, export-ledger, recovery, accessibility, and replay boundaries.</td><td><a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/docs/gates/FE-08-REMAINING-SLICES-5-9-EVIDENCE.md">Desktop closeout evidence</a></td></tr>
+            <tr><td><span class="status-badge complete">FE-09 complete</span></td><td>Recorded Crossref parsing, bounded OpenAlex and Semantic Scholar Search, rights-aware provider cache policy, recorded-byte Full Text retrieval verification, and evidence-backed direct-citation snapshots.</td><td><a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/docs/release/FE-09-COMPLETION-EVIDENCE.md">Completion evidence</a></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="content-section">
+      <h2>What the desktop can do on this baseline</h2>
+      <ul class="check-list">
+        <li>Open and verify a local Research Workspace through structured application services.</li>
+        <li>Preview and confirm workspace initialization, local Search import, and deterministic analysis.</li>
+        <li>Display a verified deduplication review queue and record an authorized human decision after exact-effect confirmation.</li>
+        <li>Conduct title/abstract Screening, correction, adjudication, and handoff through exact preview/confirm bindings.</li>
+        <li>Run candidate-local Full Text intake and human review over immutable local evidence.</li>
+        <li>Produce deterministic reports, Bundle v2 inventories, and append-only export-ledger records with round-trip verification.</li>
+      </ul>
+      <div class="callout boundary">
+        <strong>Not yet admitted on this baseline</strong>
+        Protocol or criteria authoring, provider operation from the desktop, model calls, plugin execution, authentication, database/cloud state, and multi-user collaboration.
+      </div>
+    </section>
+
+    <section class="content-section">
+      <h2>Validation and delivery posture</h2>
+      <p>The repository uses protected-main validation on Windows and Linux. The standard gate restores, builds in Release, verifies package reproducibility and local-source smoke, runs the test matrix, exercises CLI smoke paths, collects informational coverage, and verifies formatting. CodeQL and dependency review run independently.</p>
+      <ul class="link-list">
+        <li><a href="https://github.com/nexus-scholar-org/core-csharp/actions">GitHub Actions history</a></li>
+        <li><a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/.github/workflows/gate-01.yml">Main verification workflow</a></li>
+        <li><a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/docs/release/PACKAGES.md">Package topology and reproducibility</a></li>
+        <li><a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/SECURITY.md">Security policy</a></li>
+      </ul>
+    </section>
+
+    <section class="content-section">
+      <h2>Claims deliberately not made</h2>
+      <div class="feature-grid">
+        <article class="feature"><h3>No production release</h3><p>Packages are validation-only and unpublished. There is no supported installer or production operating claim.</p></article>
+        <article class="feature"><h3>No connected platform</h3><p>No database, API, cloud synchronization, tenant isolation, or multi-user collaboration is claimed.</p></article>
+        <article class="feature"><h3>No autonomous science</h3><p>Automation and model outputs cannot become final scientific decisions by themselves.</p></article>
+        <article class="feature"><h3>Bounded network scope</h3><p>OpenAlex and Semantic Scholar Search are exact-host, opt-in outward adapters. There is no live Crossref or Full Text retrieval, scraping, paywall bypass, PDF parsing, OCR, or live citation provider.</p></article>
+        <article class="feature"><h3>No plugin runtime</h3><p>Capability and manifest contracts exist; third-party execution and sandbox claims do not.</p></article>
+        <article class="feature"><h3>No broad compatibility</h3><p>PHP classifications are case- and fixture-scoped. They are not a blanket compatibility promise.</p></article>
+      </div>
+    </section>
+  </main>
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div><h2>Status is evidence-bound</h2><p>When code advances, this page should advance only with accepted gate and completion evidence.</p></div>
+      <div><h3>Next</h3><ul><li><a href="../roadmap/">Roadmap</a></li><li><a href="../tutorials/">Tutorials</a></li></ul></div>
+      <div><h3>Inspect</h3><ul><li><a href="../developers/modules/">Modules</a></li><li><a href="https://github.com/nexus-scholar-org/core-csharp">Repository</a></li></ul></div>
+    </div>
+    <p class="footer-note">Baseline commit: <code>ea665eb</code>. Status date: 17 July 2026.</p>
+  </footer>
+  <script is:inline src="../assets/js/site.js"></script>
+</body>
+</html>

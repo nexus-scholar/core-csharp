@@ -16,23 +16,26 @@ claim broad PHP compatibility.
 
 ## Current Status
 
-Protected `main` is documented at `805f3d6`. FE-08 Slice 4 implementation landed
-at `7a071cc`, and its protected-main closeout evidence is recorded in
-[`docs/release/FE-08-SLICE-4-COMPLETION-EVIDENCE.md`](docs/release/FE-08-SLICE-4-COMPLETION-EVIDENCE.md).
+Protected `main` is documented at `ea665eb`. FE-09 and the remaining FE-08
+desktop slices landed through
+[`PR #69`](https://github.com/nexus-scholar-org/core-csharp/pull/69), with
+protected-main closeout recorded in
+[`docs/release/FE-09-COMPLETION-EVIDENCE.md`](docs/release/FE-09-COMPLETION-EVIDENCE.md).
 
 The current verified baseline is:
 
-- FE-01 through FE-07 complete within their accepted local scopes;
-- FE-08 desktop slices 1 through 4 complete;
-- 906 tests passing with zero failures or skips;
-- 23 validation-only packages reproducibly packed and clean-source smoke tested;
+- FE-01 through FE-09 complete within their accepted scopes;
+- FE-08 desktop slices 1 through 9 complete;
+- 1,011 tests passing with zero failures and two opt-in live-provider smokes
+  skipped by default;
+- 24 validation-only packages reproducibly packed and clean-source smoke tested;
 - Release build and formatting checks passing on Windows and Linux;
 - no NuGet package published.
 
-FE-08 Slice 5 is the next gate candidate. It may propose the first desktop
-title/abstract Screening mutation, but it is not implementation-authorized
-until its own ADR and gate define human authority, stale preview, supersession,
-recovery, and audit behavior. FE-09 through FE-12 remain future work.
+FE-10 plugin-runtime design and capability security is the next gate. Existing
+Extensibility contracts do not authorize third-party execution or constitute an
+arbitrary-code sandbox. FE-11 governed AI and FE-12 connected operation remain
+dependency-ordered future work.
 
 The active roadmap is
 [`docs/plans/2026-07-14-feature-expansion-priority.md`](docs/plans/2026-07-14-feature-expansion-priority.md).
@@ -51,6 +54,8 @@ The active roadmap is
 | FE-08.1-2 | Windows-first local desktop host for open, initialize, import, verify, and analyze workflows |
 | FE-08.3 | First desktop scientific action: authority-checked FE-02 Deduplication review |
 | FE-08.4 | Durable, fail-closed Screening authority resolution and read-only desktop readiness |
+| FE-08.5-9 | Desktop Screening conduct and resolution, local Full Text review, reporting, Bundle v2, export verification, recovery, and accessibility closeout |
+| FE-09 | Recorded Crossref parsing, bounded OpenAlex/Semantic Scholar Search, policy-specific provider caching, recorded Full Text retrieval verification, and immutable direct-citation snapshots |
 
 The workflow model has two distinct layers:
 
@@ -178,8 +183,8 @@ lane; the table above reflects the current CLI dispatch surface.
 
 ## Project Map
 
-The solution contains 31 source projects, 2 sample hosts, and 13 test projects.
-Only the 23 projects listed in
+The repository contains 37 source projects, 2 sample hosts, and 21 test
+projects. Only the 24 projects listed in
 [`docs/release/PACKAGES.md`](docs/release/PACKAGES.md) participate in the
 validation-only package graph.
 
@@ -210,8 +215,11 @@ validation-only package graph.
 
 ### Evidence acquisition and review conduct
 
-- `NexusScholar.Search`: Search plans/traces, local import parsers, and imported
-  evidence; provider interfaces are not live provider integrations.
+- `NexusScholar.Search`: Search plans/traces, local import parsers,
+  provider-neutral acquisition evidence, and rights-aware cache policy.
+- `NexusScholar.Search.Providers.*`: outward recorded Crossref,
+  OpenAlex/Semantic Scholar adapters, exact-host live transport, credential
+  resolution, and private filesystem cache storage.
 - `NexusScholar.Deduplication`: deterministic clusters, review candidates,
   representatives, evidence, and human decisions.
 - `NexusScholar.CorpusSnapshots`: immutable corpus membership, decision-set
@@ -222,8 +230,9 @@ validation-only package graph.
   snapshots into Screening authority.
 - `NexusScholar.Screening.WorkflowExecution`: verified bridge between Screening
   conduct and workflow tasks.
-- `NexusScholar.FullText`: local no-network acquisition evidence, raw artifacts,
-  validation, source attempts, and derived extraction records.
+- `NexusScholar.FullText`: local intake and recorded retrieval evidence, exact
+  raw artifacts, rights/redirect/byte validation, source attempts, and derived
+  extraction records.
 - `NexusScholar.Screening.FullText`: full-text Screening decisions, corrections,
   independent review, handoff, and invalidation.
 
@@ -237,6 +246,8 @@ validation-only package graph.
   judgments, rationale, and correction lineage.
 - `NexusScholar.Synthesis`: deterministic synthesis plans and outputs bound to
   accepted Extraction and Appraisal evidence.
+- `NexusScholar.Network`: corpus-bound direct-citation snapshots, stable nodes,
+  unresolved targets, evidence-backed edges, and deterministic degree metrics.
 
 ### Extension and model policy contracts
 
@@ -256,7 +267,8 @@ validation-only package graph.
   evidence references, validation references, and action descriptors.
 - `NexusScholar.Avalonia.Blocks`: reusable Avalonia renderers for UI contracts.
 - `NexusScholar.Desktop.AppServices`: desktop-safe open/init/import/verify/analyze,
-  Deduplication review, and Screening-readiness facades.
+  Deduplication and Screening conduct, local Full Text review, reporting, and
+  export facades.
 - `NexusScholar.Desktop`: Windows-first local Avalonia product host and
   composition root.
 - `NexusScholar.Cli`: local command-line host.
@@ -281,7 +293,11 @@ validation-only package graph.
   `NexusScholar.Desktop.AppServices.Tests`, and
   `NexusScholar.Desktop.Tests`: contract, renderer, facade, host, and visual
   behavior coverage.
-- `tests/NexusScholar.PackageSmoke`: clean local-source loading for all 23
+- Provider, cache, Full Text retrieval, and Network projects have focused suites
+  under `tests/NexusScholar.Search.Providers.*`,
+  `tests/NexusScholar.FullText.Retrieval.Tests`, and
+  `tests/NexusScholar.Network.Tests`.
+- `tests/NexusScholar.PackageSmoke`: clean local-source loading for all 24
   validation packages.
 
 ## Authority Rules
@@ -320,8 +336,11 @@ This repository does not currently claim:
   accessibility certification;
 - broad PHP package compatibility beyond explicitly inventoried,
   fixture-backed cases;
-- live scholarly provider access, HTTP retrieval, scraping, paywall bypass, or
-  shadow-library acquisition;
+- live Crossref or Full Text retrieval, unrestricted provider retention,
+  provider completeness/parity, scraping, paywall bypass, or shadow-library
+  acquisition;
+- live citation acquisition, centrality, impact interpretation, or citation
+  export;
 - built-in PDF parsing, OCR, or page/section extraction algorithms;
 - database persistence, server API, web application, cloud sync,
   authentication, tenancy, or multi-user collaboration;

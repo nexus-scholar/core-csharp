@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Module Atlas — Nexus Scholar Core</title>
+  <meta name="description" content="Searchable developer atlas for the Nexus Scholar Core domain, workflow, evidence, application, desktop, extension, and AI modules.">
+  <link rel="icon" href="../../favicon.ico">
+  <link rel="stylesheet" href="../../assets/css/site.css">
+</head>
+<body>
+  <div class="release-status" role="status">Early alpha · 37 source projects · Implemented and planned boundaries are labeled separately</div>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header">
+    <nav class="nav" aria-label="Primary navigation">
+      <a class="brand" href="../../"><span class="brand-mark">NS</span><span>Nexus Scholar Core</span></a>
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-links">Menu</button>
+      <div class="nav-links" id="nav-links">
+        <a href="../../status/">Status</a>
+        <a href="../../developers/" aria-current="page">Developers</a>
+        <a href="../../tutorials/">Tutorials</a>
+        <a href="../../roadmap/">Roadmap</a>
+        <a href="../../about/">About</a>
+        <a href="https://github.com/nexus-scholar-org/core-csharp">GitHub</a>
+      </div>
+    </nav>
+  </header>
+  <main id="main" class="page wide">
+    <div class="breadcrumbs"><a href="../../">Home</a><span>/</span><a href="../">Developers</a><span>/</span><span>Module atlas</span></div>
+    <p class="eyebrow">Developer reference · protected main <code>ea665eb</code></p>
+    <h1>Follow authority through the whole system</h1>
+    <p class="lede">These guides explain who owns each record, what enters and leaves the boundary, which invariants fail closed, and where application convenience stops. Closely related projects are grouped when they implement one developer concept.</p>
+
+    <section class="content-section">
+      <h2>Read the repository by responsibility</h2>
+      <div class="metric-grid">
+        <article class="metric"><strong>37</strong><span>source projects on protected main</span></article>
+        <article class="metric"><strong>28</strong><span>concept-oriented module guides</span></article>
+        <article class="metric"><strong>24</strong><span>packages in reproducibility smoke</span></article>
+        <article class="metric"><strong>21</strong><span>test projects plus focused fixtures</span></article>
+      </div>
+      <div class="callout"><strong>Dependency rule:</strong> domain and scientific-record projects own meaning. Application services, CLI, desktop, renderers, providers, plugins, and model clients may depend inward, but Core never reaches outward to them.</div>
+    </section>
+
+    <div class="module-toolbar">
+      <div>
+        <strong>Search the atlas</strong>
+        <p class="section-note">Try “state machine”, “FE-06”, “plugin”, “desktop”, “screening”, or “provenance”.</p>
+      </div>
+      <div class="module-filter">
+        <label for="module-filter">Filter modules</label>
+        <input id="module-filter" type="search" placeholder="Name, feature, record, or responsibility" autocomplete="off" data-module-filter>
+      </div>
+    </div>
+    <p class="empty-filter" data-module-empty hidden>No module guide matches that filter.</p>
+
+    <section class="module-category" aria-labelledby="foundation-heading">
+      <header>
+        <p class="eyebrow">Foundation</p>
+        <h2 id="foundation-heading">Identity, protocol, and executable workflow semantics</h2>
+        <p>Stable values and accepted conduct definitions come before any product surface.</p>
+      </header>
+      <div class="module-grid">
+        <article class="module" data-module-card><div class="tag-row"><span class="tag">Foundation</span><span class="tag">Implemented</span></div><h3>Kernel</h3><p>Canonical identifiers, digest-bound values, deterministic validation, and fail-closed primitives used across the system.</p><a href="kernel/">Kernel guide</a></article>
+        <article class="module" data-module-card><div class="tag-row"><span class="tag">Foundation</span><span class="tag">Implemented</span></div><h3>Shared</h3><p>Narrow cross-module value types that preserve domain isolation without becoming a miscellaneous dependency bucket.</p><a href="shared/">Shared guide</a></article>
+        <article class="module" data-module-card><div class="tag-row"><span class="tag">Protocol</span><span class="tag">Implemented</span></div><h3>Protocol</h3><p>Drafts, approvals, immutable versions, amendments, supersession, and the authority that binds research conduct.</p><a href="protocol/">Protocol guide</a></article>
+        <article class="module" data-module-card><div class="tag-row"><span class="tag">Graph</span><span class="tag">Implemented</span></div><h3>Workflow</h3><p>Template and graph compilation: nodes, dependencies, gates, deterministic plans, and invalidation relationships.</p><a href="workflow/">Workflow guide</a></article>
+        <article class="module" data-module-card><div class="tag-row"><span class="tag">State machine</span><span class="tag">FE-03</span></div><h3>Workflow Execution</h3><p>Append-only transitions and deterministic replay over a compiled workflow. This is the state-machine half of the workflow model.</p><a href="workflow-execution/">Workflow Execution guide</a></article>
+      </div>
+    </section>
+
+    <section class="module-category" aria-labelledby="evidence-heading">
+      <header>
+        <p class="eyebrow">Evidence and history</p>
+        <h2 id="evidence-heading">Immutable bytes, snapshots, provenance, and portable verification</h2>
+        <p>These modules make state independently identifiable and history reconstructable.</p>
+      </header>
+      <div class="module-grid">
+        <article class="module" data-module-card><div class="tag-row"><span class="tag">Evidence</span><span class="tag">Implemented</span></div><h3>Artifacts</h3><p>Raw-byte identity, immutable artifact references, digest domains, and verification before trust.</p><a href="artifacts/">Artifacts guide</a></article>
+        <article class="module" data-module-card><div class="tag-row"><span class="tag">History</span><span class="tag">Implemented</span></div><h3>Provenance</h3><p>Append-only activities, actors, evidence references, lineage, and reconstruction points for scientific mutations.</p><a href="provenance/">Provenance guide</a></article>
+        <article class="module" data-module-card><div class="tag-row"><span class="tag">Portability</span><span class="tag">FE-06</span></div><h3>Bundles</h3><p>Manifest-bound packages, verification findings, and Bundle v2 transport without transferring scientific authority.</p><a href="bundles/">Bundles guide</a></article>
+        <article class="module" data-module-card><div class="tag-row"><span class="tag">Authority</span><span class="tag">FE-01</span></div><h3>Corpus Snapshots</h3><p>Immutable candidate-set identity, lineage, successor publication, and equality rules shared by decision workflows.</p><a href="corpus-snapshots/">Corpus Snapshots guide</a></article>
+      </div>
+    </section>
+
+    <section class="module-category" aria-labelledby="conduct-heading">
+      <header>
+        <p class="eyebrow">Review conduct</p>
+        <h2 id="conduct-heading">From imported observations to governed review outputs</h2>
+        <p>Each stage cites earlier evidence and adds bounded decisions; it does not rewrite the input history.</p>
+      </header>
+      <div class="module-grid">
+        <article class="module" data-module-card><div class="tag-row"><span class="tag">Acquisition</span><span class="tag">FE-09</span></div><h3>Search</h3><p>Local imports, recorded provider parsing, bounded live adapters, credential-safe transport evidence, and policy-specific response caching.</p><a href="search/">Search guide</a></article>
+        <article class="module" data-module-card><div class="tag-row"><span class="tag">Review</span><span class="tag">FE-02</span></div><h3>Deduplication</h3><p>Evidence graphs, exact and fuzzy candidates, human merge decisions, corrections, and successor snapshots.</p><a href="deduplication/">Deduplication guide</a></article>
+        <article class="module" data-module-card><div class="tag-row"><span class="tag">Human authority</span><span class="tag">FE-04</span></div><h3>Screening</h3><p>Independent title/abstract decisions, criteria binding, conflicts, adjudication, invalidation, and replay.</p><a href="screening/">Screening guide</a></article>
+        <article class="module" data-module-card><div class="tag-row"><span class="tag">Evidence</span><span class="tag">FE-05 + FE-09B</span></div><h3>Full Text</h3><p>Local intake plus rights-aware verification of recorded retrieval bytes, derived extraction evidence, decisions, corrections, and verification.</p><a href="fulltext/">Full Text guide</a></article>
+        <article class="module" data-module-card><div class="tag-row"><span class="tag">Outputs</span><span class="tag">FE-06</span></div><h3>Reporting</h3><p>Conserved counts, deterministic reports, Rapid Review governance, export ledger, and persisted verification.</p><a href="reporting/">Reporting guide</a></article>
+      </div>
+    </section>
+
+    <section class="module-category" aria-labelledby="analysis-heading">
+      <header>
+        <p class="eyebrow">Evidence analysis</p>
+        <h2 id="analysis-heading">Structured claims without synthesis overreach</h2>
+        <p>FE-07 keeps extracted data, quality judgments, and synthesis planning separate and evidence-bound.</p>
+      </header>
+      <div class="module-grid">
+        <article class="module" data-module-card><div class="tag-row"><span class="tag">FE-07</span><span class="tag">Implemented</span></div><h3>Extraction</h3><p>Schema-bound fields, exact evidence locations, author and correction lineage, and amendment invalidation.</p><a href="extraction/">Extraction guide</a></article>
+        <article class="module" data-module-card><div class="tag-row"><span class="tag">FE-07</span><span class="tag">Implemented</span></div><h3>Appraisal</h3><p>Instrument-bound quality judgments whose evidence, actor, scope, and corrections remain explicit.</p><a href="appraisal/">Appraisal guide</a></article>
+        <article class="module" data-module-card><div class="tag-row"><span class="tag">FE-07</span><span class="tag">Plan-only</span></div><h3>Synthesis</h3><p>Deterministic synthesis plans and eligibility bindings without claiming that statistical analysis has run.</p><a href="synthesis/">Synthesis guide</a></article>
+        <article class="module" data-module-card><div class="tag-row"><span class="tag">FE-09C</span><span class="tag">Implemented</span></div><h3>Network</h3><p>Corpus-bound direct-citation snapshots, stable resolved nodes, unresolved targets, evidence-backed edges, and deterministic degree metrics.</p><a href="network/">Network guide</a></article>
+      </div>
+    </section>
+
+    <section class="module-category" aria-labelledby="application-heading">
+      <header>
+        <p class="eyebrow">Application and product</p>
+        <h2 id="application-heading">Durable local workspaces and authority-checked entry points</h2>
+        <p>These projects orchestrate Core behavior. They do not acquire independent scientific authority.</p>
+      </header>
+      <div class="module-grid">
+        <article class="module" data-module-card><div class="tag-row"><span class="tag">Persistence</span><span class="tag">Local files</span></div><h3>Research Workspace</h3><p>Transactional local generations, manifests, verification, recovery, atomic promotion, and durable command results.</p><a href="researchworkspace/">Research Workspace guide</a></article>
+        <article class="module" data-module-card><div class="tag-row"><span class="tag">Composition</span><span class="tag">Application layer</span></div><h3>AppServices</h3><p>Read projections and command-facing composition over admitted domain contracts.</p><a href="appservices/">AppServices guide</a></article>
+        <article class="module" data-module-card><div class="tag-row"><span class="tag">Desktop</span><span class="tag">Authority adapter</span></div><h3>Desktop AppServices</h3><p>Preview, confirmation, expected-state bindings, readiness checks, and fail-closed product command routing.</p><a href="desktop-appservices/">Desktop AppServices guide</a></article>
+        <article class="module" data-module-card><div class="tag-row"><span class="tag">Product host</span><span class="tag">FE-08</span></div><h3>Desktop</h3><p>Avalonia product shell, workspace opening, safe local operations, and visible authority-state handling.</p><a href="desktop/">Desktop guide</a></article>
+        <article class="module" data-module-card><div class="tag-row"><span class="tag">Operator surface</span><span class="tag">Implemented</span></div><h3>CLI</h3><p>Local initialization, import, verification, decisions, replay, reporting, bundle, and export commands.</p><a href="cli/">CLI guide</a></article>
+      </div>
+    </section>
+
+    <section class="module-category" aria-labelledby="ui-heading">
+      <header>
+        <p class="eyebrow">UI contracts and adapters</p>
+        <h2 id="ui-heading">Portable presentation without UI-owned science</h2>
+        <p>Renderers communicate intent and state; authority remains in accepted Core and application contracts.</p>
+      </header>
+      <div class="module-grid">
+        <article class="module" data-module-card><div class="tag-row"><span class="tag">Renderer-neutral</span><span class="tag">Implemented</span></div><h3>UiContracts</h3><p>Workspace plans, research blocks, status, actions, and renderer-independent presentation contracts.</p><a href="uicontracts/">UiContracts guide</a></article>
+        <article class="module" data-module-card><div class="tag-row"><span class="tag">Avalonia</span><span class="tag">Renderer</span></div><h3>Avalonia Blocks</h3><p>Reusable block rendering and sample-host behavior outside the Core dependency boundary.</p><a href="avalonia-blocks/">Avalonia Blocks guide</a></article>
+        <article class="module" data-module-card><div class="tag-row"><span class="tag">Integration</span><span class="tag">Boundary guide</span></div><h3>Bridges</h3><p>How application, UI, provider, plugin, and future infrastructure adapters translate without smuggling authority inward.</p><a href="bridges/">Bridges guide</a></article>
+      </div>
+    </section>
+
+    <section class="module-category" aria-labelledby="extension-heading">
+      <header>
+        <p class="eyebrow">Extensions and governed assistance</p>
+        <h2 id="extension-heading">Capabilities, staged output, and proposals</h2>
+        <p>The current contracts define safe boundaries. FE-10 and FE-11 still require their own accepted gates before runtime claims are valid.</p>
+      </header>
+      <div class="module-grid">
+        <article class="module" data-module-card><div class="tag-row"><span class="tag">Contracts implemented</span><span class="tag">FE-10 runtime planned</span></div><h3>Extensibility and plugin runtime</h3><p>Manifest identity, scoped capabilities, invocation envelopes, staged output, validation, and the difference between isolation and a security sandbox.</p><a href="extensibility/">Extensibility guide</a></article>
+        <article class="module" data-module-card><div class="tag-row"><span class="tag">Contracts implemented</span><span class="tag">FE-11 governance planned</span></div><h3>AI</h3><p>Evidence-bound task and proposal contracts, privacy declarations, schema validation, and explicit human acceptance.</p><a href="ai/">AI guide</a></article>
+      </div>
+    </section>
+
+    <section class="content-section">
+      <h2>Do not infer maturity from a namespace</h2>
+      <p>A project in <code>src/</code> can be a stable local contract, a supporting application layer, an experimental renderer, or a boundary prepared for later work. Read the status and non-claims in its guide, then follow the linked ADR, gate, source, and tests.</p>
+      <div class="hero-actions">
+        <a class="button primary" href="../architecture/">See how the layers fit</a>
+        <a class="button" href="../../status/">Read current implementation status</a>
+        <a class="button" href="../contributing/">Contribution workflow</a>
+      </div>
+    </section>
+  </main>
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div><h2>Module atlas</h2><p>Source-backed developer guidance for protected <code>main</code>.</p></div>
+      <div><h3>Orientation</h3><ul><li><a href="../architecture/">Architecture</a></li><li><a href="../../roadmap/">Feature sequence</a></li></ul></div>
+      <div><h3>Evidence</h3><ul><li><a href="https://github.com/nexus-scholar-org/core-csharp/tree/main/src">Source projects</a></li><li><a href="https://github.com/nexus-scholar-org/core-csharp/tree/main/tests">Test projects</a></li></ul></div>
+    </div>
+  </footer>
+  <script is:inline src="../../assets/js/site.js"></script>
+</body>
+</html>

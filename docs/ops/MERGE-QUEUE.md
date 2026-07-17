@@ -4,9 +4,7 @@ Status date: 2026-07-17
 
 ## Current Queue
 
-| PR | Scope | State |
-| --- | --- | --- |
-| #69 | Complete FE-09 provider cache, recorded Full Text retrieval, and citation graph | Hosted validation pending |
+No feature pull request is currently queued.
 
 ## Recent Feature Delivery
 
@@ -20,6 +18,7 @@ Status date: 2026-07-17
 | #60-61 | FE-07 Extraction, Appraisal, Synthesis, and closeout | Landed |
 | #62-67 | FE-08 desktop slices 1-4 and closeouts | Landed |
 | #68 | Public documentation and Pages closeout | Landed |
+| #69 | FE-08 desktop closeout and FE-09 providers, cache, recorded Full Text retrieval, and citation network | Landed |
 
 ## Admission Rule
 

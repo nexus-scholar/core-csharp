@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Developer guide to Nexus Scholar evidence-preserving deduplication, clusters, representative selection, authority policy, human review commands, and decisions.">
+  <title>Deduplication developer guide - Nexus Scholar Core</title>
+  <link rel="stylesheet" href="../../../assets/css/site.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <div class="release-status" role="status">Early alpha. Not production-ready. No package publication or broad PHP compatibility claim.</div>
+  <header class="site-header"><nav class="nav" aria-label="Primary navigation">
+    <a class="brand" href="../../../"><span class="brand-mark">NS</span><span>Nexus Scholar Core</span></a><button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-links">Menu</button>
+    <div class="nav-links" id="nav-links"><a href="../../../status/">Status</a><a href="../../../developers/" aria-current="page">Developers</a><a href="../../../tutorials/">Tutorials</a><a href="../../../roadmap/">Roadmap</a><a href="../../../about/">About</a><a href="https://github.com/nexus-scholar-org/core-csharp">GitHub</a></div>
+  </nav></header>
+  <main class="page doc-page" id="main">
+    <nav class="breadcrumbs" aria-label="Breadcrumb"><a href="../../../developers/">Developers</a><span aria-hidden="true">/</span><a href="../">Modules</a><span aria-hidden="true">/</span><span aria-current="page">Deduplication</span></nav>
+    <p class="eyebrow">Evidence consolidation · FE-02 · NexusScholar.Deduplication</p>
+    <h1>Deduplication</h1>
+    <p class="lede">Explainable duplicate evidence, deterministic exact clusters and representatives, conservative review candidates, and human-authorized merge/keep-separate/unresolved decisions.</p>
+    <div class="doc-shell">
+      <div class="doc-main">
+        <section class="content-section" id="boundary">
+          <h2>Purpose and authority boundary</h2>
+          <p>Deduplication consumes raw Search/import sightings and preserves their lineage while identifying exact duplicate components and ambiguous review pairs. Automatic cluster formation is limited to accepted stable-identifier evidence. Fuzzy title, source-specific ID, and no-ID evidence can request review but cannot silently become scientific identity.</p>
+          <p class="section-note">A representative is a projection over preserved members and evidence. It does not delete raw sightings. A review request is not a decision, and a decision is not a published corpus snapshot; those authority steps remain explicit.</p>
+        </section>
+        <section class="content-section" id="analysis">
+          <h2>Analysis model</h2>
+          <pre aria-label="Deduplication analysis flow"><code>SearchTrace / SearchImportTrace
+  → DedupCandidateRecord (all source bindings retained)
+  → pair evidence
+       exact stable ID → automatic union-find edge
+       fuzzy title ≥ 0.95 → human-review edge
+       source-specific/no ID → human-review evidence
+  → DedupCluster + DedupReviewCandidate + unresolved candidates
+  → deterministic representative projection</code></pre>
+          <p>Exact edges are transitive, but every direct edge remains recorded. The representative selector ranks metadata completeness, stable identifiers, recorded provider priority, DOI tie-break, normalized primary identifier, and deterministic candidate id. It fills missing fields and unions identifiers; it does not overwrite populated representative data silently.</p>
+        </section>
+        <section class="content-section" id="surface">
+          <h2>Key types and services</h2>
+          <ul>
+            <li><code>DeduplicationService</code> builds candidates/evidence, exact clusters, fuzzy review pairs, representatives, warnings, errors, and nonclaims.</li>
+            <li><code>DeduplicationResult</code>, <code>DedupCluster</code>, <code>DedupEvidence</code>, and <code>DedupReviewCandidate</code> retain the complete analysis surface.</li>
+            <li><code>DeduplicationRehydrator</code> returns <code>VerifiedDeduplicationResult</code> only after complete semantic/order validation.</li>
+            <li><code>DeduplicationAuthorityDigests</code> creates verified result, candidate, evidence, and exact review-target digests.</li>
+            <li><code>DeduplicationAuthorityPolicy</code> verifies allowed human actor/role pairs, actions, reason codes, rationale requirements, issuer, and policy digest.</li>
+            <li><code>DeduplicationReviewCommand</code> binds the exact generation, active decisions, result, snapshot, target, policy, action, actor, and optional supersession into a stable request digest/idempotency key.</li>
+            <li><code>DeduplicationDecision</code> produces append-only verified human decisions for <code>merge</code>, <code>keep-separate</code>, and <code>mark-unresolved</code>.</li>
+          </ul>
+          <p>Source: <a href="https://github.com/nexus-scholar-org/core-csharp/tree/main/src/NexusScholar.Deduplication">NexusScholar.Deduplication</a>. Contracts: <a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/docs/adr/0012-deduplication-evidence-and-cluster-contract.md">ADR 0012</a>, <a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/docs/adr/0028-local-decision-and-corpus-snapshot-authority.md">ADR 0028</a>, and <a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/docs/adr/0029-executable-deduplication-review-transitions.md">ADR 0029</a>.</p>
+        </section>
+        <section class="content-section" id="commands">
+          <h2>Human decision transition</h2>
+          <ul>
+            <li><strong>merge:</strong> unions the groups/unresolved entries containing the verified pair, preserves all members/evidence, and elects the representative deterministically.</li>
+            <li><strong>keep-separate:</strong> preserves membership and creates an active separation constraint.</li>
+            <li><strong>mark-unresolved:</strong> preserves membership and records an active unresolved target that blocks a final-corpus claim.</li>
+          </ul>
+          <p>The request digest excludes time and random IDs and deterministically derives request/decision IDs. The committed decision digest includes transaction time. Exact retries return the stored transition; a new action must explicitly supersede the current decision by id and digest. An accepted transition is published atomically with a successor corpus snapshot, invalidation, and provenance in ResearchWorkspace.</p>
+        </section>
+        <section class="content-section" id="identity">
+          <h2>Authority digests and stale-state defense</h2>
+          <p>The canonical result digest covers policy, ordered source bindings, all raw candidates/sightings, clusters, representatives, evidence, unresolved candidates, review pairs, warnings, errors, and nonclaims. Separate candidate/evidence/review-target digests prevent an unchanged id from hiding changed content. Commands additionally bind the predecessor snapshot and active decision-set digest, so an old browser/CLI action cannot apply to newer authority.</p>
+        </section>
+        <section class="content-section" id="refusals">
+          <h2>Failure and refusal behavior</h2>
+          <p>The module rejects title-only automatic merge, runtime/path identity, fuzzy auto-merge, malformed or noncanonical results, missing source bindings, incomplete representative metadata, stale targets/policies/snapshots/generations, unauthorized actors, unapproved actions/reasons, implicit overwrite, missing or cross-target supersession, cycles, duplicate active decisions, and merge across an active keep-separate constraint.</p>
+        </section>
+        <section class="content-section" id="evidence">
+          <h2>Tests, extension points, and nonclaims</h2>
+          <p><a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/tests/NexusScholar.Core.Tests/DeduplicationServiceTests.cs">DeduplicationServiceTests</a>, <a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/tests/NexusScholar.Core.Tests/DeduplicationDecisionTests.cs">decision tests</a>, <a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/tests/NexusScholar.Core.Tests/DeduplicationReviewCommandTests.cs">command tests</a>, and <a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/tests/NexusScholar.Conformance.Tests/DeduplicationFixtureTests.cs">conformance tests</a> cover clustering, representation, authority, stale state, and human transitions. Fixtures are under <a href="https://github.com/nexus-scholar-org/core-csharp/tree/main/fixtures/conformance/deduplication">deduplication</a> and <a href="https://github.com/nexus-scholar-org/core-csharp/tree/main/fixtures/conformance/executable-deduplication-review">executable review</a>.</p>
+          <p>New matching policies must preserve raw evidence, record thresholds/version, and classify automatic versus review-only authority. This package provides no learned similarity model, generic cross-domain decision framework, manual representative override, final corpus publication, UI/database/cloud behavior, or broad PHP compatibility.</p>
+        </section>
+      </div>
+      <aside class="doc-aside">
+        <section class="doc-card"><h2>Implementation status</h2><p>Analysis and FE-02 human review transitions are implemented. Learned matching and generic decisions are not.</p></section>
+        <section class="doc-card"><h2>Automatic authority</h2><p>Accepted stable-identifier overlap only.</p></section>
+        <section class="doc-card"><h2>Human actions</h2><ul class="link-list"><li>merge</li><li>keep-separate</li><li>mark-unresolved</li></ul></section>
+        <section class="doc-card"><h2>Depends inward</h2><p><a href="../kernel/">Kernel</a>, <a href="../shared/">Shared</a>, and <a href="../search/">Search</a>.</p></section>
+        <section class="doc-card"><h2>Next authority</h2><p><a href="../corpus-snapshots/">Corpus Snapshots</a></p></section>
+      </aside>
+    </div>
+  </main>
+  <footer class="site-footer"><p>Deduplication guide · consolidate evidence without erasing it.</p></footer>
+  <script is:inline src="../../../assets/js/site.js"></script>
+</body>
+</html>

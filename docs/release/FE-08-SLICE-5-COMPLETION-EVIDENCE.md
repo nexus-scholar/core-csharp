@@ -5,7 +5,7 @@ Date: 2026-07-17
 Authority: ADR 0038 and
 `docs/gates/FE-08-REMAINING-SLICES-5-9.md`.
 
-Status: complete locally; hosted validation and merge remain pending.
+Status: complete; merged through PR #69 to protected `main`.
 
 ## Delivered Scope
 
@@ -48,7 +48,10 @@ Status: complete locally; hosted validation and merge remain pending.
 - independent manager and test reviews initially blocked closeout, required
   scope and adversarial fixes, then passed with no blocking/high findings.
 
-Hosted CI and merge evidence are recorded after branch publication.
+Hosted [Ubuntu and Windows](https://github.com/nexus-scholar-org/core-csharp/actions/runs/29609611238),
+[dependency-review](https://github.com/nexus-scholar-org/core-csharp/actions/runs/29609611240),
+and [CodeQL](https://github.com/nexus-scholar-org/core-csharp/actions/runs/29609611248)
+checks passed on PR #69.
 
 ## Claim Boundary
 

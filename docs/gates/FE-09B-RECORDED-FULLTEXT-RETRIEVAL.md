@@ -1,6 +1,6 @@
 # FE-09B: Recorded Full Text Retrieval
 
-Status: Complete locally
+Status: Complete; merged through PR #69 to protected `main`
 
 Date: 2026-07-17
 

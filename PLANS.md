@@ -5,7 +5,7 @@ This file is the concise gate map. The detailed active roadmap is
 
 ## Current Position
 
-Protected `main` is documented at `805f3d6`.
+Protected `main` is documented at `ea665eb`.
 
 | Work | Status |
 | --- | --- |
@@ -17,31 +17,28 @@ Protected `main` is documented at `805f3d6`.
 | FE-05 Local Full Text workflow | Complete |
 | FE-06 Reporting, audit bundle, and Rapid Review profile | Complete |
 | FE-07 Extraction, Appraisal, and Synthesis | Complete |
-| FE-08 Slices 1-2 local desktop foundation | Complete |
-| FE-08 Slice 3 desktop Deduplication review | Complete |
-| FE-08 Slice 4 durable Screening authority resolution | Complete |
-| FE-08 Slice 5 first desktop Screening mutation | Next gate candidate; not yet authorized |
-| FE-09 through FE-12 | Sequenced future work; not authorized |
+| FE-08 Slices 1-9 local desktop workflow | Complete |
+| FE-09 providers, cache, recorded Full Text retrieval, and citation network | Complete within accepted scope |
+| FE-10 plugin runtime | Immediate design and capability-security gate |
+| FE-11 through FE-12 | Sequenced future work; not authorized |
 
-The verification baseline at FE-08 Slice 4 closeout is 906 tests and 23
-validation-only packages.
+The verification baseline at FE-09 closeout is 1,011 passing tests, two opt-in
+live-provider smokes skipped by default, and 24 validation-only packages.
 
 ## Immediate Next Gate
 
-FE-08 Slice 5 may propose the first desktop title/abstract Screening mutation.
-Before implementation it requires an accepted ADR and gate covering:
+FE-10 may design a plugin runtime only after an accepted ADR and gate freeze:
 
-- exact approved Protocol and title/abstract criteria authority;
-- exact candidate, corpus snapshot, and workflow-task bindings;
-- explicit human actor and admitted role;
-- preview and confirmation material;
-- stale generation, stale authority, and concurrent-writer rejection;
-- conflict, correction, supersession, and invalidation behavior;
-- atomic local persistence, recovery, provenance, and refresh;
-- desktop command-facade direction without UI-owned authority.
+- manifest and plugin identity;
+- invocation-scoped capability grants;
+- explicit input/output schemas and data classification;
+- process, filesystem, network, credential, and resource boundaries;
+- immutable invocation evidence and staged, non-canonical output;
+- host validation, provenance, invalidation, and recovery;
+- a separate authorized human or domain action before staged output becomes
+  scientific authority.
 
-No generic action descriptor, button, selection, or view model may create a
-Screening decision.
+Process isolation alone must not be described as a security sandbox.
 
 ## Completed Product Flow
 
@@ -59,8 +56,9 @@ local Search import
   -> Extraction, Appraisal, and Synthesis
 ```
 
-The desktop currently covers workspace open/init/import/verify/analyze,
-authority-checked Deduplication review, and read-only Screening readiness.
+The desktop covers workspace open/init/import/verify/analyze, authority-checked
+Deduplication and Screening conduct, local Full Text review, reporting,
+Bundle v2, export-ledger publication, and verification.
 
 The CLI includes:
 
@@ -80,7 +78,6 @@ does not use a database, server API, or cloud synchronization.
 
 | Gate | Outcome | Boundary before implementation |
 | --- | --- | --- |
-| FE-09 | Live providers and citation networks | Legal/network ADRs, reproducible acquisition evidence, immutable graph snapshots |
 | FE-10 | Plugin runtime | Capability grants, staged outputs, out-of-process host, threat model, and no direct authority |
 | FE-11 | Governed AI | Context/evidence provenance, privacy, validation, human acceptance, and retention policy |
 | FE-12 | Database, API, cloud, and multi-user operation | Semantic equivalence, authorization, concurrency, migration, backup/restore, and tenant isolation |
@@ -94,7 +91,8 @@ The current plan does not authorize claims of:
 
 - production readiness or completed security/accessibility certification;
 - broad PHP compatibility;
-- live provider access, scraping, or built-in PDF/OCR;
+- live Crossref or Full Text retrieval, scraping, unrestricted provider
+  retention, live citation acquisition, or built-in PDF/OCR;
 - database, API, cloud, sync, authentication, or multi-user behavior;
 - plugin execution or safe arbitrary-code sandboxing;
 - live model execution or AI scientific authority;

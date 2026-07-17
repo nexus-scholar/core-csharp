@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Developer guide to Nexus Scholar immutable direct-citation snapshots, stable nodes, unresolved targets, evidence-backed edges, and deterministic degree metrics.">
+  <title>Network developer guide - Nexus Scholar Core</title>
+  <link rel="stylesheet" href="../../../assets/css/site.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <div class="release-status" role="status">FE-09C complete · Direct-citation evidence only · No impact or centrality claim</div>
+  <header class="site-header"><nav class="nav" aria-label="Primary navigation">
+    <a class="brand" href="../../../"><span class="brand-mark">NS</span><span>Nexus Scholar Core</span></a><button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-links">Menu</button>
+    <div class="nav-links" id="nav-links"><a href="../../../status/">Status</a><a href="../../../developers/" aria-current="page">Developers</a><a href="../../../tutorials/">Tutorials</a><a href="../../../roadmap/">Roadmap</a><a href="../../../about/">About</a><a href="https://github.com/nexus-scholar-org/core-csharp">GitHub</a></div>
+  </nav></header>
+  <main class="page doc-page" id="main">
+    <nav class="breadcrumbs" aria-label="Breadcrumb"><a href="../../../developers/">Developers</a><span aria-hidden="true">/</span><a href="../">Modules</a><span aria-hidden="true">/</span><span aria-current="page">Network</span></nav>
+    <p class="eyebrow">Citation evidence · FE-09C · NexusScholar.Network</p>
+    <h1>Network</h1>
+    <p class="lede">Immutable, corpus-bound direct-citation snapshots over stable scholarly identities, with every edge backed by exact evidence and only deterministic count and degree metrics.</p>
+
+    <div class="doc-shell">
+      <div class="doc-main">
+        <section class="content-section" id="boundary">
+          <h2>Purpose and authority boundary</h2>
+          <p><code>NexusScholar.Network</code> owns the meaning and canonical identity of a direct-citation snapshot. It does not call a provider, discover citations, store a graph, or decide that a citation exists. An outward adapter must first produce an evidence reference whose digest can be verified; the domain then validates and snapshots the supplied relationship.</p>
+          <div class="callout boundary">
+            <strong>A graph relation is not evidence by itself</strong>
+            Every edge cites <code>CitationNetworkEvidenceRef</code>. Provider rank, a mutable UI edge, an in-memory graph, or a database relationship cannot substitute for the referenced evidence and digest.
+          </div>
+        </section>
+
+        <section class="content-section" id="model">
+          <h2>Snapshot model</h2>
+          <pre><code>verified corpus snapshot id + digest
+  → resolved scholarly works with stable WorkIdSet identity
+  → direct-citation edges with evidence id + digest
+       resolved target → must name another snapshot node
+       unresolved target → preserved explicitly, never invented
+  → canonical ordering and duplicate-edge rejection
+  → immutable CitationNetworkSnapshot digest
+  → node count, edge count, isolated count, in/out degree</code></pre>
+          <p>The snapshot schema is <code>nexus.network.citation-snapshot/1.0.0</code>. It binds the source corpus, <code>direct-citation/1.0.0</code> algorithm identity, resolved nodes, unresolved targets, evidence-backed edges, and metrics in canonical JSON.</p>
+        </section>
+
+        <section class="content-section" id="surface">
+          <h2>Key types</h2>
+          <ul>
+            <li><code>CitationNetworkNode</code> is built from an identified <code>ScholarlyWork</code>. It requires at least one stable <code>WorkId</code>; the primary stable ID becomes the node ID.</li>
+            <li><code>CitationNetworkCitationTarget</code> keeps resolved and unresolved targets distinct. A resolved target must parse as a stable work ID and must exist in the snapshot node set.</li>
+            <li><code>CitationNetworkEvidenceRef</code> binds evidence kind, stable evidence ID, and valid content digest.</li>
+            <li><code>CitationNetworkEdge</code> currently admits only the directed <code>direct-citation</code> kind.</li>
+            <li><code>CitationNetworkSnapshot</code> validates the corpus binding, algorithm, node/edge consistency, evidence, and deterministic ordering before computing its digest.</li>
+            <li><code>CitationNetworkMetrics</code> exposes node, edge, and isolated-node counts plus per-node in-degree and out-degree.</li>
+          </ul>
+          <p>Source: <a href="https://github.com/nexus-scholar-org/core-csharp/tree/main/src/NexusScholar.Network">NexusScholar.Network</a>. Authority: <a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/docs/adr/0043-citation-graph-snapshot-and-basic-metrics.md">ADR 0043</a> and <a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/docs/gates/FE-09C-CITATION-GRAPH-CONTRACT.md">FE-09C gate evidence</a>.</p>
+        </section>
+
+        <section class="content-section" id="determinism">
+          <h2>Determinism and metric semantics</h2>
+          <p>Input enumeration order does not affect the snapshot. Nodes sort by node ID, unresolved targets sort ordinally, and edges sort by a normalized source/kind/target key. Duplicate normalized edges fail instead of being silently coalesced.</p>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Metric</th><th>Exact meaning</th><th>Not implied</th></tr></thead>
+              <tbody>
+                <tr><td>Node count</td><td>Resolved stable works admitted to this corpus-bound snapshot.</td><td>Coverage of a field or provider.</td></tr>
+                <tr><td>Edge count</td><td>Distinct evidence-backed direct citations, including unresolved targets.</td><td>Complete bibliography reconstruction.</td></tr>
+                <tr><td>In-degree</td><td>Resolved snapshot nodes directly citing this node.</td><td>Impact, quality, or influence.</td></tr>
+                <tr><td>Out-degree</td><td>Evidence-backed direct citations leaving this node, resolved or unresolved.</td><td>Reference-list completeness.</td></tr>
+                <tr><td>Isolated count</td><td>Snapshot nodes with zero in-degree and zero out-degree.</td><td>Scientific irrelevance.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="content-section" id="refusals">
+          <h2>Failure and refusal behavior</h2>
+          <p>Construction rejects an invalid corpus digest, unsupported algorithm/version, duplicate node identity, a node without a stable work ID, a missing citing node, a resolved target absent from the node set, missing or invalid edge evidence, duplicate normalized edges, and every edge kind except direct citation. Unresolved targets remain explicit rather than being dropped or guessed.</p>
+        </section>
+
+        <section class="content-section" id="dependencies">
+          <h2>Dependency and integration boundary</h2>
+          <p>The packable domain project depends only on <a href="../kernel/">Kernel</a> and <a href="../shared/">Shared</a>. It has no HTTP, provider, storage, graph-library, UI, or application dependency. Provider-specific citation acquisition, workspace persistence, CLI commands, visualization, or export require outward adapters and successor gates.</p>
+        </section>
+
+        <section class="content-section" id="evidence">
+          <h2>Tests and explicit nonclaims</h2>
+          <p><a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/tests/NexusScholar.Network.Tests/CitationNetworkSnapshotTests.cs">CitationNetworkSnapshotTests</a> prove order-independent identity, count and degree behavior, unresolved-target preservation, and rejection of missing nodes, duplicate edges, invalid corpus digests, and unsupported edge kinds. The module participates in the 24-package reproducibility and local-source smoke gate.</p>
+          <p>No live citation provider, bibliographic coupling, co-citation, snowballing, shortest path, centrality, community detection, visualization, export, dissemination, PHP parity, scale, completeness, or impact interpretation is claimed.</p>
+        </section>
+      </div>
+
+      <aside class="doc-aside">
+        <section class="doc-card"><h2>Implementation status</h2><p>FE-09C direct-citation snapshot and basic metrics contract is complete on protected main.</p></section>
+        <section class="doc-card"><h2>Admitted metrics</h2><ul><li>Node count</li><li>Edge count</li><li>Isolated-node count</li><li>In-degree</li><li>Out-degree</li></ul></section>
+        <section class="doc-card"><h2>Depends inward</h2><p><a href="../kernel/">Kernel</a> and <a href="../shared/">Shared scholarly identity</a>.</p></section>
+        <section class="doc-card"><h2>Adjacent boundary</h2><p><a href="../search/">Search providers</a> may supply evidence through an outward integration later; provider output never becomes a Network edge without an admitted evidence reference.</p></section>
+      </aside>
+    </div>
+  </main>
+  <footer class="site-footer"><p>Network developer guide · evidence-backed direct citations, not impact authority.</p></footer>
+  <script is:inline src="../../../assets/js/site.js"></script>
+</body>
+</html>

@@ -2,7 +2,7 @@ bin/
 obj/
 .packages/
 tests/NexusScholar.PackageSmoke/packages.lock.json
-artifacts/
+/artifacts/
 TestResults/
 .coverage/
 .idea/
@@ -16,3 +16,7 @@ TestResults/
 .env.*
 !.env.example
 fixtures/php-golden/generated/
+site/.astro/
+site/dist/
+site/node_modules/
+output/playwright/

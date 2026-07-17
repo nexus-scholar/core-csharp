@@ -1,6 +1,6 @@
 # FE-09A Local Completion Evidence
 
-Status: complete locally; hosted CI and merge pending.
+Status: complete; merged through PR #69 to protected `main`.
 
 Date: 2026-07-17
 
