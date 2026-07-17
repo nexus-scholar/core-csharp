@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Developer guide to Nexus Scholar local Full Text admission, acquisition, exact artifacts, extraction attempts, human screening conduct, invalidation, and handoff.">
+  <title>Full Text developer guide - Nexus Scholar Core</title>
+  <link rel="stylesheet" href="../../../assets/css/site.css">
+</head>
+<body>
+  <a class="skip-link" href="#content">Skip to content</a>
+  <div class="release-status" role="status">Early alpha. Not production-ready. No package publication or broad PHP compatibility claim.</div>
+  <header class="site-header"><nav class="nav" aria-label="Primary navigation">
+    <a class="brand" href="../../../"><span class="brand-mark">NS</span><span>Nexus Scholar Core</span></a><button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-links">Menu</button>
+    <div class="nav-links" id="nav-links"><a href="../../../developers/" aria-current="page">Developers</a><a href="../../../tutorials/">Tutorials</a><a href="../../../blog/">Blog</a><a href="../../../about/">About</a><a href="https://github.com/nexus-scholar/core-csharp">GitHub</a></div>
+  </nav></header>
+  <main class="page doc-page" id="content">
+    <p class="eyebrow">Local evidence · FE-05 · NexusScholar.FullText</p>
+    <h1>Full Text</h1>
+    <p class="lede">Verified admission from Screening, local no-network acquisition, exact raw-byte evidence, explicit extraction attempts, and append-only human full-text decisions.</p>
+    <div class="doc-shell">
+      <div class="doc-main">
+        <section class="content-section" id="boundary">
+          <h2>Purpose and authority boundary</h2>
+          <p><code>NexusScholar.FullText</code> owns input, acquisition, artifact validation, extraction attempts, canonical codecs, and verified replay. <code>NexusScholar.Screening.FullText</code> is the outward bridge that admits a current FE-04 include and owns full-text human conduct. Infrastructure reads local files and retains bytes; paths never become evidence identity.</p>
+          <p class="section-note"><strong>Scientific boundary:</strong> extraction is derived evidence. An extraction failure or unsupported parser is not a study-exclusion reason and cannot be smuggled into a final decision as generic evidence.</p>
+        </section>
+        <section class="content-section" id="pipeline">
+          <h2>End-to-end authority pipeline</h2>
+          <pre aria-label="Full Text workflow"><code>verified FE-04 include handoff
+  → VerifiedFullTextAdmission
+  → local source attempt + acquisition record
+  → exact retained bytes + FullTextArtifactEvidence
+  → extraction attempt
+       UTF-8 text: deterministic
+       safe XML text: deterministic
+       PDF parsing: unsupported
+  → FullTextScreeningConductJournal
+  → terminal verified handoff</code></pre>
+          <p>The same bytes received through two paths share raw-byte identity but keep distinct acquisition provenance. Changed bytes at the same path are a different artifact. Raw and extracted representations always have separate digests.</p>
+        </section>
+        <section class="content-section" id="surface">
+          <h2>Key types and services</h2>
+          <ul>
+            <li><code>FullTextInput</code> identifies the candidate and accepted source decision. The authoritative FE-05 path is derived by <code>VerifiedFullTextAdmission</code>, not the historical string-only factory.</li>
+            <li><code>FullTextSourceAttempt</code> and <code>FullTextAcquisitionRecord</code> preserve human/import actor, time, source reference/type, availability/access notes, and explicit legal-status nonclaim.</li>
+            <li><code>FullTextArtifactEvidence</code> binds artifact kind, media type, size, raw digest, acquisition, and source input. <code>FullTextArtifactValidator</code> checks signatures/encoding/size and exact bytes.</li>
+            <li><code>FullTextExtractionAttempt</code> binds source artifact, extractor id/version, configuration digest, status, representation, output digest, warnings, and controlled failure.</li>
+            <li><code>FullTextDeterministicExtractor</code> supports UTF-8 text and safe XML projection; PDF intake can be valid while extraction remains <code>unsupported</code>.</li>
+            <li><code>FullTextRehydrator</code> and <code>FullTextExtractionRehydrator</code> return verified wrappers only after exact authority and byte checks.</li>
+            <li><code>FullTextScreeningConductPolicy</code>, journal, decisions, invalidations, and handoff mirror FE-04’s append-only human-review rules while binding exact admission/artifact/extraction authority.</li>
+          </ul>
+          <p>Source: <a href="https://github.com/nexus-scholar/core-csharp/tree/main/src/NexusScholar.FullText">FullText</a> and <a href="https://github.com/nexus-scholar/core-csharp/tree/main/src/NexusScholar.Screening.FullText">Screening.FullText</a>. Contracts: <a href="https://github.com/nexus-scholar/core-csharp/blob/main/docs/adr/0014-fulltext-acquisition-artifact-and-extraction-contract.md">ADR 0014</a>, dependency correction in <a href="https://github.com/nexus-scholar/core-csharp/blob/main/docs/adr/0022-fulltext-artifacts-dependency-direction.md">ADR 0022</a>, and durable authority in <a href="https://github.com/nexus-scholar/core-csharp/blob/main/docs/adr/0032-local-fulltext-workflow-authority.md">ADR 0032</a>.</p>
+        </section>
+        <section class="content-section" id="statuses">
+          <h2>Extraction status is evidence, not verdict</h2>
+          <ul>
+            <li><strong>success:</strong> a complete derived representation and digest are available.</li>
+            <li><strong>partial:</strong> output exists, warnings are mandatory, and limitations remain visible.</li>
+            <li><strong>failure:</strong> no successful content; controlled category and summary explain the attempt.</li>
+            <li><strong>unsupported:</strong> the admitted extractor does not implement that artifact/representation.</li>
+          </ul>
+          <p>Only the exact extraction attempt bound by policy may support a decision. Failed/unsupported attempts cannot support exclusion directly or indirectly. The reviewer can always bind the exact raw artifact.</p>
+        </section>
+        <section class="content-section" id="identity">
+          <h2>Canonical identity and conduct</h2>
+          <p>Raw artifacts use <code>raw-artifact-bytes</code>. Admission, acquisition, artifact evidence, extraction attempt, conduct policy/header/decision/invalidation/handoff use versioned canonical-record schemas. Strict codecs require exact canonical bytes and verified source records. Conduct decisions bind Protocol, criteria, admission, raw artifact, optional exact extraction, actor, rationale, verdict, reason, evidence, ordinal, and prior digest.</p>
+          <p>Independent review, correction, conflict generation, adjudication, invalidation, and handoff use the same no-overwrite principles as title/abstract Screening. Full-text exclusions require a stage-specific policy reason.</p>
+        </section>
+        <section class="content-section" id="refusals">
+          <h2>Failure and refusal behavior</h2>
+          <p>The local source boundary rejects HTTP/HTTPS, UNC/network sources, provider SDKs, live retrieval, path traversal/reparse risk, and configured byte-limit violations. Artifact validation rejects digest/size/signature/media mismatch, empty text, unsafe XML, wrong scope, and invalid source chain. Admission rejects stale/non-included Screening handoff. Conduct rejects automation, unauthorized actor, wrong criteria/Protocol/artifact/extraction, extraction-failure evidence, incomplete invalidation, unresolved conflict, and premature handoff.</p>
+        </section>
+        <section class="content-section" id="evidence">
+          <h2>Tests, extension points, and nonclaims</h2>
+          <p><a href="https://github.com/nexus-scholar/core-csharp/blob/main/tests/NexusScholar.Core.Tests/FullTextTests.cs">FullTextTests</a>, <a href="https://github.com/nexus-scholar/core-csharp/blob/main/tests/NexusScholar.Core.Tests/FullTextAdmissionTests.cs">admission tests</a>, authority codec tests, and <a href="https://github.com/nexus-scholar/core-csharp/blob/main/tests/NexusScholar.Conformance.Tests/FullTextWorkflowFixtureTests.cs">FullText workflow fixtures</a> cover bytes, paths, duplicates, extraction states, admission, decisions, and tamper. Gate closure is in <a href="https://github.com/nexus-scholar/core-csharp/blob/main/docs/gates/FE-05-LOCAL-FULLTEXT-WORKFLOW-EVIDENCE.md">FE-05 completion evidence</a>.</p>
+          <p>A deterministic PDF parser or OCR engine requires a versioned dependency, parser contract, fixtures, and ADR; it cannot be inserted behind the current interface and claimed equivalent. Current code makes no PDF parsing, OCR, retrieval, paywall bypass, legal certification, redistribution, provider, cloud, database, API, or production claim.</p>
+        </section>
+      </div>
+      <aside class="doc-aside">
+        <section class="doc-card"><h2>Implementation status</h2><p>FE-05 local authority is complete. PDF parsing, OCR, retrieval, and network input are not implemented.</p></section>
+        <section class="doc-card"><h2>Implemented extraction</h2><ul class="link-list"><li>UTF-8 text</li><li>Safe XML text</li><li>PDF: intake only; parse unsupported</li><li>OCR: not implemented</li></ul></section>
+        <section class="doc-card"><h2>Depends inward</h2><p>FullText: <a href="../kernel/">Kernel</a> + <a href="../artifacts/">Artifacts</a>. Screening bridge adds Protocol, Screening, and Deduplication authority inputs.</p></section>
+        <section class="doc-card"><h2>Next stage</h2><p><a href="../reporting/">Reporting</a> consumes terminal Full Text cases.</p></section>
+      </aside>
+    </div>
+  </main>
+  <footer class="site-footer"><p>Full Text guide · exact bytes first, derived extraction second, human verdict last.</p></footer>
+  <script src="../../../assets/js/site.js"></script>
+</body>
+</html>

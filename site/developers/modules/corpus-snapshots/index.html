@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Developer guide to Nexus Scholar immutable corpus snapshots, successor reduction, invalidation, content and record digests, and Screening corpus bindings.">
+  <title>Corpus Snapshots developer guide - Nexus Scholar Core</title>
+  <link rel="stylesheet" href="../../../assets/css/site.css">
+</head>
+<body>
+  <a class="skip-link" href="#content">Skip to content</a>
+  <div class="release-status" role="status">Early alpha. Not production-ready. No package publication or broad PHP compatibility claim.</div>
+  <header class="site-header"><nav class="nav" aria-label="Primary navigation">
+    <a class="brand" href="../../../"><span class="brand-mark">NS</span><span>Nexus Scholar Core</span></a><button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-links">Menu</button>
+    <div class="nav-links" id="nav-links"><a href="../../../developers/" aria-current="page">Developers</a><a href="../../../tutorials/">Tutorials</a><a href="../../../blog/">Blog</a><a href="../../../about/">About</a><a href="https://github.com/nexus-scholar/core-csharp">GitHub</a></div>
+  </nav></header>
+  <main class="page doc-page" id="content">
+    <p class="eyebrow">Immutable corpus authority · NexusScholar.CorpusSnapshots</p>
+    <h1>Corpus Snapshots</h1>
+    <p class="lede">Immutable candidate membership after Deduplication decisions, with complete group/unresolved coverage, separate scientific-content and historical-record digests, append-only invalidation, and an exact bridge into Screening.</p>
+    <div class="doc-shell">
+      <div class="doc-main">
+        <section class="content-section" id="boundary">
+          <h2>Purpose and authority boundary</h2>
+          <p>A corpus snapshot is scientific membership authority. It binds one exact verified Deduplication result and active decision set, preserves every candidate exactly once as a group member or unresolved entry, and records representative/evidence relationships without deleting raw source records. A workspace generation or “current candidates” view is not a snapshot.</p>
+          <p><code>NexusScholar.Screening.CorpusSnapshots</code> is a separate outward bridge. It converts verified snapshot units into the locked candidate surface used by Screening without making CorpusSnapshots depend on Screening.</p>
+        </section>
+        <section class="content-section" id="model">
+          <h2>Snapshot and successor model</h2>
+          <pre><code>verified Deduplication result + verified authority policy
+  → baseline snapshot (empty decision set)
+  → human decision
+  → deterministic reduction
+       merge          → group union
+       keep-separate  → membership unchanged + active constraint
+       mark-unresolved→ membership unchanged + unresolved decision
+  → successor snapshot
+  → predecessor invalidation
+
+No snapshot is edited or deleted.</code></pre>
+          <p><code>DeduplicationSnapshotReducer</code> applies only exact verified review-pair decisions. It preserves all group members and evidence, elects representatives with the Deduplication selector, checks active keep-separate constraints, and requires the successor active decision set to differ by exactly the accepted transition.</p>
+        </section>
+        <section class="content-section" id="surface">
+          <h2>Key types and services</h2>
+          <ul>
+            <li><code>VerifiedCorpusSnapshot</code> exposes source/decision bindings, groups, unresolved candidates, publisher authority, supersession, invalidations, and both digests.</li>
+            <li><code>CorpusSnapshotService</code> creates baselines/successors, verifies complete membership, deterministic ordering, group IDs, evidence, authority, lineage, and rehydration.</li>
+            <li><code>CorpusSnapshotInvalidation</code> creates and rehydrates immutable invalidation records tied to cause decision/snapshot and complete invalidated records.</li>
+            <li><code>DeduplicationSnapshotReducer</code> owns membership transition logic for FE-02.</li>
+            <li><code>VerifiedScreeningCorpusBinding</code> binds result, snapshot record, decision set, group units, unresolved units, and a canonical digest.</li>
+            <li><code>ScreeningCorpusBindingAuthority</code> checks exact source coverage and creates <code>VerifiedSnapshotBoundScreeningPolicy</code>.</li>
+          </ul>
+          <p>Source: <a href="https://github.com/nexus-scholar/core-csharp/tree/main/src/NexusScholar.CorpusSnapshots">CorpusSnapshots</a> and <a href="https://github.com/nexus-scholar/core-csharp/tree/main/src/NexusScholar.Screening.CorpusSnapshots">Screening.CorpusSnapshots</a>. Authority is defined by <a href="https://github.com/nexus-scholar/core-csharp/blob/main/docs/adr/0028-local-decision-and-corpus-snapshot-authority.md">ADR 0028</a> and the FE-06 bridge in <a href="https://github.com/nexus-scholar/core-csharp/blob/main/docs/adr/0033-reporting-audit-bundle-and-rapid-review-profile.md">ADR 0033</a>.</p>
+        </section>
+        <section class="content-section" id="identity">
+          <h2>Two digest meanings</h2>
+          <ul>
+            <li><strong>Content digest:</strong> schema, source result, active decisions, groups, membership, representatives, evidence, and unresolved candidates. It excludes snapshot id, creator/time, supersession, and invalidation history. Matching content digests mean scientifically equal corpus content under this schema.</li>
+            <li><strong>Record digest:</strong> all snapshot record fields, including id, publisher, time, supersession, invalidation references, and reproduced content digest. It identifies the exact historical record.</li>
+          </ul>
+          <p>Group IDs derive from canonical ordered member candidate IDs. The decision-set digest derives from decision id/digest references ordered by decision id. Every Deduplication candidate must occur once and only once; no-ID candidates remain explicitly unresolved with their candidate digest and raw-sighting references.</p>
+        </section>
+        <section class="content-section" id="screening">
+          <h2>Snapshot-to-Screening bridge</h2>
+          <p>Each snapshot group becomes one Screening unit represented by the group’s representative candidate, while all member IDs stay bound. Each unresolved snapshot candidate becomes its own unit with exact candidate digest. The bridge requires total source coverage, forbids duplicate membership, binds the snapshot record and decision-set digests, and creates a locked candidate set with explicit source references. Screening cannot expose a public factory that bypasses this binding for snapshot-authoritative conduct.</p>
+        </section>
+        <section class="content-section" id="refusals">
+          <h2>Failure and refusal behavior</h2>
+          <p>Snapshot authority rejects stale result/policy, unauthorized publisher, missing/duplicate membership, representative outside group, altered candidate/evidence digest, fabricated no-ID identity, noncanonical ordering, wrong group/decision-set/content/record digest, invalid supersession, unknown decision, cycles, incomplete invalidation, and active-separation violation. The Screening bridge additionally rejects stale snapshot/result, altered units, duplicate units, noncanonical bytes, missing members, wrong representatives, and candidate-digest mismatch.</p>
+        </section>
+        <section class="content-section" id="evidence">
+          <h2>Tests, extension points, and nonclaims</h2>
+          <p><a href="https://github.com/nexus-scholar/core-csharp/blob/main/tests/NexusScholar.Core.Tests/CorpusSnapshotTests.cs">CorpusSnapshotTests</a>, <a href="https://github.com/nexus-scholar/core-csharp/blob/main/tests/NexusScholar.Core.Tests/CorpusSnapshotInvalidationTests.cs">invalidation tests</a>, <a href="https://github.com/nexus-scholar/core-csharp/blob/main/tests/NexusScholar.Core.Tests/DeduplicationSnapshotReducerTests.cs">reducer tests</a>, and <a href="https://github.com/nexus-scholar/core-csharp/blob/main/tests/NexusScholar.Core.Tests/ScreeningCorpusBindingTests.cs">Screening binding tests</a> cover equality, transitions, tamper, and exact coverage. Conformance cases are in <a href="https://github.com/nexus-scholar/core-csharp/tree/main/fixtures/conformance/screening-corpus-binding">screening-corpus-binding fixtures</a>.</p>
+          <p>New downstream bindings belong in outward bridge packages. New invalidatable record kinds require explicit resolver and semantics. The module provides no mutable corpus table, Search/Deduplication execution, storage, release snapshot, PHP corpus-lock compatibility, automatic downstream invalidation, or final-review completeness claim.</p>
+        </section>
+      </div>
+      <aside class="doc-aside">
+        <section class="doc-card"><h2>Implementation status</h2><p>Baseline/successor authority and the FE-06 Screening binding are implemented. A mutable corpus store is not.</p></section>
+        <section class="doc-card"><h2>Identity split</h2><ul class="link-list"><li>Content digest: membership equality</li><li>Record digest: historical identity</li></ul></section>
+        <section class="doc-card"><h2>Depends inward</h2><p>CorpusSnapshots: <a href="../kernel/">Kernel</a> + <a href="../deduplication/">Deduplication</a>. Screening bridge adds Protocol and Screening inputs.</p></section>
+        <section class="doc-card"><h2>Next stage</h2><p><a href="../screening/">Title/abstract Screening</a></p></section>
+      </aside>
+    </div>
+  </main>
+  <footer class="site-footer"><p>Corpus Snapshots guide · immutable membership with explicit lineage.</p></footer>
+  <script src="../../../assets/js/site.js"></script>
+</body>
+</html>

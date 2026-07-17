@@ -1,132 +1,93 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Screening Module - Nexus Scholar Core</title>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Developer guide to Nexus Scholar title and abstract screening conduct, criteria, human decisions, corrections, conflicts, adjudication, invalidation, and handoff.">
+  <title>Screening developer guide - Nexus Scholar Core</title>
   <link rel="stylesheet" href="../../../assets/css/site.css">
 </head>
 <body>
-  <div class="release-status" role="status">Early alpha. Not production-ready. No package publication or PHP compatibility claim.</div>
-  <header class="site-header">
-    <nav class="nav" aria-label="Primary navigation">
-      <a class="brand" href="../../../"><span class="brand-mark">NS</span><span>Nexus Scholar Core</span></a>
-      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-links">Menu</button>
-      <div class="nav-links" id="nav-links">
-        <a href="../../../developers/" aria-current="page">Developers</a>
-        <a href="../../../tutorials/">Tutorials</a>
-        <a href="../../../blog/">Blog</a>
-        <a href="../../../about/">About</a>
-        <a href="https://github.com/nexus-scholar/core-csharp">GitHub</a>
-      </div>
-    </nav>
-  </header>
-  <main class="page doc-page">
-    <p class="eyebrow">Module documentation</p>
-    <h1>Screening</h1>
-    <p class="lede">Candidate-set, criteria, suggestion, final decision, conflict, and adjudication contracts that preserve human authority over include, exclude, and needs-review outcomes.</p>
+  <a class="skip-link" href="#content">Skip to content</a>
+  <div class="release-status" role="status">Early alpha. Not production-ready. No package publication or broad PHP compatibility claim.</div>
+  <header class="site-header"><nav class="nav" aria-label="Primary navigation">
+    <a class="brand" href="../../../"><span class="brand-mark">NS</span><span>Nexus Scholar Core</span></a><button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-links">Menu</button>
+    <div class="nav-links" id="nav-links"><a href="../../../developers/" aria-current="page">Developers</a><a href="../../../tutorials/">Tutorials</a><a href="../../../blog/">Blog</a><a href="../../../about/">About</a><a href="https://github.com/nexus-scholar/core-csharp">GitHub</a></div>
+  </nav></header>
+  <main class="page doc-page" id="content">
+    <p class="eyebrow">Human conduct · FE-04 · NexusScholar.Screening</p>
+    <h1>Title and abstract Screening</h1>
+    <p class="lede">Append-only, snapshot-bound human decisions with independent review, deterministic conflict generations, corrections, adjudication, complete invalidation, and a verified downstream handoff.</p>
     <div class="doc-shell">
       <div class="doc-main">
-        <section class="content-section">
-          <h2>Scope and ownership</h2>
-          <p>Screening begins only after a reviewable candidate set exists. The module owns the candidate-set contract, criteria records, canonical verdict vocabulary, suggestion records, final human decisions, conflict detection, and append-only adjudication. It does not own raw Search intake. It does not bypass Deduplication.</p>
-          <p class="section-intro">The implemented types make that boundary explicit. <code>ScreeningCandidateSet</code> can be built from a Deduplication result or a locked reviewable set. <code>ScreeningCriteria</code> captures stage-specific inclusion and exclusion logic. <code>ScreeningDecision</code> and <code>ScreeningConflict</code> keep final authority with identified humans.</p>
+        <section class="content-section" id="boundary">
+          <h2>Purpose and authority boundary</h2>
+          <p>Screening determines whether locked candidate units proceed based on approved criteria and Protocol authority. The durable FE-04 path is <code>ScreeningConductJournal</code>; it preserves every decision and invalidation and derives the current projection by replay. The earlier <code>ScreeningService</code remains a useful in-memory contract but is not restart-safe authority by itself.</p>
+          <p class="section-note"><strong>Human authority:</strong> automation or a model may produce <code>ScreeningSuggestion</code>, but it cannot create a final conduct decision, occupy an independent review slot, adjudicate a conflict, or publish a handoff.</p>
         </section>
-        <section class="content-section">
-          <h2>Gate and ADR status</h2>
-          <p>The local contract is accepted in <a href="https://github.com/nexus-scholar/core-csharp/blob/main/docs/adr/0013-screening-decision-and-conflict-contract.md">ADR 0013</a>, and the implemented module follows that boundary. The accepted scope is clear on three points: raw Search traces are not valid Screening inputs, final scientific decisions require a human actor, and unresolved conflicts block downstream stage advancement.</p>
-          <p class="section-note">That boundary is stronger than some CLI and Web behavior in the surrounding ecosystem. Those applications may expose additional workflow surfaces, but Core authority here remains narrow and explicit.</p>
+        <section class="content-section" id="model">
+          <h2>Conduct model</h2>
+          <pre aria-label="Screening conduct flow"><code>VerifiedSnapshotBoundScreeningPolicy
+  → conduct header (hash-chain root)
+  → review decision(s)
+       agreement → outcome
+       disagreement → deterministic conflict generation
+       correction → supersedes exact current digest
+       adjudication → cites conflict + every source decision digest
+  → optional complete-source invalidation
+  → replayed projection
+  → handoff only when every candidate is terminal and conflict-free</code></pre>
+          <p>Policy permits one or two independent reviews. The same actor cannot fill two slots for one candidate and decision generation. Verdicts are closed to <code>include</code>, <code>exclude</code>, and <code>needs_review</code>. Exclude requires a policy-defined title/abstract reason; other verdicts cannot carry one.</p>
         </section>
-        <section class="content-section">
-          <h2>Diagrams</h2>
-          <div class="diagram-grid">
-            <article class="diagram-card">
-              <h3>Class map</h3>
-              <p>The service coordinates candidate-set, criteria, suggestions, decisions, and conflicts. Suggestions are preserved, but they are not final authority.</p>
-              <svg viewBox="0 0 520 248" role="img" aria-label="Screening class map">
-                <defs><marker id="arrow-screen-a" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#0b4f4a"></path></marker></defs>
-                <rect x="184" y="24" width="152" height="58" rx="8" fill="#fff" stroke="#0f766e"></rect>
-                <text x="260" y="49" text-anchor="middle">ScreeningService</text>
-                <text x="260" y="67" text-anchor="middle" class="diagram-muted">append-only coordination</text>
-                <rect x="28" y="142" width="112" height="56" rx="8" fill="#fff" stroke="#0f766e"></rect>
-                <text x="84" y="166" text-anchor="middle">CandidateSet</text>
-                <text x="84" y="184" text-anchor="middle" class="diagram-muted">locked inputs</text>
-                <rect x="154" y="142" width="92" height="56" rx="8" fill="#fff" stroke="#0f766e"></rect>
-                <text x="200" y="166" text-anchor="middle">Criteria</text>
-                <text x="200" y="184" text-anchor="middle" class="diagram-muted">digest-bound</text>
-                <rect x="260" y="142" width="92" height="56" rx="8" fill="#fff" stroke="#0f766e"></rect>
-                <text x="306" y="166" text-anchor="middle">Suggestion</text>
-                <text x="306" y="184" text-anchor="middle" class="diagram-muted">proposal only</text>
-                <rect x="366" y="142" width="92" height="56" rx="8" fill="#fff" stroke="#0f766e"></rect>
-                <text x="412" y="166" text-anchor="middle">Decision</text>
-                <text x="412" y="184" text-anchor="middle" class="diagram-muted">human final</text>
-                <rect x="214" y="208" width="92" height="28" rx="8" fill="#f4f1ea" stroke="#b7791f"></rect>
-                <text x="260" y="227" text-anchor="middle">Conflict</text>
-                <line x1="260" y1="82" x2="84" y2="142" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-screen-a)"></line>
-                <line x1="260" y1="82" x2="200" y2="142" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-screen-a)"></line>
-                <line x1="260" y1="82" x2="306" y2="142" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-screen-a)"></line>
-                <line x1="260" y1="82" x2="412" y2="142" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-screen-a)"></line>
-                <line x1="412" y1="198" x2="306" y2="222" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-screen-a)"></line>
-              </svg>
-            </article>
-            <article class="diagram-card">
-              <h3>Use case flow</h3>
-              <p>The authority path is candidate set to human decision, with suggestions and conflict checks along the way.</p>
-              <svg viewBox="0 0 520 210" role="img" aria-label="Screening use case flow">
-                <defs><marker id="arrow-screen-b" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#0b4f4a"></path></marker></defs>
-                <rect x="14" y="72" width="96" height="60" rx="8" fill="#fff" stroke="#0f766e"></rect>
-                <text x="62" y="98" text-anchor="middle">candidate set</text>
-                <text x="62" y="116" text-anchor="middle" class="diagram-muted">locked input</text>
-                <rect x="138" y="72" width="96" height="60" rx="8" fill="#fff" stroke="#0f766e"></rect>
-                <text x="186" y="98" text-anchor="middle">criteria</text>
-                <text x="186" y="116" text-anchor="middle" class="diagram-muted">stage digest</text>
-                <rect x="262" y="72" width="96" height="60" rx="8" fill="#fff" stroke="#0f766e"></rect>
-                <text x="310" y="98" text-anchor="middle">human decision</text>
-                <text x="310" y="116" text-anchor="middle" class="diagram-muted">include / exclude</text>
-                <rect x="386" y="72" width="120" height="60" rx="8" fill="#f4f1ea" stroke="#b7791f"></rect>
-                <text x="446" y="98" text-anchor="middle">conflict check</text>
-                <text x="446" y="116" text-anchor="middle" class="diagram-muted">adjudicate if needed</text>
-                <line x1="110" y1="102" x2="138" y2="102" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-screen-b)"></line>
-                <line x1="234" y1="102" x2="262" y2="102" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-screen-b)"></line>
-                <line x1="358" y1="102" x2="386" y2="102" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-screen-b)"></line>
-              </svg>
-            </article>
-          </div>
+        <section class="content-section" id="surface">
+          <h2>Key types and services</h2>
+          <ul>
+            <li><code>ScreeningCriteria</code> binds stage-specific inclusion/exclusion material to the approved Protocol content digest.</li>
+            <li><code>ScreeningConductPolicy</code> binds the locked candidate set, criteria, Protocol, review count, actor-role assignments, adjudicator roles, reasons, and human approval.</li>
+            <li><code>ScreeningConductHeader</code> fixes conduct/policy/candidate/criteria/Protocol identity and starts the chain.</li>
+            <li><code>ScreeningConductDecision</code> represents review, correction, or adjudication with ordinal, prior digest, request identity, human actor, rationale, evidence, and exact source digests.</li>
+            <li><code>ScreeningConductInvalidation</code> names a verified changed source and the complete current decision set affected by it.</li>
+            <li><code>ScreeningConductJournal</code> validates append operations and replays current outcomes/conflicts/head/readiness.</li>
+            <li><code>ScreeningConductHandoff</code> binds terminal included/excluded outcomes, reason codes, supporting decisions, and current journal head.</li>
+            <li><code>ScreeningConductCanonicalCodec</code> strictly round-trips policy, header, entries, and handoff.</li>
+          </ul>
+          <p>Source: <a href="https://github.com/nexus-scholar/core-csharp/tree/main/src/NexusScholar.Screening">NexusScholar.Screening</a>. Semantics: <a href="https://github.com/nexus-scholar/core-csharp/blob/main/docs/adr/0013-screening-decision-and-conflict-contract.md">ADR 0013</a> and durable conduct in <a href="https://github.com/nexus-scholar/core-csharp/blob/main/docs/adr/0031-title-abstract-screening-conduct.md">ADR 0031</a>.</p>
         </section>
-        <section class="content-section">
-          <h2>Code surface and implemented behavior</h2>
-          <p><a href="https://github.com/nexus-scholar/core-csharp/blob/main/src/NexusScholar.Screening/ScreeningModels.cs">ScreeningModels.cs</a> defines the canonical schemas, stages, verdicts, actors, candidate sets, criteria, suggestions, decisions, and conflicts. <a href="https://github.com/nexus-scholar/core-csharp/blob/main/src/NexusScholar.Screening/ScreeningService.cs">ScreeningService.cs</a> enforces the authority rules: unknown stages and verdicts are rejected, automation cannot finalize decisions, final decisions require rationale and criteria digest, unresolved conflicts can block downstream decisions, and full-text decisions require artifact evidence rather than local path identity.</p>
-          <p class="section-intro">This is one of the clearer implemented modules in the repo because most of its value is in refusal logic. The service stops invalid transitions instead of trying to recover from them silently.</p>
+        <section class="content-section" id="chain">
+          <h2>Identity, replay, and conflicts</h2>
+          <p>Every record uses <code>canonical-json-record</code>. The policy digest binds source authority; the header digest is the journal root; each entry binds one-based ordinal and previous digest. Request digest deterministically derives decision identity independently of decision time. Persisted bytes must be exactly canonical, and rehydration requires the exact verified Protocol, Deduplication, criteria, and policy authorities.</p>
+          <p>Conflict identity derives from candidate, criteria, and the ordered current source-decision digests. A correction can therefore create a new conflict generation without rewriting the old one. An adjudication only resolves the exact generation it cites.</p>
         </section>
-        <section class="content-section">
-          <h2>Related modules and current risks</h2>
-          <p>Screening depends on Deduplication for candidate-set intake, on Kernel for digest rules, and later on Artifacts for full-text evidence identity. It is also where AI pressure has to be resisted most carefully, because suggestion records are easy to mistake for decisions.</p>
-          <p class="section-intro">The main implementation risk is workflow bleed from CLI or Web projection behavior. Reviewer assignment, batch management, and app audit tables may be useful, but they are not Core authority unless a later accepted contract adopts them.</p>
+        <section class="content-section" id="flow">
+          <h2>Typical developer flow</h2>
+          <ol class="step-list">
+            <li>Create a <a href="../corpus-snapshots/">verified snapshot corpus binding</a> and snapshot-bound conduct policy.</li>
+            <li>Create the header with an assigned human reviewer.</li>
+            <li>Preview a decision against the current journal head and actor-role assignment.</li>
+            <li>Append canonical review entries; use correction or adjudication instead of editing prior records.</li>
+            <li>When source authority changes, append one invalidation naming every affected current decision.</li>
+            <li>Create a handoff only when replay reports all required reviews, resolved conflicts, and no <code>needs_review</code>.</li>
+            <li>Use the outward WorkflowExecution bridge to complete the matching human task with the same actor and exact decision/handoff digest.</li>
+          </ol>
+        </section>
+        <section class="content-section" id="refusals">
+          <h2>Failure and refusal behavior</h2>
+          <p>Screening rejects raw Search input, unlocked/stale candidate sets, wrong Protocol/criteria stage, invalid verdict, missing rationale, unknown reason, automation finalization, unauthorized reviewer/adjudicator, duplicate actor slot, invalid hash chain, stale request, correction of another actor or noncurrent record, adjudication source mismatch, incomplete invalidation, unresolved conflict, insufficient reviews, and premature handoff.</p>
+        </section>
+        <section class="content-section" id="evidence">
+          <h2>Tests, integration, and nonclaims</h2>
+          <p><a href="https://github.com/nexus-scholar/core-csharp/blob/main/tests/NexusScholar.Core.Tests/ScreeningServiceTests.cs">ScreeningServiceTests</a>, conduct tests in <a href="https://github.com/nexus-scholar/core-csharp/blob/main/tests/NexusScholar.Conformance.Tests/ScreeningConductFixtureTests.cs">ScreeningConductFixtureTests</a>, and the <a href="https://github.com/nexus-scholar/core-csharp/tree/main/fixtures/conformance/screening-conduct">conduct fixture pack</a> cover single/dual review, conflicts, same-actor refusal, adjudication, invalidation, and handoff. Gate closure is recorded in <a href="https://github.com/nexus-scholar/core-csharp/blob/main/docs/gates/FE-04-TITLE-ABSTRACT-SCREENING-EVIDENCE.md">FE-04 completion evidence</a>.</p>
+          <p>AppServices/ResearchWorkspace can commit Screening and its matching Workflow event under one lock and revision. CLI exposes integrity/status only because process entry cannot yet resolve full Protocol/Workflow authority. The module makes no reviewer-assignment UI authority, AI-quality, database, API, cloud, multi-user, production, or broad PHP compatibility claim.</p>
         </section>
       </div>
       <aside class="doc-aside">
-        <section class="doc-card">
-          <h2>At a glance</h2>
-          <ul class="link-list">
-            <li>Primary ADR: `ADR 0013`</li>
-            <li>Status: implemented local contract</li>
-            <li>Input: locked candidate set</li>
-            <li>Final authority: human actor only</li>
-          </ul>
-        </section>
-        <section class="doc-card">
-          <h2>Canonical verdicts</h2>
-          <ul class="link-list">
-            <li>`include`</li>
-            <li>`exclude`</li>
-            <li>`needs_review`</li>
-            <li>adjudication is a decision kind, not a verdict</li>
-          </ul>
-        </section>
+        <section class="doc-card"><h2>Implementation status</h2><p>FE-04 local conduct and verified handoff are complete. CLI mutation and multi-user collaboration are not admitted.</p></section>
+        <section class="doc-card"><h2>Decision kinds</h2><ul class="link-list"><li>Review</li><li>Correction</li><li>Adjudication</li></ul></section>
+        <section class="doc-card"><h2>Depends inward</h2><p><a href="../kernel/">Kernel</a>, <a href="../protocol/">Protocol</a>, and <a href="../deduplication/">Deduplication</a>. Snapshot binding is an outward bridge.</p></section>
+        <section class="doc-card"><h2>Next stage</h2><p><a href="../fulltext/">Full Text</a> admits only candidates from a verified include handoff.</p></section>
       </aside>
     </div>
   </main>
-  <footer class="site-footer"><p>Screening module documentation.</p></footer>
+  <footer class="site-footer"><p>Screening developer guide · suggestions remain proposals; humans decide.</p></footer>
   <script src="../../../assets/js/site.js"></script>
 </body>
 </html>

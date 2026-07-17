@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Developer guide to the Nexus Scholar append-only workflow execution state machine, authority policy, hash chain, attempts, invalidation, replay, and concurrency.">
+  <title>Workflow Execution developer guide - Nexus Scholar Core</title>
+  <link rel="stylesheet" href="../../../assets/css/site.css">
+</head>
+<body>
+  <a class="skip-link" href="#content">Skip to content</a>
+  <div class="release-status" role="status">Early alpha. Not production-ready. No package publication or broad PHP compatibility claim.</div>
+  <header class="site-header"><nav class="nav" aria-label="Primary navigation">
+    <a class="brand" href="../../../"><span class="brand-mark">NS</span><span>Nexus Scholar Core</span></a><button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-links">Menu</button>
+    <div class="nav-links" id="nav-links"><a href="../../../developers/" aria-current="page">Developers</a><a href="../../../tutorials/">Tutorials</a><a href="../../../blog/">Blog</a><a href="../../../about/">About</a><a href="https://github.com/nexus-scholar/core-csharp">GitHub</a></div>
+  </nav></header>
+  <main class="page doc-page" id="content">
+    <p class="eyebrow">Execution · FE-03 · NexusScholar.WorkflowExecution</p>
+    <h1>Workflow Execution</h1>
+    <p class="lede">A protocol-bound, append-only state machine over a verified workflow DAG. Every accepted transition is a canonical event in one replayable hash chain.</p>
+    <div class="doc-shell">
+      <div class="doc-main">
+        <section class="content-section" id="boundary">
+          <h2>Purpose and authority boundary</h2>
+          <p>Workflow Execution records what happened to planned nodes without adding mutable status to the compiled Workflow. It owns execution authority policy, the journal header, canonical transition events, attempts, replay, invalidation propagation, and successor binding. It does not own Screening or Full Text decisions, scheduler behavior, storage, plugin execution, or model execution.</p>
+          <p class="section-note"><strong>Separation:</strong> Workflow owns the immutable DAG; WorkflowExecution owns the transition journal; conduct modules own scientific decisions; Provenance receives an outward projection. A completed execution node proves that a valid record was referenced—not that the external work was scientifically correct.</p>
+        </section>
+
+        <section class="content-section" id="states">
+          <h2>Closed state machine</h2>
+          <pre aria-label="Workflow execution transition table"><code>pending ──dependencies-satisfied──→ ready
+ready ──work-started──────────────→ active
+active ──work-blocked─────────────→ blocked
+blocked ──block-cleared───────────→ active
+active ──work-completed───────────→ completed
+active ──work-failed──────────────→ failed
+failed ──retry-authorized─────────→ ready
+
+pending | ready | active | blocked | completed | failed
+  └─ work-invalidated → invalidated ──successor-bound→ superseded</code></pre>
+          <p>Root DAG nodes begin <code>ready</code>; nodes with predecessors begin <code>pending</code>. A dependency transition requires every predecessor to be completed and current. No transition outside the table is admitted. Invalidated and superseded nodes never resume in the same execution.</p>
+        </section>
+
+        <section class="content-section" id="surface">
+          <h2>Key types and services</h2>
+          <ul>
+            <li><code>WorkflowExecutionAuthorityPolicy</code> binds one execution scope, verified Workflow/Protocol, immutable actor-role assignments, and a human approver.</li>
+            <li><code>WorkflowExecutionHeader</code> binds the execution id, policy, workflow, protocol, node set, creating human, and chain-root digest.</li>
+            <li><code>WorkflowExecutionEvent</code> binds ordinal, prior head, request identity, node, prior/result states, actor, time, rationale, attempt, record references, approvals, errors, and invalidation/successor data.</li>
+            <li><code>WorkflowExecutionJournal</code> validates append commands, idempotency, optimistic concurrency, graph constraints, authority, outputs, invalidation closure, and replay.</li>
+            <li><code>WorkflowExecutionProjection</code> derives current node states and complete attempt history; it is not separately persisted scientific authority.</li>
+            <li><code>WorkflowExecutionCanonicalCodec</code> strictly rehydrates canonical records against a verified Workflow and <code>IWorkflowExecutionRecordResolver</code>.</li>
+          </ul>
+          <p>Source: <a href="https://github.com/nexus-scholar/core-csharp/tree/main/src/NexusScholar.WorkflowExecution">NexusScholar.WorkflowExecution</a>. Accepted design: <a href="https://github.com/nexus-scholar/core-csharp/blob/main/docs/adr/0030-workflow-execution-journal.md">ADR 0030</a>.</p>
+        </section>
+
+        <section class="content-section" id="chain">
+          <h2>Hash chain, requests, and concurrency</h2>
+          <p>The header digest is the chain root. Event one names it as <code>PreviousDigest</code>; later events name the immediately preceding event. Ordinals are one-based and contiguous. Event digest covers the full record. Removal, reordering, insertion, duplication, or cross-execution splicing therefore fails replay.</p>
+          <p>Every command supplies the expected current head and prior node state. A stale writer is rejected instead of rebased. <code>RequestDigest</code> is computed over the stable request content, while event time belongs to the resulting record. Repeating the same request id and digest is idempotent; reusing the id with different content is a conflict.</p>
+        </section>
+
+        <section class="content-section" id="attempts">
+          <h2>Attempts, people, approvals, and outputs</h2>
+          <p><code>work-started</code>, completion, and failure bind an attempt id and sequence. A retry appends a new attempt after explicit authorization; it never replaces failure history. Completion must include stable kind/id/digest references matching every artifact declared by the compiled node. Paths are never execution evidence identity.</p>
+          <p>Automated nodes may be performed by automation. Human and hybrid tasks require an actor and role admitted by both compiled gate/approval definitions and the digest-bound authority policy. Human-task completion must bind the owning conduct record. Approval nodes additionally enforce minimum count, required roles, distinct actors where configured, and human-only approval records.</p>
+        </section>
+
+        <section class="content-section" id="invalidation">
+          <h2>Invalidation and successor execution</h2>
+          <p>An invalidation binds an independently resolvable source record and the workflow invalidation-policy reference. The journal computes the full affected descendant closure and appends one ordered event per node; a partial batch is rejected because it would leave dependent work appearing current. A successor execution can be bound only after affected predecessor nodes are invalidated, producing <code>superseded</code> terminal state.</p>
+        </section>
+
+        <section class="content-section" id="flow">
+          <h2>Typical developer flow</h2>
+          <ol class="step-list">
+            <li>Resolve a <code>VerifiedWorkflowDefinition</code> and create a human-approved execution authority policy.</li>
+            <li>Create a header and journal; retain the header digest as the initial expected head.</li>
+            <li>Preview a transition against the current projection and expected state.</li>
+            <li>Construct stable input/output/conduct references through a resolver; append the event.</li>
+            <li>Persist canonical header/events atomically in order; do not persist projection as authority.</li>
+            <li>After restart, strictly rehydrate and replay the complete chain to reproduce states and head digest.</li>
+          </ol>
+        </section>
+
+        <section class="content-section" id="refusals">
+          <h2>Failure and refusal behavior</h2>
+          <p>Stable categories reject unverified authority, unknown nodes, dependency gaps, invalid transitions/attempts, stale heads, broken chains, forged roles, automation claiming human authority, missing declared outputs, invalid approvals, conflicting requests, partial invalidation, and bad successor binding. Canonical codecs reject unknown fields, noncanonical bytes, altered digests, gaps, and cross-journal records.</p>
+        </section>
+
+        <section class="content-section" id="evidence">
+          <h2>Tests, bridges, and nonclaims</h2>
+          <p><a href="https://github.com/nexus-scholar/core-csharp/blob/main/tests/NexusScholar.Conformance.Tests/WorkflowExecutionFixtureTests.cs">WorkflowExecutionFixtureTests</a> and the <a href="https://github.com/nexus-scholar/core-csharp/tree/main/fixtures/conformance/workflow-execution">FE-03 fixture pack</a> exercise replay and adversarial transitions. <a href="https://github.com/nexus-scholar/core-csharp/blob/main/docs/gates/FE-03-WORKFLOW-EXECUTION-JOURNAL-EVIDENCE.md">FE-03 completion evidence</a> records focused validation.</p>
+          <p><code>NexusScholar.WorkflowExecution.Provenance</code> projects accepted events outward; <code>NexusScholar.Screening.WorkflowExecution</code> binds conduct completion without reversing dependencies. The package provides no scheduler, queue, database, API, distributed lock, plugin host, AI runner, or guarantee of external side effects. A standalone CLI mutation remains outside the accepted authority path until durable verified Workflow resolution is available.</p>
+        </section>
+      </div>
+      <aside class="doc-aside">
+        <section class="doc-card"><h2>Implementation status</h2><p>FE-03 local contract complete. Scheduler, queue, plugin host, and standalone CLI mutation are not implemented here.</p></section>
+        <section class="doc-card"><h2>On this page</h2><ul class="link-list"><li><a href="#boundary">Boundary</a></li><li><a href="#states">States</a></li><li><a href="#chain">Hash chain</a></li><li><a href="#attempts">Attempts</a></li><li><a href="#invalidation">Invalidation</a></li><li><a href="#refusals">Refusals</a></li></ul></section>
+        <section class="doc-card"><h2>Depends inward</h2><p><a href="../kernel/">Kernel</a> and <a href="../workflow/">Workflow</a> only.</p></section>
+        <section class="doc-card"><h2>Canonical schemas</h2><ul class="link-list"><li>authority-policy / 1.0.0</li><li>header / 1.0.0</li><li>event / 1.0.0</li></ul></section>
+      </aside>
+    </div>
+  </main>
+  <footer class="site-footer"><p>Workflow Execution guide · append-only work history, deterministic replay.</p></footer>
+  <script src="../../../assets/js/site.js"></script>
+</body>
+</html>
