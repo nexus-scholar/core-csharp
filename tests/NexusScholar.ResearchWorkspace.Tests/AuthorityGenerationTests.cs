@@ -146,6 +146,21 @@ public sealed class AuthorityGenerationTests
     }
 
     [TestMethod]
+    public void Authority_chain_remains_current_after_unrelated_project_revision_when_pointer_is_unchanged()
+    {
+        using var workspace = Workspace.CreateAnalyzed();
+        var baseline = Initialize(workspace);
+        var source = DeduplicationAuthorityDigests.CreateResultDigestMaterial(workspace.Analysis.DeduplicationResult);
+        var advanced = baseline.Project with { Revision = baseline.Project.Revision + 1 };
+        ResearchWorkspaceStore.WriteProject(workspace.Location, advanced);
+
+        var chain = ResearchWorkspaceAuthorityChainVerifier.VerifyCurrent(workspace.Location, advanced, source);
+
+        Assert.AreEqual(baseline.Project.CurrentAuthorityGenerationId, chain.GenerationId);
+        Assert.IsTrue(chain.ProjectRevision < advanced.Revision);
+    }
+
+    [TestMethod]
     public void CommitDeduplicationDecision_exact_replay_returns_stored_transition_without_time_or_ids()
     {
         using var workspace = Workspace.CreateAnalyzed();

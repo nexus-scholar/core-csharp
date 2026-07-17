@@ -15,6 +15,7 @@ public static class ResearchWorkspacePaths
     public const string ScreeningGenerations = "nexus-output/screening-generations";
     public const string WorkflowExecutionJournals = "nexus-output/workflow-executions";
     public const string ScreeningConducts = "nexus-output/screening-conducts";
+    public const string ScreeningAuthorityPackages = "nexus-output/screening-authority-packages";
     public const string FullTextGenerations = "nexus-output/fulltext-generations";
     public const string Exports = "nexus-output/exports";
     public const string ExportLedgerHead = "nexus-output/exports/ledger-head.json";
@@ -50,6 +51,9 @@ public static class ResearchWorkspacePaths
 
     public static string ScreeningConductRoot(string conductId, string generationId) =>
         $"{ScreeningConducts}/conduct-{ContentDigest.Sha256Utf8(conductId).Value[..24]}/{generationId}";
+
+    public static string ScreeningAuthorityPackageRoot(string generationId) =>
+        $"{ScreeningAuthorityPackages}/{generationId}";
 
     public static string FullTextGenerationRoot(string candidateId, string generationId) =>
         $"{FullTextGenerations}/candidate-{ContentDigest.Sha256Utf8(candidateId).Value[..24]}/{generationId}";

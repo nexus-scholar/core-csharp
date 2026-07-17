@@ -24,6 +24,9 @@ public sealed record ResearchWorkspaceProject(
     string? CurrentScreeningConductGenerationId = null,
     string? ScreeningConductManifestPath = null,
     string? ScreeningConductManifestSha256 = null,
+    string? CurrentScreeningAuthorityPackageGenerationId = null,
+    string? ScreeningAuthorityPackageManifestPath = null,
+    string? ScreeningAuthorityPackageManifestSha256 = null,
     string? CurrentFullTextGenerationId = null,
     string? FullTextManifestPath = null,
     string? FullTextManifestSha256 = null)
@@ -109,6 +112,17 @@ public sealed record ResearchWorkspaceProject(
             CurrentScreeningConductGenerationId = generationId,
             ScreeningConductManifestPath = manifestPath,
             ScreeningConductManifestSha256 = manifestSha256
+        };
+
+    public ResearchWorkspaceProject CommitScreeningAuthorityPackageGeneration(
+        string generationId,
+        string manifestPath,
+        string manifestSha256) => this with
+        {
+            Revision = checked(Revision + 1),
+            CurrentScreeningAuthorityPackageGenerationId = generationId,
+            ScreeningAuthorityPackageManifestPath = manifestPath,
+            ScreeningAuthorityPackageManifestSha256 = manifestSha256
         };
 
     public ResearchWorkspaceProject CommitScreeningAndWorkflowExecutionGenerations(

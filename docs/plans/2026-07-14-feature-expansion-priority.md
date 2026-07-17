@@ -547,11 +547,11 @@ fixtures, and package-boundary justification.
 
 ## FE-08 - Local Product Desktop Shell
 
-Status: slices 1 and 2 complete under ADR 0035. Slice 3 desktop deduplication
-review is active under ADR 0036 and
-`docs/gates/FE-08-DESKTOP-DEDUPLICATION-REVIEW-SLICE-3.md`. Slices 1 and 2 were
-closed under `docs/gates/FE-08-LOCAL-PRODUCT-DESKTOP-SLICES-1-2.md` and merged
-through PR 62 at `b40bba6` with branch and post-merge validation passed.
+Status: slices 1 through 4 complete. Slices 1 and 2 are governed by ADR 0035,
+Slice 3 desktop deduplication review by ADR 0036, and Slice 4 durable Screening
+authority resolution by ADR 0037 and
+`docs/gates/FE-08-SCREENING-AUTHORITY-RESOLUTION-SLICE-4.md`. The first desktop
+Screening decision remains deferred to an accepted Slice 5 gate.
 
 ### Outcome
 

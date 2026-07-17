@@ -33,7 +33,8 @@ public static class ResearchWorkspaceAuthorityChainVerifier
         }
         var loaded = Load(location, manifestPath, currentDigest, project.WorkspaceId, project.CurrentGenerationId!,
             analysisManifestDigest, sourceResult, new HashSet<string>(StringComparer.Ordinal));
-        if (!string.Equals(loaded.GenerationId, project.CurrentAuthorityGenerationId, StringComparison.Ordinal) || loaded.ProjectRevision != project.Revision)
+        if (!string.Equals(loaded.GenerationId, project.CurrentAuthorityGenerationId, StringComparison.Ordinal) ||
+            loaded.ProjectRevision > project.Revision)
         {
             throw new InvalidOperationException("Current authority generation does not match the project pointer.");
         }
@@ -135,7 +136,7 @@ public static class ResearchWorkspaceAuthorityChainVerifier
         var predecessor = Load(location, predecessorPath, ContentDigest.Parse(manifest.PredecessorAuthorityGenerationManifestSha256),
             workspaceId, sourceAnalysisGenerationId, sourceAnalysisManifestDigest, sourceResult, visited);
         if (!string.Equals(predecessor.GenerationId, manifest.PredecessorAuthorityGenerationId, StringComparison.Ordinal) ||
-            manifest.ProjectRevision != checked(predecessor.ProjectRevision + 1))
+            manifest.ProjectRevision <= predecessor.ProjectRevision)
             throw new InvalidOperationException("Successor authority predecessor identity or revision is invalid.");
         var generationRoot = ResearchWorkspacePaths.InProject(location.RootDirectory,
             ResearchWorkspacePaths.AuthorityGenerationRoot(manifest.AuthorityGenerationId));

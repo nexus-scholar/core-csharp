@@ -1,12 +1,12 @@
 # Merge Queue
 
-Status date: 2026-07-14
+Status date: 2026-07-17
 
 ## Current Queue
 
 | Order | Gate | Scope | Status |
 |---|---|---|---|
-| 1 | FE-01 | Decision-and-snapshot authority implementation on `cdx/fe-01-decision-snapshot-authority` | In progress |
+| 1 | FE-08 Slice 4 | Durable Screening authority resolution on `cdx/fe-08-slice-4-screening-authority` | In progress |
 
 Recently landed:
 
@@ -26,7 +26,14 @@ Recently landed:
 | #53 | Hardening 29 Phase 7 closeout | Landed |
 | #54 | Hardening 30 post-Phase 7 remediation | Landed |
 | #55 | Hardening 30 protected-main closeout | Landed |
+| #62 | FE-08 desktop slices 1 and 2 | Landed |
+| #64 | FE-08 Slice 3 desktop deduplication review | Landed |
+| #65 | FE-08 Slice 3 closeout | Landed |
 
 ## Do Not Queue
 
-ADR 0028 authorizes only the FE-01 baseline authority-initialization scope. Do not queue FE-02 decision append or later package publication, signing, live providers, scraping, persistence/API/cloud, product UI, PDF/OCR, model calls, executable merge decisions, or compatibility claims without the relevant accepted ADR and gate.
+ADR 0037 authorizes authority-package persistence, verification, and read-only
+desktop readiness only. Do not queue desktop Screening mutation, Workflow
+completion, Protocol or criteria authoring, live providers, scraping, API/cloud,
+AI, plugin execution, package publication, or broader compatibility claims
+without the relevant accepted ADR and gate.

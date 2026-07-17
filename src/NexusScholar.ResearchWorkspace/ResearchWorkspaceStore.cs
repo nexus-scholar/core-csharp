@@ -189,6 +189,16 @@ public static class ResearchWorkspaceStore
             throw new JsonException("Screening conduct pointer fields must be safe and workspace-relative.");
         }
 
+        if ((project.CurrentScreeningAuthorityPackageGenerationId is null) != (project.ScreeningAuthorityPackageManifestPath is null) ||
+            (project.CurrentScreeningAuthorityPackageGenerationId is null) != (project.ScreeningAuthorityPackageManifestSha256 is null) ||
+            project.CurrentScreeningAuthorityPackageGenerationId is not null &&
+            (!IsSafeIdentifier(project.CurrentScreeningAuthorityPackageGenerationId) ||
+             !IsWorkspaceRelative(project.ScreeningAuthorityPackageManifestPath!) ||
+             !TryValidateRawDigest(project.ScreeningAuthorityPackageManifestSha256!)))
+        {
+            throw new JsonException("Screening authority package pointer is incomplete or invalid.");
+        }
+
     }
 
     private static bool IsSafeIdentifier(string? value) =>
