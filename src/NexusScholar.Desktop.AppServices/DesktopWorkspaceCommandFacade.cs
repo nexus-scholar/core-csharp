@@ -3,7 +3,7 @@ using NexusScholar.ResearchWorkspace;
 
 namespace NexusScholar.Desktop.AppServices;
 
-public sealed class DesktopWorkspaceCommandFacade
+public sealed partial class DesktopWorkspaceCommandFacade
 {
     private static readonly string[] OperationalNonClaims =
     {
@@ -26,6 +26,10 @@ public sealed class DesktopWorkspaceCommandFacade
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or System.Text.Json.JsonException)
         {
             return Failed(SafeFailure("The workspace could not be opened", exception));
+        }
+        catch (InvalidOperationException)
+        {
+            return Recovery("The workspace authority or generated evidence failed verification.");
         }
     }
 

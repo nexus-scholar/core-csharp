@@ -31,9 +31,19 @@ public static class ResearchWorkspaceReadModelBuilder
         }
 
         var verification = ResearchWorkspaceVerifier.Verify(location, project);
-        _ = ResearchWorkspaceGenerationVerifier.VerifyCurrent(location, project);
+        _ = ResearchWorkspaceGenerationVerifier.VerifyCurrent(location, project, allowVerifiedAuthoritySuccessor: true);
         var traces = LoadImportTraces(location, project);
         var deduplicationResult = TryReadDeduplicationResult(location, project);
+        if (project.CurrentAuthorityGenerationId is not null)
+        {
+            if (deduplicationResult is null)
+            {
+                throw new InvalidOperationException("Current authority requires its bound deduplication result.");
+            }
+
+            var source = DeduplicationAuthorityDigests.CreateResultDigestMaterial(deduplicationResult);
+            _ = ResearchWorkspaceAuthorityChainVerifier.VerifyCurrent(location, project, source);
+        }
         var workspacePlan = TryReadWorkspacePlan(location, project);
         var reviewReportPresent = project.Outputs.TryGetValue("reviewReport", out var reviewReportPath) &&
             File.Exists(ResearchWorkspacePaths.InProject(location.RootDirectory, reviewReportPath));

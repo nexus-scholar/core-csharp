@@ -40,7 +40,10 @@ Hardening Phases 1-7 and the Hardening 30 corrective closeout are complete on pr
 
 - `docs/plans/2026-07-14-feature-expansion-priority.md`
 
-The roadmap establishes the dependency-ordered feature sequence FE-01 through FE-12. FE-01 through FE-04 are complete under ADRs 0028 through 0031. FE-05 is the next planning target; later features remain unauthorized.
+The roadmap establishes the dependency-ordered feature sequence FE-01 through
+FE-12. FE-01 through FE-07 and FE-08 slices 1 and 2 are complete. FE-08 Slice 3
+desktop deduplication review is active under ADR 0036; later scientific desktop
+commands remain unauthorized.
 
 Completed hardening references remain:
 
@@ -57,7 +60,11 @@ The completed dependency order was:
 6. release engineering;
 7. PHP compatibility evidence only after local correctness.
 
-Hardening 30 corrected the post-phase review findings in AI proposal authority, Full Text rehydration, Search import parsing, compatibility-evidence guards, package version identity, and operating documentation. FE-01 through FE-04 are complete. FE-05 local Full Text workflow is the next planning target.
+Hardening 30 corrected the post-phase review findings in AI proposal authority,
+Full Text rehydration, Search import parsing, compatibility-evidence guards,
+package version identity, and operating documentation. FE-01 through FE-07 and
+FE-08 slices 1 and 2 are complete. FE-08 Slice 3 is the active implementation
+gate.
 
 ## Deferred Until Their Feature Gate
 

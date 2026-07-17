@@ -79,6 +79,154 @@ public sealed class DeduplicationDecideCommandTests
         Assert.AreEqual(action, chain.ActiveDecisions.Single().ActionType);
     }
 
+    [TestMethod]
+    public void Structured_review_operation_inspects_previews_and_commits_the_verified_authority_chain()
+    {
+        using var workspace = TestWorkspace.Create();
+        var queue = ResearchWorkspaceDeduplicationReview.Inspect(workspace.Root);
+        var request = new ResearchWorkspaceDeduplicationReviewRequest(
+            workspace.Root, workspace.TargetId, DeduplicationAuthorityPolicyConstants.MergeAction,
+            "duplicate", "Reviewed as duplicate.", "alice", "owner", null, Now);
+
+        var preview = ResearchWorkspaceDeduplicationReview.Preview(request);
+        var before = ResearchWorkspaceStore.ReadProject(workspace.Location.ProjectFilePath);
+        var committed = ResearchWorkspaceDeduplicationReview.Commit(preview);
+        var after = ResearchWorkspaceStore.ReadProject(workspace.Location.ProjectFilePath);
+
+        Assert.IsTrue(queue.Completed, queue.Message);
+        Assert.AreEqual(workspace.TargetId, queue.Targets.Single().TargetId);
+        CollectionAssert.Contains(queue.Policy!.AllowedActions.ToList(), DeduplicationAuthorityPolicyConstants.MergeAction);
+        Assert.IsTrue(preview.IsReady, preview.Message);
+        Assert.AreEqual("alice", preview.ActorId);
+        Assert.IsTrue(preview.MembershipChanges);
+        Assert.IsTrue(committed.Completed, committed.Message);
+        Assert.AreEqual(before.Revision + 1, after.Revision);
+        Assert.IsNotNull(committed.DecisionId);
+    }
+
+    [TestMethod]
+    public void Structured_review_preview_rejects_unauthorized_actor_role()
+    {
+        using var workspace = TestWorkspace.Create();
+
+        var preview = ResearchWorkspaceDeduplicationReview.Preview(
+            new ResearchWorkspaceDeduplicationReviewRequest(
+                workspace.Root, workspace.TargetId, DeduplicationAuthorityPolicyConstants.MergeAction,
+                "duplicate", "Reviewed as duplicate.", "mallory", "owner", null, Now));
+
+        Assert.AreEqual(ResearchWorkspaceOperationStatus.Failed, preview.Status);
+        StringAssert.Contains(preview.Message, DeduplicationReviewCommandErrorCodes.UnauthorizedActor);
+    }
+
+    [TestMethod]
+    public void Structured_review_commit_rejects_changed_preview_binding_as_stale()
+    {
+        using var workspace = TestWorkspace.Create();
+        var preview = ResearchWorkspaceDeduplicationReview.Preview(
+            new ResearchWorkspaceDeduplicationReviewRequest(
+                workspace.Root, workspace.TargetId, DeduplicationAuthorityPolicyConstants.KeepSeparateAction,
+                "different", null, "alice", "owner", null, Now));
+
+        var result = ResearchWorkspaceDeduplicationReview.Commit(
+            preview with { ExpectedProjectRevision = preview.ExpectedProjectRevision + 1 });
+
+        Assert.AreEqual(ResearchWorkspaceOperationStatus.Stale, result.Status);
+        var project = ResearchWorkspaceStore.ReadProject(workspace.Location.ProjectFilePath);
+        Assert.AreEqual(preview.ExpectedProjectRevision, project.Revision);
+    }
+
+    [TestMethod]
+    public void Structured_review_commit_reports_workspace_lock_as_recovery_required()
+    {
+        using var workspace = TestWorkspace.Create();
+        var preview = ResearchWorkspaceDeduplicationReview.Preview(
+            new ResearchWorkspaceDeduplicationReviewRequest(
+                workspace.Root, workspace.TargetId, DeduplicationAuthorityPolicyConstants.MarkUnresolvedAction,
+                "uncertain", null, "alice", "owner", null, Now));
+        using var workspaceLock = new FileStream(
+            Path.Combine(workspace.Root, ResearchWorkspacePaths.ProjectLockFileName),
+            FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
+
+        var result = ResearchWorkspaceDeduplicationReview.Commit(preview);
+
+        Assert.AreEqual(ResearchWorkspaceOperationStatus.RecoveryRequired, result.Status);
+    }
+
+    [TestMethod]
+    public void Structured_review_queue_requires_exact_supersession_after_reopen()
+    {
+        using var workspace = TestWorkspace.Create();
+        var first = ResearchWorkspaceDeduplicationReview.Preview(
+            new ResearchWorkspaceDeduplicationReviewRequest(
+                workspace.Root, workspace.TargetId, DeduplicationAuthorityPolicyConstants.KeepSeparateAction,
+                "different", null, "alice", "owner", null, Now));
+        var firstCommit = ResearchWorkspaceDeduplicationReview.Commit(first);
+
+        var reopened = ResearchWorkspaceDeduplicationReview.Inspect(workspace.Root);
+        var active = reopened.Targets.Single().ActiveDecisions.Single();
+        var freshSecond = ResearchWorkspaceDeduplicationReview.Preview(
+            new ResearchWorkspaceDeduplicationReviewRequest(
+                workspace.Root, workspace.TargetId, DeduplicationAuthorityPolicyConstants.MarkUnresolvedAction,
+                "uncertain", null, "alice", "owner", null, Now.AddMinutes(1)));
+        var correction = ResearchWorkspaceDeduplicationReview.Preview(
+            new ResearchWorkspaceDeduplicationReviewRequest(
+                workspace.Root, workspace.TargetId, DeduplicationAuthorityPolicyConstants.MarkUnresolvedAction,
+                "uncertain", null, "alice", "owner", active.DecisionId, Now.AddMinutes(1)));
+
+        Assert.IsTrue(firstCommit.Completed, firstCommit.Message);
+        Assert.AreEqual(firstCommit.DecisionId, active.DecisionId);
+        Assert.AreEqual(ResearchWorkspaceOperationStatus.Failed, freshSecond.Status);
+        StringAssert.Contains(freshSecond.Message, "exact active decision id");
+        Assert.IsTrue(correction.IsReady, correction.Message);
+        Assert.AreEqual(active.DecisionDigest, correction.SupersedesDecisionDigest);
+    }
+
+    [TestMethod]
+    public void Structured_review_exact_preview_retry_is_idempotent()
+    {
+        using var workspace = TestWorkspace.Create();
+        var preview = ResearchWorkspaceDeduplicationReview.Preview(
+            new ResearchWorkspaceDeduplicationReviewRequest(
+                workspace.Root, workspace.TargetId, DeduplicationAuthorityPolicyConstants.MergeAction,
+                "duplicate", "Reviewed as duplicate.", "alice", "owner", null, Now));
+
+        var first = ResearchWorkspaceDeduplicationReview.Commit(preview);
+        var afterFirst = ResearchWorkspaceStore.ReadProject(workspace.Location.ProjectFilePath);
+        var replay = ResearchWorkspaceDeduplicationReview.Commit(preview);
+        var afterReplay = ResearchWorkspaceStore.ReadProject(workspace.Location.ProjectFilePath);
+
+        Assert.IsTrue(first.Completed, first.Message);
+        Assert.IsTrue(replay.Completed, replay.Message);
+        Assert.IsTrue(replay.AlreadyApplied);
+        Assert.AreEqual(first.DecisionId, replay.DecisionId);
+        Assert.AreEqual(afterFirst.Revision, afterReplay.Revision);
+    }
+
+    [TestMethod]
+    public void Structured_review_commit_classifies_same_target_authority_race_as_stale()
+    {
+        using var workspace = TestWorkspace.Create();
+        var firstCaller = ResearchWorkspaceDeduplicationReview.Preview(
+            new ResearchWorkspaceDeduplicationReviewRequest(
+                workspace.Root, workspace.TargetId, DeduplicationAuthorityPolicyConstants.KeepSeparateAction,
+                "different", null, "alice", "owner", null, Now));
+        var secondCaller = ResearchWorkspaceDeduplicationReview.Preview(
+            new ResearchWorkspaceDeduplicationReviewRequest(
+                workspace.Root, workspace.TargetId, DeduplicationAuthorityPolicyConstants.MarkUnresolvedAction,
+                "uncertain", null, "alice", "owner", null, Now));
+
+        var winningCommit = ResearchWorkspaceDeduplicationReview.Commit(secondCaller);
+        var staleCommit = ResearchWorkspaceDeduplicationReview.Commit(firstCaller);
+
+        Assert.IsTrue(winningCommit.Completed, winningCommit.Message);
+        Assert.AreEqual(ResearchWorkspaceOperationStatus.Stale, staleCommit.Status);
+        var chain = ResearchWorkspaceAuthorityChainVerifier.VerifyCurrent(
+            workspace.Location,
+            ResearchWorkspaceStore.ReadProject(workspace.Location.ProjectFilePath),
+            workspace.Source);
+        Assert.AreEqual(1, chain.Transitions.Count);
+    }
+
     private static int Run(string root, string[] args, out string output, out string error)
     {
         using var stdout = new StringWriter();

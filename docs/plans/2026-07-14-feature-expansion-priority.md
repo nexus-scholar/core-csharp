@@ -3,8 +3,8 @@
 Status: active successor roadmap after Hardening 30.
 
 Current state: FE-01 through FE-07 and FE-08 slices 1 and 2 are complete. FE-08
-slices 1 and 2 merged through PR 62 under ADR 0035 with branch and post-merge
-validation recorded in `docs/release/FE-08-SLICES-1-2-COMPLETION-EVIDENCE.md`.
+Slice 3 desktop deduplication review is active under ADR 0036 and
+`docs/gates/FE-08-DESKTOP-DEDUPLICATION-REVIEW-SLICE-3.md`.
 FE-09 through FE-12 remain sequenced future work and are not implementation-
 authorized by this roadmap.
 
@@ -547,9 +547,11 @@ fixtures, and package-boundary justification.
 
 ## FE-08 - Local Product Desktop Shell
 
-Status: slices 1 and 2 complete under ADR 0035 and
-`docs/gates/FE-08-LOCAL-PRODUCT-DESKTOP-SLICES-1-2.md`; merged through PR 62 at
-`b40bba6` with branch and post-merge validation passed.
+Status: slices 1 and 2 complete under ADR 0035. Slice 3 desktop deduplication
+review is active under ADR 0036 and
+`docs/gates/FE-08-DESKTOP-DEDUPLICATION-REVIEW-SLICE-3.md`. Slices 1 and 2 were
+closed under `docs/gates/FE-08-LOCAL-PRODUCT-DESKTOP-SLICES-1-2.md` and merged
+through PR 62 at `b40bba6` with branch and post-merge validation passed.
 
 ### Outcome
 
@@ -837,9 +839,10 @@ become compatibility obligations.
 
 ## Immediate Next Gate
 
-FE-04 Title and Abstract Screening is complete under ADR 0031. The next gate is
-FE-05 Local Full Text Workflow, consuming only the verified FE-04 handoff and
-preserving digest-bound local artifact authority.
+FE-08 Slice 3 desktop deduplication review is active under ADR 0036. It admits
+only the existing FE-02 human-authorized decision path through a shared
+ResearchWorkspace operation. Desktop Screening remains deferred until a trusted
+resolver can reconstruct the verified authority package required by ADR 0031.
 
 ## Verification Baseline
 

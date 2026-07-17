@@ -33,6 +33,14 @@ public sealed class MainWindow : Window
     private readonly ComboBox _format = Choice(new[] { "CSV", "RIS", "BibTeX" });
     private readonly TextBox _inputId = Input("Optional input id");
     private readonly TextBox _query = Input("Optional query text");
+    private readonly ComboBox _reviewTarget = Choice(Array.Empty<string>());
+    private readonly ComboBox _reviewAction = Choice(Array.Empty<string>());
+    private readonly ComboBox _reviewReason = Choice(Array.Empty<string>());
+    private readonly ComboBox _supersedesDecision = Choice(Array.Empty<string>());
+    private readonly TextBox _actorId = Input("Human actor id");
+    private readonly TextBox _actorRole = Input("Policy-assigned role");
+    private readonly TextBox _rationale = Input("Decision rationale");
+    private readonly Button _reviewDecision = PrimaryButton("Review decision effects");
     private readonly StackPanel _workspaceContent = new() { Spacing = 18 };
     private readonly StackPanel _confirmationContent = new() { Spacing = 10 };
     private readonly TextBlock _status = new() { TextWrapping = TextWrapping.Wrap };
@@ -56,6 +64,25 @@ public sealed class MainWindow : Window
 
         _source.SelectedIndex = 0;
         _format.SelectedIndex = 0;
+        _reviewAction.SelectionChanged += (_, _) => { UpdateReviewReasons(); UpdateReviewPreviewAvailability(); };
+        _reviewTarget.SelectionChanged += (_, _) => { UpdateSupersessionChoices(); UpdateReviewPreviewAvailability(); };
+        _reviewReason.SelectionChanged += (_, _) => UpdateReviewPreviewAvailability();
+        _actorId.TextChanged += (_, _) => UpdateReviewPreviewAvailability();
+        _actorRole.TextChanged += (_, _) => UpdateReviewPreviewAvailability();
+        _reviewDecision.Click += (_, _) =>
+        {
+            _viewModel.PreviewDeduplicationReview(
+                _reviewTarget.SelectedItem?.ToString() ?? string.Empty,
+                _reviewAction.SelectedItem?.ToString() ?? string.Empty,
+                _reviewReason.SelectedItem?.ToString() ?? string.Empty,
+                _rationale.Text,
+                _actorId.Text ?? string.Empty,
+                _actorRole.Text ?? string.Empty,
+                _supersedesDecision.SelectedItem?.ToString(),
+                DateTimeOffset.UtcNow);
+            Render();
+        };
+        UpdateReviewPreviewAvailability();
         _workspacePath.Text = string.IsNullOrWhiteSpace(initialWorkspacePath) ? string.Empty : initialWorkspacePath;
         if (!string.IsNullOrWhiteSpace(initialWorkspacePath))
         {
@@ -149,12 +176,13 @@ public sealed class MainWindow : Window
                 Foreground = Surface,
                 BorderThickness = new Thickness(0),
                 CornerRadius = new CornerRadius(4),
-                IsEnabled = label is "Workspace" or "Imports" or "Evidence"
+                IsEnabled = label is "Workspace" or "Imports" or "Evidence" ||
+                    label == "Review queue" && _viewModel.ReviewQueue is not null
             });
         }
         panel.Children.Add(new TextBlock
         {
-            Text = "Scientific decisions are unavailable in this slice.",
+            Text = "Human-authorized deduplication review is available when a verified authority queue is present.",
             TextWrapping = TextWrapping.Wrap,
             Foreground = Brush("#bcd6d1"),
             FontSize = 12,
@@ -204,11 +232,16 @@ public sealed class MainWindow : Window
 
     private void Render()
     {
+        DetachReusableWorkspaceControls();
         _workspaceContent.Children.Clear();
         _workspaceContent.Children.Add(BuildWorkspacePicker());
         if (_viewModel.HasWorkspace)
         {
             _workspaceContent.Children.Add(BuildOverview());
+            if (_viewModel.ReviewQueue is { } queue)
+            {
+                _workspaceContent.Children.Add(BuildDeduplicationReview(queue));
+            }
             _workspaceContent.Children.Add(BuildImportForm());
         }
         else
@@ -224,6 +257,37 @@ public sealed class MainWindow : Window
             DesktopWorkspaceCommandStatus.Stale or DesktopWorkspaceCommandStatus.RecoveryRequired or DesktopWorkspaceCommandStatus.Attention => Warning,
             _ => Text
         };
+    }
+
+    private void DetachReusableWorkspaceControls()
+    {
+        Control[] controls =
+        [
+            _workspacePath, _title, _workspaceId, _sourcePath, _source, _format,
+            _inputId, _query, _reviewTarget, _reviewAction, _reviewReason,
+            _supersedesDecision, _actorId, _actorRole, _rationale, _reviewDecision
+        ];
+
+        foreach (var control in controls)
+        {
+            DetachFromParent(control);
+        }
+    }
+
+    internal static void DetachFromParent(Control control)
+    {
+        switch (control.Parent)
+        {
+            case Panel panel:
+                panel.Children.Remove(control);
+                break;
+            case Decorator decorator when ReferenceEquals(decorator.Child, control):
+                decorator.Child = null;
+                break;
+            case ContentControl contentControl when ReferenceEquals(contentControl.Content, control):
+                contentControl.Content = null;
+                break;
+        }
     }
 
     private Control BuildWorkspacePicker()
@@ -365,6 +429,115 @@ public sealed class MainWindow : Window
         return Section("Import local evidence", "Only researcher-selected files are read. No provider or network call is available.", panel);
     }
 
+    private Control BuildDeduplicationReview(DesktopDeduplicationReviewQueue queue)
+    {
+        var panel = new StackPanel { Spacing = 10 };
+        if (queue.Targets.Count == 0)
+        {
+            panel.Children.Add(new TextBlock
+            {
+                Text = "No current deduplication review targets remain.",
+                Foreground = Text
+            });
+            return Section("Deduplication review", "Verified policy and authority state.", panel);
+        }
+
+        _reviewTarget.ItemsSource = queue.Targets.Select(target => target.TargetId).ToArray();
+        _reviewTarget.SelectedIndex = -1;
+        _reviewAction.ItemsSource = queue.Policy.AllowedActions.ToArray();
+        _reviewAction.SelectedIndex = -1;
+        UpdateReviewReasons();
+        UpdateSupersessionChoices();
+
+        panel.Children.Add(Labeled("Review target", _reviewTarget));
+        var actor = new Grid { ColumnSpacing = 10 };
+        actor.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
+        actor.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
+        Grid.SetColumn(_actorId, 0);
+        Grid.SetColumn(_actorRole, 1);
+        actor.Children.Add(_actorId);
+        actor.Children.Add(_actorRole);
+        panel.Children.Add(Labeled("Human actor and active role", actor));
+
+        var decision = new Grid { ColumnSpacing = 10 };
+        decision.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
+        decision.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
+        Grid.SetColumn(_reviewAction, 0);
+        Grid.SetColumn(_reviewReason, 1);
+        decision.Children.Add(_reviewAction);
+        decision.Children.Add(_reviewReason);
+        panel.Children.Add(Labeled("Policy action and reason", decision));
+        panel.Children.Add(Labeled("Rationale", _rationale));
+        if (_supersedesDecision.Items.Count > 0)
+        {
+            panel.Children.Add(Labeled("Correct active decision", _supersedesDecision));
+        }
+
+        var selected = SelectedReviewTarget();
+        if (selected is not null)
+        {
+            panel.Children.Add(new TextBlock
+            {
+                Text = $"Candidates: {string.Join(", ", selected.CandidateIds)}  |  Evidence: {selected.EvidenceIds.Count}  |  Active decisions: {selected.ActiveDecisions.Count}",
+                TextWrapping = TextWrapping.Wrap,
+                Foreground = Muted
+            });
+        }
+        panel.Children.Add(new TextBlock
+        {
+            Text = $"Policy: {queue.Policy.PolicyId} {queue.Policy.PolicyVersion}",
+            TextWrapping = TextWrapping.Wrap,
+            Foreground = Muted
+        });
+
+        UpdateReviewPreviewAvailability();
+        panel.Children.Add(_reviewDecision);
+        return Section("Deduplication review", "Every decision is checked against the verified local policy and requires explicit confirmation.", panel);
+    }
+
+    private DesktopDeduplicationReviewTarget? SelectedReviewTarget() =>
+        _viewModel.ReviewQueue?.Targets.SingleOrDefault(target =>
+            string.Equals(target.TargetId, _reviewTarget.SelectedItem?.ToString(), StringComparison.Ordinal));
+
+    private void UpdateReviewReasons()
+    {
+        var action = _reviewAction.SelectedItem?.ToString();
+        var reasons = action is not null && _viewModel.ReviewQueue?.Policy.ReasonCodesByAction.TryGetValue(action, out var values) == true
+            ? values
+            : Array.Empty<string>();
+        _reviewReason.ItemsSource = reasons.ToArray();
+        _reviewReason.SelectedIndex = -1;
+    }
+
+    private void UpdateSupersessionChoices()
+    {
+        var decisions = SelectedReviewTarget()?.ActiveDecisions ?? Array.Empty<DesktopDeduplicationActiveDecision>();
+        _supersedesDecision.ItemsSource = decisions.Select(item => item.DecisionId).ToArray();
+        _supersedesDecision.SelectedIndex = decisions.Count == 1 ? 0 : -1;
+    }
+
+    private void UpdateReviewPreviewAvailability()
+    {
+        _reviewDecision.IsEnabled = CanPreviewDeduplicationReview(
+            _reviewTarget.SelectedItem?.ToString(),
+            _reviewAction.SelectedItem?.ToString(),
+            _reviewReason.SelectedItem?.ToString(),
+            _actorId.Text,
+            _actorRole.Text);
+    }
+
+    internal static bool CanPreviewDeduplicationReview(
+        string? target,
+        string? action,
+        string? reason,
+        string? actorId,
+        string? actorRole) =>
+        !string.IsNullOrWhiteSpace(target) &&
+        !string.IsNullOrWhiteSpace(action) &&
+        !string.IsNullOrWhiteSpace(reason) &&
+        !string.IsNullOrWhiteSpace(actorId) &&
+        !string.IsNullOrWhiteSpace(actorRole);
+
     private void RenderConfirmation()
     {
         _confirmationContent.Children.Clear();
@@ -383,7 +556,7 @@ public sealed class MainWindow : Window
                 TextWrapping = TextWrapping.Wrap,
                 Foreground = Muted
             });
-            _confirmationContent.Children.Add(BoundaryNote());
+            _confirmationContent.Children.Add(BoundaryNote(scientificDecision: false));
             return;
         }
 
@@ -404,12 +577,12 @@ public sealed class MainWindow : Window
         }
         _confirmationContent.Children.Add(new TextBlock
         {
-            Text = $"Confirmation token: {_viewModel.PendingPreview!.ConfirmationToken}",
+            Text = $"Confirmation token: {_viewModel.PendingConfirmationToken}",
             FontSize = 11,
             TextWrapping = TextWrapping.Wrap,
             Foreground = Muted
         });
-        _confirmationContent.Children.Add(BoundaryNote());
+        _confirmationContent.Children.Add(BoundaryNote(_viewModel.PendingReviewPreview is not null));
         var confirm = PrimaryButton("Confirm exact effects");
         confirm.Click += (_, _) => { _viewModel.ConfirmPending(); Render(); };
         var cancel = SecondaryButton("Cancel");
@@ -418,7 +591,7 @@ public sealed class MainWindow : Window
         _confirmationContent.Children.Add(cancel);
     }
 
-    private static Control BoundaryNote() => new Border
+    private static Control BoundaryNote(bool scientificDecision) => new Border
     {
         Background = Brush("#fff6df"),
         BorderBrush = Brush("#e4c16c"),
@@ -427,7 +600,9 @@ public sealed class MainWindow : Window
         Padding = new Thickness(10),
         Child = new TextBlock
         {
-            Text = "Operational action only. No scientific actor, decision, provider, AI, or cloud authority is active.",
+            Text = scientificDecision
+                ? "Scientific decision: the named human actor and role must be assigned by the verified local policy. No authentication, provider, AI, or cloud authority is implied."
+                : "Operational action only. No scientific actor, decision, provider, AI, or cloud authority is active.",
             TextWrapping = TextWrapping.Wrap,
             Foreground = Warning
         }
