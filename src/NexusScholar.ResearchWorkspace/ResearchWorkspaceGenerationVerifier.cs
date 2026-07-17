@@ -9,7 +9,8 @@ public static class ResearchWorkspaceGenerationVerifier
 
     public static ResearchWorkspaceGenerationManifest? VerifyCurrent(
         ResearchWorkspaceLocation location,
-        ResearchWorkspaceProject project)
+        ResearchWorkspaceProject project,
+        bool allowVerifiedAuthoritySuccessor = false)
     {
         if (project.CurrentGenerationId is null)
         {
@@ -24,10 +25,14 @@ public static class ResearchWorkspaceGenerationVerifier
 
         var manifest = JsonSerializer.Deserialize<ResearchWorkspaceGenerationManifest>(File.ReadAllText(manifestPath), Options)
             ?? throw new JsonException("Generation manifest did not contain an object.");
+        var revisionMatches = manifest.ProjectRevision == project.Revision ||
+            allowVerifiedAuthoritySuccessor &&
+            manifest.ProjectRevision < project.Revision &&
+            project.CurrentAuthorityGenerationId is not null;
         if (!string.Equals(manifest.Schema, ResearchWorkspaceGenerationManifest.CurrentSchema, StringComparison.Ordinal) ||
             !string.Equals(manifest.GenerationId, project.CurrentGenerationId, StringComparison.Ordinal) ||
             !string.Equals(manifest.WorkspaceId, project.WorkspaceId, StringComparison.Ordinal) ||
-            manifest.ProjectRevision != project.Revision)
+            !revisionMatches)
         {
             throw new InvalidOperationException("The committed generation manifest is stale or belongs to another workspace.");
         }

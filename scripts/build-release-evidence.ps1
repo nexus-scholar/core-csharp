@@ -64,12 +64,23 @@ try {
             $_.FullName -notmatch '[\\/]tests[\\/]NexusScholar\.PackageSmoke[\\/]packages\.lock\.json$'
         } |
         Sort-Object FullName)
-    if ($lockFiles.Count -ne 31) {
-        throw "Expected exactly 31 solution restore lock files, found $($lockFiles.Count)."
+
+    [xml]$solution = Get-Content (Join-Path $root 'NexusScholar.Core.slnx') -Raw
+    $expectedLockPaths = @($solution.SelectNodes('//Project') | ForEach-Object {
+        $projectPath = Join-Path $root $_.Path
+        [IO.Path]::GetFullPath((Join-Path (Split-Path $projectPath -Parent) 'packages.lock.json'))
+    } | Sort-Object)
+    $actualLockPaths = @($lockFiles | ForEach-Object { $_.FullName } | Sort-Object)
+    $lockPathDifferences = @(Compare-Object $expectedLockPaths $actualLockPaths)
+    if ($lockPathDifferences.Count -ne 0) {
+        $details = ($lockPathDifferences | ForEach-Object { "$($_.SideIndicator) $($_.InputObject)" }) -join '; '
+        throw "Solution restore lock topology does not match NexusScholar.Core.slnx: $details"
     }
 
     function Get-RelativePath([string]$path) {
-        return [IO.Path]::GetRelativePath($root, $path).Replace('\\', '/')
+        $rootUri = [Uri]([IO.Path]::GetFullPath($root).TrimEnd([IO.Path]::DirectorySeparatorChar, [IO.Path]::AltDirectorySeparatorChar) + [IO.Path]::DirectorySeparatorChar)
+        $pathUri = [Uri]([IO.Path]::GetFullPath($path))
+        return [Uri]::UnescapeDataString($rootUri.MakeRelativeUri($pathUri).ToString()).Replace([IO.Path]::DirectorySeparatorChar, '/')
     }
 
     function Get-HashRecord([IO.FileInfo]$file) {
@@ -79,9 +90,20 @@ try {
         }
     }
 
+    function Get-Sha256Hex([byte[]]$bytes) {
+        $sha256 = [Security.Cryptography.SHA256]::Create()
+        try {
+            $hash = $sha256.ComputeHash($bytes)
+        }
+        finally {
+            $sha256.Dispose()
+        }
+        return [BitConverter]::ToString($hash).Replace('-', '').ToLowerInvariant()
+    }
+
     $locks = @($lockFiles | ForEach-Object { Get-HashRecord $_ })
     $lockMaterial = [Text.Encoding]::UTF8.GetBytes(($locks | ForEach-Object { "$($_.path)=$($_.sha256)" }) -join "`n")
-    $lockDigest = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($lockMaterial)).ToLowerInvariant()
+    $lockDigest = Get-Sha256Hex $lockMaterial
 
     $artifactFiles = @(Get-ChildItem $releaseDirectory -Recurse -File |
         Where-Object { $_.Name -ne 'release-evidence.json' } |
@@ -101,9 +123,9 @@ try {
         "version=$version"
     )
     $provenanceMaterial = [Text.Encoding]::UTF8.GetBytes($provenanceLines -join "`n")
-    $provenanceDigest = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($provenanceMaterial)).ToLowerInvariant()
+    $provenanceDigest = Get-Sha256Hex $provenanceMaterial
 
-    [ordered]@{
+    $evidenceJson = [ordered]@{
         schema = 'nexus.release-evidence.v1'
         version = $version
         commit = $commit
@@ -118,7 +140,11 @@ try {
         publication = 'validation-only'
         lockFiles = $locks
         artifacts = $artifacts
-    } | ConvertTo-Json -Depth 6 | Set-Content (Join-Path $releaseDirectory 'release-evidence.json') -Encoding utf8NoBOM
+    } | ConvertTo-Json -Depth 6
+    [IO.File]::WriteAllText(
+        (Join-Path $releaseDirectory 'release-evidence.json'),
+        $evidenceJson,
+        [Text.UTF8Encoding]::new($false))
 
     Write-Host "Release evidence passed: $($artifacts.Count) artifacts and $($lockFiles.Count) lock files bound to $commit."
 }

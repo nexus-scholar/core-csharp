@@ -4,9 +4,10 @@ This folder tracks UI and UX work for Nexus Scholar without changing Core scient
 
 The current UI lane has moved past preview-only work. FE-08 slices 1 and 2 add a
 local product host, structured desktop command facade, and safe open, initialize,
-local Search import, verify, and analyze workflows. The earlier preview remains a
-sample. Neither host is scientific authority, and scientific decisions remain
-unavailable.
+local Search import, verify, and analyze workflows. FE-08 Slice 3 adds the first
+human-authorized desktop scientific action: verified FE-02 deduplication review.
+The earlier preview remains a sample. The host is not scientific authority;
+policy-assigned human actors remain the authority.
 
 ## Documents
 
@@ -39,7 +40,8 @@ unavailable.
 - `samples/NexusScholar.Avalonia.Blocks.SampleHost`: local visual inspection host for those samples.
 - `samples/NexusScholar.Desktop.Preview`: Avalonia preview over local Research Workspace outputs, with UI-02A verify/analyze actions only.
 - `src/NexusScholar.Desktop.AppServices`: deterministic preview/confirmation and
-  stale-safe command facade for admitted desktop operations.
+  stale-safe command facade for admitted desktop operations and FE-02
+  deduplication review.
 - `src/NexusScholar.Desktop`: Windows-first local product host for FE-08 slices 1
   and 2.
 - `tests/NexusScholar.UiContracts.Tests`, `tests/NexusScholar.Avalonia.Blocks.Tests`,

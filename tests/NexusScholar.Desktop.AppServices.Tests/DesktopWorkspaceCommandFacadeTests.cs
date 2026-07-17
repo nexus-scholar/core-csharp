@@ -4,7 +4,9 @@ using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NexusScholar.Deduplication;
 using NexusScholar.Desktop.AppServices;
+using NexusScholar.Kernel;
 using NexusScholar.ResearchWorkspace;
 
 namespace NexusScholar.Desktop.AppServices.Tests;
@@ -469,6 +471,176 @@ public sealed class DesktopWorkspaceCommandFacadeTests
         AssertNoAbsolutePathsIn(analyzePreview.Message);
     }
 
+    [TestMethod]
+    public void Deduplication_review_queue_previews_and_commits_verified_human_decision()
+    {
+        var facade = new DesktopWorkspaceCommandFacade();
+        using var workspace = TemporaryAuthorityWorkspace.Create();
+
+        var queue = facade.LoadDeduplicationReviewQueue(workspace.Root);
+        var target = queue.Queue!.Targets.Single();
+        var preview = facade.PreviewDeduplicationReview(new DesktopDeduplicationReviewRequest(
+            workspace.Root,
+            target.TargetId,
+            DeduplicationAuthorityPolicyConstants.MergeAction,
+            "duplicate",
+            "Reviewed as the same work.",
+            "alice",
+            "owner",
+            null,
+            FixedTime));
+        var before = ResearchWorkspaceStore.ReadProject(workspace.Location.ProjectFilePath);
+
+        var committed = facade.ExecuteDeduplicationReview(preview.Preview!);
+        var after = ResearchWorkspaceStore.ReadProject(workspace.Location.ProjectFilePath);
+
+        Assert.AreEqual(DesktopWorkspaceCommandStatus.Attention, queue.Status);
+        Assert.IsTrue(preview.IsReady, preview.Message);
+        Assert.AreEqual("alice", preview.Preview!.ActorId);
+        Assert.IsTrue(committed.Completed, committed.Message);
+        Assert.AreEqual(before.Revision + 1, after.Revision);
+        Assert.IsNotNull(committed.DecisionId);
+        Assert.AreEqual(committed.DecisionId, committed.Queue!.Targets.Single().ActiveDecisions.Single().DecisionId);
+    }
+
+    [TestMethod]
+    public void Deduplication_review_confirmation_rejects_every_changed_authority_field()
+    {
+        var facade = new DesktopWorkspaceCommandFacade();
+        using var workspace = TemporaryAuthorityWorkspace.Create();
+        var target = facade.LoadDeduplicationReviewQueue(workspace.Root).Queue!.Targets.Single();
+        var preview = facade.PreviewDeduplicationReview(new DesktopDeduplicationReviewRequest(
+            workspace.Root, target.TargetId, DeduplicationAuthorityPolicyConstants.KeepSeparateAction,
+            "different", "Distinct records.", "alice", "owner", null, FixedTime)).Preview!;
+        var digest = ContentDigest.Sha256Utf8("tampered").ToString();
+        DesktopDeduplicationReviewPreview[] changed =
+        {
+            preview with { ExpectedProjectRevision = preview.ExpectedProjectRevision + 1 },
+            preview with { AuthorityManifestDigest = digest },
+            preview with { ActiveDecisionSetDigest = digest },
+            preview with { SourceResultDigest = digest },
+            preview with { SourceSnapshotDigest = digest },
+            preview with { TargetDigest = digest },
+            preview with { PolicyDigest = digest },
+            preview with { RequestDigest = digest },
+            preview with { Rationale = "Changed rationale." },
+            preview with { ActorId = "mallory" },
+            preview with { SupersedesDecisionDigest = digest },
+            preview with { AffectedCandidateIds = preview.AffectedCandidateIds.Reverse().ToArray() },
+            preview with { InvalidatedRecords = preview.InvalidatedRecords.Append("record:fake:" + digest).ToArray() },
+            preview with { ExpectedEffects = preview.ExpectedEffects.Append("hidden effect").ToArray() }
+        };
+
+        foreach (var item in changed)
+        {
+            var result = facade.ExecuteDeduplicationReview(item);
+            Assert.AreEqual(DesktopWorkspaceCommandStatus.Stale, result.Status);
+        }
+
+        var project = ResearchWorkspaceStore.ReadProject(workspace.Location.ProjectFilePath);
+        Assert.AreEqual(preview.ExpectedProjectRevision, project.Revision);
+    }
+
+    [TestMethod]
+    public void Deduplication_review_queue_fails_closed_without_an_authority_generation()
+    {
+        var facade = new DesktopWorkspaceCommandFacade();
+        using var workspace = TemporaryInitializedWorkspace.Create();
+
+        var result = facade.LoadDeduplicationReviewQueue(workspace.Root);
+
+        Assert.AreEqual(DesktopWorkspaceCommandStatus.Failed, result.Status);
+        Assert.IsNull(result.Queue);
+    }
+
+    [TestMethod]
+    public void Deduplication_review_queue_requires_recovery_for_corrupt_authority_bytes()
+    {
+        var facade = new DesktopWorkspaceCommandFacade();
+        using var workspace = TemporaryAuthorityWorkspace.Create();
+        var project = ResearchWorkspaceStore.ReadProject(workspace.Location.ProjectFilePath);
+        var manifestPath = ResearchWorkspacePaths.InProject(
+            workspace.Root,
+            project.AuthorityGenerationManifestPath!);
+        File.AppendAllText(manifestPath, "corrupt");
+
+        var result = facade.LoadDeduplicationReviewQueue(workspace.Root);
+
+        Assert.AreEqual(DesktopWorkspaceCommandStatus.RecoveryRequired, result.Status);
+        Assert.IsNull(result.Queue);
+    }
+
+    [TestMethod]
+    public void Deduplication_review_preview_rejects_unassigned_actor_role()
+    {
+        var facade = new DesktopWorkspaceCommandFacade();
+        using var workspace = TemporaryAuthorityWorkspace.Create();
+        var target = facade.LoadDeduplicationReviewQueue(workspace.Root).Queue!.Targets.Single();
+
+        var preview = facade.PreviewDeduplicationReview(new DesktopDeduplicationReviewRequest(
+            workspace.Root, target.TargetId, DeduplicationAuthorityPolicyConstants.MergeAction,
+            "duplicate", "Reviewed.", "mallory", "owner", null, FixedTime));
+
+        Assert.AreEqual(DesktopWorkspaceCommandStatus.Failed, preview.Status);
+        Assert.IsNull(preview.Preview);
+    }
+
+    [TestMethod]
+    public void Deduplication_review_exact_confirmation_retry_is_already_applied()
+    {
+        var facade = new DesktopWorkspaceCommandFacade();
+        using var workspace = TemporaryAuthorityWorkspace.Create();
+        var target = facade.LoadDeduplicationReviewQueue(workspace.Root).Queue!.Targets.Single();
+        var preview = facade.PreviewDeduplicationReview(new DesktopDeduplicationReviewRequest(
+            workspace.Root, target.TargetId, DeduplicationAuthorityPolicyConstants.MergeAction,
+            "duplicate", "Reviewed.", "alice", "owner", null, FixedTime)).Preview!;
+
+        var first = facade.ExecuteDeduplicationReview(preview);
+        var replay = facade.ExecuteDeduplicationReview(preview);
+
+        Assert.IsTrue(first.Completed, first.Message);
+        Assert.IsTrue(replay.Completed, replay.Message);
+        Assert.IsTrue(replay.AlreadyApplied);
+        Assert.AreEqual(first.DecisionId, replay.DecisionId);
+    }
+
+    [TestMethod]
+    public void Deduplication_review_commit_does_not_persist_desktop_confirmation_state()
+    {
+        var facade = new DesktopWorkspaceCommandFacade();
+        using var workspace = TemporaryAuthorityWorkspace.Create();
+        var target = facade.LoadDeduplicationReviewQueue(workspace.Root).Queue!.Targets.Single();
+        var preview = facade.PreviewDeduplicationReview(new DesktopDeduplicationReviewRequest(
+            workspace.Root, target.TargetId, DeduplicationAuthorityPolicyConstants.MergeAction,
+            "duplicate", "Same study.", "alice", "owner", null, FixedTime)).Preview!;
+
+        Assert.IsTrue(facade.ExecuteDeduplicationReview(preview).Completed);
+        var projectJson = File.ReadAllText(workspace.Location.ProjectFilePath);
+
+        Assert.IsFalse(projectJson.Contains("confirmationToken", StringComparison.OrdinalIgnoreCase));
+        Assert.IsFalse(projectJson.Contains("selectedIndex", StringComparison.OrdinalIgnoreCase));
+        Assert.IsFalse(projectJson.Contains("pendingReviewPreview", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [TestMethod]
+    public void Deduplication_review_same_target_authority_race_is_stale()
+    {
+        var facade = new DesktopWorkspaceCommandFacade();
+        using var workspace = TemporaryAuthorityWorkspace.Create();
+        var target = facade.LoadDeduplicationReviewQueue(workspace.Root).Queue!.Targets.Single();
+        var firstCaller = facade.PreviewDeduplicationReview(new DesktopDeduplicationReviewRequest(
+            workspace.Root, target.TargetId, DeduplicationAuthorityPolicyConstants.KeepSeparateAction,
+            "different", null, "alice", "owner", null, FixedTime)).Preview!;
+        var secondCaller = facade.PreviewDeduplicationReview(new DesktopDeduplicationReviewRequest(
+            workspace.Root, target.TargetId, DeduplicationAuthorityPolicyConstants.MarkUnresolvedAction,
+            "uncertain", null, "alice", "owner", null, FixedTime)).Preview!;
+
+        Assert.IsTrue(facade.ExecuteDeduplicationReview(secondCaller).Completed);
+        var stale = facade.ExecuteDeduplicationReview(firstCaller);
+
+        Assert.AreEqual(DesktopWorkspaceCommandStatus.Stale, stale.Status);
+    }
+
     private static readonly DateTimeOffset FixedTime = new(2026, 7, 16, 12, 0, 0, TimeSpan.Zero);
 
     private static readonly string ScopusCsv = """
@@ -590,6 +762,109 @@ public sealed class DesktopWorkspaceCommandFacadeTests
             {
                 Directory.Delete(Root, recursive: true);
             }
+        }
+    }
+
+    private sealed class TemporaryAuthorityWorkspace : IDisposable
+    {
+        private TemporaryAuthorityWorkspace(
+            string root,
+            ResearchWorkspaceLocation location,
+            string targetId)
+        {
+            Root = root;
+            Location = location;
+            TargetId = targetId;
+        }
+
+        public string Root { get; }
+
+        public ResearchWorkspaceLocation Location { get; }
+
+        public string TargetId { get; }
+
+        public static TemporaryAuthorityWorkspace Create()
+        {
+            var root = Path.Combine(Path.GetTempPath(), $"nexus-desktop-review-{Guid.NewGuid():N}");
+            Directory.CreateDirectory(root);
+            var location = new ResearchWorkspaceLocation(root, ResearchWorkspacePaths.ProjectFile(root));
+            foreach (var directory in ResearchWorkspacePaths.RequiredDirectories)
+            {
+                Directory.CreateDirectory(ResearchWorkspacePaths.InProject(root, directory));
+            }
+
+            var project = ResearchWorkspaceProject.Create("Desktop review", FixedTime);
+            var relative = $"{ResearchWorkspacePaths.SearchInputs}/input.csv";
+            var bytes = Encoding.UTF8.GetBytes(
+                "eid,title,doi\n1,Example record,10.1000/example-a\n2,Example record,10.1000/example-b\n");
+            File.WriteAllBytes(ResearchWorkspacePaths.InProject(root, relative), bytes);
+            project = project.WithInput(new ResearchWorkspaceInput
+            {
+                InputId = "input",
+                Kind = "search-export",
+                Source = "scopus",
+                Format = "csv",
+                RelativePath = relative,
+                Sha256 = ContentDigest.Sha256(bytes).ToString(),
+                QueryId = "input",
+                ImportTracePath = $"{ResearchWorkspacePaths.ImportOutputs}/input.import-trace.json"
+            });
+            ResearchWorkspaceStore.WriteProject(location, project);
+            var analysis = ResearchWorkspaceTransaction.AnalyzeAndCommit(location, project);
+            var source = DeduplicationAuthorityDigests.CreateResultDigestMaterial(analysis.Analysis.DeduplicationResult);
+            var policy = DeduplicationAuthorityPolicy.CreatePolicyMaterial(new UnverifiedDeduplicationAuthorityPolicy(
+                DeduplicationAuthorityPolicyConstants.SchemaId,
+                DeduplicationAuthorityPolicyConstants.SchemaVersion,
+                DeduplicationAuthorityPolicyConstants.LocalAuthoritySourceKind,
+                source.Result.PolicyId!,
+                DeduplicationService.PolicyVersion,
+                new[] { new DeduplicationAuthorityPolicyActorRole("alice", "owner") },
+                DeduplicationAuthorityPolicyConstants.ClosedActions,
+                new[]
+                {
+                    new DeduplicationAuthorityPolicyReasonGroup(DeduplicationAuthorityPolicyConstants.MergeAction, new[] { "duplicate" }),
+                    new DeduplicationAuthorityPolicyReasonGroup(DeduplicationAuthorityPolicyConstants.KeepSeparateAction, new[] { "different" }),
+                    new DeduplicationAuthorityPolicyReasonGroup(DeduplicationAuthorityPolicyConstants.MarkUnresolvedAction, new[] { "uncertain" })
+                },
+                false,
+                "alice",
+                "owner",
+                FixedTime));
+            var manifestBytes = File.ReadAllBytes(ResearchWorkspacePaths.InProject(root, analysis.Project.GenerationManifestPath!));
+            _ = ResearchWorkspaceTransaction.InitializeAuthorityGeneration(
+                location,
+                analysis.Project,
+                analysis.Project.CurrentGenerationId!,
+                ContentDigest.Sha256(manifestBytes).ToString(),
+                "snapshot-desktop-baseline",
+                source,
+                policy,
+                "alice",
+                "owner",
+                new TestClock(),
+                new TestIdGenerator());
+            var target = ResearchWorkspaceDeduplicationReview.Inspect(root).Targets.Single();
+            return new TemporaryAuthorityWorkspace(root, location, target.TargetId);
+        }
+
+        public void Dispose()
+        {
+            if (Directory.Exists(Root))
+            {
+                Directory.Delete(Root, recursive: true);
+            }
+        }
+
+        private sealed class TestClock : IClock
+        {
+            public DateTimeOffset UtcNow => FixedTime;
+        }
+
+        private sealed class TestIdGenerator : IIdGenerator
+        {
+            private int _value = 810;
+
+            public Guid NewId() => Guid.Parse($"00000000-0000-0000-0000-{_value++:000000000000}");
         }
     }
 }
