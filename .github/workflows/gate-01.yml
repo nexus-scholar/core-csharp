@@ -43,7 +43,7 @@ jobs:
         run: ./scripts/verify-packages.ps1
 
       - name: Test
-        run: dotnet test NexusScholar.Core.slnx -c Release --no-build --logger trx --results-directory artifacts/test-results
+        run: dotnet test NexusScholar.Core.slnx -c Release --no-build --filter "TestCategory!=LiveProvider" --logger trx --results-directory artifacts/test-results
 
       - name: Upload test results
         if: always()
@@ -55,7 +55,7 @@ jobs:
 
       - name: Collect informational coverage
         if: matrix.os == 'ubuntu-latest'
-        run: dotnet test NexusScholar.Core.slnx -c Release --no-build --collect:"XPlat Code Coverage" --results-directory artifacts/coverage
+        run: dotnet test NexusScholar.Core.slnx -c Release --no-build --filter "TestCategory!=LiveProvider" --collect:"XPlat Code Coverage" --results-directory artifacts/coverage
 
       - name: Upload informational coverage
         if: matrix.os == 'ubuntu-latest'

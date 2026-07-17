@@ -1,0 +1,30 @@
+{
+  "meta": {
+    "count": 4,
+    "per_page": 2,
+    "next_cursor": null,
+    "page": null
+  },
+  "results": [
+    {
+      "id": "https://openalex.org/W112",
+      "doi": "https://doi.org/10.1000/beta",
+      "display_name": "OpenAlex Page Two One",
+      "publication_year": 2021,
+      "cited_by_count": 7,
+      "authorships": [
+        { "author": { "display_name": "Grace Hopper" } }
+      ],
+      "primary_location": null
+    },
+    {
+      "id": "https://openalex.org/W113",
+      "doi": "https://doi.org/10.1000/gamma",
+      "display_name": "OpenAlex Page Two Two",
+      "publication_year": 2021,
+      "cited_by_count": 3,
+      "authorships": [],
+      "primary_location": { "source": { "display_name": "Journal of Curated Data" } }
+    }
+  ]
+}

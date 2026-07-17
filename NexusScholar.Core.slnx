@@ -11,6 +11,9 @@
     <Project Path="src/NexusScholar.Shared/NexusScholar.Shared.csproj" />
     <Project Path="src/NexusScholar.Search/NexusScholar.Search.csproj" />
     <Project Path="src/NexusScholar.Search.Providers.Crossref/NexusScholar.Search.Providers.Crossref.csproj" />
+    <Project Path="src/NexusScholar.Search.Providers.Live/NexusScholar.Search.Providers.Live.csproj" />
+    <Project Path="src/NexusScholar.Search.Providers.OpenAlex/NexusScholar.Search.Providers.OpenAlex.csproj" />
+    <Project Path="src/NexusScholar.Search.Providers.SemanticScholar/NexusScholar.Search.Providers.SemanticScholar.csproj" />
     <Project Path="src/NexusScholar.Deduplication/NexusScholar.Deduplication.csproj" />
     <Project Path="src/NexusScholar.CorpusSnapshots/NexusScholar.CorpusSnapshots.csproj" />
     <Project Path="src/NexusScholar.Screening/NexusScholar.Screening.csproj" />
@@ -51,5 +54,9 @@
     <Project Path="tests/NexusScholar.Desktop.Tests/NexusScholar.Desktop.Tests.csproj" />
     <Project Path="tests/NexusScholar.Desktop.AppServices.Tests/NexusScholar.Desktop.AppServices.Tests.csproj" />
     <Project Path="tests/NexusScholar.Search.Providers.Crossref.Tests/NexusScholar.Search.Providers.Crossref.Tests.csproj" />
+    <Project Path="tests/NexusScholar.Search.Providers.Live.Tests/NexusScholar.Search.Providers.Live.Tests.csproj" />
+    <Project Path="tests/NexusScholar.Search.Providers.OpenAlex.Tests/NexusScholar.Search.Providers.OpenAlex.Tests.csproj" />
+    <Project Path="tests/NexusScholar.Search.Providers.SemanticScholar.Tests/NexusScholar.Search.Providers.SemanticScholar.Tests.csproj" />
+    <Project Path="tests/NexusScholar.Search.Providers.LiveSmoke.Tests/NexusScholar.Search.Providers.LiveSmoke.Tests.csproj" />
   </Folder>
 </Solution>

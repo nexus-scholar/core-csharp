@@ -1,0 +1,22 @@
+{"token":"s2-token-next","data":[
+  {
+    "paperId":"s2-a",
+    "externalIds":{"doi":"10.1000/beta"},
+    "title":"Alpha paper",
+    "abstract":"Synthetic alpha example",
+    "year":2023,
+    "venue":"Venue A",
+    "authors":[{"name":"Ann"}],
+    "citationCount":3
+  },
+  {
+    "paperId":"s2-b",
+    "externalIds":{"DOI":"10.1000/alpha","ArXiv":"arXiv:2301.00001","PubMed":"12345"},
+    "title":"Beta paper",
+    "abstract":"Synthetic beta example",
+    "year":2022,
+    "venue":"Venue B",
+    "authors":[{"name":"Alice"},{"name":"Bob"}],
+    "citationCount":7
+  }
+]}

@@ -1,0 +1,26 @@
+[
+  {
+    "paperId": "s2-beta",
+    "title": null,
+    "abstract": "Beta missing title and year",
+    "externalIds": {
+      "doi": "10.1000/beta"
+    },
+    "year": 2023,
+    "venue": "Venue B",
+    "authors": [
+      { "name": "Beta Author" }
+    ],
+    "citationCount": 15
+  },
+  {
+    "paperId": "s2-alpha",
+    "title": "Alpha paper",
+    "abstract": "Alpha missing year",
+    "externalIds": {
+      "ArXiv": "arXiv:2301.00001"
+    },
+    "venue": "Venue A",
+    "citationCount": 2
+  }
+]

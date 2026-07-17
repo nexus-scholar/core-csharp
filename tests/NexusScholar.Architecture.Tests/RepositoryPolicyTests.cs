@@ -82,6 +82,7 @@ public sealed class RepositoryPolicyTests
         var sourceFiles = Directory.EnumerateFiles(root, "*.cs", SearchOption.AllDirectories)
             .Where(path => !IsBuildArtifact(path))
             .Where(path => !IsArchitectureGuardFile(root, path))
+            .Where(path => !IsAcceptedLiveProviderBoundary(root, path))
             .ToArray();
 
         var violations = new List<string>();
@@ -130,6 +131,13 @@ public sealed class RepositoryPolicyTests
         }
 
         throw new InvalidOperationException("Repository root not found.");
+    }
+
+    private static bool IsAcceptedLiveProviderBoundary(string root, string path)
+    {
+        var relative = NormalizeRelativePath(Path.GetRelativePath(root, path));
+        return relative.StartsWith("src/NexusScholar.Search.Providers.Live/", StringComparison.Ordinal)
+            || relative.StartsWith("tests/NexusScholar.Search.Providers.Live.Tests/", StringComparison.Ordinal);
     }
 
     private static bool IsArchitectureGuardFile(string root, string path)

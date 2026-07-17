@@ -1,0 +1,15 @@
+{
+  "meta": {
+    "count": 5,
+    "per_page": 3,
+    "next_cursor": null,
+    "page": null
+  },
+  "results": [
+    {
+      "id": "https://openalex.org/W114",
+      "doi": "10.1000/drift",
+      "display_name": "OpenAlex Drift Work"
+    }
+  ]
+}

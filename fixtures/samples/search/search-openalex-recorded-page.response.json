@@ -1,0 +1,33 @@
+{
+  "meta": {
+    "count": 4,
+    "per_page": 2,
+    "next_cursor": "cursor-page-2",
+    "page": null
+  },
+  "results": [
+    {
+      "id": "https://openalex.org/W111",
+      "doi": "https://doi.org/10.1000/alpha",
+      "display_name": "OpenAlex Duplicate One",
+      "publication_year": 2022,
+      "cited_by_count": 10,
+      "authorships": [
+        { "author": { "display_name": "Ada Lovelace" } },
+        { "author": { "display_name": "Alan Turing" } }
+      ],
+      "primary_location": { "source": { "display_name": "Proceedings of Archive" } }
+    },
+    {
+      "id": "https://openalex.org/W111",
+      "doi": "https://doi.org/10.1000/alpha",
+      "display_name": "OpenAlex Duplicate Two",
+      "publication_year": 2022,
+      "cited_by_count": 8,
+      "authorships": [
+        { "author": { "display_name": "Ada Lovelace" } }
+      ],
+      "primary_location": { "source": { "display_name": "Proceedings of Archive" } }
+    }
+  ]
+}

@@ -11,6 +11,10 @@ public static class ProviderAcquisitionErrorCodes
     public const string SecretBearingDescriptor = "secret-bearing-descriptor";
     public const string ProviderSchemaDrift = "provider-schema-drift";
     public const string PaginationChainMismatch = "pagination-chain-mismatch";
+    public const string CredentialUnavailable = "provider-credential-unavailable";
+    public const string TransportPolicyViolation = "provider-transport-policy-violation";
+    public const string ResponseTooLarge = "provider-response-too-large";
+    public const string ProviderTimeout = "provider-timeout";
 }
 
 public sealed class ProviderAcquisitionRequest

@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <IsTestProject>true</IsTestProject>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="MSTest" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../src/NexusScholar.Search.Providers.Live/NexusScholar.Search.Providers.Live.csproj" />
+    <ProjectReference Include="../../src/NexusScholar.Search.Providers.OpenAlex/NexusScholar.Search.Providers.OpenAlex.csproj" />
+    <ProjectReference Include="../../src/NexusScholar.Search.Providers.SemanticScholar/NexusScholar.Search.Providers.SemanticScholar.csproj" />
+  </ItemGroup>
+</Project>

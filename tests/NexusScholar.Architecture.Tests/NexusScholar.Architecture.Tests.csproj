@@ -21,6 +21,9 @@
     <ProjectReference Include="../../src/NexusScholar.Shared/NexusScholar.Shared.csproj" />
     <ProjectReference Include="../../src/NexusScholar.Search/NexusScholar.Search.csproj" />
     <ProjectReference Include="../../src/NexusScholar.Search.Providers.Crossref/NexusScholar.Search.Providers.Crossref.csproj" />
+    <ProjectReference Include="../../src/NexusScholar.Search.Providers.Live/NexusScholar.Search.Providers.Live.csproj" />
+    <ProjectReference Include="../../src/NexusScholar.Search.Providers.OpenAlex/NexusScholar.Search.Providers.OpenAlex.csproj" />
+    <ProjectReference Include="../../src/NexusScholar.Search.Providers.SemanticScholar/NexusScholar.Search.Providers.SemanticScholar.csproj" />
     <ProjectReference Include="../../src/NexusScholar.Deduplication/NexusScholar.Deduplication.csproj" />
     <ProjectReference Include="../../src/NexusScholar.CorpusSnapshots/NexusScholar.CorpusSnapshots.csproj" />
     <ProjectReference Include="../../src/NexusScholar.Screening/NexusScholar.Screening.csproj" />

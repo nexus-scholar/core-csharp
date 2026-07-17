@@ -535,6 +535,29 @@
           "NexusScholar.Shared": "[0.1.0-alpha.2, )"
         }
       },
+      "nexusscholar.search.providers.live": {
+        "type": "Project",
+        "dependencies": {
+          "NexusScholar.Kernel": "[0.1.0-alpha.2, )",
+          "NexusScholar.Search": "[0.1.0-alpha.2, )"
+        }
+      },
+      "nexusscholar.search.providers.openalex": {
+        "type": "Project",
+        "dependencies": {
+          "NexusScholar.Search": "[0.1.0-alpha.2, )",
+          "NexusScholar.Search.Providers.Live": "[0.1.0-alpha.2, )",
+          "NexusScholar.Shared": "[0.1.0-alpha.2, )"
+        }
+      },
+      "nexusscholar.search.providers.semanticscholar": {
+        "type": "Project",
+        "dependencies": {
+          "NexusScholar.Search": "[0.1.0-alpha.2, )",
+          "NexusScholar.Search.Providers.Live": "[0.1.0-alpha.2, )",
+          "NexusScholar.Shared": "[0.1.0-alpha.2, )"
+        }
+      },
       "nexusscholar.shared": {
         "type": "Project",
         "dependencies": {

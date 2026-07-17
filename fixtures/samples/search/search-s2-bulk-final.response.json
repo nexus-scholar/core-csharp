@@ -1,0 +1,12 @@
+{"data":[
+  {
+    "paperId":"s2-c",
+    "externalIds":{"PubMed":"54321","DOI":"10.1000/gamma"},
+    "title":"Gamma paper",
+    "abstract":"Last page synthetic",
+    "year":2021,
+    "venue":"Venue C",
+    "authors":[{"name":"Cara"}],
+    "citationCount":1
+  }
+]}

@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <IsTestProject>true</IsTestProject>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="MSTest" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../src/NexusScholar.Kernel/NexusScholar.Kernel.csproj" />
+    <ProjectReference Include="../../src/NexusScholar.Search/NexusScholar.Search.csproj" />
+    <ProjectReference Include="../../src/NexusScholar.Search.Providers.Live/NexusScholar.Search.Providers.Live.csproj" />
+    <ProjectReference Include="../../src/NexusScholar.Search.Providers.SemanticScholar/NexusScholar.Search.Providers.SemanticScholar.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="../../fixtures/samples/search/search-s2-*.response.json">
+      <Link>fixtures/%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+</Project>

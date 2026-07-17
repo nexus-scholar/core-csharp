@@ -24,6 +24,9 @@ using NexusScholar.Screening.FullText;
 using NexusScholar.Screening.WorkflowExecution;
 using NexusScholar.Search;
 using NexusScholar.Search.Providers.Crossref;
+using NexusScholar.Search.Providers.Live;
+using NexusScholar.Search.Providers.OpenAlex;
+using NexusScholar.Search.Providers.SemanticScholar;
 using NexusScholar.Shared;
 using NexusScholar.Synthesis;
 using NexusScholar.UiContracts;
@@ -365,6 +368,81 @@ public sealed class DependencyRulesTests
             .ToArray();
         Assert.AreEqual(0, credentialProperties.Length,
             $"Provider evidence contracts contain credential-shaped properties: {string.Join(", ", credentialProperties)}");
+    }
+
+    [TestMethod]
+    public void Live_provider_projects_are_outward_nonpackable_and_transport_is_isolated()
+    {
+        var liveAssembly = typeof(ProviderLiveHost).Assembly;
+        var providerAssemblies = new[]
+        {
+            typeof(OpenAlexRecordedResponseAdapter).Assembly,
+            typeof(SemanticScholarRecordedResponseAdapter).Assembly
+        };
+        var outwardAssemblies = providerAssemblies.Append(liveAssembly).ToArray();
+        var searchAssembly = typeof(SearchTrace).Assembly;
+
+        Assert.IsFalse(
+            searchAssembly.GetReferencedAssemblies().Any(reference =>
+                outwardAssemblies.Any(outward =>
+                    string.Equals(reference.Name, outward.GetName().Name, StringComparison.Ordinal))),
+            "NexusScholar.Search must not reference any outward live provider project.");
+
+        Assert.IsTrue(
+            liveAssembly.GetReferencedAssemblies().Any(reference =>
+                string.Equals(reference.Name, "System.Net.Http", StringComparison.Ordinal)),
+            "The admitted live host must own the HTTP transport reference.");
+
+        foreach (var adapterAssembly in providerAssemblies)
+        {
+            Assert.IsFalse(
+                adapterAssembly.GetReferencedAssemblies().Any(reference =>
+                    string.Equals(reference.Name, "System.Net.Http", StringComparison.Ordinal)),
+                $"{adapterAssembly.GetName().Name} must not own HTTP transport.");
+        }
+
+        var allowedAdapterDependencies = new[]
+        {
+            typeof(IClock).Assembly.GetName().Name,
+            searchAssembly.GetName().Name,
+            typeof(WorkId).Assembly.GetName().Name,
+            liveAssembly.GetName().Name
+        };
+        foreach (var adapterAssembly in providerAssemblies)
+        {
+            var disallowed = adapterAssembly.GetReferencedAssemblies()
+                .Select(reference => reference.Name ?? string.Empty)
+                .Where(name => name.StartsWith("NexusScholar.", StringComparison.Ordinal))
+                .Where(name => !allowedAdapterDependencies.Contains(name, StringComparer.Ordinal))
+                .ToArray();
+            Assert.AreEqual(
+                0,
+                disallowed.Length,
+                $"{adapterAssembly.GetName().Name} has disallowed Nexus dependencies: {string.Join(", ", disallowed)}");
+        }
+
+        var root = FindRepositoryRoot();
+        foreach (var projectName in new[]
+        {
+            "NexusScholar.Search.Providers.Live",
+            "NexusScholar.Search.Providers.OpenAlex",
+            "NexusScholar.Search.Providers.SemanticScholar"
+        })
+        {
+            var project = File.ReadAllText(Path.Combine(root, "src", projectName, $"{projectName}.csproj"));
+            StringAssert.Contains(project, "<IsPackable>false</IsPackable>");
+        }
+
+        var credentialShapedProperties = typeof(RuntimeProviderResponseEvidence)
+            .GetProperties()
+            .Select(property => property.Name)
+            .Where(name => new[] { "credential", "secret", "apiKey", "authorization" }
+                .Any(fragment => name.Contains(fragment, StringComparison.OrdinalIgnoreCase)))
+            .ToArray();
+        Assert.AreEqual(
+            0,
+            credentialShapedProperties.Length,
+            $"Runtime evidence exposes credential-shaped properties: {string.Join(", ", credentialShapedProperties)}");
     }
 
     [TestMethod]

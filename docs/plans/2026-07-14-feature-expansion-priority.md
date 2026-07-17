@@ -4,9 +4,11 @@ Status: active successor roadmap after Hardening 30.
 
 Current state: FE-01 through FE-08 are complete locally. FE-09A's retained-local-
 fixture contract and Crossref normalization adapter are complete locally under
-ADR 0039; hosted CI and merge remain pending on a stacked branch. Remaining
-FE-09 slices and FE-10 through FE-12 are sequenced future work and are not
-implementation-ready unless their stated prerequisites are accepted.
+ADR 0039; hosted CI and merge remain pending on a stacked branch. FE-09D host,
+credential, and runtime-evidence policy is accepted under ADR 0040. FE-09F
+OpenAlex/Semantic Scholar transport is complete locally; OpenAlex live smoke
+passed, while authenticated S2 bulk/batch smoke remains credential-blocked.
+Remaining FE-09 slices and FE-10 through FE-12 stay dependency-ordered.
 
 ## Operating Decision
 
@@ -840,10 +842,9 @@ become compatibility obligations.
 
 ## Immediate Next Gate
 
-Close FE-08 and the stacked FE-09A retained-fixture branch through hosted CI and
-merge. Live provider transport remains blocked until FE-09D accepts legal,
-network, credential, contact-identity, retry, and host policy and a successor
-FE-09A gate admits the concrete transport.
+Close FE-08, FE-09A, and the stacked FE-09F branch through hosted CI and merge.
+Then plan FE-09E provider evidence caching under a dedicated retention and
+invalidation gate before citation-network or broader production integration.
 
 ## Verification Baseline
 

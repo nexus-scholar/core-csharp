@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../NexusScholar.Search/NexusScholar.Search.csproj" />
+    <ProjectReference Include="../NexusScholar.Search.Providers.Live/NexusScholar.Search.Providers.Live.csproj" />
+    <ProjectReference Include="../NexusScholar.Shared/NexusScholar.Shared.csproj" />
+  </ItemGroup>
+</Project>

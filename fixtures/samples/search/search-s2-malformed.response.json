@@ -1,0 +1,3 @@
+{ "meta": { "count": 1, "next_cursor": null },
+"data": [
+  { "paperId": "s2-b", "externalIds": {"doi": "10.1000/beta"}, "title": "Beta", "year": "two thousand", "venue": "Venue B", "citationCount": 7 }
