@@ -5,7 +5,7 @@ Date: 2026-07-17
 Authority: ADR 0036 and
 `docs/gates/FE-08-DESKTOP-DEDUPLICATION-REVIEW-SLICE-3.md`.
 
-Status: implementation and local/hosted validation complete; protected merge pending.
+Status: complete.
 
 ## Delivered Scope
 
@@ -53,7 +53,9 @@ Final local results:
 - PR 64 hosted validation: Ubuntu, Windows, CodeQL/analyze, and automated review
   passed.
 
-Protected merge and post-merge validation remain pending.
+PR 64 merged to `main` as `13a4a41`. Post-merge `scripts/verify.ps1`
+passed on that exact commit, including all 878 tests and release evidence bound
+to `13a4a41f5e4b0d4d5c63f88f384f38aaf1842f04`.
 
 ## Claim Boundary
 
