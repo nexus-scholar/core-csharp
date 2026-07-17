@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AI Contracts - Nexus Scholar Core</title>
+  <meta name="description" content="Developer guide to the current Nexus Scholar AI proposal contracts and the planned FE-11 privacy, evidence, validation, and human-acceptance boundary.">
+  <link rel="stylesheet" href="../../../assets/css/site.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <div class="release-status" role="status">Early alpha. Not production-ready. No package publication or broad PHP compatibility claim.</div>
+  <header class="site-header"><nav class="nav" aria-label="Primary navigation">
+    <a class="brand" href="../../../"><span class="brand-mark">NS</span><span>Nexus Scholar Core</span></a><button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-links">Menu</button>
+    <div class="nav-links" id="nav-links"><a href="../../../status/">Status</a><a href="../../../developers/" aria-current="page">Developers</a><a href="../../../tutorials/">Tutorials</a><a href="../../../roadmap/">Roadmap</a><a href="../../../about/">About</a><a href="https://github.com/nexus-scholar-org/core-csharp">GitHub</a></div>
+  </nav></header>
+  <main id="main" class="page doc-page">
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+      <a href="../../../developers/">Developers</a><span aria-hidden="true">/</span><a href="../">Modules</a><span aria-hidden="true">/</span><span aria-current="page">AI</span>
+    </nav>
+    <p class="eyebrow">Contract-only module</p>
+    <h1>AI</h1>
+    <p class="lede">Two small policy/proposal types that encode “model output is not authority.” There is no provider adapter, prompt runner, governed task journal, proposal-review workflow, or model execution in the current assembly.</p>
+    <div class="doc-shell">
+      <div class="doc-main">
+        <section class="content-section">
+          <h2>Implemented surface</h2>
+          <p><a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/src/NexusScholar.AI/AiTaskPolicy.cs"><code>AiTaskPolicy</code></a> records task type, authority class, whether human approval and evidence are required, and whether external data transfer is allowed. <code>Create</code> refuses a scientific-decision or external-action proposal when human approval is not required.</p>
+          <p><a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/src/NexusScholar.AI/AiProposal.cs"><code>AiProposal&lt;T&gt;</code></a> carries the policy, a typed value, evidence digests, and a non-default UTC creation time. It rejects invalid evidence digests and rejects an empty evidence set when the policy requires evidence.</p>
+          <p class="section-note">There is no <code>AcceptedAiProposal</code> type in the current code. Human acceptance, rejection, partial acceptance, resulting domain command, and provenance are FE-11 work—not an implicit property of <code>AiProposal&lt;T&gt;</code>.</p>
+        </section>
+
+        <section class="content-section">
+          <h2>Authority classes</h2>
+          <ul class="link-list">
+            <li><code>ReadOnlySuggestion</code>: advisory output with no mutation authority.</li>
+            <li><code>BoundedTransformation</code>: a declared transformation that still does not become scientific truth automatically.</li>
+            <li><code>ScientificDecisionProposal</code>: must require a recorded human approval step.</li>
+            <li><code>ExternalActionProposal</code>: must require a recorded human approval step.</li>
+          </ul>
+          <p>The enum names classify intended use; they do not execute enforcement beyond the policy factory’s approval check. Callers still need a future trusted task runner and domain-owned acceptance path.</p>
+        </section>
+
+        <section class="content-section">
+          <h2>Current flow and missing runtime</h2>
+          <pre><code>AiTaskPolicy.Create(...)
+       |
+       v
+AiProposal&lt;T&gt;
+  value + evidence digests + UTC time
+       |
+       X
+no provider call
+no context manifest
+no schema parser
+no acceptance record
+no domain mutation</code></pre>
+          <p>The project depends on Kernel and Provenance, but the current types do not append a provenance event. A project reference indicates the intended architecture, not completed governed execution.</p>
+        </section>
+
+        <section class="content-section">
+          <h2>FE-11 target—planned, not implemented</h2>
+          <p>The roadmap places governed AI after plugin staging and provider/privacy boundaries. It calls for task-specific accepted schemas, exact context manifests, provider/model/version/parameter records, prompt/template digests, transfer and retention policy, cost and output digests, untrusted-output parsing, evidence citations, uncertainty, immutable proposals, and separate human acceptance or rejection.</p>
+          <p>CI must remain model-free and use recorded fixtures. The first target is a low-risk protocol clarification proposal, not autonomous Screening, Extraction, Appraisal, Synthesis, or external action.</p>
+          <p>See <a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/docs/plans/2026-07-14-feature-expansion-priority.md#fe-11---governed-ai">the FE-11 roadmap</a>.</p>
+        </section>
+
+        <section class="content-section">
+          <h2>Failure states and extension rules</h2>
+          <ul class="check-list">
+            <li>High-authority policy without human approval fails immediately.</li>
+            <li>Evidence-required proposal without evidence fails.</li>
+            <li>Invalid evidence digest or non-UTC/default time fails.</li>
+            <li>External transfer permission is only a policy value today; no privacy or provider enforcement exists.</li>
+            <li>Proposal value <code>T</code> is not schema-validated by this module.</li>
+          </ul>
+          <p>Do not add a concrete SDK client to this domain package. Future provider code belongs in an outward adapter, while this owner defines task/context/proposal records and the separate human review contract.</p>
+        </section>
+
+        <section class="content-section">
+          <h2>Tests and explicit nonclaims</h2>
+          <p>AI policy behavior has focused coverage in Core tests and architecture checks, but there is no completed FE-11 gate, governed-task fixture catalog, provider test harness, privacy review, or end-to-end acceptance evidence.</p>
+          <p>No model call, prompt execution, deterministic model replay, provider support, context selection, privacy enforcement, data transfer, output schema validation, factuality check, citation validation, proposal persistence, human acceptance, autonomous decision, external action, or PHP compatibility is claimed.</p>
+        </section>
+      </div>
+      <aside class="doc-aside">
+        <section class="doc-card"><h2>At a glance</h2><ul class="link-list">
+          <li>Status: contract scaffold</li><li>FE-11 runtime: not implemented</li>
+          <li>Provider clients: none</li><li>Acceptance record: none</li>
+        </ul></section>
+        <section class="doc-card"><h2>Product law</h2><p>Model output remains a proposal until a separate authorized human action accepts specific content into the owning domain.</p></section>
+      </aside>
+    </div>
+  </main>
+  <footer class="site-footer"><p>AI contract documentation.</p></footer>
+  <script is:inline src="../../../assets/js/site.js"></script>
+</body>
+</html>

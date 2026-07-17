@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Synthesis Module - Nexus Scholar Core</title>
+  <meta name="description" content="Developer guide to deterministic, plan-only Nexus Scholar synthesis contracts, eligibility, evidence bindings, corrections, and explicit nonclaims.">
+  <link rel="stylesheet" href="../../../assets/css/site.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <div class="release-status" role="status">Early alpha. Not production-ready. No package publication or broad PHP compatibility claim.</div>
+  <header class="site-header">
+    <nav class="nav" aria-label="Primary navigation">
+      <a class="brand" href="../../../"><span class="brand-mark">NS</span><span>Nexus Scholar Core</span></a>
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-links">Menu</button>
+      <div class="nav-links" id="nav-links">
+        <a href="../../../status/">Status</a>
+        <a href="../../../developers/" aria-current="page">Developers</a>
+        <a href="../../../tutorials/">Tutorials</a>
+        <a href="../../../roadmap/">Roadmap</a>
+        <a href="../../../about/">About</a>
+        <a href="https://github.com/nexus-scholar-org/core-csharp">GitHub</a>
+      </div>
+    </nav>
+  </header>
+  <main id="main" class="page doc-page">
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+      <a href="../../../developers/">Developers</a><span aria-hidden="true">/</span><a href="../">Modules</a><span aria-hidden="true">/</span><span aria-current="page">Synthesis</span>
+    </nav>
+    <p class="eyebrow">FE-07 domain module</p>
+    <h1>Synthesis</h1>
+    <p class="lede">Human-authorized, immutable synthesis plans over current Extraction and Appraisal records—explicit about outcomes, units, transformations, assumptions, missing data, sensitivities, and calculation configuration, but deliberately not a statistics engine.</p>
+    <div class="doc-shell">
+      <div class="doc-main">
+        <section class="content-section">
+          <h2>Purpose and authority boundary</h2>
+          <p><code>NexusScholar.Synthesis</code> owns the plan for a synthesis, not computed results or conclusions. A verified plan binds one approved Protocol, a unique eligible source-record set, source-to-outcome mappings, target outcomes, effect measures, units, transformations, assumptions, a missing-data policy, sensitivity analyses, and calculation-library declarations.</p>
+          <p class="section-note">The plan records which library id, version, and canonical configuration is intended. It does not call that library, validate an estimator, certify statistics, or turn a calculation into a scientific conclusion.</p>
+        </section>
+
+        <section class="content-section">
+          <h2>Eligibility and planning flow</h2>
+          <pre><code>ExtractionJournal --current final record--+
+                                           +--&gt; SynthesisEligibleRecord
+AppraisalJournal  --current final record--+
+                                                    |
+approved Protocol + human author + outcomes         |
+transformations + assumptions + calculations -------+
+                                                    v
+                                         VerifiedSynthesisPlan
+                                                    |
+                                     SynthesisPlanJournal
+                                                    |
+                                  Protocol amendment invalidation</code></pre>
+          <p>Callers cannot construct <code>SynthesisEligibleRecord</code> directly. The public factories <code>FromExtraction</code> and <code>FromAppraisal</code> derive eligibility from the owning journal, reject proposals, and carry current and invalidated status into plan validation.</p>
+        </section>
+
+        <section class="content-section">
+          <h2>Key API surface</h2>
+          <ul class="link-list">
+            <li><a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/src/NexusScholar.Synthesis/SynthesisEligibleRecordFactories.cs"><code>SynthesisEligibleRecord.FromExtraction</code> / <code>FromAppraisal</code></a> establish source provenance and currentness.</li>
+            <li><a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/src/NexusScholar.Synthesis/SynthesisPlan.cs"><code>SynthesisOutcome</code></a> declares outcome id, name, target effect measure, unit, and timepoint.</li>
+            <li><code>SynthesisTransformation</code> makes every effect-measure or unit conversion explicit, method-named, and rationale-bound.</li>
+            <li><code>SynthesisCalculationDeclaration</code> freezes canonical configuration and stores its digest beside library id and version.</li>
+            <li><code>SynthesisPlanAuthority.Create</code> performs the full authority and compatibility validation and returns a <code>VerifiedSynthesisPlan</code>.</li>
+            <li><a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/src/NexusScholar.Synthesis/SynthesisPlanJournal.cs"><code>SynthesisPlanJournal</code></a> retains plans and append-only invalidations while projecting current plans.</li>
+          </ul>
+          <p>The canonical schemas are <code>nexus.synthesis.plan</code> and <code>nexus.synthesis.invalidation</code>, version <code>1.0.0</code>.</p>
+        </section>
+
+        <section class="content-section">
+          <h2>Determinism and refusal states</h2>
+          <p>Sources, outcomes, mappings, transformations, assumptions, sensitivities, and calculation declarations are normalized into deterministic order. Configuration is deep-cloned, frozen, and digested as canonical JSON. The plan embeds the nonclaims <code>plan-not-calculation</code>, <code>no-statistical-conclusion</code>, and <code>no-clinical-or-causal-claim</code>.</p>
+          <ul class="check-list">
+            <li>Automation cannot authorize a plan or invalidate plan authority.</li>
+            <li>Empty, duplicate, stale, superseded, invalidated, or foreign-Protocol sources are rejected.</li>
+            <li>Source-outcome mappings must resolve to admitted sources and declared outcomes.</li>
+            <li>Effect-measure or unit mismatches require an exact declared transformation.</li>
+            <li>Assumptions, sensitivity analyses, missing-data policy, and calculation declarations cannot be omitted.</li>
+            <li>Invalidation must target current plans governed by the exact amended Protocol authority.</li>
+          </ul>
+        </section>
+
+        <section class="content-section">
+          <h2>Dependencies and extension points</h2>
+          <p>Synthesis depends inward on Kernel, Protocol, Extraction, and Appraisal. It intentionally does not depend on FullText directly because its admitted inputs are already evidence-bound owner records. It has no statistics, Workflow, persistence, UI, provider, or model runtime dependency.</p>
+          <p>Developers can declare different outcome vocabularies, calculation libraries, configurations, transformations, and sensitivity analyses through the plan contract. Actually executing a method, validating a statistical package, or publishing a result requires a future method-specific ADR and evidence.</p>
+        </section>
+
+        <section class="content-section">
+          <h2>Tests and accepted evidence</h2>
+          <p><a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/tests/NexusScholar.Core.Tests/SynthesisTests.cs">SynthesisTests</a> cover eligible-record factories, stale and invalid sources, plan authority, unit/effect mismatches, transformations, automation refusal, and invalidation. Cross-module canonical fixtures and amendment replay are in <a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/tests/NexusScholar.Conformance.Tests/Fe07FixtureTests.cs">Fe07FixtureTests</a> and <a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/tests/NexusScholar.Conformance.Tests/Fe07AuthorityReplayTests.cs">Fe07AuthorityReplayTests</a>.</p>
+          <p>See <a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/docs/adr/0034-extraction-appraisal-and-synthesis-authority.md">ADR 0034</a>, the <a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/docs/gates/FE-07-EXTRACTION-APPRAISAL-SYNTHESIS.md">FE-07 gate</a>, and <a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/docs/release/FE-07-COMPLETION-EVIDENCE.md">completion evidence</a>.</p>
+        </section>
+
+        <section class="content-section">
+          <h2>Explicit nonclaims</h2>
+          <p>No statistical execution, correctness, effect estimation, meta-analysis, certainty grading, clinical, causal, regulatory, database, UI, AI, PHP, or production claim is made. <code>VerifiedSynthesisPlan</code> means the declared plan passed authority and consistency checks—not that its future calculation is correct.</p>
+        </section>
+      </div>
+      <aside class="doc-aside">
+        <section class="doc-card">
+          <h2>At a glance</h2>
+          <ul class="link-list">
+            <li>Status: FE-07 complete</li>
+            <li>Authority: ADR 0034</li>
+            <li>Artifact: immutable plan</li>
+            <li>Statistics executed: none</li>
+          </ul>
+        </section>
+        <section class="doc-card">
+          <h2>Plan binds</h2>
+          <ul class="link-list">
+            <li>current source digests</li>
+            <li>outcomes and mappings</li>
+            <li>units and transformations</li>
+            <li>assumptions and missing data</li>
+            <li>library/version/configuration</li>
+          </ul>
+        </section>
+        <section class="doc-card">
+          <h2>Related modules</h2>
+          <ul class="link-list">
+            <li><a href="../extraction/">Extraction</a></li>
+            <li><a href="../appraisal/">Appraisal</a></li>
+            <li><a href="../bridges/">Bridge assemblies</a></li>
+          </ul>
+        </section>
+      </aside>
+    </div>
+  </main>
+  <footer class="site-footer"><p>Synthesis developer documentation.</p></footer>
+  <script is:inline src="../../../assets/js/site.js"></script>
+</body>
+</html>

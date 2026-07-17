@@ -43,6 +43,7 @@ plugin-runtime design under a new accepted gate.
 
 ## Pages
 
-- Deployable GitHub Pages source: `site/` on `main`.
+- GitHub Pages source: Astro project under `site/` on `main`.
+- Generated deployment artifact: `site/dist/` in CI only; never committed.
 - Deployment workflow: `.github/workflows/pages.yml`.
 - `gh-pages` is retained only as historical branch state.

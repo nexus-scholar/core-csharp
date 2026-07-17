@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Developer guide to Nexus Scholar shared scholarly-work identity, identifier namespaces, transitive membership, and corpus slices.">
+  <title>Shared identity developer guide - Nexus Scholar Core</title>
+  <link rel="stylesheet" href="../../../assets/css/site.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <div class="release-status" role="status">Early alpha. Not production-ready. No package publication or broad PHP compatibility claim.</div>
+  <header class="site-header"><nav class="nav" aria-label="Primary navigation">
+    <a class="brand" href="../../../"><span class="brand-mark">NS</span><span>Nexus Scholar Core</span></a><button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-links">Menu</button>
+    <div class="nav-links" id="nav-links"><a href="../../../status/">Status</a><a href="../../../developers/" aria-current="page">Developers</a><a href="../../../tutorials/">Tutorials</a><a href="../../../roadmap/">Roadmap</a><a href="../../../about/">About</a><a href="https://github.com/nexus-scholar-org/core-csharp">GitHub</a></div>
+  </nav></header>
+  <main class="page doc-page" id="main">
+    <nav class="breadcrumbs" aria-label="Breadcrumb"><a href="../../../developers/">Developers</a><span aria-hidden="true">/</span><a href="../">Modules</a><span aria-hidden="true">/</span><span aria-current="page">Shared identity</span></nav>
+    <p class="eyebrow">Scientific identity · NexusScholar.Shared</p>
+    <h1>Shared identity</h1>
+    <p class="lede">Normalized scholarly identifiers and transitive membership semantics that let Search, Deduplication, and Bundles refer to works without falling back to titles or object identity.</p>
+    <div class="doc-shell">
+      <div class="doc-main">
+        <section class="content-section" id="boundary">
+          <h2>Purpose and authority boundary</h2>
+          <p>Shared owns cross-module identity primitives, not provider records or deduplication decisions. <code>WorkId</code> expresses a stable namespace/value pair. <code>ScholarlyWork</code> groups identifiers and metadata. <code>CorpusSlice</code> defines membership through identifier overlap and connected components.</p>
+          <p class="section-note">Titles, authors, publication year, array position, and runtime object identity are not stable work identity. A record with no accepted stable identifier remains unresolved; Shared does not fabricate one.</p>
+        </section>
+        <section class="content-section" id="surface">
+          <h2>Key types</h2>
+          <ul>
+            <li><code>WorkIdNamespace</code> closes the accepted set to DOI, arXiv, OpenAlex, Semantic Scholar (<code>s2</code>), PubMed, PMCID, IEEE, DOAJ, and internal identifiers.</li>
+            <li><code>WorkId</code> parses and canonicalizes namespace/value pairs; namespace-specific rules normalize DOI prefixes/URLs and other provider forms.</li>
+            <li><code>WorkIdSet</code> rejects empty/default/duplicate identity and exposes deterministic primary-id selection.</li>
+            <li><code>ScholarlyWork</code> carries an immutable identifier set plus bibliographic metadata. Metadata enriches display and comparison but does not replace identifiers.</li>
+            <li><code>CorpusSlice</code> closes over transitive identifier overlap: if A shares with B and B shares with C, all three belong to one identity component even when A and C do not directly overlap.</li>
+          </ul>
+          <p>Source: <a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/src/NexusScholar.Shared/SharedIdentity.cs">SharedIdentity.cs</a>. Contract: <a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/docs/adr/0007-shared-scientific-identity.md">ADR 0007</a>.</p>
+        </section>
+        <section class="content-section" id="model">
+          <h2>Transitive identity model</h2>
+          <pre><code>A = {"{"}doi:10.x/a, scopus:1{"}"}
+B = {"{"}scopus:1, pmid:2{"}"}
+C = {"{"}pmid:2, openalex:W3{"}"}
+
+A ↔ B ↔ C  ⇒ one connected identity component
+
+No stable ID ⇒ unresolved candidate, not title-derived membership</code></pre>
+          <p>Primary-id precedence and canonical string forms make ordering reproducible. Set equality is based on normalized identities rather than input order. Hardening protects against adding a bridge record that would silently collapse previously distinct components through transitive overlap.</p>
+        </section>
+        <section class="content-section" id="flow">
+          <h2>Typical developer flow</h2>
+          <ol class="step-list">
+            <li>Normalize provider identifiers at ingestion into <code>WorkId</code> values.</li>
+            <li>Retain all observed stable identifiers; do not discard aliases after choosing a primary id.</li>
+            <li>Create immutable <code>ScholarlyWork</code> records and a <code>CorpusSlice</code>.</li>
+            <li>Compare membership through normalized identifier components.</li>
+            <li>Route no-id records to the owning unresolved-candidate workflow instead of assigning a title hash.</li>
+          </ol>
+        </section>
+        <section class="content-section" id="refusals">
+          <h2>Failure and refusal behavior</h2>
+          <p>Stable rules reject unknown/blank namespaces, malformed or empty values, duplicate IDs, default identities, empty work sets, inconsistent primary IDs, no-ID records entering canonical membership, and transitive bridge additions that would change authority without an explicit owning decision.</p>
+        </section>
+        <section class="content-section" id="evidence">
+          <h2>Tests, extension points, and nonclaims</h2>
+          <p><a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/tests/NexusScholar.Core.Tests/SharedIdentityTests.cs">SharedIdentityTests</a> exercise normalization, immutable sets, transitive membership, and bridge rejection. <a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/tests/NexusScholar.Conformance.Tests/SharedIdentityFixtureTests.cs">SharedIdentityFixtureTests</a> replay the <a href="https://github.com/nexus-scholar-org/core-csharp/tree/main/fixtures/conformance/shared-identity">shared identity fixtures</a>. Narrow PHP comparator evidence, where present, is fixture-scoped rather than a broad compatibility claim.</p>
+          <p>Adding a namespace requires explicit normalization, canonical rendering, precedence, collisions, and fixtures. Shared provides no fuzzy matching, DOI resolution, provider lookup, title similarity, deduplication decision, corpus snapshot publication, or guarantee that two provider identifiers truly describe the same real-world work beyond the accepted evidence.</p>
+        </section>
+      </div>
+      <aside class="doc-aside">
+        <section class="doc-card"><h2>Implementation status</h2><p>Implemented normalized identity contract. Fuzzy matching and external identifier resolution are not part of Shared.</p></section>
+        <section class="doc-card"><h2>Identity hierarchy</h2><ul class="link-list"><li>Stable identifiers</li><li>Normalized identifier set</li><li>Connected component</li><li>Unresolved no-id candidate</li></ul></section>
+        <section class="doc-card"><h2>Depends inward</h2><p><a href="../kernel/">Kernel</a> only.</p></section>
+        <section class="doc-card"><h2>Key consumers</h2><ul class="link-list"><li><a href="../search/">Search</a></li><li><a href="../deduplication/">Deduplication</a></li><li><a href="../bundles/">Bundles</a></li></ul></section>
+      </aside>
+    </div>
+  </main>
+  <footer class="site-footer"><p>Shared identity guide · stable identifiers before convenient metadata.</p></footer>
+  <script is:inline src="../../../assets/js/site.js"></script>
+</body>
+</html>

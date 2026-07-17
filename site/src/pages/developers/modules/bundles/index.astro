@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Developer guide to Nexus Scholar review bundles, verified authority bindings, exact inventories, embedded and external evidence, and tamper detection.">
+  <title>Bundles developer guide - Nexus Scholar Core</title>
+  <link rel="stylesheet" href="../../../assets/css/site.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <div class="release-status" role="status">Early alpha. Not production-ready. No package publication or broad PHP compatibility claim.</div>
+  <header class="site-header"><nav class="nav" aria-label="Primary navigation">
+    <a class="brand" href="../../../"><span class="brand-mark">NS</span><span>Nexus Scholar Core</span></a><button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-links">Menu</button>
+    <div class="nav-links" id="nav-links"><a href="../../../status/">Status</a><a href="../../../developers/" aria-current="page">Developers</a><a href="../../../tutorials/">Tutorials</a><a href="../../../roadmap/">Roadmap</a><a href="../../../about/">About</a><a href="https://github.com/nexus-scholar-org/core-csharp">GitHub</a></div>
+  </nav></header>
+  <main class="page doc-page" id="main">
+    <nav class="breadcrumbs" aria-label="Breadcrumb"><a href="../../../developers/">Developers</a><span aria-hidden="true">/</span><a href="../">Modules</a><span aria-hidden="true">/</span><span aria-current="page">Bundles</span></nav>
+    <p class="eyebrow">Portable verification · NexusScholar.Bundles</p>
+    <h1>Bundles</h1>
+    <p class="lede">Canonical manifests and exact inventories that package or reference review evidence without mistaking archive transport for scientific identity.</p>
+    <div class="doc-shell">
+      <div class="doc-main">
+        <section class="content-section" id="boundary">
+          <h2>Purpose and authority boundary</h2>
+          <p>Bundles provide a portable verification boundary around already authoritative records. They do not create Protocol, Workflow, Provenance, report, or artifact authority. Verification resolves those owners inward and compares complete identity; a syntactically valid digest or manifest field is not sufficient.</p>
+          <p class="section-note"><strong>Identity rule:</strong> the canonical manifest and exact embedded bytes are verified content. ZIP order, compression, timestamps, archive bytes, transport headers, and local extraction paths are not scientific bundle identity.</p>
+        </section>
+        <section class="content-section" id="versions">
+          <h2>Two supported manifest generations</h2>
+          <ul>
+            <li><strong>v1 / 1.0.0:</strong> <code>ReviewBundleManifest</code> binds approved Protocol, optional verified Workflow and Provenance, artifact entries, required schemas, shared identity, and unresolved candidates. <code>BundleVerifier</code> returns structured errors/warnings and verified artifacts.</li>
+            <li><strong>v2 / 2.0.0:</strong> <code>VerifiedReviewBundleV2</code> supports FE-06 exact workspace-cut/report/source-generation bindings, embedded inventory entries, and explicit external references. It is additive; v1 remains historical and supported.</li>
+          </ul>
+          <p>Source: <a href="https://github.com/nexus-scholar-org/core-csharp/tree/main/src/NexusScholar.Bundles">NexusScholar.Bundles</a>. Core decisions: <a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/docs/adr/0009-portable-bundle-and-artifact-contract.md">ADR 0009</a>, <a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/docs/adr/0020-bundle-authority-dependency-direction.md">ADR 0020</a>, and the FE-06 contract in <a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/docs/adr/0033-reporting-audit-bundle-and-rapid-review-profile.md">ADR 0033</a>.</p>
+        </section>
+        <section class="content-section" id="surface">
+          <h2>Key types and services</h2>
+          <ul>
+            <li><code>ReviewBundleManifest</code>, <code>BundleProtocolBinding</code>, <code>BundleWorkflowBinding</code>, <code>BundleProvenanceBinding</code>, and <code>BundleArtifactEntry</code> model v1.</li>
+            <li><code>IBundleAuthorityResolver</code> supplies complete verified Protocol, Workflow, and Provenance records to v1 verification.</li>
+            <li><code>BundleArtifactPath</code> normalizes portable logical paths and rejects path traversal.</li>
+            <li><code>ReviewBundleV2Authority</code> creates verified v2 manifests; <code>ReviewBundleV2CanonicalCodec</code> strictly round-trips their bytes.</li>
+            <li><code>BundleV2EmbeddedEntry</code> binds ordinal, logical path, size, raw-byte digest, role, and source generation.</li>
+            <li><code>BundleV2ExternalEntry</code> makes missing bytes explicit with reference kind/locator, availability note, and optional expected digest.</li>
+            <li><code>ReviewBundleV2Verifier</code> compares canonical manifest bytes against exact observed inventory and returns stable findings plus an inventory digest.</li>
+          </ul>
+        </section>
+        <section class="content-section" id="verification">
+          <h2>Verification flow</h2>
+          <pre aria-label="Bundle verification flow"><code>parse untrusted manifest
+  → enforce exact schema and canonical bytes
+  → resolve complete source authorities
+  → validate safe, unique logical paths
+  → compare declared and observed inventory exactly
+  → recompute every embedded size and raw-byte digest
+  → reject missing, extra, altered, mis-scoped, or foreign entries
+  → return verification result; never partial authority</code></pre>
+          <p>External references never masquerade as embedded content. v2 permits only explicit locator schemes, rejects file paths, user-info, credential-like values, and foreign source generations, and reports <code>IsSelfContained = false</code> when any external entry remains.</p>
+        </section>
+        <section class="content-section" id="identity">
+          <h2>Deterministic identity rules</h2>
+          <p>Manifests use scope <code>bundle-manifest</code>. Embedded content uses <code>raw-artifact-bytes</code>. Source/report/workspace-cut digests carry explicit scopes. Manifest arrays use contract-defined deterministic ordering; v2 entry ordinals and logical paths are closed and unique. The inventory digest is a canonical digest over observed path, size, and byte digest—not the digest of an archive container.</p>
+        </section>
+        <section class="content-section" id="refusals">
+          <h2>Failure and refusal behavior</h2>
+          <p>v1 produces stable findings for invalid/stale manifest, unsupported schema, unsafe/duplicate paths, missing artifact, size/checksum mismatch, destructive overwrite, and invalid Protocol/Workflow/Provenance binding. v2 adds noncanonical manifest, missing/extra inventory, altered artifact, mis-scoped digest, duplicate entry, foreign generation, and invalid external reference. Verification is all-or-nothing; no failed import is committed.</p>
+        </section>
+        <section class="content-section" id="evidence">
+          <h2>Tests and evidence</h2>
+          <p><a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/tests/NexusScholar.Core.Tests/BundleTests.cs">BundleTests</a> and <a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/tests/NexusScholar.Core.Tests/BundleV2Tests.cs">BundleV2Tests</a> cover authority resolution, exact inventory, paths, altered bytes, external locators, and strict codecs. <a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/tests/NexusScholar.Conformance.Tests/BundleFixtureTests.cs">BundleFixtureTests</a> and <a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/tests/NexusScholar.Conformance.Tests/Fe06ReleaseFixtureTests.cs">FE-06 release fixtures</a> replay portable cases. Release closure is recorded in <a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/docs/release/FE-06-COMPLETION-EVIDENCE.md">FE-06 Completion Evidence</a>.</p>
+        </section>
+        <section class="content-section" id="nonclaims">
+          <h2>Dependencies, extension points, and nonclaims</h2>
+          <p>Bundles is an outward verifier and depends inward on Kernel, Shared, Protocol, Workflow, and Provenance; none of those owners depends back on Bundles. New bundle semantics require a schema version. New entry/reference kinds require explicit scoping and threat-model tests.</p>
+          <p>The module does not claim archive-format identity, signatures, encryption, malware safety, long-term preservation certification, remote availability, legal redistribution, cloud sync, submission-package conformance, PRISMA certification, or broad PHP/blueprint compatibility.</p>
+        </section>
+      </div>
+      <aside class="doc-aside">
+        <section class="doc-card"><h2>Implementation status</h2><p>v1 and FE-06 v2 manifests are implemented. Signing, encryption, and archive-format identity are not.</p></section>
+        <section class="doc-card"><h2>On this page</h2><ul class="link-list"><li><a href="#boundary">Boundary</a></li><li><a href="#versions">Versions</a></li><li><a href="#verification">Verification</a></li><li><a href="#identity">Identity</a></li><li><a href="#refusals">Findings</a></li><li><a href="#evidence">Evidence</a></li></ul></section>
+        <section class="doc-card"><h2>Depends inward</h2><ul class="link-list"><li><a href="../kernel/">Kernel</a></li><li><a href="../shared/">Shared</a></li><li><a href="../protocol/">Protocol</a></li><li><a href="../workflow/">Workflow</a></li><li><a href="../provenance/">Provenance</a></li></ul></section>
+        <section class="doc-card"><h2>Schema</h2><ul class="link-list"><li>manifest / 1.0.0</li><li>manifest / 2.0.0</li></ul></section>
+      </aside>
+    </div>
+  </main>
+  <footer class="site-footer"><p>Bundles developer guide · exact inventory, explicit external evidence.</p></footer>
+  <script is:inline src="../../../assets/js/site.js"></script>
+</body>
+</html>

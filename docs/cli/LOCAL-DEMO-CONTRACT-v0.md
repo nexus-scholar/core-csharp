@@ -3,7 +3,7 @@
 Status: historical CLI-02/CLI-03 demo contract. The `demo` command remains local-only, deterministic, and non-authoritative, but this file is not the current full CLI inventory.
 
 Current command routing lives in `README.md`, `CODEX-START-HERE.md`, and
-`site/developers/modules/cli/index.html`.
+`site/src/pages/developers/modules/cli/index.astro`.
 
 ## Goal
 

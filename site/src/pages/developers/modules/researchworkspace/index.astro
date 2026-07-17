@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ResearchWorkspace Module - Nexus Scholar Core</title>
+  <meta name="description" content="Developer guide to transactional Nexus Scholar local workspaces, verified generations, atomic promotion, recovery, and structured operations.">
+  <link rel="stylesheet" href="../../../assets/css/site.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <div class="release-status" role="status">Early alpha. Not production-ready. No package publication or broad PHP compatibility claim.</div>
+  <header class="site-header">
+    <nav class="nav" aria-label="Primary navigation">
+      <a class="brand" href="../../../"><span class="brand-mark">NS</span><span>Nexus Scholar Core</span></a>
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-links">Menu</button>
+      <div class="nav-links" id="nav-links">
+        <a href="../../../status/">Status</a><a href="../../../developers/" aria-current="page">Developers</a>
+        <a href="../../../tutorials/">Tutorials</a><a href="../../../roadmap/">Roadmap</a>
+        <a href="../../../about/">About</a>
+        <a href="https://github.com/nexus-scholar-org/core-csharp">GitHub</a>
+      </div>
+    </nav>
+  </header>
+  <main id="main" class="page doc-page">
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+      <a href="../../../developers/">Developers</a><span aria-hidden="true">/</span><a href="../">Modules</a><span aria-hidden="true">/</span><span aria-current="page">ResearchWorkspace</span>
+    </nav>
+    <p class="eyebrow">Local application-service module</p>
+    <h1>ResearchWorkspace</h1>
+    <p class="lede">The non-UI orchestration boundary for a local Nexus project folder: immutable generations, exact input verification, authority-chain reconstruction, atomic mutations, read models, and structured CLI/desktop operations.</p>
+    <div class="doc-shell">
+      <div class="doc-main">
+        <section class="content-section">
+          <h2>Purpose and authority boundary</h2>
+          <p><code>NexusScholar.ResearchWorkspace</code> coordinates local files around the domain packages. It discovers <code>nexus.project.json</code>, imports user-selected Search exports, verifies bytes, publishes analysis and authority generations, reconstructs current authority, prepares read models, and commits admitted local transitions.</p>
+          <p>It is an application-service boundary, not a domain model. The project index and its paths are commit pointers and locators. Scientific authority remains in canonical, digest-bound records inside verified generations.</p>
+          <p class="section-note">A filename such as <code>current.deduplication-result.json</code> is never trusted by convention alone. Consumers resolve it through the committed project pointer and verify the generation manifest, artifact path, bytes, digest, workspace id, revision, and upstream bindings.</p>
+        </section>
+
+        <section class="content-section">
+          <h2>Workspace layout and commit protocol</h2>
+          <pre><code>nexus.project.json                 final atomic commit pointer
+inputs/search/                     immutable imported source bytes
+nexus-output/generations/          analysis generations
+nexus-output/authority-generations/
+nexus-output/workflow-executions/
+nexus-output/screening-conducts/
+nexus-output/screening-authority-packages/
+nexus-output/fulltext-generations/
+nexus-output/exports/
+nexus-output/.staging/             uncommitted preparation
+nexus-output/quarantine/           promoted but uncommitted recovery</code></pre>
+          <p>Writers prepare a generation in staging, hash and verify every artifact, acquire an exclusive workspace lock, re-read the project, compare the exact expected revision and source pointers, atomically promote the directory, then replace <code>nexus.project.json</code> last. A failed post-promotion commit is quarantined.</p>
+          <p>Project revisions are monotonic concurrency tokens. Authority generations may remain valid across later unrelated revisions only when their generation id and manifest digest remain unchanged; writers still require an exact expected revision.</p>
+        </section>
+
+        <section class="content-section">
+          <h2>Major API families</h2>
+          <ul class="link-list">
+            <li><a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/src/NexusScholar.ResearchWorkspace/ResearchWorkspaceLocalOperations.cs"><code>ResearchWorkspaceLocalOperations</code></a>: initialize a folder and import local CSV, RIS, or BibTeX Search evidence with source digest, parser trace, warnings, and skipped-record counts.</li>
+            <li><a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/src/NexusScholar.ResearchWorkspace/ResearchWorkspaceVerifier.cs"><code>ResearchWorkspaceVerifier</code></a>: verify inputs, reject absolute/escaping/reparse-point paths, reparse evidence, and report missing or changed bytes.</li>
+            <li><a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/src/NexusScholar.ResearchWorkspace/ResearchWorkspaceTransaction.cs"><code>ResearchWorkspaceTransaction</code></a>: atomic analysis, FE-01 authority initialization, and FE-02 successor decision commits.</li>
+            <li><a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/src/NexusScholar.ResearchWorkspace/ResearchWorkspaceAuthorityChainVerifier.cs"><code>ResearchWorkspaceAuthorityChainVerifier</code></a>: replay baseline and successor authority generations into verified policy, snapshots, decisions, invalidations, and provenance.</li>
+            <li><a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/src/NexusScholar.ResearchWorkspace/ResearchWorkspaceDeduplicationReview.cs"><code>ResearchWorkspaceDeduplicationReview</code></a>: inspect queue, preview exact effects, and commit a verified human deduplication decision.</li>
+            <li><a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/src/NexusScholar.ResearchWorkspace/ResearchWorkspaceScreeningAuthorityPackage.cs"><code>ResearchWorkspaceScreeningAuthorityPackage</code></a>: persist and reconstruct the exact approved Protocol, title/abstract criteria, Deduplication result, decision set, and corpus snapshot needed for future Screening conduct.</li>
+            <li><code>ResearchWorkspaceWorkflowExecutionJournal*</code>, <code>ResearchWorkspaceScreeningConduct*</code>, and <code>ResearchWorkspaceFullText*</code>: verified generation transactions for later workflow stages.</li>
+            <li><code>ResearchWorkspaceExportLedger*</code>: digest-linked, human-recorded local export history with exact report/bundle inventory.</li>
+            <li><a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/src/NexusScholar.ResearchWorkspace/ResearchWorkspaceReadModelBuilder.cs"><code>ResearchWorkspaceReadModelBuilder</code></a>: framework-neutral status, imports, evidence rows, duplicate clusters, review queues, and attention items.</li>
+          </ul>
+        </section>
+
+        <section class="content-section">
+          <h2>Structured outcomes and failure semantics</h2>
+          <p>Local operations return <code>Succeeded</code>, <code>Failed</code>, <code>Stale</code>, or <code>RecoveryRequired</code>. Desktop adapters add an <code>Attention</code> presentation state. Absence of an exception is never treated as proof of success.</p>
+          <ul class="check-list">
+            <li><strong>Stale:</strong> expected revision, workspace id, source digest, generation id, manifest digest, decision set, snapshot, or target no longer matches.</li>
+            <li><strong>Failed:</strong> missing project/input, unsupported schema/format, malformed canonical content, or a domain rule refusal.</li>
+            <li><strong>Recovery required:</strong> lock contention, I/O interruption, active authority transition, or state that cannot safely be classified as a normal validation failure.</li>
+            <li><strong>Already applied:</strong> replay-safe requests can return the previously committed transition rather than duplicating it.</li>
+          </ul>
+        </section>
+
+        <section class="content-section">
+          <h2>Dependencies and extension points</h2>
+          <p>The project references the domain and bridge packages it must orchestrate plus AppServices and UiContracts. It must remain UI-framework-free and provider-free. CLI and Desktop.AppServices adapt its structured operations; neither should duplicate its transaction engine.</p>
+          <p>New durable workflow stages should add a generation manifest, strict verifier, staging/promotion transaction, pointer-last project update, explicit result states, replay behavior, and adversarial tests. Adding a mutable “current” file without a verified generation is not an acceptable extension.</p>
+        </section>
+
+        <section class="content-section">
+          <h2>Tests and accepted evidence</h2>
+          <p><a href="https://github.com/nexus-scholar-org/core-csharp/tree/main/tests/NexusScholar.ResearchWorkspace.Tests">ResearchWorkspace tests</a> cover local services, generation verification, authority artifacts, authority transitions, Screening authority packages, concurrency, fault injection, stale writes, quarantine, path safety, read models, Full Text, Screening conduct, workflow journals, and exports.</p>
+          <p>The key architecture contracts are <a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/docs/adr/0016-desktop-shell-and-researchworkspace-boundary.md">ADR 0016</a>, <a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/docs/adr/0023-transactional-research-workspace-generations.md">ADR 0023</a>, and the FE-08 authority decisions <a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/docs/adr/0035-local-product-desktop-shell-and-command-facade.md">0035</a>–<a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/docs/adr/0037-durable-screening-authority-resolution.md">0037</a>.</p>
+        </section>
+
+        <section class="content-section">
+          <h2>Explicit nonclaims</h2>
+          <p>No database, API, cloud synchronization, multi-user locking protocol, remote provider, authentication, identity provider, installer, telemetry, PHP compatibility, or production-security claim is made. The workspace is a disciplined local folder protocol, not a distributed transaction system.</p>
+        </section>
+      </div>
+      <aside class="doc-aside">
+        <section class="doc-card"><h2>At a glance</h2><ul class="link-list">
+          <li>Role: local orchestration</li><li>Commit: pointer last</li>
+          <li>Concurrency: lock + revision</li><li>Identity: manifests + digests</li>
+        </ul></section>
+        <section class="doc-card"><h2>Consumers</h2><ul class="link-list">
+          <li><a href="../cli/">CLI</a></li>
+          <li><a href="../desktop-appservices/">Desktop.AppServices</a></li>
+          <li><a href="../desktop/">Desktop</a></li>
+        </ul></section>
+      </aside>
+    </div>
+  </main>
+  <footer class="site-footer"><p>ResearchWorkspace developer documentation.</p></footer>
+  <script is:inline src="../../../assets/js/site.js"></script>
+</body>
+</html>

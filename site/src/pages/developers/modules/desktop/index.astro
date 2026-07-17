@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Desktop Product Host - Nexus Scholar Core</title>
+  <meta name="description" content="Developer guide to the Windows-first Nexus Scholar Avalonia product host and its local, authority-checked FE-08 surface.">
+  <link rel="stylesheet" href="../../../assets/css/site.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <div class="release-status" role="status">Early alpha. Not production-ready. No package publication or broad PHP compatibility claim.</div>
+  <header class="site-header"><nav class="nav" aria-label="Primary navigation">
+    <a class="brand" href="../../../"><span class="brand-mark">NS</span><span>Nexus Scholar Core</span></a><button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-links">Menu</button>
+    <div class="nav-links" id="nav-links"><a href="../../../status/">Status</a><a href="../../../developers/" aria-current="page">Developers</a><a href="../../../tutorials/">Tutorials</a><a href="../../../roadmap/">Roadmap</a><a href="../../../about/">About</a><a href="https://github.com/nexus-scholar-org/core-csharp">GitHub</a></div>
+  </nav></header>
+  <main id="main" class="page doc-page">
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+      <a href="../../../developers/">Developers</a><span aria-hidden="true">/</span><a href="../">Modules</a><span aria-hidden="true">/</span><span aria-current="page">Desktop</span>
+    </nav>
+    <p class="eyebrow">FE-08 product host</p>
+    <h1>Desktop</h1>
+    <p class="lede">The Windows-first Avalonia product shell for local workspace inspection, safe operational commands, and one verified human deduplication-review workflow.</p>
+    <div class="doc-shell">
+      <div class="doc-main">
+        <section class="content-section">
+          <h2>Product-host boundary</h2>
+          <p><code>NexusScholar.Desktop</code> owns process startup, the main window, file and folder pickers, the operator view model, rendering, and explicit confirmation interactions. It owns no scientific rule and references no Core domain package or ResearchWorkspace directly.</p>
+          <p>The host reaches local behavior exclusively through <a href="../desktop-appservices/"><code>NexusScholar.Desktop.AppServices</code></a>. UI selection, focus, row order, labels, and local paths never become scientific identity.</p>
+          <p class="section-note">The desktop may invoke an accepted, authority-checked application command. The desktop itself does not grant authority: FE-02 policy assignment authorizes the named human actor and role.</p>
+        </section>
+
+        <section class="content-section">
+          <h2>Current researcher workflows</h2>
+          <ul class="check-list">
+            <li>Open an existing local workspace, including an optional startup path.</li>
+            <li>Initialize a selected folder after reviewing exact local effects.</li>
+            <li>Import one user-selected Scopus, Web of Science, Google Scholar, OpenAlex, Semantic Scholar, or Other export in CSV, RIS, or BibTeX format.</li>
+            <li>Verify local inputs and surface parser warnings, skipped records, and attention states.</li>
+            <li>Analyze imported evidence after previewing publication of a new local generation.</li>
+            <li>Load an authority-aware FE-02 review queue; choose an exact target, policy action/reason, actor, role, rationale, and superseded decision; inspect effects; then explicitly confirm.</li>
+          </ul>
+          <p>Screening authority readiness exists in the facade but Slice 4 does not add a desktop Screening decision UI. Other scientific actions remain unavailable.</p>
+        </section>
+
+        <section class="content-section">
+          <h2>Implementation map</h2>
+          <pre><code>Program / App
+    |
+    v
+MainWindow  ---- file/folder pickers, three-column shell
+    |
+    v
+DesktopWorkspaceViewModel
+    |
+    v
+DesktopWorkspaceCommandFacade
+    |
+    v
+verified ResearchWorkspace operations</code></pre>
+          <ul class="link-list">
+            <li><a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/src/NexusScholar.Desktop/MainWindow.cs"><code>MainWindow</code></a> builds the navigation, workspace, status, and effect-inspector regions in Avalonia controls.</li>
+            <li><a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/src/NexusScholar.Desktop/DesktopWorkspaceViewModel.cs"><code>DesktopWorkspaceViewModel</code></a> owns transient operator state, one pending preview, current overview, and review queue.</li>
+            <li><a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/src/NexusScholar.Desktop/App.cs"><code>App</code></a> applies the version-aligned Fluent theme and opens the classic desktop lifetime.</li>
+          </ul>
+        </section>
+
+        <section class="content-section">
+          <h2>Confirmation and failure experience</h2>
+          <p>Every admitted write first fills the right-side effect inspector with the exact effects and confirmation token. Confirm submits that immutable preview; cancel clears it without mutation. Operational actions display that no scientific actor is active. Deduplication review displays the stronger policy-assignment boundary.</p>
+          <p>Status color distinguishes failed, stale, recovery-required, and attention states from success. The view model updates overview or queue only when the facade returns a structured result; it does not infer success from a completed event handler.</p>
+        </section>
+
+        <section class="content-section">
+          <h2>Dependencies and customization</h2>
+          <p>The host references Avalonia, Avalonia.Desktop, Avalonia Fluent theme, Avalonia Blocks, Desktop.AppServices, and UiContracts. Core projects do not reference it. New controls should stay presentation-only and invoke typed facade operations; domain reconstruction, filesystem transactions, and policy checks do not belong in the host.</p>
+          <p>The current shell is programmatic C# UI. Accessibility certification, cross-platform qualification, durable layout/settings, navigation completion, installer behavior, and updater behavior are not yet established.</p>
+        </section>
+
+        <section class="content-section">
+          <h2>Tests and release evidence</h2>
+          <p><a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/tests/NexusScholar.Desktop.Tests/DesktopWorkspaceViewModelTests.cs">Desktop tests</a> cover view-model state, command confirmation, deduplication review, and reusable-control safety. Native Windows visual QA covers first-run, loaded-warning, review, and re-render states.</p>
+          <p>See <a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/docs/release/FE-08-SLICES-1-2-COMPLETION-EVIDENCE.md">Slices 1–2 evidence</a>, <a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/docs/release/FE-08-SLICE-3-COMPLETION-EVIDENCE.md">Slice 3 evidence</a>, and <a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/docs/release/FE-08-SLICE-4-COMPLETION-EVIDENCE.md">Slice 4 evidence</a>.</p>
+        </section>
+
+        <section class="content-section">
+          <h2>Run and nonclaims</h2>
+          <pre><code>dotnet run --project src/NexusScholar.Desktop/NexusScholar.Desktop.csproj -c Release</code></pre>
+          <p>No installer, updater, deployment, accessibility certification, authentication, identity provider, multi-user collaboration, provider/network acquisition, AI, plugin runtime, database/API/cloud, telemetry, crash upload, PHP compatibility, or production-security claim is made.</p>
+        </section>
+      </div>
+      <aside class="doc-aside">
+        <section class="doc-card"><h2>At a glance</h2><ul class="link-list">
+          <li>Status: product host, early alpha</li><li>Platform: Windows-first</li>
+          <li>Framework: Avalonia</li><li>Authority: facade and domain</li>
+        </ul></section>
+        <section class="doc-card"><h2>Admitted writes</h2><ul class="link-list">
+          <li>initialize</li><li>local Search import</li><li>analyze</li><li>FE-02 dedup review</li>
+        </ul></section>
+        <section class="doc-card"><h2>Related</h2><ul class="link-list">
+          <li><a href="../desktop-appservices/">Desktop.AppServices</a></li>
+          <li><a href="../avalonia-blocks/">Avalonia Blocks</a></li>
+          <li><a href="../uicontracts/">UiContracts</a></li>
+        </ul></section>
+      </aside>
+    </div>
+  </main>
+  <footer class="site-footer"><p>Desktop product-host developer documentation.</p></footer>
+  <script is:inline src="../../../assets/js/site.js"></script>
+</body>
+</html>
