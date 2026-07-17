@@ -2,9 +2,9 @@
 
 Status: active successor roadmap after Hardening 30.
 
-Current state: FE-01 through FE-07 and FE-08 slices 1 and 2 are complete. FE-08
-Slice 3 desktop deduplication review is active under ADR 0036 and
-`docs/gates/FE-08-DESKTOP-DEDUPLICATION-REVIEW-SLICE-3.md`.
+Current state: FE-01 through FE-07 and FE-08 slices 1 through 4 are complete.
+FE-08 Slice 5 is the next gate candidate; it is not implementation-authorized
+until its own ADR and gate are accepted.
 FE-09 through FE-12 remain sequenced future work and are not implementation-
 authorized by this roadmap.
 
@@ -839,10 +839,10 @@ become compatibility obligations.
 
 ## Immediate Next Gate
 
-FE-08 Slice 3 desktop deduplication review is active under ADR 0036. It admits
-only the existing FE-02 human-authorized decision path through a shared
-ResearchWorkspace operation. Desktop Screening remains deferred until a trusted
-resolver can reconstruct the verified authority package required by ADR 0031.
+FE-08 Slice 4 durable Screening authority resolution is complete under ADR
+0037. Slice 5 may propose the first desktop Screening mutation, but must define
+its human-authority, stale-preview, supersession, recovery, and audit boundaries
+in an accepted ADR and gate before implementation.
 
 ## Verification Baseline
 

@@ -4,18 +4,18 @@ Status date: 2026-07-17
 
 ## Current Repository State
 
-- `main`: FE-08 Slice 3 and its closeout are complete at `f84b926`.
+- `main`: FE-08 Slice 4 implementation is complete at `7a071cc`.
 - `gh-pages`: retained as historical static-site source at `9a76975`; new Pages deployments are sourced from `site/` on `main`.
-- Active feature branch: `cdx/fe-08-slice-4-screening-authority`.
+- Active feature branch: none.
 - Active plan: `docs/plans/2026-07-14-feature-expansion-priority.md`.
-- Immediate job: merge and close FE-08 Slice 4 durable Screening authority
-  resolution under accepted ADR 0037.
+- Immediate job: design and accept the FE-08 Slice 5 gate before implementing
+  the first desktop Screening mutation.
 
 ## Completed Hardening
 
 - Phases 1-7 and post-review Hardening 30 are complete on protected `main`.
 - Phase 6 has accepted release policy, a 12-package validation topology, 30 locked solution restore graphs, normalized package reproducibility, clean local-source package smoke, SPDX SBOM and release evidence, retained test artifacts, dependency review, CodeQL SARIF, and validation-only artifact attestation.
-- Current protected-main verification baseline is 878 tests on Windows and Linux.
+- Current protected-main verification baseline is 906 tests on Windows and Linux.
 
 ## Current Closeout
 
@@ -25,6 +25,9 @@ Status date: 2026-07-17
 - Phase 7 fixture-backed compatibility evidence landed through PRs #49-#53 with case-scoped claims only.
 - Hardening 30 landed through PR #54 with green Windows/Linux gates, dependency review, and CodeQL checks.
 - Hardening 30 closeout landed through PR #55; final `main` Gate 01 and CodeQL runs passed.
+- FE-08 Slice 4 landed through PR #66 with green Windows/Linux gates,
+  dependency review, and CodeQL checks. Post-merge verification passed on exact
+  `main` commit `7a071cc`.
 - The active validation package identity is `0.1.0-alpha.2`; `v0.1.0-alpha.1` remains the historical attested rehearsal and no NuGet package is published.
 
 ## Product Boundary

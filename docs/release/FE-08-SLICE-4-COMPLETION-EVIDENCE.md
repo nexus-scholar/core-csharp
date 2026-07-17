@@ -5,8 +5,7 @@ Date: 2026-07-17
 Authority: ADR 0037 and
 `docs/gates/FE-08-SCREENING-AUTHORITY-RESOLUTION-SLICE-4.md`.
 
-Status: implementation and local validation complete; hosted merge evidence is
-recorded after protected-branch completion.
+Status: complete.
 
 ## Delivered Scope
 
@@ -46,6 +45,12 @@ recorded after protected-branch completion.
 - independent architecture and scientific-invariant reviews required fixes,
   then accepted the corrected authority boundary with no blocking or
   high-severity findings.
+
+PR 66 hosted validation passed on Ubuntu and Windows, including CodeQL/analyze
+and automated dependency review. PR 66 merged to `main` as `7a071cc`.
+Post-merge `scripts/verify.ps1` passed on that exact commit, including all 906
+tests and release evidence bound to
+`7a071ccaa6b3b53ff7a7755db7e8e6409350838f`.
 
 ## Claim Boundary
 

@@ -4,9 +4,8 @@ Status date: 2026-07-17
 
 ## Current Queue
 
-| Order | Gate | Scope | Status |
-|---|---|---|---|
-| 1 | FE-08 Slice 4 | Durable Screening authority resolution on `cdx/fe-08-slice-4-screening-authority` | In progress |
+No feature implementation is queued. FE-08 Slice 5 requires an accepted gate
+before implementation.
 
 Recently landed:
 
@@ -29,6 +28,7 @@ Recently landed:
 | #62 | FE-08 desktop slices 1 and 2 | Landed |
 | #64 | FE-08 Slice 3 desktop deduplication review | Landed |
 | #65 | FE-08 Slice 3 closeout | Landed |
+| #66 | FE-08 Slice 4 durable Screening authority resolution | Landed |
 
 ## Do Not Queue
 
