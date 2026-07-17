@@ -1,6 +1,9 @@
 # Desktop Workspace UI Plan - 2026-07-02
 
-Status: planning baseline.
+Status: historical planning baseline; later accepted ADRs and FE-08 evidence supersede it as a current-state description.
+
+Use `docs/ui/README.md`, `docs/ui/ROADMAP.md`,
+`docs/ops/BRANCH-BOARD.md`, and `site/status/index.html` for current routing.
 
 This plan converts the imported UI guide/spec pack into dependency-ordered work that a smaller model can execute. It does not authorize implementation by itself. Start implementation only after the first ADR/task below is accepted.
 

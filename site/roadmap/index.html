@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Roadmap — Nexus Scholar Core</title>
+  <meta name="description" content="Dependency-ordered Nexus Scholar feature roadmap with completed, next-candidate, and future work clearly separated.">
+  <link rel="icon" href="../favicon.ico">
+  <link rel="stylesheet" href="../assets/css/site.css">
+</head>
+<body>
+  <div class="release-status" role="status">Roadmap sequence is not blanket implementation authority</div>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header">
+    <nav class="nav" aria-label="Primary navigation">
+      <a class="brand" href="../"><span class="brand-mark">NS</span><span>Nexus Scholar Core</span></a>
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-links">Menu</button>
+      <div class="nav-links" id="nav-links">
+        <a href="../status/">Status</a><a href="../developers/">Developers</a><a href="../tutorials/">Tutorials</a>
+        <a href="../roadmap/" aria-current="page">Roadmap</a><a href="../about/">About</a>
+        <a href="https://github.com/nexus-scholar-org/core-csharp">GitHub</a>
+      </div>
+    </nav>
+  </header>
+  <main id="main" class="page wide">
+    <div class="breadcrumbs"><a href="../">Home</a><span>/</span><span>Roadmap</span></div>
+    <p class="eyebrow">Strict Core invariants · Flexible workflow profiles</p>
+    <h1>A dependency-ordered route from local authority to connected operation</h1>
+    <p class="lede">Each feature requires its own accepted decision, negative cases, fixtures, validation, and explicit non-claims. Later convenience never weakens earlier authority.</p>
+
+    <section class="content-section">
+      <h2>Completed foundation and conduct</h2>
+      <div class="phase-grid">
+        <article class="phase-card complete"><span class="status-badge complete">FE-01</span><h3>Decision and snapshots</h3><p>Human authority, immutable corpus state, provenance, and atomic local generations.</p></article>
+        <article class="phase-card complete"><span class="status-badge complete">FE-02</span><h3>Deduplication conduct</h3><p>Previewed and confirmed human decisions with corrections and successor snapshots.</p></article>
+        <article class="phase-card complete"><span class="status-badge complete">FE-03</span><h3>Execution journal</h3><p>Replayable protocol-bound work state and append-only transitions.</p></article>
+        <article class="phase-card complete"><span class="status-badge complete">FE-04</span><h3>Screening</h3><p>Independent human review, conflicts, adjudication, and invalidation.</p></article>
+        <article class="phase-card complete"><span class="status-badge complete">FE-05</span><h3>Local full text</h3><p>Exact bytes, derived extraction evidence, and full-text decisions without retrieval.</p></article>
+        <article class="phase-card complete"><span class="status-badge complete">FE-06</span><h3>Reporting and bundles</h3><p>Conserved counts, Rapid Review governance, exports, and verification.</p></article>
+        <article class="phase-card complete"><span class="status-badge complete">FE-07</span><h3>Evidence analysis</h3><p>Extraction, appraisal, and plan-only synthesis with evidence and correction lineage.</p></article>
+        <article class="phase-card complete"><span class="status-badge complete">FE-08 · 1–4</span><h3>Local desktop</h3><p>Product host, safe commands, deduplication decisions, and Screening authority readiness.</p></article>
+      </div>
+    </section>
+
+    <section class="content-section">
+      <h2>Next candidate inside FE-08</h2>
+      <article class="phase-card next">
+        <span class="status-badge active">Candidate, not authorized here</span>
+        <h3>Slice 5 — first desktop title/abstract Screening conduct</h3>
+        <p>The protected-main roadmap identifies Slice 5 as the next candidate after durable authority resolution. It must preserve exact actor, criteria, snapshot, protocol, workflow, and expected-state bindings. A separate accepted ADR and gate are required before implementation.</p>
+      </article>
+    </section>
+
+    <section class="content-section">
+      <h2>Sequenced future capability</h2>
+      <div class="phase-grid">
+        <article class="phase-card future"><span class="status-badge planned">FE-09</span><h3>Providers and networks</h3><p>Legally governed external acquisition and reproducible citation-graph evidence.</p></article>
+        <article class="phase-card future"><span class="status-badge planned">FE-10</span><h3><a href="../developers/modules/extensibility/">Plugin runtime</a></h3><p>Capability-scoped, out-of-process execution with staged and validated output. Current code contains only a small contract scaffold, not a host or sandbox.</p></article>
+        <article class="phase-card future"><span class="status-badge planned">FE-11</span><h3>Governed AI</h3><p>Evidence-bound model proposals with explicit privacy and human acceptance.</p></article>
+        <article class="phase-card future"><span class="status-badge planned">FE-12</span><h3>Connected operation</h3><p>Database, API, cloud, synchronization, authorization, and multi-user infrastructure.</p></article>
+      </div>
+      <div class="callout warning">
+        <strong>Why connected infrastructure comes last</strong>
+        Persistence and distribution amplify semantic mistakes. Stable local records, invalidation, command behavior, and operator workflows come first.
+      </div>
+    </section>
+
+    <section class="content-section">
+      <h2>FE-10 in concrete developer terms</h2>
+      <p>FE-10 is planned as an outward runtime boundary for untrusted extension code. A plugin would declare identity, versions, input and output schemas, requested capabilities, data classification, resource needs, and network or credential requirements. The host—not the plugin—would resolve an explicit grant for one project or invocation.</p>
+      <div class="flow" aria-label="Planned FE-10 plugin invocation boundary">
+        <div class="flow-step"><strong>Manifest</strong><br>declare identity and needs</div><span class="flow-arrow">→</span>
+        <div class="flow-step"><strong>Grant</strong><br>select scoped capabilities</div><span class="flow-arrow">→</span>
+        <div class="flow-step"><strong>Host</strong><br>run out of process</div><span class="flow-arrow">→</span>
+        <div class="flow-step"><strong>Stage</strong><br>write non-canonical output</div><span class="flow-arrow">→</span>
+        <div class="flow-step"><strong>Validate</strong><br>schema, digest, policy</div><span class="flow-arrow">→</span>
+        <div class="flow-step"><strong>Adopt</strong><br>separate domain or human action</div>
+      </div>
+      <div class="callout warning"><strong>Critical boundary:</strong> a separate process improves isolation but is not, by itself, a security sandbox. A plugin receives no database credentials, unrestricted workspace path, raw secret, or authority to make its staged output canonical.</div>
+      <p><a href="../developers/modules/extensibility/">Read the current Extensibility scaffold and full FE-10 non-claims</a>.</p>
+    </section>
+
+    <section class="content-section">
+      <h2>How a roadmap item becomes real</h2>
+      <ol class="step-list">
+        <li>Resolve source conflicts through an accepted ADR.</li>
+        <li>Define authority, identity, provenance, invalidation, privacy, and trust boundaries.</li>
+        <li>Specify positive fixtures and adversarial negative cases.</li>
+        <li>Implement one coherent vertical slice without widening adjacent modules.</li>
+        <li>Pass focused tests, architecture checks, full Release validation, package smoke, and formatting.</li>
+        <li>Record completion evidence bound to the tested commit and preserve explicit non-claims.</li>
+      </ol>
+      <p><a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/docs/plans/2026-07-14-feature-expansion-priority.md">Read the authoritative feature expansion plan on GitHub</a>.</p>
+    </section>
+  </main>
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div><h2>Build in dependency order</h2><p>The roadmap is an integrity constraint, not a feature checklist.</p></div>
+      <div><h3>Current</h3><ul><li><a href="../status/">Implementation status</a></li><li><a href="../developers/modules/">Module map</a></li></ul></div>
+      <div><h3>Participate</h3><ul><li><a href="../developers/contributing/">Contributing</a></li><li><a href="https://github.com/nexus-scholar-org/core-csharp/issues">Issues</a></li></ul></div>
+    </div>
+  </footer>
+  <script src="../assets/js/site.js"></script>
+</body>
+</html>

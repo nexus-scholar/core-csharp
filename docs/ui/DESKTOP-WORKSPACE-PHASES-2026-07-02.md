@@ -1,8 +1,12 @@
 # Desktop Workspace Implementation Phases
 
-Status: Accepted planning baseline
+Status: historical accepted planning baseline; not the current desktop capability statement.
 Date: 2026-07-02
 Depends on: `docs/adr/0016-desktop-shell-and-researchworkspace-boundary.md`
+
+Current desktop routing and completed FE-08 slices are recorded in
+`docs/ui/README.md`, `docs/ui/ROADMAP.md`, `docs/ops/BRANCH-BOARD.md`, and
+`site/status/index.html`.
 
 ## Purpose
 

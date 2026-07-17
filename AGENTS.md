@@ -4,7 +4,7 @@
 
 Build toward an audit-grade, local-first C# research workflow kernel. Research methods, human decisions, automation, evidence, amendments, deviations, and outputs must be reconstructable.
 
-Current state is audit-oriented early alpha. The active operating plan is `docs/reviews/2026-07-11-hardening-plan/README.md`; feature expansion is frozen until the hardening blockers are addressed in dependency order.
+Current state is audit-oriented early alpha. The July hardening sequence is complete. Protected `main` contains FE-01 through FE-07 and FE-08 Slices 1 through 4; use `PLANS.md`, `docs/ops/BRANCH-BOARD.md`, and the accepted gate or release evidence for the current implementation boundary. A planned feature or slice is not authorized until its ADR and gate are accepted.
 
 ## Source of truth
 

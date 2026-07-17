@@ -1,145 +1,121 @@
 # Plans
 
-This file keeps the historical gate map and points to the current operating plan.
+This file is the concise gate map. The detailed active roadmap is
+[`docs/plans/2026-07-14-feature-expansion-priority.md`](docs/plans/2026-07-14-feature-expansion-priority.md).
 
-## Completed
+## Current Position
 
-The public local CLI workflow is implemented and documented:
+Protected `main` is documented at `805f3d6`.
 
-- local workspace initialization and status;
-- local Search export import;
-- workspace verification;
-- deterministic analysis over imported Search evidence;
-- APP-01 workspace plan composition;
-- read-only review queue display;
-- read-only dedup cluster inspection;
-- public tutorial on `gh-pages`.
+| Work | Status |
+| --- | --- |
+| Hardening Phases 1-7 and Hardening 30 | Complete |
+| FE-01 Decision and snapshot authority | Complete |
+| FE-02 Executable Deduplication review | Complete |
+| FE-03 Workflow execution journal | Complete |
+| FE-04 Title/abstract Screening | Complete |
+| FE-05 Local Full Text workflow | Complete |
+| FE-06 Reporting, audit bundle, and Rapid Review profile | Complete |
+| FE-07 Extraction, Appraisal, and Synthesis | Complete |
+| FE-08 Slices 1-2 local desktop foundation | Complete |
+| FE-08 Slice 3 desktop Deduplication review | Complete |
+| FE-08 Slice 4 durable Screening authority resolution | Complete |
+| FE-08 Slice 5 first desktop Screening mutation | Next gate candidate; not yet authorized |
+| FE-09 through FE-12 | Sequenced future work; not authorized |
 
-The implemented command loop is:
+The verification baseline at FE-08 Slice 4 closeout is 906 tests and 23
+validation-only packages.
 
-```bash
-nexus init
-nexus status
-nexus import search
-nexus verify
-nexus analyze
-nexus review
-nexus clusters
-nexus clusters exact
-nexus clusters review
-nexus clusters show <id>
+## Immediate Next Gate
+
+FE-08 Slice 5 may propose the first desktop title/abstract Screening mutation.
+Before implementation it requires an accepted ADR and gate covering:
+
+- exact approved Protocol and title/abstract criteria authority;
+- exact candidate, corpus snapshot, and workflow-task bindings;
+- explicit human actor and admitted role;
+- preview and confirmation material;
+- stale generation, stale authority, and concurrent-writer rejection;
+- conflict, correction, supersession, and invalidation behavior;
+- atomic local persistence, recovery, provenance, and refresh;
+- desktop command-facade direction without UI-owned authority.
+
+No generic action descriptor, button, selection, or view model may create a
+Screening decision.
+
+## Completed Product Flow
+
+The repository now contains local contracts and durable authority records for:
+
+```text
+local Search import
+  -> deterministic Deduplication
+  -> human Deduplication decisions
+  -> immutable corpus snapshot
+  -> workflow execution
+  -> title/abstract Screening
+  -> local Full Text and full-text Screening
+  -> reporting and audit bundle
+  -> Extraction, Appraisal, and Synthesis
 ```
 
-A Nexus research project is a local folder. `nexus.project.json` is a local project index, not a database and not canonical scientific authority.
+The desktop currently covers workspace open/init/import/verify/analyze,
+authority-checked Deduplication review, and read-only Screening readiness.
 
-The CLI verifies local files, analyzes imported Search/Deduplication evidence, and shows records requiring human review. It does not query live providers or execute merge decisions.
+The CLI includes:
 
-## Current Plan
+```text
+doctor, sample, demo
+init, status, import search, verify, analyze, review
+clusters, clusters exact, clusters review, clusters show
+dedup decide
+screening status
+report verify, bundle verify, export verify, export status
+```
 
-Hardening Phases 1-7 and the Hardening 30 corrective closeout are complete on protected `main`. The active successor roadmap is:
+The Research Workspace uses durable local files and immutable generations. It
+does not use a database, server API, or cloud synchronization.
 
-- `docs/plans/2026-07-14-feature-expansion-priority.md`
+## Future Sequence
 
-The roadmap establishes the dependency-ordered feature sequence FE-01 through
-FE-12. FE-01 through FE-07 and FE-08 slices 1 through 4 are complete. FE-08
-Slice 4 adds durable, fail-closed Screening authority resolution under ADR 0037.
-The first desktop Screening mutation remains unauthorized until Slice 5 accepts
-its own gate.
+| Gate | Outcome | Boundary before implementation |
+| --- | --- | --- |
+| FE-09 | Live providers and citation networks | Legal/network ADRs, reproducible acquisition evidence, immutable graph snapshots |
+| FE-10 | Plugin runtime | Capability grants, staged outputs, out-of-process host, threat model, and no direct authority |
+| FE-11 | Governed AI | Context/evidence provenance, privacy, validation, human acceptance, and retention policy |
+| FE-12 | Database, API, cloud, and multi-user operation | Semantic equivalence, authorization, concurrency, migration, backup/restore, and tenant isolation |
 
-Completed hardening references remain:
+Later design may proceed, but implementation must not bypass dependencies or its
+own accepted gate.
+
+## Claim Boundaries
+
+The current plan does not authorize claims of:
+
+- production readiness or completed security/accessibility certification;
+- broad PHP compatibility;
+- live provider access, scraping, or built-in PDF/OCR;
+- database, API, cloud, sync, authentication, or multi-user behavior;
+- plugin execution or safe arbitrary-code sandboxing;
+- live model execution or AI scientific authority;
+- published or signed packages.
+
+## Historical References
+
+Completed hardening:
 
 - `docs/reviews/2026-07-11-hardening-plan/README.md`
 - `docs/reviews/2026-07-11-hardening-plan/full-technical-review.md`
 
-The completed dependency order was:
+Current coordination:
 
-1. canonical foundation;
-2. authority-safe rehydration;
-3. scholarly pipeline correctness;
-4. transactional workspace;
-5. test strategy upgrade;
-6. release engineering;
-7. PHP compatibility evidence only after local correctness.
-
-Hardening 30 corrected the post-phase review findings in AI proposal authority,
-Full Text rehydration, Search import parsing, compatibility-evidence guards,
-package version identity, and operating documentation. FE-01 through FE-07 and
-FE-08 slices 1 through 4 are complete. FE-08 Slice 5 is the next gate candidate.
-
-## Deferred Until Their Feature Gate
-
-- local Full Text intake, extraction, and full-text Screening: FE-05;
-- reproducible reporting, portable audit bundle, and Rapid Review profile: FE-06;
-- extraction, appraisal, and synthesis records: FE-07;
-- UI product shell and command routing: FE-08;
-- live providers, legal retrieval, and citation networks: FE-09;
-- plugin runtime: FE-10;
-- AI/model calls and proposal acceptance under a dedicated governance ADR: FE-11;
-- database, API, cloud, synchronization, and multi-user operation: FE-12.
-
-APP-01 merge-gate actions remain non-authority display hints. They must not mutate Core records, write files, or call services. Only the accepted FE-02 `nexus dedup decide --confirm` boundary may execute the three admitted Deduplication actions; no generic UI action becomes authority.
-
-Do not implement a listed feature until its minimum dependencies are complete and its own gate is accepted. This roadmap is sequencing authority, not blanket implementation authority.
-
-## Current Detailed References
-
-- `docs/plans/2026-07-14-feature-expansion-priority.md`
-- `docs/reviews/2026-07-11-hardening-plan/README.md`
-- `docs/reviews/2026-07-11-hardening-plan/full-technical-review.md`
 - `docs/ops/BRANCH-BOARD.md`
 - `docs/ops/MERGE-QUEUE.md`
-- `docs/reviews/2026-06-29-main-public-readiness/README.md` - historical public-readiness context only
+- `docs/ops/CHAT-ROSTER.md`
 
-## Historical Implementation Gates
+Historical public-readiness review:
 
-The gates below remain useful historical structure and source-routing context. They are not a command to restart Gate 0.
+- `docs/reviews/2026-06-29-main-public-readiness/README.md`
 
-### Gate 0: evidence freeze
-
-Map the blueprint and PHP reference, capture the PHP commit, define product laws, list open conflicts, and plan golden fixtures.
-
-### Gate 1: repository quality
-
-Keep restore, release build, tests, formatting, and architecture checks green on Windows and Linux.
-
-### Gate 2: deterministic kernel
-
-Implement typed identifiers, clocks, ID generation, canonical serialization, digests, errors, and actor identity.
-
-### Gate 3: protocol lifecycle
-
-Implement drafts, structured decisions, approval, immutable versions, amendments, waivers, and deviations.
-
-### Gate 4: workflow compiler
-
-Implement templates, parameters, nodes, edges, gates, validation, capability requirements, and invalidation planning.
-
-### Gate 5: artifact and provenance ledger
-
-Implement immutable artifacts, append-only events, agents, activities, inputs, outputs, and decision lineage.
-
-### Gate 6: portable bundle
-
-Export, verify, import, tamper-check, and round-trip the canonical review bundle.
-
-### Gate 7: local application
-
-Future gate. Add local application behavior only after application-service boundaries are explicit. Do not jump directly to persistence from the current public-feedback lane.
-
-### Gate 8: first method pack
-
-Future gate. Implement a Rapid Review pack with explicit shortcuts, consequences, mitigations, approvals, and reporting evidence.
-
-### Gate 9: PHP behavior port
-
-Port scholarly identity, normalization, deduplication, snapshots, screening, search, retrieval, graphs, and exports through differential fixtures.
-
-Current Gate 9 local state includes Search, Search Import, Deduplication, Screening, and local no-network Full Text. Phase 7 generated pinned fixtures and semantic comparators for explicitly inventoried cases only; broad PHP compatibility remains unclaimed.
-
-### Gate 10: plugins
-
-Add capability-scoped official plugins, then an out-of-process host for third-party extensions.
-
-### Gate 11: governed AI
-
-Start with protocol clarification proposals. Add later AI tasks only after context, evidence, authority, validation, retention, and human-action policies are explicit.
+The original Gate 0-11 sequence remains historical architecture context. The
+FE-01 through FE-12 roadmap is the active delivery sequence.

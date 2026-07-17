@@ -2,44 +2,52 @@
 
 Status date: 2026-07-17
 
-## Current Repository State
+## Protected Main
 
-- `main`: FE-08 Slice 4 implementation is complete at `7a071cc`.
-- `gh-pages`: retained as historical static-site source at `9a76975`; new Pages deployments are sourced from `site/` on `main`.
-- Active feature branch: none.
-- Active plan: `docs/plans/2026-07-14-feature-expansion-priority.md`.
-- Immediate job: design and accept the FE-08 Slice 5 gate before implementing
-  the first desktop Screening mutation.
+- `origin/main`: `805f3d6` (`docs: close FE-08 Slice 4 evidence`).
+- FE-08 Slice 4 implementation: `7a071cc`.
+- Active roadmap:
+  `docs/plans/2026-07-14-feature-expansion-priority.md`.
+- Immediate candidate: design and accept FE-08 Slice 5 before implementing the
+  first desktop Screening mutation.
+- Active feature branch: none recorded on protected `main`.
 
-## Completed Hardening
+## Verified Baseline
 
-- Phases 1-7 and post-review Hardening 30 are complete on protected `main`.
-- Phase 6 has accepted release policy, a 12-package validation topology, 30 locked solution restore graphs, normalized package reproducibility, clean local-source package smoke, SPDX SBOM and release evidence, retained test artifacts, dependency review, CodeQL SARIF, and validation-only artifact attestation.
-- Current protected-main verification baseline is 906 tests on Windows and Linux.
-
-## Current Closeout
-
-- Pages is built through workflow run `29231264071`.
-- `main`, private reporting, security analysis, and the tag-only `release` environment pass `scripts/verify-github-governance.ps1`.
-- Tag `v0.1.0-alpha.1` completed attested clean-machine run `29231634501`.
-- Phase 7 fixture-backed compatibility evidence landed through PRs #49-#53 with case-scoped claims only.
-- Hardening 30 landed through PR #54 with green Windows/Linux gates, dependency review, and CodeQL checks.
-- Hardening 30 closeout landed through PR #55; final `main` Gate 01 and CodeQL runs passed.
-- FE-08 Slice 4 landed through PR #66 with green Windows/Linux gates,
-  dependency review, and CodeQL checks. Post-merge verification passed on exact
-  `main` commit `7a071cc`.
-- The active validation package identity is `0.1.0-alpha.2`; `v0.1.0-alpha.1` remains the historical attested rehearsal and no NuGet package is published.
+- Hardening Phases 1-7 and Hardening 30: complete.
+- FE-01 through FE-07: complete within accepted local scopes.
+- FE-08 slices 1 through 4: complete.
+- Full solution: 906 passed, 0 failed, 0 skipped.
+- Package graph: 23 validation-only packages, reproducible pack, clean local
+  source restore/load.
+- Release build and formatting: green.
+- Hosted PR 66 checks: Ubuntu, Windows, CodeQL, and dependency review passed.
+- Package identity: `0.1.0-alpha.2`; publication disabled.
 
 ## Product Boundary
 
-The roadmap sequences later product work but does not authorize it automatically.
-FE-08 Slice 4 adds readiness resolution only. Desktop Screening mutation,
-Workflow completion, live providers, scraping, API/cloud, AI, plugins, and
-package publication remain unauthorized until their accepted gates.
+Implemented persistence is durable, project-relative local file persistence:
+authority generations, scientific records, provenance, invalidation, generated
+projections, and export ledgers. There is no database, server API, cloud sync,
+authentication, tenancy, or multi-user operation.
 
-## Protected References
+The desktop can invoke admitted, authority-checked commands. It does not own
+scientific authority. FE-08 Slice 4 provides fail-closed Screening readiness,
+not a desktop Screening decision.
 
-- `main`
-- `gh-pages` historical branch
-- `origin/main`
-- `origin/gh-pages`
+## Not Queued
+
+- FE-08 Slice 5 implementation without an accepted ADR and gate;
+- Workflow completion from the desktop;
+- Protocol or Screening-criteria authoring from the desktop;
+- live providers, HTTP retrieval, scraping, PDF/OCR;
+- plugin runtime, live AI/model calls, or proposal acceptance;
+- database, API, cloud, synchronization, authentication, or multi-user work;
+- package signing or publication;
+- broad PHP compatibility.
+
+## Pages
+
+- Deployable GitHub Pages source: `site/` on `main`.
+- Deployment workflow: `.github/workflows/pages.yml`.
+- `gh-pages` is retained only as historical branch state.

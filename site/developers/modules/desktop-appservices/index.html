@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Desktop.AppServices Module - Nexus Scholar Core</title>
+  <meta name="description" content="Developer guide to Nexus Scholar desktop command preview, confirmation, readiness, stale-state, and fail-closed application adapters.">
+  <link rel="stylesheet" href="../../../assets/css/site.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <div class="release-status" role="status">Early alpha. Not production-ready. No package publication or broad PHP compatibility claim.</div>
+  <header class="site-header"><nav class="nav" aria-label="Primary navigation">
+    <a class="brand" href="../../../"><span class="brand-mark">NS</span><span>Nexus Scholar Core</span></a><button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-links">Menu</button>
+    <div class="nav-links" id="nav-links"><a href="../../../status/">Status</a><a href="../../../developers/" aria-current="page">Developers</a><a href="../../../tutorials/">Tutorials</a><a href="../../../roadmap/">Roadmap</a><a href="../../../about/">About</a><a href="https://github.com/nexus-scholar-org/core-csharp">GitHub</a></div>
+  </nav></header>
+  <main id="main" class="page doc-page">
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+      <a href="../../../developers/">Developers</a><span aria-hidden="true">/</span><a href="../">Modules</a><span aria-hidden="true">/</span><span aria-current="page">Desktop.AppServices</span>
+    </nav>
+    <p class="eyebrow">FE-08 product boundary</p>
+    <h1>Desktop.AppServices</h1>
+    <p class="lede">The structured command facade between Avalonia and ResearchWorkspace: immutable previews, canonical confirmation tokens, stale-safe execution, authority-aware deduplication review, and read-only Screening readiness.</p>
+    <div class="doc-shell">
+      <div class="doc-main">
+        <section class="content-section">
+          <h2>Why this package exists</h2>
+          <p>The product host must not parse CLI text, call domain modules directly, or implement stale-write rules in controls. <code>NexusScholar.Desktop.AppServices</code> gives the desktop typed requests, projections, previews, results, and status categories while keeping Avalonia outside the workspace and scientific authority layers.</p>
+          <p>It depends on Kernel, ResearchWorkspace, and UiContracts only. ResearchWorkspace already depends on AppServices, so this separate outward facade also avoids a dependency cycle.</p>
+        </section>
+
+        <section class="content-section">
+          <h2>Operational command lifecycle</h2>
+          <pre><code>initialize / import / analyze request
+              |
+              v
+immutable DesktopWorkspaceCommandPreview
+  workspace + expected revision
+  source path/digest where applicable
+  expected effects + explicit nonclaims
+  canonical confirmation token
+              |
+         explicit confirm
+              |
+ revalidate token, workspace, revision,
+ source bytes, target state, and lock
+              |
+ Succeeded | Attention | Failed |
+ Stale | RecoveryRequired</code></pre>
+          <p><code>OpenWorkspace</code> and <code>VerifyWorkspace</code> are read operations. Initialize, import, and analyze require preview and confirmation. Source paths are execution references only; source digests and workspace authority identities provide the durable binding.</p>
+        </section>
+
+        <section class="content-section">
+          <h2>Human-authorized deduplication review</h2>
+          <p><a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/src/NexusScholar.Desktop.AppServices/DesktopDeduplicationReviewFacade.cs"><code>LoadDeduplicationReviewQueue</code></a> exposes only targets and actions admitted by the current verified FE-01 policy. Actor id and role are command inputs, not login claims. Authorization still comes from exact policy assignment.</p>
+          <p>The review preview binds workspace revision, authority generation and manifest, decision-set digest, source result, source snapshot, target, policy, request, actor, role, action, reason, rationale, superseded decision, candidate membership, invalidations, expected effects, and nonclaims. Changing any field changes the confirmation token. Commit reconstructs authority again and fails stale if the current workspace no longer matches.</p>
+          <p class="section-note">A target with an active decision cannot receive another fresh decision. A correction must select and supersede the exact active decision. Cancellation writes nothing.</p>
+        </section>
+
+        <section class="content-section">
+          <h2>Screening authority readiness</h2>
+          <p><a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/src/NexusScholar.Desktop.AppServices/DesktopScreeningAuthorityFacade.cs"><code>InspectScreeningAuthority</code></a> projects ready, unavailable, stale, invalid, or recovery-required state from the durable ResearchWorkspace package. The desktop sees immutable identifiers and digests, not verified Protocol or Screening domain objects.</p>
+          <p>FE-08 Slice 4 is readiness-only. This facade cannot initialize Screening conduct, submit a Screening decision, complete Workflow work, author a Protocol, or author criteria.</p>
+        </section>
+
+        <section class="content-section">
+          <h2>Key contracts and failure semantics</h2>
+          <ul class="link-list">
+            <li><a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/src/NexusScholar.Desktop.AppServices/DesktopWorkspaceCommandContracts.cs"><code>DesktopWorkspaceCommandStatus</code></a>: <code>Ready</code>, <code>Succeeded</code>, <code>Attention</code>, <code>Failed</code>, <code>Stale</code>, and <code>RecoveryRequired</code>.</li>
+            <li><code>DesktopWorkspaceOverview</code>: safe product projection of imports, warnings, skipped records, review work, attention items, and nonclaims.</li>
+            <li><code>DesktopDeduplicationReviewQueue</code>: current policy, actor-role assignments, targets, evidence ids, and active decisions.</li>
+            <li><code>DesktopDeduplicationReviewPreview</code>: the complete immutable confirmation material for the one admitted scientific action.</li>
+            <li><code>DesktopScreeningAuthorityReadiness</code>: a non-mutating readiness projection with authority ids and digests.</li>
+          </ul>
+          <p>Stale means the preview is no longer the command the user reviewed. Recovery-required means the facade cannot safely classify the state as an ordinary validation problem. Neither is rendered as success.</p>
+        </section>
+
+        <section class="content-section">
+          <h2>Tests and accepted evidence</h2>
+          <p><a href="https://github.com/nexus-scholar-org/core-csharp/tree/main/tests/NexusScholar.Desktop.AppServices.Tests">Desktop.AppServices tests</a> cover command previews, changed tokens, changed source bytes, revision drift, result mapping, deduplication queue/preview/commit behavior, actor policy, supersession, and Screening readiness.</p>
+          <p>The product boundary is defined by <a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/docs/adr/0035-local-product-desktop-shell-and-command-facade.md">ADR 0035</a>, <a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/docs/adr/0036-desktop-human-authorized-deduplication-review.md">ADR 0036</a>, and <a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/docs/adr/0037-durable-screening-authority-resolution.md">ADR 0037</a>. See the <a href="https://github.com/nexus-scholar-org/core-csharp/tree/main/docs/release">FE-08 completion evidence</a>.</p>
+        </section>
+
+        <section class="content-section">
+          <h2>Dependencies and extension points</h2>
+          <p>The facade depends on Kernel, ResearchWorkspace, and UiContracts; it has no Avalonia reference. A new desktop mutation should add an immutable request and preview, canonical confirmation material, exact stale bindings, structured result states, and a ResearchWorkspace operation that owns reconstruction and commit. Scientific commands also require an accepted ADR defining actor authority and the exact records bound by confirmation.</p>
+        </section>
+
+        <section class="content-section">
+          <h2>Explicit nonclaims</h2>
+          <p>No authentication, identity provider, user session authority, Screening mutation, provider/network access, AI, plugin runtime, database, API, cloud, telemetry, or production-security boundary is implemented. A typed facade is not a security sandbox.</p>
+        </section>
+      </div>
+      <aside class="doc-aside">
+        <section class="doc-card"><h2>At a glance</h2><ul class="link-list">
+          <li>Status: FE-08 slices 1–4</li><li>UI framework: none</li>
+          <li>Scientific action: FE-02 review only</li><li>Screening: readiness only</li>
+        </ul></section>
+        <section class="doc-card"><h2>Related</h2><ul class="link-list">
+          <li><a href="../researchworkspace/">ResearchWorkspace</a></li>
+          <li><a href="../desktop/">Desktop host</a></li>
+          <li><a href="../appservices/">AppServices</a></li>
+        </ul></section>
+      </aside>
+    </div>
+  </main>
+  <footer class="site-footer"><p>Desktop.AppServices developer documentation.</p></footer>
+  <script src="../../../assets/js/site.js"></script>
+</body>
+</html>

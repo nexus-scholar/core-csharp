@@ -1,126 +1,94 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Avalonia Blocks Module - Nexus Scholar Core</title>
+  <meta name="description" content="Developer guide to rendering Nexus Scholar UI contracts with reusable Avalonia blocks outside the Core authority boundary.">
   <link rel="stylesheet" href="../../../assets/css/site.css">
 </head>
 <body>
-  <div class="release-status" role="status">Early alpha. Not production-ready. No package publication or PHP compatibility claim.</div>
-  <header class="site-header">
-    <nav class="nav" aria-label="Primary navigation">
-      <a class="brand" href="../../../"><span class="brand-mark">NS</span><span>Nexus Scholar Core</span></a>
-      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-links">Menu</button>
-      <div class="nav-links" id="nav-links">
-        <a href="../../../developers/" aria-current="page">Developers</a>
-        <a href="../../../tutorials/">Tutorials</a>
-        <a href="../../../blog/">Blog</a>
-        <a href="../../../about/">About</a>
-        <a href="https://github.com/nexus-scholar/core-csharp">GitHub</a>
-      </div>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <div class="release-status" role="status">Early alpha. Not production-ready. No package publication or broad PHP compatibility claim.</div>
+  <header class="site-header"><nav class="nav" aria-label="Primary navigation">
+    <a class="brand" href="../../../"><span class="brand-mark">NS</span><span>Nexus Scholar Core</span></a><button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-links">Menu</button>
+    <div class="nav-links" id="nav-links"><a href="../../../status/">Status</a><a href="../../../developers/" aria-current="page">Developers</a><a href="../../../tutorials/">Tutorials</a><a href="../../../roadmap/">Roadmap</a><a href="../../../about/">About</a><a href="https://github.com/nexus-scholar-org/core-csharp">GitHub</a></div>
+  </nav></header>
+  <main id="main" class="page doc-page">
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+      <a href="../../../developers/">Developers</a><span aria-hidden="true">/</span><a href="../">Modules</a><span aria-hidden="true">/</span><span aria-current="page">Avalonia Blocks</span>
     </nav>
-  </header>
-  <main class="page doc-page">
-    <p class="eyebrow">Module documentation</p>
+    <p class="eyebrow">Renderer package</p>
     <h1>Avalonia Blocks</h1>
-    <p class="lede">A renderer-only prototype that consumes UiContracts workspace plans and turns them into Avalonia views without pulling Core domain projects into the desktop layer.</p>
+    <p class="lede">Reusable Avalonia controls and view models that render UiContracts workspace plans while remaining isolated from Core domain packages and command execution.</p>
     <div class="doc-shell">
       <div class="doc-main">
         <section class="content-section">
-          <h2>Scope and ownership</h2>
-          <p>Avalonia Blocks is not the desktop product. It is a renderer prototype for <code>WorkspacePlan</code> JSON. Its job is to prove that the contract can be consumed by a concrete UI without contaminating Core. That is why the current surface is view models and user controls, not app services, persistence, or domain commands.</p>
-          <p class="section-intro">The module exposes controls such as <code>WorkspacePlanView</code>, <code>ResearchBlockView</code>, <code>EvidenceRefListView</code>, <code>ValidationRefListView</code>, <code>BlockActionListView</code>, and <code>PayloadJsonView</code>. Actions are callbacks only. They are display plumbing, not Core mutation.</p>
+          <h2>Purpose and boundary</h2>
+          <p><code>NexusScholar.Avalonia.Blocks</code> turns a <code>WorkspacePlan</code> into controls for plan headers, research blocks, evidence references, validation findings, payload JSON, and action descriptors. It depends only on Avalonia and <a href="../uicontracts/">UiContracts</a>.</p>
+          <p>This renderer is distinct from the <a href="../desktop/">Desktop product host</a>. It has no workspace discovery, file I/O, command facade, domain records, persistence, or scientific authority.</p>
         </section>
+
         <section class="content-section">
-          <h2>Boundary status</h2>
-          <p>The active design reference is <a href="https://github.com/nexus-scholar/core-csharp/blob/main/docs/ui/AVALONIA-RENDERER-PROTOTYPE-v0.md">AVALONIA-RENDERER-PROTOTYPE-v0</a>. The document is explicit about what this module is not: no shell, no Core state loading, no app-state persistence, no AI execution, and no command bridge into the domain stack.</p>
-          <p class="section-note">That boundary is healthy. Desktop renderer work is valuable here only if it remains a consumer of contracts rather than a backdoor into domain behavior.</p>
+          <h2>Projection and rendering flow</h2>
+          <pre><code>WorkspacePlan or JSON
+       |
+       v
+WorkspacePlanViewModel
+  detects sample/non-authority label
+       |
+       +-- ResearchBlockViewModel[]
+       +-- EvidenceRefViewModel[]
+       +-- ValidationRefViewModel[]
+       +-- BlockActionViewModel[]
+       |
+       v
+WorkspacePlanView and child Avalonia controls</code></pre>
+          <p><a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/src/NexusScholar.Avalonia.Blocks/WorkspacePlanViewModels.cs"><code>WorkspacePlanViewModel.FromJson</code></a> deserializes through the shared options. <code>FromWorkspacePlan</code> preserves input order and projects each action into a <code>BlockActionInvocation</code>.</p>
         </section>
+
         <section class="content-section">
-          <h2>Diagrams</h2>
-          <div class="diagram-grid">
-            <article class="diagram-card">
-              <h3>Class map</h3>
-              <p>The renderer projects a contract into view models and controls. The domain stack stays outside the module.</p>
-              <svg viewBox="0 0 520 244" role="img" aria-label="Avalonia Blocks class map">
-                <defs><marker id="arrow-ava-a" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#0b4f4a"></path></marker></defs>
-                <rect x="190" y="22" width="140" height="56" rx="8" fill="#fff" stroke="#0f766e"></rect>
-                <text x="260" y="47" text-anchor="middle">WorkspacePlan</text>
-                <text x="260" y="65" text-anchor="middle" class="diagram-muted">UiContracts input</text>
-                <rect x="176" y="104" width="168" height="56" rx="8" fill="#fff" stroke="#0f766e"></rect>
-                <text x="260" y="129" text-anchor="middle">WorkspacePlanViewModels</text>
-                <text x="260" y="147" text-anchor="middle" class="diagram-muted">projection layer</text>
-                <rect x="34" y="186" width="124" height="42" rx="8" fill="#fff" stroke="#0f766e"></rect>
-                <text x="96" y="212" text-anchor="middle">WorkspacePlanView</text>
-                <rect x="176" y="186" width="120" height="42" rx="8" fill="#fff" stroke="#0f766e"></rect>
-                <text x="236" y="212" text-anchor="middle">ResearchBlockView</text>
-                <rect x="314" y="186" width="172" height="42" rx="8" fill="#fff" stroke="#0f766e"></rect>
-                <text x="400" y="212" text-anchor="middle">evidence / validation / actions</text>
-                <line x1="260" y1="78" x2="260" y2="104" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-ava-a)"></line>
-                <line x1="260" y1="160" x2="96" y2="186" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-ava-a)"></line>
-                <line x1="260" y1="160" x2="236" y2="186" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-ava-a)"></line>
-                <line x1="260" y1="160" x2="400" y2="186" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-ava-a)"></line>
-              </svg>
-            </article>
-            <article class="diagram-card">
-              <h3>Use case flow</h3>
-              <p>The supported path is one-way: deserialize contract, project view models, render, optionally invoke caller-supplied callbacks.</p>
-              <svg viewBox="0 0 520 210" role="img" aria-label="Avalonia Blocks use case flow">
-                <defs><marker id="arrow-ava-b" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#0b4f4a"></path></marker></defs>
-                <rect x="18" y="72" width="114" height="60" rx="8" fill="#fff" stroke="#0f766e"></rect>
-                <text x="75" y="98" text-anchor="middle">sample JSON</text>
-                <text x="75" y="116" text-anchor="middle" class="diagram-muted">workspace plan</text>
-                <rect x="164" y="72" width="114" height="60" rx="8" fill="#fff" stroke="#0f766e"></rect>
-                <text x="221" y="98" text-anchor="middle">deserialize</text>
-                <text x="221" y="116" text-anchor="middle" class="diagram-muted">UiContracts</text>
-                <rect x="310" y="72" width="96" height="60" rx="8" fill="#fff" stroke="#0f766e"></rect>
-                <text x="358" y="98" text-anchor="middle">render</text>
-                <text x="358" y="116" text-anchor="middle" class="diagram-muted">Avalonia</text>
-                <rect x="438" y="72" width="66" height="60" rx="8" fill="#f4f1ea" stroke="#b7791f"></rect>
-                <text x="471" y="98" text-anchor="middle">callback</text>
-                <text x="471" y="116" text-anchor="middle" class="diagram-muted">optional</text>
-                <line x1="132" y1="102" x2="164" y2="102" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-ava-b)"></line>
-                <line x1="278" y1="102" x2="310" y2="102" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-ava-b)"></line>
-                <line x1="406" y1="102" x2="438" y2="102" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-ava-b)"></line>
-              </svg>
-            </article>
-          </div>
+          <h2>Public controls and callbacks</h2>
+          <ul class="link-list">
+            <li><a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/src/NexusScholar.Avalonia.Blocks/WorkspacePlanView.cs"><code>WorkspacePlanView.Render</code></a>: plan header, authority-status label, context evidence, and ordered blocks.</li>
+            <li><code>ResearchBlockView</code>: block badges, summary, evidence, validation, actions, and optional payload.</li>
+            <li><code>EvidenceRefListView</code> and <code>ValidationRefListView</code>: readable projections of traceability and findings.</li>
+            <li><code>PayloadJsonView</code>: displays supplied JSON; it does not interpret scientific meaning.</li>
+            <li><a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/src/NexusScholar.Avalonia.Blocks/BlockActionInvocation.cs"><code>BlockActionCallback</code></a>: optional callback with workspace, block, action, command, target, confirmation, and destructive metadata.</li>
+          </ul>
+          <p class="section-note">Invoking an action calls only the supplied callback. The control itself never confirms, authorizes, or executes a Core command. Current action UI explicitly labels this as placeholder behavior.</p>
         </section>
+
         <section class="content-section">
-          <h2>Code surface and dependencies</h2>
-          <p>The implementation is split between view-model projection in <a href="https://github.com/nexus-scholar/core-csharp/blob/main/src/NexusScholar.Avalonia.Blocks/WorkspacePlanViewModels.cs">WorkspacePlanViewModels.cs</a> and a small set of controls such as <code>WorkspacePlanView</code> and <code>ResearchBlockView</code>. The project should reference only <code>NexusScholar.UiContracts</code> and Avalonia packages.</p>
-          <p class="section-intro">That dependency line is not cosmetic. If this renderer starts referencing Kernel, Protocol, Search, or Screening directly, it will collapse the separation that the UI prep work was trying to establish.</p>
+          <h2>Determinism and failure behavior</h2>
+          <p>The renderer preserves plan and block ordering. Invalid JSON or an invalid UiContracts payload fails during deserialization/construction. Re-render clears and rebuilds the visual tree from the supplied view model. Authority status is a display warning derived from sample refs and descriptions; it is not cryptographic verification.</p>
+          <p>Consumers that need real commands must route callbacks through a trusted application boundary that revalidates authority, confirmation, and stale state. Connecting a button directly to a domain mutation is prohibited.</p>
         </section>
+
         <section class="content-section">
-          <h2>Related modules and current risks</h2>
-          <p>Avalonia Blocks depends on UiContracts and on sample plan data. It should not depend on Core modules. The main risk is accidental app-shell growth inside the renderer project: once callbacks exist, it is easy to start wiring direct command execution and domain reads here.</p>
-          <p class="section-intro">For now the module stays disciplined. It proves renderer feasibility and nothing more.</p>
+          <h2>Tests and extension points</h2>
+          <p><a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/tests/NexusScholar.Avalonia.Blocks.Tests/WorkspacePlanViewModelTests.cs">WorkspacePlanViewModelTests</a> cover contract projection, authority labels, callbacks, and payloads. <a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/tests/NexusScholar.Avalonia.Blocks.SampleHost.Tests/SampleWorkspaceLoaderTests.cs">sample-host tests</a> cover illustrative plan loading. Architecture tests prove the package does not reference domain modules.</p>
+          <p>New visual treatments belong here when they remain general renderings of UiContracts. Workspace workflows, file pickers, actor policy, and command confirmation belong in Desktop and Desktop.AppServices.</p>
+        </section>
+
+        <section class="content-section">
+          <h2>Explicit nonclaims</h2>
+          <p>No product shell, scientific command execution, authority validation, persistence, accessibility certification, cross-platform qualification, AI execution, or PHP compatibility is claimed. Renderer isolation is architectural separation, not a security sandbox.</p>
         </section>
       </div>
       <aside class="doc-aside">
-        <section class="doc-card">
-          <h2>At a glance</h2>
-          <ul class="link-list">
-            <li>Status: renderer prototype</li>
-            <li>Authority: non-authoritative sample consumer</li>
-            <li>Depends on: `NexusScholar.UiContracts`</li>
-            <li>Must not depend on Core domain projects</li>
-          </ul>
-        </section>
-        <section class="doc-card">
-          <h2>Owns</h2>
-          <ul class="link-list">
-            <li>view models</li>
-            <li>Avalonia controls</li>
-            <li>display-only action callbacks</li>
-            <li>sample-plan rendering</li>
-          </ul>
-        </section>
+        <section class="doc-card"><h2>At a glance</h2><ul class="link-list">
+          <li>Role: reusable renderer</li><li>Core references: none</li>
+          <li>Input: WorkspacePlan</li><li>Actions: callback only</li>
+        </ul></section>
+        <section class="doc-card"><h2>Related</h2><ul class="link-list">
+          <li><a href="../uicontracts/">UiContracts</a></li>
+          <li><a href="../desktop/">Desktop</a></li>
+          <li><a href="../appservices/">AppServices</a></li>
+        </ul></section>
       </aside>
     </div>
   </main>
-  <footer class="site-footer"><p>Avalonia Blocks module documentation.</p></footer>
+  <footer class="site-footer"><p>Avalonia Blocks developer documentation.</p></footer>
   <script src="../../../assets/js/site.js"></script>
 </body>
 </html>

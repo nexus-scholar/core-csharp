@@ -1,43 +1,98 @@
 # Nexus Scholar Core for .NET
 
-Nexus Scholar Core is an audit-oriented, local-first early-alpha C# research workflow kernel. Its purpose is to make research methods, human decisions, automation, evidence, amendments, deviations, and outputs reconstructable from durable records.
+Nexus Scholar is an audit-oriented, local-first research workflow system. It is
+designed so that protocols, human decisions, automation, evidence, amendments,
+deviations, invalidations, and exports can be reconstructed from durable
+records.
 
-The pinned PHP package remains behavioral evidence for proven workflows. This repo ports observable behavior into stricter local contracts instead of translating PHP classes or app storage shapes directly.
+This repository is an **early alpha**. It is suitable for contract development,
+controlled local evaluation, and first-tester feedback. It is not yet a
+production systematic-review platform.
+
+The pinned PHP package is behavioral evidence for selected proven workflows.
+The C# implementation ports observable behavior into stricter authority and
+reproducibility contracts; it does not translate Laravel structure and does not
+claim broad PHP compatibility.
 
 ## Current Status
 
-Integrity hardening is complete. The current operating roadmap is dependency-ordered feature expansion, beginning with FE-01 decision-and-snapshot gate planning. See `docs/plans/2026-07-14-feature-expansion-priority.md`.
+Protected `main` is documented at `805f3d6`. FE-08 Slice 4 implementation landed
+at `7a071cc`, and its protected-main closeout evidence is recorded in
+[`docs/release/FE-08-SLICE-4-COMPLETION-EVIDENCE.md`](docs/release/FE-08-SLICE-4-COMPLETION-EVIDENCE.md).
 
-The roadmap authorizes planning order, not feature code by default. Each feature still requires an accepted gate with explicit authority, tests, fixtures, exit criteria, and non-claims.
+The current verified baseline is:
 
-`main` contains the local Core implementation through the first no-network Full Text slice, plus a contract-backed UI renderer prototype:
+- FE-01 through FE-07 complete within their accepted local scopes;
+- FE-08 desktop slices 1 through 4 complete;
+- 906 tests passing with zero failures or skips;
+- 23 validation-only packages reproducibly packed and clean-source smoke tested;
+- Release build and formatting checks passing on Windows and Linux;
+- no NuGet package published.
 
-- deterministic kernel primitives, canonical JSON, and digest scopes;
-- protocol drafts, decisions, approvals, amendments, waivers, deviations, and invalidation notices;
-- workflow template compilation with schema closure, approval gates, waivers, and invalidation planning;
-- artifact and review-bundle contracts with immutable digest-bound entries;
-- append-only provenance events and local in-memory ledger behavior;
-- shared scientific identity, Search traces, imported Search evidence, Deduplication, Screening, and Full Text;
-- plugin capability and governed-AI policy/proposal contracts;
-- UI contracts, sample block plans, an Avalonia block renderer, and a sample visual host;
-- a local CLI with `doctor`, `sample`, deterministic `demo`, and the first Research Workspace commands: `init`, `status`, `import search`, `verify`, `analyze`, `review`, and `clusters`.
+FE-08 Slice 5 is the next gate candidate. It may propose the first desktop
+title/abstract Screening mutation, but it is not implementation-authorized
+until its own ADR and gate define human authority, stale preview, supersession,
+recovery, and audit behavior. FE-09 through FE-12 remain future work.
 
-The Full Text slice is local and no-network. It accepts digest-bound user-supplied or deterministic artifact bytes, records acquisition/source-attempt evidence, validates PDF/XML/text shapes, detects duplicate artifacts by raw byte digest, and keeps extraction as derived evidence bound to the raw artifact. It does not download papers, call provider APIs, parse PDFs, run OCR, persist data, expose an API, or claim PHP compatibility.
+The active roadmap is
+[`docs/plans/2026-07-14-feature-expansion-priority.md`](docs/plans/2026-07-14-feature-expansion-priority.md).
 
-## Public Walkthrough And Feedback
+## What Is Implemented
 
-- First-tester walkthrough: https://nexus-scholar.github.io/core-csharp/tutorials/getting-started/
-- Contributing guide: `CONTRIBUTING.md`
-- Security policy: `SECURITY.md`
-- First tester run issue: https://github.com/nexus-scholar/core-csharp/issues/new?template=first-tester-run.yml
-- Architecture boundary review: https://github.com/nexus-scholar/core-csharp/issues/new?template=architecture-boundary-review.yml
-- Documentation confusion: https://github.com/nexus-scholar/core-csharp/issues/new?template=documentation-confusion.yml
+| Gate | Implemented local capability |
+| --- | --- |
+| FE-01 | Verified decision and immutable corpus-snapshot authority |
+| FE-02 | Previewed and confirmed human Deduplication decisions with durable generations, invalidation, and provenance |
+| FE-03 | Protocol-bound workflow execution journal with validated state transitions and replay |
+| FE-04 | Title/abstract Screening conduct, conflicts, adjudication, invalidation, and authorized handoff |
+| FE-05 | Digest-bound local full-text intake, extraction evidence, full-text decisions, and immutable workspace generations |
+| FE-06 | Deterministic review reporting, portable audit bundles, immutable export ledger, and governed Rapid Review profile |
+| FE-07 | Structured Extraction, human Appraisal, and deterministic Synthesis records |
+| FE-08.1-2 | Windows-first local desktop host for open, initialize, import, verify, and analyze workflows |
+| FE-08.3 | First desktop scientific action: authority-checked FE-02 Deduplication review |
+| FE-08.4 | Durable, fail-closed Screening authority resolution and read-only desktop readiness |
 
-The walkthrough and issue templates are for first-tester feedback. They do not imply production systematic-review use, live providers, persistence/API/cloud behavior, PDF/OCR, or PHP compatibility.
+The workflow model has two distinct layers:
+
+```text
+approved Protocol + Workflow template
+                  |
+                  v
+       immutable compiled DAG
+                  |
+                  v
+     FE-03 execution state machine
+                  |
+                  v
+ decisions + snapshots + provenance + exports
+```
+
+The compiled Workflow DAG defines permitted work and dependencies. The
+WorkflowExecution journal records actual state transitions. Domain modules
+create authoritative scientific records; UI state never does.
+
+## Local Persistence Model
+
+A Nexus research project is a local folder. Nexus now performs durable local
+file persistence; statements that the product has “no persistence” are obsolete.
+The distinction is:
+
+- **Implemented:** project-relative inputs, generated projections, immutable
+  authority generations, canonical decision/snapshot records, provenance,
+  invalidation records, and append-only export ledgers;
+- **Not implemented:** database storage, server API, cloud synchronization,
+  authentication, multi-user tenancy, or hosted collaboration.
+
+`nexus.project.json` is a local project index and pointer surface. It is not a
+database and is not scientific authority by itself. Scientific identity comes
+from validated records, stable identifiers, content digests, and verified
+lineage. Paths remain references, not identities.
 
 ## Try It Locally
 
-Prerequisites: the exact .NET SDK pinned by `global.json` and the .NET 8 runtime required by the repository-pinned SBOM tool. CI installs .NET SDK 8.0.422 only to supply that runtime; repository builds still use .NET SDK 10.0.301.
+Prerequisites are the SDK pinned by [`global.json`](global.json) and the .NET 8
+runtime used by the repository-pinned SBOM tool. Repository builds use the
+pinned .NET 10 SDK.
 
 Bootstrap:
 
@@ -49,7 +104,7 @@ pwsh ./scripts/bootstrap.ps1
 bash scripts/bootstrap.sh
 ```
 
-Verify the solution:
+Verify the repository:
 
 ```powershell
 dotnet restore NexusScholar.Core.slnx
@@ -58,7 +113,7 @@ dotnet test NexusScholar.Core.slnx -c Release --no-build
 dotnet format NexusScholar.Core.slnx --verify-no-changes --no-restore
 ```
 
-Or run the repository verification script:
+Or run the full repository verification:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File ./scripts/verify.ps1
@@ -68,7 +123,13 @@ powershell -ExecutionPolicy Bypass -File ./scripts/verify.ps1
 bash scripts/verify.sh
 ```
 
-Run the CLI smoke commands:
+Run the local desktop:
+
+```powershell
+dotnet run --project src/NexusScholar.Desktop/NexusScholar.Desktop.csproj -c Release
+```
+
+Run the deterministic command-line samples:
 
 ```powershell
 dotnet run --project src/NexusScholar.Cli -- doctor
@@ -76,119 +137,197 @@ dotnet run --project src/NexusScholar.Cli -- sample
 dotnet run --project src/NexusScholar.Cli -- demo
 ```
 
-The `demo` command is for first-tester feedback, not researcher production use. It is local-only, deterministic, and non-authoritative: it uses embedded sample Search-import bytes, does not call live providers or provider SDKs, does not download or scrape, does not persist data, does not expose an API/cloud workflow, does not run PDF extraction/OCR, and does not claim PHP compatibility.
+`demo` uses embedded deterministic bytes. It does not contact providers,
+download papers, persist a research project, or create scientific authority.
 
-The local Research Workspace CLI workflow is documented in `docs/cli/RESEARCH-WORKSPACE-CLI-v0.md`. It is implemented for first-tester local inspection using researcher-supplied or generated local Search export files. It does not query live providers, scrape Google Scholar, persist to a database, expose an API/cloud workflow, run PDF/OCR, execute merge decisions, or claim PHP compatibility.
+## CLI Surface
 
-Stable `demo` summary:
-
-```text
-Nexus Scholar Core local demo
-Mode: deterministic local sample
-Network: none
-Live providers: none
-Persistence: none
-Import source: scopus-csv
-Imported records: 5
-Search sightings: 4
-Parser warnings: 2
-Source digest scope: raw-artifact-bytes
-Dedup raw candidates: 4
-Dedup exact clusters: 1
-Dedup review-required pairs: 1
-Non-claims: no live providers; no provider SDKs; no persistence/API/cloud; no PDF/OCR; no PHP compatibility
-```
-
-### Run the local Research Workspace workflow
-
-The commands below use generated local APP-01 fixture exports already in the repository. They are not real Scopus, Web of Science, or Google Scholar exports and are not scientific authority.
+Invoke commands during development as:
 
 ```powershell
-Remove-Item -Recurse -Force .nexus-demo -ErrorAction SilentlyContinue
-New-Item -ItemType Directory -Force .nexus-demo/workspace | Out-Null
-Push-Location .nexus-demo/workspace
-
-dotnet run --project ../../src/NexusScholar.Cli -- init --title "APP-01 demo review"
-dotnet run --project ../../src/NexusScholar.Cli -- import search ../../tests/NexusScholar.AppServices.Tests/Fixtures/App01GeneratedLocalBundles/bundles/FB07-combined-app01-demo/combined_scopus_like.csv --source scopus --format csv --query-id search-001 --query "systematic review screening software"
-dotnet run --project ../../src/NexusScholar.Cli -- import search ../../tests/NexusScholar.AppServices.Tests/Fixtures/App01GeneratedLocalBundles/bundles/FB07-combined-app01-demo/combined_wos_like.ris --source web-of-science --format ris --query-id search-002 --query "systematic review screening software"
-dotnet run --project ../../src/NexusScholar.Cli -- import search ../../tests/NexusScholar.AppServices.Tests/Fixtures/App01GeneratedLocalBundles/bundles/FB07-combined-app01-demo/combined_scholar_style.bib --source google-scholar --format bibtex --query-id search-003 --query "systematic review screening software"
-dotnet run --project ../../src/NexusScholar.Cli -- import search ../../tests/NexusScholar.AppServices.Tests/Fixtures/App01GeneratedLocalBundles/bundles/FB07-combined-app01-demo/combined_wos_like_source_specific.csv --source web-of-science --format csv --query-id search-004 --query "systematic review screening software"
-
-dotnet run --project ../../src/NexusScholar.Cli -- verify
-dotnet run --project ../../src/NexusScholar.Cli -- analyze
-dotnet run --project ../../src/NexusScholar.Cli -- review
-dotnet run --project ../../src/NexusScholar.Cli -- clusters
-dotnet run --project ../../src/NexusScholar.Cli -- clusters exact
-dotnet run --project ../../src/NexusScholar.Cli -- clusters review
-dotnet run --project ../../src/NexusScholar.Cli -- clusters show dedup-candidate-0001
-
-Pop-Location
+dotnet run --project src/NexusScholar.Cli -- <command>
 ```
 
-The review and cluster commands are read-only. They display APP-01 merge gates but do not accept, reject, mark unresolved, or execute merge decisions. The public walkthrough mirrors this local workflow for first-tester feedback.
+| Command | Current behavior |
+| --- | --- |
+| `doctor` | Reports runtime and core policy |
+| `sample` | Builds an in-memory Protocol, Workflow, Provenance event, and verified Bundle sample |
+| `demo` | Runs a deterministic, local, non-authoritative Search/Deduplication demonstration |
+| `init --title "<title>"` | Initializes a local Research Workspace |
+| `status` | Finds and reports the nearest workspace and its current local state |
+| `import search <path> --source <source> --format <format>` | Imports a researcher-supplied local CSV, RIS, or BibTeX export |
+| `verify` | Verifies project-relative inputs, digests, schemas, and generated state |
+| `analyze` | Runs deterministic local Search/Deduplication analysis and projections |
+| `review` | Displays the review queue |
+| `clusters [exact\|review\|show <id>]` | Inspects Deduplication clusters and review candidates |
+| `dedup decide ...` | Previews an actor/role-bound FE-02 decision; `--confirm` commits the admitted action through the durable authority transaction |
+| `screening status` | Checks persisted Screening conduct manifest/artifact integrity; it explicitly does not replay source authority |
+| `report verify <export-id>` | Verifies canonical report and review-slice bytes against export-ledger bindings |
+| `bundle verify <export-id>` | Rehydrates and verifies the exact Bundle v2 inventory |
+| `export verify <export-id>` | Verifies one immutable export against the replayed ledger |
+| `export status` | Replays and reports the complete export ledger |
 
-The combined demo bundle intentionally includes parser warnings and skipped records. `verify` surfaces those issues before `analyze`; the workflow continues so first testers can inspect warning, deduplication, and human-gate blocks.
+`dedup decide` requires `--target`, `--action`, `--reason`, `--actor`, and
+`--role`; optional inputs include `--rationale` and `--supersedes`. Without
+`--confirm`, it is preview-only.
 
-`status` is state-aware and can be run from the workspace root or a child folder. It reports local state such as `initialized`, `imported-with-warnings`, `analyzed`, `review-ready`, or `needs-attention` without printing machine-local absolute paths.
-
-Launch the UI sample host:
-
-```powershell
-dotnet run --project samples/NexusScholar.Avalonia.Blocks.SampleHost
-```
-
-The sample host renders non-authoritative sample `WorkspacePlan` JSON through `NexusScholar.UiContracts` and `NexusScholar.Avalonia.Blocks`. It is a visual inspection harness, not a product desktop shell.
+The complete first-tester workflow and exit-code contract are documented in
+[`docs/cli/RESEARCH-WORKSPACE-CLI-v0.md`](docs/cli/RESEARCH-WORKSPACE-CLI-v0.md).
+Some sections of that historical v0 document describe the original read-only
+lane; the table above reflects the current CLI dispatch surface.
 
 ## Project Map
 
-- `src/NexusScholar.Kernel`: deterministic primitives, clocks, ids, canonical JSON, and digests.
-- `src/NexusScholar.Protocol`: protocol lifecycle records and human approval semantics.
-- `src/NexusScholar.Workflow`: deterministic workflow compilation.
-- `src/NexusScholar.Artifacts`: immutable artifact identity helpers.
-- `src/NexusScholar.Provenance`: append-only local provenance records.
-- `src/NexusScholar.Bundles`: portable review-bundle manifests and verification.
-- `src/NexusScholar.Shared`: stable scholarly identity primitives.
-- `src/NexusScholar.Search`: Search traces, provider stubs, schema-closed plans, and imported evidence parsing.
-- `src/NexusScholar.Deduplication`: local deduplication clusters, review candidates, representatives, and evidence preservation.
-- `src/NexusScholar.Screening`: human-authorized Screening decisions, AI suggestions as proposals, conflicts, and adjudication.
-- `src/NexusScholar.FullText`: local no-network acquisition, artifact evidence, source attempts, validation, duplicate artifact detection, and extraction records.
-- `src/NexusScholar.Extensibility`: extension manifests and scoped capability selections.
-- `src/NexusScholar.AI`: governed AI task policies and immutable proposals; proposal acceptance remains unavailable pending a dedicated AI-governance ADR.
-- `src/NexusScholar.UiContracts`: renderer-neutral workspace and research block contracts.
-- `src/NexusScholar.Avalonia.Blocks`: Avalonia renderer controls for UI contract blocks.
-- `src/NexusScholar.Cli`: local CLI entry point.
-- `samples/block-plans`: non-authoritative UI sample plans.
-- `samples/NexusScholar.Avalonia.Blocks.SampleHost`: sample-only Avalonia host.
-- `tests`: unit, conformance, architecture, UI-contract, renderer, and sample-host tests.
-- `fixtures/conformance`: local contract fixtures.
-- `docs/adr`: accepted architecture decisions.
-- `docs/gates`: gate plans and evidence.
-- `docs/ui`: UI planning, contract, renderer, and sample-host notes.
+The solution contains 31 source projects, 2 sample hosts, and 13 test projects.
+Only the 23 projects listed in
+[`docs/release/PACKAGES.md`](docs/release/PACKAGES.md) participate in the
+validation-only package graph.
+
+### Foundations and immutable evidence
+
+- `NexusScholar.Kernel`: identifiers, clocks, canonical JSON, digests, and
+  deterministic primitives.
+- `NexusScholar.Shared`: stable scholarly identity and normalization primitives.
+- `NexusScholar.Artifacts`: immutable artifact identities and digest-bound
+  references.
+- `NexusScholar.Provenance`: append-only agents, activities, entities, and
+  research events.
+- `NexusScholar.Bundles`: portable review-bundle manifests, inventory checks,
+  authority resolution, and tamper verification.
+
+### Protocol, workflow, and execution
+
+- `NexusScholar.Protocol`: drafts, structured decisions, approvals, immutable
+  versions, amendments, waivers, deviations, and invalidation.
+- `NexusScholar.Workflow`: deterministic compilation of protocol-bound workflow
+  templates into immutable DAG definitions.
+- `NexusScholar.WorkflowExecution`: validated execution instances, node state
+  transitions, readiness, replay, invalidation, and supersession.
+- `NexusScholar.WorkflowExecution.Provenance`: provenance adapter for workflow
+  execution events.
+- `NexusScholar.WorkflowExecution.ScientificRecords`: completion-evidence bridge
+  from Extraction, Appraisal, and Synthesis records into workflow execution.
+
+### Evidence acquisition and review conduct
+
+- `NexusScholar.Search`: Search plans/traces, local import parsers, and imported
+  evidence; provider interfaces are not live provider integrations.
+- `NexusScholar.Deduplication`: deterministic clusters, review candidates,
+  representatives, evidence, and human decisions.
+- `NexusScholar.CorpusSnapshots`: immutable corpus membership, decision-set
+  bindings, supersession, and invalidation planning.
+- `NexusScholar.Screening`: human title/abstract Screening decisions, conflicts,
+  adjudication, criteria, and AI suggestions that remain proposals.
+- `NexusScholar.Screening.CorpusSnapshots`: verified bridge from corpus
+  snapshots into Screening authority.
+- `NexusScholar.Screening.WorkflowExecution`: verified bridge between Screening
+  conduct and workflow tasks.
+- `NexusScholar.FullText`: local no-network acquisition evidence, raw artifacts,
+  validation, source attempts, and derived extraction records.
+- `NexusScholar.Screening.FullText`: full-text Screening decisions, corrections,
+  independent review, handoff, and invalidation.
+
+### Reporting and evidence analysis
+
+- `NexusScholar.Reporting`: deterministic review slices, flow accounting,
+  Rapid Review deviations, and report records.
+- `NexusScholar.Extraction`: structured, protocol-bound study extraction records
+  and correction lineage.
+- `NexusScholar.Appraisal`: versioned appraisal instruments, complete human
+  judgments, rationale, and correction lineage.
+- `NexusScholar.Synthesis`: deterministic synthesis plans and outputs bound to
+  accepted Extraction and Appraisal evidence.
+
+### Extension and model policy contracts
+
+- `NexusScholar.Extensibility`: extension manifests and capability-selection
+  contracts. The FE-10 plugin runtime is not implemented.
+- `NexusScholar.AI`: governed task-policy and immutable proposal contracts.
+  Live model execution and proposal acceptance remain deferred to FE-11.
+
+### Application and product surfaces
+
+- `NexusScholar.AppServices`: use-case composition, reporting/export commands,
+  and framework-neutral application boundaries.
+- `NexusScholar.ResearchWorkspace`: local project discovery, durable
+  transactions, authority generations, verification, recovery, projections,
+  and export-ledger orchestration.
+- `NexusScholar.UiContracts`: renderer-neutral workspace plans, research blocks,
+  evidence references, validation references, and action descriptors.
+- `NexusScholar.Avalonia.Blocks`: reusable Avalonia renderers for UI contracts.
+- `NexusScholar.Desktop.AppServices`: desktop-safe open/init/import/verify/analyze,
+  Deduplication review, and Screening-readiness facades.
+- `NexusScholar.Desktop`: Windows-first local Avalonia product host and
+  composition root.
+- `NexusScholar.Cli`: local command-line host.
+
+### Samples and tests
+
+- `samples/NexusScholar.Avalonia.Blocks.SampleHost`: non-authoritative renderer
+  inspection harness.
+- `samples/NexusScholar.Desktop.Preview`: historical read-only Research
+  Workspace preview.
+- `samples/block-plans`: illustrative, non-authoritative UI contract plans.
+- `tests/NexusScholar.Core.Tests`, `NexusScholar.Conformance.Tests`, and
+  `NexusScholar.Architecture.Tests`: domain, fixture, invariant, and dependency
+  coverage.
+- `tests/NexusScholar.AppServices.Tests`,
+  `NexusScholar.ResearchWorkspace.Tests`, and `NexusScholar.Cli.Tests`:
+  application, durable workspace, recovery, and command coverage.
+- `tests/NexusScholar.UiContracts.Tests`,
+  `NexusScholar.Avalonia.Blocks.Tests`,
+  `NexusScholar.Avalonia.Blocks.SampleHost.Tests`,
+  `NexusScholar.Desktop.Preview.Tests`,
+  `NexusScholar.Desktop.AppServices.Tests`, and
+  `NexusScholar.Desktop.Tests`: contract, renderer, facade, host, and visual
+  behavior coverage.
+- `tests/NexusScholar.PackageSmoke`: clean local-source loading for all 23
+  validation packages.
 
 ## Authority Rules
 
 The source-of-truth order is:
 
-1. Approved files in `specs/`.
-2. Accepted ADRs in `docs/adr/`.
-3. Golden fixtures in `fixtures/`.
-4. Observable behavior of the pinned PHP reference.
-5. Current C# implementation.
-6. Informal notes and comments.
+1. approved files in `specs/`;
+2. accepted ADRs in `docs/adr/`;
+3. golden fixtures in `fixtures/`;
+4. observable behavior of the pinned PHP reference;
+5. current C# implementation;
+6. informal notes and comments.
 
-When sources conflict, record the conflict and resolve it through an ADR or fixture-backed gate. Do not guess silently.
+When sources conflict, record the conflict and resolve it through an ADR or
+fixture-backed gate. Do not guess silently.
 
-Core domain projects must not depend on EF Core, ASP.NET Core, UI frameworks, provider SDKs, storage SDKs, or concrete model clients. Infrastructure depends inward. `NexusScholar.UiContracts` and `NexusScholar.Avalonia.Blocks` are intentionally outside Core authority, and Core projects must not reference them.
+Core domain projects do not depend on EF Core, ASP.NET Core, UI frameworks,
+provider SDKs, storage SDKs, or concrete model clients. Infrastructure depends
+inward. Desktop and CLI surfaces may invoke accepted, authority-checked
+application commands; they do not create scientific authority from UI state.
+
+## Public Walkthrough and Feedback
+
+- [First-tester walkthrough](https://nexus.mouadh.org/tutorials/getting-started/)
+- [Contributing guide](CONTRIBUTING.md)
+- [Security policy](SECURITY.md)
+- [First tester run](https://github.com/nexus-scholar-org/core-csharp/issues/new?template=first-tester-run.yml)
+- [Architecture boundary review](https://github.com/nexus-scholar-org/core-csharp/issues/new?template=architecture-boundary-review.yml)
+- [Documentation confusion](https://github.com/nexus-scholar-org/core-csharp/issues/new?template=documentation-confusion.yml)
 
 ## Non-Claims
 
 This repository does not currently claim:
 
-- PHP compatibility without generated PHP fixtures and semantic comparators;
-- live scholarly provider access;
-- HTTP download, scraping, paywall bypass, or shadow-library acquisition;
-- persistence, API, web app, cloud sync, or production desktop-shell behavior;
-- PDF extraction, OCR, or page/section parsing algorithms;
-- AI authority over scientific decisions.
+- production readiness, clinical or regulatory fitness, or completed
+  accessibility certification;
+- broad PHP package compatibility beyond explicitly inventoried,
+  fixture-backed cases;
+- live scholarly provider access, HTTP retrieval, scraping, paywall bypass, or
+  shadow-library acquisition;
+- built-in PDF parsing, OCR, or page/section extraction algorithms;
+- database persistence, server API, web application, cloud sync,
+  authentication, tenancy, or multi-user collaboration;
+- a working plugin runtime or safe arbitrary-code sandbox;
+- live AI/model execution or AI authority over scientific decisions;
+- published, signed, or supported NuGet packages.
 
-Model outputs remain proposals until an authorized human action accepts them. Drafts are not approved protocols. Paths and app rows are projections, not scientific identity.
+Model outputs remain proposals. Drafts are not approved protocols. UI state,
+database rows, and file paths are not scientific identity.

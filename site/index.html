@@ -3,12 +3,20 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Nexus Scholar Core</title>
-  <meta name="description" content="Audit-oriented early-alpha local-first research workflow contracts for human-authorized science.">
+  <title>Nexus Scholar Core — Reconstructable research workflows</title>
+  <meta name="description" content="Local-first, audit-oriented research workflow infrastructure for evidence, human decisions, provenance, and verifiable review outputs.">
+  <meta name="theme-color" content="#17242b">
+  <meta property="og:title" content="Nexus Scholar Core">
+  <meta property="og:description" content="Strict scientific records underneath. Clear human-authorized workflows on top.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://nexus.mouadh.org/">
+  <meta property="og:image" content="https://nexus.mouadh.org/assets/img/nexus-scholar-core-home.png">
+  <link rel="canonical" href="https://nexus.mouadh.org/">
+  <link rel="icon" href="favicon.ico">
   <link rel="stylesheet" href="assets/css/site.css">
 </head>
 <body>
-  <div class="release-status" role="status">Early alpha. Not production-ready. No package publication or PHP compatibility claim.</div>
+  <div class="release-status" role="status">Early alpha · Local-first · Not production-ready · No package publication or broad PHP compatibility claim</div>
   <a class="skip-link" href="#main">Skip to content</a>
   <header class="site-header">
     <nav class="nav" aria-label="Primary navigation">
@@ -18,68 +26,132 @@
       </a>
       <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-links">Menu</button>
       <div class="nav-links" id="nav-links">
+        <a href="status/">Status</a>
         <a href="developers/">Developers</a>
         <a href="tutorials/">Tutorials</a>
-        <a href="blog/">Blog</a>
+        <a href="roadmap/">Roadmap</a>
         <a href="about/">About</a>
-        <a href="https://github.com/nexus-scholar/core-csharp">GitHub</a>
+        <a href="https://github.com/nexus-scholar-org/core-csharp">GitHub</a>
       </div>
     </nav>
   </header>
 
   <main id="main">
     <section class="hero" aria-labelledby="hero-title">
-      <img class="hero-image" src="assets/img/nexus-scholar-core-home.png" alt="Layered research workflow blocks connected by an audit trail">
+      <img class="hero-image" src="assets/img/nexus-scholar-core-home.png" alt="">
       <div class="hero-copy">
-        <p class="eyebrow">Audit-oriented early alpha</p>
-        <h1 id="hero-title">Strict inside. Simple outside.</h1>
-        <p class="lede">Nexus Scholar Core is an early-alpha local-first C# kernel exploring reconstructable research methods, human decisions, provenance, automation, deviations, and outputs.</p>
+        <p class="eyebrow">Audit-oriented research infrastructure</p>
+        <h1 id="hero-title">A research workflow you can reconstruct.</h1>
+        <p class="lede">Nexus Scholar Core is a local-first .NET foundation for protocols, evidence, human decisions, workflow execution, provenance, and verifiable review outputs. It is designed so a result never has to stand apart from the history that produced it.</p>
         <div class="hero-actions">
-          <a class="button primary" href="blog/2026-06-28-introducing-nexus-scholar-core/">Read the project story</a>
-          <a class="button" href="developers/">Developer docs</a>
+          <a class="button primary" href="status/">See what is implemented</a>
+          <a class="button" href="tutorials/getting-started/">Run the local workflow</a>
+          <a class="button" href="developers/modules/">Explore the modules</a>
         </div>
+        <div class="hero-metrics" aria-label="Current protected main baseline">
+          <div class="hero-metric"><strong>FE-01–FE-07</strong><span>completed local authority stack</span></div>
+          <div class="hero-metric"><strong>FE-08 · 1–4</strong><span>completed desktop slices</span></div>
+          <div class="hero-metric"><strong>906 tests</strong><span>recorded at Slice 4 closeout</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="band compact">
+      <div class="section-heading">
+        <p class="eyebrow">The product promise</p>
+        <h2>Keep the review workflow honest—even when automation helps.</h2>
+        <p>Nexus is not another chat interface over PDFs. Its job is to preserve the evidence, authority, decisions, and invalidation rules beneath research work.</p>
+      </div>
+      <div class="audience-grid">
+        <article class="audience-card">
+          <span class="tag">For researchers</span>
+          <h3>Know what happened</h3>
+          <p>Import local evidence, resolve duplicate candidates, inspect screening authority, and export records whose identity can be checked later.</p>
+        </article>
+        <article class="audience-card">
+          <span class="tag">For supervisors and labs</span>
+          <h3>Inspect the decision trail</h3>
+          <p>Trace a review from approved protocol through snapshots, human decisions, full-text evidence, reporting, and portable bundles.</p>
+        </article>
+        <article class="audience-card">
+          <span class="tag">For developers</span>
+          <h3>Integrate without redefining authority</h3>
+          <p>Use inward-facing domain contracts, explicit application boundaries, canonical records, and verification-first adapters.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="band tint">
+      <div class="section-heading">
+        <p class="eyebrow">One coherent local stack</p>
+        <h2>From protocol intent to independently checkable output</h2>
+      </div>
+      <div class="flow" aria-label="Nexus Scholar local review workflow">
+        <div class="flow-step"><strong>Protocol</strong><br>approved conduct and authority</div>
+        <span class="flow-arrow" aria-hidden="true">→</span>
+        <div class="flow-step"><strong>Workflow</strong><br>compiled DAG and execution journal</div>
+        <span class="flow-arrow" aria-hidden="true">→</span>
+        <div class="flow-step"><strong>Evidence</strong><br>imports, snapshots, full text</div>
+        <span class="flow-arrow" aria-hidden="true">→</span>
+        <div class="flow-step"><strong>Decisions</strong><br>identified humans and conflicts</div>
+        <span class="flow-arrow" aria-hidden="true">→</span>
+        <div class="flow-step"><strong>Output</strong><br>reports and verifiable bundles</div>
+      </div>
+      <div class="callout boundary">
+        <strong>Authority boundary</strong>
+        Automation, plugins, and model output may eventually propose or transform. They do not approve protocols or finalize scientific decisions.
       </div>
     </section>
 
     <section class="band">
       <div class="section-heading">
-        <p class="eyebrow">Ecosystem role</p>
-        <h2>Core rules for scientific software</h2>
+        <p class="eyebrow">Current protected-main baseline</p>
+        <h2>Real local conduct, with narrow claims</h2>
       </div>
-      <div class="feature-grid">
-        <article class="feature">
-          <h3>Human-authorized science</h3>
-          <p>Suggestions, drafts, and model outputs remain proposals until an authorized human action accepts them.</p>
-        </article>
-        <article class="feature">
-          <h3>Reconstructable history</h3>
-          <p>Protocols, amendments, evidence, provenance, snapshots, and outputs are designed to be audited after the fact.</p>
-        </article>
-        <article class="feature">
-          <h3>Local-first kernel</h3>
-          <p>The Core package owns the scientific contracts while apps, renderers, storage, and integrations stay outside the domain boundary.</p>
-        </article>
+      <div class="metric-grid">
+        <article class="metric"><strong>23</strong><span>validation-only packages in the accepted topology</span></article>
+        <article class="metric"><strong>Local</strong><span>durable workspaces without a database or cloud authority layer</span></article>
+        <article class="metric"><strong>Human</strong><span>policy-bound authority for admitted scientific decisions</span></article>
+        <article class="metric"><strong>Digest</strong><span>content identity for authoritative and evidentiary records</span></article>
+      </div>
+      <div class="hero-actions">
+        <a class="button primary" href="status/">Read the dated implementation status</a>
+        <a class="button" href="roadmap/">Understand what remains</a>
       </div>
     </section>
 
     <section class="split-band">
       <div>
-        <p class="eyebrow">Community entry points</p>
-        <h2>Read the story, inspect the contracts, and help sharpen the boundaries</h2>
-        <p>The site now separates public narrative from developer contracts. Blog posts explain the motivation and market position, while module pages document implemented behavior and current non-claims.</p>
+        <p class="eyebrow">Start at your altitude</p>
+        <h2>Evaluate the idea, run the software, or inspect the contracts</h2>
+        <p>The public narrative and developer reference are intentionally separate. Product pages explain why the system exists; module guides explain exactly where the authority and dependency boundaries live.</p>
       </div>
       <ul class="link-list">
-        <li><a href="blog/2026-06-28-where-nexus-fits-in-the-research-tool-landscape/">Where Nexus fits in the research tool landscape</a></li>
-        <li><a href="blog/2026-06-28-building-in-public-with-the-research-community/">Building in public with the research community</a></li>
-        <li><a href="developers/contributing/">Contributor guide</a></li>
-        <li><a href="developers/modules/">Module documentation</a></li>
-        <li><a href="developers/architecture/">Architecture boundary notes</a></li>
+        <li><a href="about/">Why Nexus Scholar exists</a></li>
+        <li><a href="tutorials/getting-started/">Getting-started walkthrough</a></li>
+        <li><a href="developers/architecture/">Architecture and dependency rules</a></li>
+        <li><a href="developers/modules/">Deep module reference</a></li>
+        <li><a href="developers/contributing/">Contributor workflow</a></li>
       </ul>
     </section>
   </main>
 
   <footer class="site-footer">
-    <p>Nexus Scholar Core. AI-assisted, never AI-authoritative.</p>
+    <div class="footer-inner">
+      <div>
+        <h2>Nexus Scholar Core</h2>
+        <p>Local-first, audit-oriented research workflow infrastructure. AI-assisted when governed; never AI-authoritative.</p>
+      </div>
+      <div>
+        <h3>Project</h3>
+        <ul><li><a href="status/">Status</a></li><li><a href="roadmap/">Roadmap</a></li><li><a href="about/">About</a></li></ul>
+      </div>
+      <div>
+        <h3>Build</h3>
+        <ul><li><a href="developers/">Developers</a></li><li><a href="tutorials/">Tutorials</a></li><li><a href="https://github.com/nexus-scholar-org/core-csharp">GitHub</a></li></ul>
+      </div>
+    </div>
+    <p class="footer-note">Public status baseline: protected <code>main</code> at <code>805f3d6</code>, 17 July 2026. Historical claims remain scoped to their dated evidence.</p>
   </footer>
   <script src="assets/js/site.js"></script>
 </body>

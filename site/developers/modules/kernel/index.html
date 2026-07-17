@@ -3,140 +3,108 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Kernel Module - Nexus Scholar Core</title>
+  <meta name="description" content="Developer guide to NexusScholar.Kernel canonical JSON, digests, envelopes, identifiers, timestamps, and verified rehydration.">
+  <title>Kernel developer guide - Nexus Scholar Core</title>
   <link rel="stylesheet" href="../../../assets/css/site.css">
 </head>
 <body>
-  <div class="release-status" role="status">Early alpha. Not production-ready. No package publication or PHP compatibility claim.</div>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <div class="release-status" role="status">Early alpha. Not production-ready. No package publication or broad PHP compatibility claim.</div>
   <header class="site-header">
     <nav class="nav" aria-label="Primary navigation">
       <a class="brand" href="../../../"><span class="brand-mark">NS</span><span>Nexus Scholar Core</span></a>
       <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-links">Menu</button>
       <div class="nav-links" id="nav-links">
-        <a href="../../../developers/" aria-current="page">Developers</a>
-        <a href="../../../tutorials/">Tutorials</a>
-        <a href="../../../blog/">Blog</a>
-        <a href="../../../about/">About</a>
-        <a href="https://github.com/nexus-scholar/core-csharp">GitHub</a>
+        <a href="../../../status/">Status</a><a href="../../../developers/" aria-current="page">Developers</a>
+        <a href="../../../tutorials/">Tutorials</a><a href="../../../roadmap/">Roadmap</a><a href="../../../about/">About</a>
+        <a href="https://github.com/nexus-scholar-org/core-csharp">GitHub</a>
       </div>
     </nav>
   </header>
-  <main class="page doc-page">
-    <p class="eyebrow">Module documentation</p>
+  <main class="page doc-page" id="main">
+    <nav class="breadcrumbs" aria-label="Breadcrumb"><a href="../../../developers/">Developers</a><span aria-hidden="true">/</span><a href="../">Modules</a><span aria-hidden="true">/</span><span aria-current="page">Kernel</span></nav>
+    <p class="eyebrow">Foundation · NexusScholar.Kernel</p>
     <h1>Kernel</h1>
-    <p class="lede">Deterministic primitives and canonicalization rules that every higher-level module relies on when the system needs one stable answer for identity, hashing, and time.</p>
+    <p class="lede">The deterministic vocabulary beneath every authority record: canonical JSON, scoped SHA-256 digests, strict envelopes, canonical time, and fail-closed identifiers.</p>
     <div class="doc-shell">
       <div class="doc-main">
-        <section class="content-section">
-          <h2>Scope and ownership</h2>
-          <p>Kernel is where the repository fixes the low-level rules that cannot drift from module to module. It owns canonical IDs, digest rendering, timestamp normalization, canonical JSON, and envelope rules. That means every domain module can reuse the same vocabulary for content identity without importing application concerns, persistence APIs, or host frameworks.</p>
-          <p class="section-intro">In practical terms, the module centers on three clusters of types: primitive guards and IDs in <code>KernelPrimitives.cs</code>, canonical content machinery in <code>CanonicalJson.cs</code> and <code>CanonicalTimestamp.cs</code>, and digest contracts in <code>ContentDigest</code>, <code>DigestEnvelope</code>, <code>DigestScope</code>, and <code>DigestAlgorithm</code>.</p>
+        <section class="content-section" id="purpose">
+          <h2>Purpose and authority boundary</h2>
+          <p>Kernel answers a narrow but consequential question: when two components claim to refer to the same scientific bytes or record, how is that identity reproduced? It owns representation mechanics, not research meaning. Protocol decides what belongs in protocol content; Workflow decides what belongs in a plan; Kernel gives both a deterministic encoding and digest vocabulary.</p>
+          <p class="section-note"><strong>Authority rule:</strong> a parsed digest string or deserialized envelope is only a claim. <code>DigestEnvelope.RehydrateAndVerify</code> returns <code>VerifiedDigestEnvelope</code> only after the caller supplies the expected digest, scope, schema id, and schema version and the implementation reproduces all of them.</p>
         </section>
 
-        <section class="content-section">
-          <h2>Gate and ADR status</h2>
-          <p><a href="https://github.com/nexus-scholar/core-csharp/blob/main/docs/gates/GATE-02.md">GATE-02</a> is the accepted scope for kernel determinism, and <a href="https://github.com/nexus-scholar/core-csharp/blob/main/docs/adr/0002-canonical-json-and-digests.md">ADR 0002</a> is the decision that makes those rules authoritative. The page-level takeaway is simple: if another module computes a digest, normalizes a timestamp, or serializes canonical scientific content, it should be using Kernel rather than re-inventing the rule locally.</p>
-          <p class="section-intro">The important fixed points are the lowercase <code>sha256:&lt;64 hex&gt;</code> digest format, the repository’s RFC-8785-style canonical JSON profile, the canonical UTC timestamp shape <code>yyyy-MM-ddTHH:mm:ss.fffffffZ</code>, and the shared digest-scope vocabulary that later modules reuse for protocol content, approval records, provenance events, manifests, and NDJSON streams.</p>
-          <p class="section-note">Evidence for the accepted surface lives in <a href="https://github.com/nexus-scholar/core-csharp/blob/main/docs/gates/GATE-02-EVIDENCE.md">GATE-02-EVIDENCE</a>. That matters because this module is foundational: a quiet change here would ripple into nearly every other digest-bearing contract.</p>
+        <section class="content-section" id="surface">
+          <h2>Key types and services</h2>
+          <ul>
+            <li><code>CanonicalJsonValue</code>, <code>CanonicalJsonObject</code>, and <code>CanonicalJsonSerializer</code> form the explicit value tree and serializer. Objects reject duplicate keys and can be frozen recursively.</li>
+            <li><code>ContentDigest</code> accepts only <code>sha256:&lt;64 lowercase hex&gt;</code>; default values fail when read as authority.</li>
+            <li><code>DigestScope</code> closes the base vocabulary to raw bytes, canonical records, protocol content, approval records, provenance events, bundle manifests, and NDJSON streams.</li>
+            <li><code>DigestEnvelope</code> binds algorithm, profile, scope, schema, version, and content before hashing.</li>
+            <li><code>CanonicalTimestamp</code> emits UTC as <code>yyyy-MM-ddTHH:mm:ss.fffffffZ</code>.</li>
+            <li><code>EntityId&lt;TTag&gt;</code>, <code>IIdGenerator</code>, <code>GuidV7IdGenerator</code>, <code>IClock</code>, and <code>SystemClock</code> keep identity and time explicit at record-creation boundaries.</li>
+            <li><code>NdjsonCanonicalizer</code> rejects BOM and carriage returns unless CRLF normalization is explicitly enabled.</li>
+          </ul>
+          <p>Source: <a href="https://github.com/nexus-scholar-org/core-csharp/tree/main/src/NexusScholar.Kernel">NexusScholar.Kernel</a>. The profile correction is recorded in <a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/docs/adr/0017-canonical-json-profile-correction.md">ADR 0017</a>.</p>
         </section>
 
-        <section class="content-section">
-          <h2>Diagrams</h2>
-          <p>The Kernel page benefits from diagrams because the source files are small but easy to mentally blur together. One view below shows the internal contract layering, and the other shows the standard “canonicalize then digest” use case that downstream modules depend on.</p>
-          <div class="diagram-grid">
-            <article class="diagram-card">
-              <h3>Class map</h3>
-              <p>Primitive guards and IDs feed canonicalization and digest contracts, which then support every higher-level record type.</p>
-              <svg viewBox="0 0 520 250" role="img" aria-label="Kernel class map">
-                <defs>
-                  <marker id="arrow-kernel-a" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
-                    <path d="M0,0 L8,4 L0,8 z" fill="#0b4f4a"></path>
-                  </marker>
-                </defs>
-                <rect x="20" y="28" width="132" height="58" rx="8" fill="#fff" stroke="#0f766e"></rect>
-                <text x="86" y="52" text-anchor="middle">KernelPrimitives</text>
-                <text x="86" y="70" text-anchor="middle" class="diagram-muted">Guard, IDs, clock</text>
-                <rect x="194" y="28" width="132" height="58" rx="8" fill="#fff" stroke="#0f766e"></rect>
-                <text x="260" y="52" text-anchor="middle">CanonicalJson</text>
-                <text x="260" y="70" text-anchor="middle" class="diagram-muted">stable content form</text>
-                <rect x="368" y="28" width="132" height="58" rx="8" fill="#fff" stroke="#0f766e"></rect>
-                <text x="434" y="52" text-anchor="middle">CanonicalTimestamp</text>
-                <text x="434" y="70" text-anchor="middle" class="diagram-muted">UTC normalization</text>
-                <rect x="116" y="144" width="132" height="58" rx="8" fill="#fff" stroke="#0f766e"></rect>
-                <text x="182" y="168" text-anchor="middle">ContentDigest</text>
-                <text x="182" y="186" text-anchor="middle" class="diagram-muted">sha256 rendering</text>
-                <rect x="286" y="144" width="132" height="58" rx="8" fill="#fff" stroke="#0f766e"></rect>
-                <text x="352" y="168" text-anchor="middle">DigestEnvelope</text>
-                <text x="352" y="186" text-anchor="middle" class="diagram-muted">scope plus schema</text>
-                <line x1="152" y1="57" x2="194" y2="57" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-kernel-a)"></line>
-                <line x1="326" y1="57" x2="368" y2="57" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-kernel-a)"></line>
-                <line x1="260" y1="86" x2="200" y2="144" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-kernel-a)"></line>
-                <line x1="434" y1="86" x2="366" y2="144" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-kernel-a)"></line>
-              </svg>
-            </article>
-            <article class="diagram-card">
-              <h3>Use case flow</h3>
-              <p>Most modules use Kernel in the same sequence: normalize the content, compute a digest, wrap it in an envelope, and then carry that identity forward.</p>
-              <svg viewBox="0 0 520 210" role="img" aria-label="Kernel use case flow">
-                <defs>
-                  <marker id="arrow-kernel-b" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
-                    <path d="M0,0 L8,4 L0,8 z" fill="#0b4f4a"></path>
-                  </marker>
-                </defs>
-                <rect x="16" y="76" width="96" height="52" rx="26" fill="#f4f1ea" stroke="#b7791f"></rect>
-                <text x="64" y="106" text-anchor="middle">raw record</text>
-                <rect x="148" y="70" width="104" height="64" rx="8" fill="#fff" stroke="#0f766e"></rect>
-                <text x="200" y="97" text-anchor="middle">canonicalize</text>
-                <text x="200" y="115" text-anchor="middle" class="diagram-muted">JSON plus time</text>
-                <rect x="288" y="70" width="104" height="64" rx="8" fill="#fff" stroke="#0f766e"></rect>
-                <text x="340" y="97" text-anchor="middle">digest</text>
-                <text x="340" y="115" text-anchor="middle" class="diagram-muted">scope-aware hash</text>
-                <rect x="428" y="70" width="76" height="64" rx="8" fill="#fff" stroke="#0f766e"></rect>
-                <text x="466" y="97" text-anchor="middle">reuse</text>
-                <text x="466" y="115" text-anchor="middle" class="diagram-muted">Protocol</text>
-                <line x1="112" y1="102" x2="148" y2="102" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-kernel-b)"></line>
-                <line x1="252" y1="102" x2="288" y2="102" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-kernel-b)"></line>
-                <line x1="392" y1="102" x2="428" y2="102" stroke="#0b4f4a" stroke-width="2" marker-end="url(#arrow-kernel-b)"></line>
-              </svg>
-            </article>
-          </div>
+        <section class="content-section" id="identity">
+          <h2>Canonical identity pipeline</h2>
+          <pre aria-label="Canonical identity pipeline"><code>typed domain content
+  → schema-owned ordering and omission rules
+  → DigestEnvelope(scope, schema, version, content)
+  → nexus-jcs-nfc-v1 UTF-8 bytes, no BOM
+  → SHA-256
+  → sha256:&lt;lowercase hex&gt;</code></pre>
+          <p>The profile normalizes strings and property names to NFC, rejects collisions introduced by normalization, sorts object properties ordinally, preserves array order, and renders finite IEEE-754 binary64 numbers using the RFC 8785/ECMAScript thresholds. Negative zero becomes <code>0</code>. Non-finite values and caller-visible integers or decimals that cannot be represented exactly in the accepted numeric model are rejected; schemas must model wider exact values as strings.</p>
+          <p>Digest scope is semantic. The same information hashed as <code>raw-artifact-bytes</code> and as <code>canonical-json-record</code> does not establish interchangeable authority. Absolute paths, machine names, runtime identity, serializer defaults, current time, secrets, caches, embeddings, and generated narratives are forbidden from scientific identity unless a narrower accepted contract explicitly makes them authoritative.</p>
         </section>
 
-        <section class="content-section">
-          <h2>Code surface and verification</h2>
-          <p>The implementation is compact and intentionally concentrated. The main files are <a href="https://github.com/nexus-scholar/core-csharp/blob/main/src/NexusScholar.Kernel/KernelPrimitives.cs">KernelPrimitives.cs</a>, <a href="https://github.com/nexus-scholar/core-csharp/blob/main/src/NexusScholar.Kernel/DigestTypes.cs">DigestTypes.cs</a>, <a href="https://github.com/nexus-scholar/core-csharp/blob/main/src/NexusScholar.Kernel/ContentDigest.cs">ContentDigest.cs</a>, <a href="https://github.com/nexus-scholar/core-csharp/blob/main/src/NexusScholar.Kernel/DigestEnvelope.cs">DigestEnvelope.cs</a>, <a href="https://github.com/nexus-scholar/core-csharp/blob/main/src/NexusScholar.Kernel/CanonicalJson.cs">CanonicalJson.cs</a>, <a href="https://github.com/nexus-scholar/core-csharp/blob/main/src/NexusScholar.Kernel/CanonicalTimestamp.cs">CanonicalTimestamp.cs</a>, and <a href="https://github.com/nexus-scholar/core-csharp/blob/main/src/NexusScholar.Kernel/NdjsonCanonicalizer.cs">NdjsonCanonicalizer.cs</a>.</p>
-          <p class="section-intro">Verification is equally direct: <a href="https://github.com/nexus-scholar/core-csharp/blob/main/tests/NexusScholar.Core.Tests/DeterministicKernelTests.cs">DeterministicKernelTests.cs</a> exercises the native behavior, while <a href="https://github.com/nexus-scholar/core-csharp/blob/main/tests/NexusScholar.Conformance.Tests/KernelFixtureTests.cs">KernelFixtureTests.cs</a> replays the conformance fixtures under <a href="https://github.com/nexus-scholar/core-csharp/blob/main/fixtures/conformance/kernel/">fixtures/conformance/kernel/</a>. That combination is appropriate for a low-level module: fast direct tests for the implementation, fixture replay for the contract surface.</p>
+        <section class="content-section" id="flow">
+          <h2>Typical developer flow</h2>
+          <ol class="step-list">
+            <li>Build a typed canonical object in the owning domain; normalize logically unordered collections there.</li>
+            <li>Select an approved scope and explicit schema id/version.</li>
+            <li>Construct <code>DigestEnvelope</code> and call <code>ComputeDigest()</code>.</li>
+            <li>Persist or exchange the envelope bytes and digest together.</li>
+            <li>On read, treat JSON as untrusted; call <code>RehydrateAndVerify</code> with authority selected outside the payload.</li>
+            <li>Pass only the verified wrapper across an authority boundary.</li>
+          </ol>
+          <pre><code>var envelope = new DigestEnvelope(
+    DigestScope.CanonicalJsonRecord,
+    "nexus.example-record",
+    "1.0.0",
+    content);
+var digest = envelope.ComputeDigest();</code></pre>
         </section>
 
-        <section class="content-section">
-          <h2>Downstream impact and current risks</h2>
-          <p>Kernel is effectively consumed by the rest of the domain stack: Protocol for content and approval digests, Workflow for canonical compile outputs, Provenance for event hashes, Bundles for manifest identity, and the later Search, Screening, Deduplication, AI, Shared, Artifacts, CLI, and Extensibility surfaces for various identity and payload rules.</p>
-          <p class="section-intro">The current risks are not in coverage volume but in boundary discipline. First, parts of Protocol still carry legacy provisional digest assumptions, so Gate 2 deliberately stops short of claiming protocol-wide cleanup. Second, very large non-integer numeric inputs still depend on explicit parse paths in <code>CanonicalJson.ParseNumber</code>; if another module needs strict precision guarantees beyond that, it must enforce them at its own schema boundary rather than assuming Kernel has solved the policy question for every caller.</p>
+        <section class="content-section" id="refusals">
+          <h2>Failure and refusal behavior</h2>
+          <p>Kernel fails closed on uppercase or prefix-free digests, unsupported algorithms/scopes, unknown or duplicate envelope fields, null or wrongly typed metadata, wrong profile/schema/version/scope, digest mismatch, tampered nested content, lone Unicode surrogates, post-normalization duplicate properties, non-finite numbers, invalid IDs, BOM-bearing NDJSON, and noncanonical line endings. Transport whitespace and object property order may differ during envelope input, but the reconstructed canonical digest must still match.</p>
+        </section>
+
+        <section class="content-section" id="evidence">
+          <h2>Tests and evidence</h2>
+          <p><a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/tests/NexusScholar.Core.Tests/DeterministicKernelTests.cs">DeterministicKernelTests</a> cover direct behavior. <a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/tests/NexusScholar.Conformance.Tests/KernelFixtureTests.cs">KernelFixtureTests</a> replay the <a href="https://github.com/nexus-scholar-org/core-csharp/tree/main/fixtures/conformance/kernel">Kernel conformance pack</a>, including RFC 8785 Appendix B vectors and adversarial rehydration records. Hardening evidence is recorded in <a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/docs/gates/HARDENING-01-CANONICAL-JSON-EVIDENCE.md">HARDENING-01</a> and <a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/docs/gates/HARDENING-02-KERNEL-REHYDRATION-EVIDENCE.md">HARDENING-02</a>.</p>
+        </section>
+
+        <section class="content-section" id="extension">
+          <h2>Extension points and nonclaims</h2>
+          <p>Domain packages extend Kernel by defining schema-specific canonical codecs and verified wrappers; they should not add ad hoc digest formats or reuse a scope with different semantics. Kernel provides no persistence, signature, encryption, authorization, schema registry, migration, network, UI, or scientific-validity guarantee. The profile is Nexus-specific because NFC preprocessing is not pure RFC 8785. Pre-correction <code>rfc8785-jcs</code> digests are invalid provisional state, not silently migrated compatibility records.</p>
         </section>
       </div>
       <aside class="doc-aside">
-        <section class="doc-card">
-          <h2>At a glance</h2>
-          <ul class="link-list">
-            <li>Authority scope: `GATE-02`</li>
-            <li>Primary ADR: `ADR 0002`</li>
-            <li>Role: shared deterministic foundation</li>
-            <li>Next module: <a href="../protocol/">Protocol</a></li>
-          </ul>
-        </section>
-        <section class="doc-card">
-          <h2>Key consumers</h2>
-          <ul class="link-list">
-            <li><a href="https://github.com/nexus-scholar/core-csharp/tree/main/src/NexusScholar.Protocol/">Protocol</a></li>
-            <li><a href="https://github.com/nexus-scholar/core-csharp/tree/main/src/NexusScholar.Workflow/">Workflow</a></li>
-            <li><a href="https://github.com/nexus-scholar/core-csharp/tree/main/src/NexusScholar.Provenance/">Provenance</a></li>
-            <li><a href="https://github.com/nexus-scholar/core-csharp/tree/main/src/NexusScholar.Bundles/">Bundles</a></li>
-          </ul>
-        </section>
+        <section class="doc-card"><h2>Implementation status</h2><p>Implemented and conformance-tested local foundation. Signatures, persistence, and migration remain outside this module.</p></section>
+        <section class="doc-card"><h2>On this page</h2><ul class="link-list">
+          <li><a href="#purpose">Boundary</a></li><li><a href="#surface">Types</a></li><li><a href="#identity">Identity</a></li>
+          <li><a href="#flow">Use flow</a></li><li><a href="#refusals">Refusals</a></li><li><a href="#evidence">Evidence</a></li>
+        </ul></section>
+        <section class="doc-card"><h2>Dependencies</h2><p>Inside Nexus: none. Every higher scientific package depends inward on this vocabulary.</p></section>
+        <section class="doc-card"><h2>Continue</h2><ul class="link-list"><li><a href="../protocol/">Protocol</a></li><li><a href="../artifacts/">Artifacts</a></li><li><a href="../shared/">Shared identity</a></li></ul></section>
       </aside>
     </div>
   </main>
-  <footer class="site-footer"><p>Kernel module documentation.</p></footer>
+  <footer class="site-footer"><p>Kernel developer guide · evidence-linked for the current early-alpha codebase.</p></footer>
   <script src="../../../assets/js/site.js"></script>
 </body>
 </html>
