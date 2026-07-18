@@ -513,7 +513,9 @@ public sealed class ResearchWorkspaceServiceTests
 
         using var workspace = TemporaryWorkspace.Create();
         var existingPath = $"{ResearchWorkspacePaths.SearchInputs}/casepath/child.txt";
-        File.WriteAllText(ResearchWorkspacePaths.InProject(workspace.Root, existingPath), "baseline");
+        var existingFullPath = ResearchWorkspacePaths.InProject(workspace.Root, existingPath);
+        Directory.CreateDirectory(Path.GetDirectoryName(existingFullPath)!);
+        File.WriteAllText(existingFullPath, "baseline");
 
         Assert.IsFalse(ResearchWorkspaceVerifier.TryResolveWorkspaceRelativePath(
             workspace.Root,
