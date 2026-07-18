@@ -393,12 +393,16 @@ public sealed class ProviderEvidenceCacheStore
 
     private static DateTimeOffset ParseTimestamp(string value)
     {
-        if (!DateTimeOffset.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var parsed))
+        if (!CanonicalTimestamp.IsCanonicalUtc(value, rejectDefault: true))
         {
             throw new SearchRuleException(ProviderEvidenceCacheErrorCodes.StoreIndexCorrupt, "Cached timestamp is malformed.");
         }
 
-        return parsed;
+        return DateTimeOffset.ParseExact(
+            value,
+            CanonicalTimestamp.DefaultUtcFormat,
+            CultureInfo.InvariantCulture,
+            DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal);
     }
 
     private static void WriteEntryManifest(string entryDirectory, ProviderEvidenceCacheEntry entry)
@@ -423,10 +427,10 @@ public sealed class ProviderEvidenceCacheStore
             ByteLength = entry.ByteLength,
             RawResponseDigest = entry.ResponseDigest.ToString(),
             RawResponseEvidenceDigest = entry.ResponseEvidenceDigest.ToString(),
-            RequestedAt = entry.RequestedAt.ToString("o", CultureInfo.InvariantCulture),
-            ReceivedAt = entry.ReceivedAt.ToString("o", CultureInfo.InvariantCulture),
-            StoredAt = entry.StoredAt.ToString("o", CultureInfo.InvariantCulture),
-            ExpiresAt = entry.ExpiresAt.ToString("o", CultureInfo.InvariantCulture),
+            RequestedAt = CanonicalTimestamp.FormatUtc(entry.RequestedAt),
+            ReceivedAt = CanonicalTimestamp.FormatUtc(entry.ReceivedAt),
+            StoredAt = CanonicalTimestamp.FormatUtc(entry.StoredAt),
+            ExpiresAt = CanonicalTimestamp.FormatUtc(entry.ExpiresAt),
             IsBodyRetained = entry.IsBodyRetained
         };
 

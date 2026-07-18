@@ -26,9 +26,9 @@ The historical FE-09 closeout baseline at `ea665eb` is 1,011 passing tests, two
 opt-in live-provider smokes skipped by default, and 24 validation-only packages.
 The active `cdx/fe-09-deep-review-remediation` branch completes the successor
 integrity work under ADR 0044 and ADR 0045. Its full local gate passed with
-1,048 tests, zero failures, two Windows-host Linux-only skips, and two opt-in
-live-provider smokes skipped. Remote governance still blocks protected-main
-closeout.
+1,084 tests, zero failures, two Windows-host Linux-only skips, two opt-in
+live-provider smokes skipped, and 150 exact mutation cases across nine project
+suites. Remote governance still blocks protected-main closeout.
 
 ## Immediate Next Gate
 

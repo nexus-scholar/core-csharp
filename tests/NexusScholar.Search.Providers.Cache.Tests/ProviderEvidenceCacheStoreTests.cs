@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Reflection;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NexusScholar.Kernel;
 using NexusScholar.Search;
@@ -269,6 +270,45 @@ public sealed class ProviderEvidenceCacheStoreTests
         var exception = Assert.ThrowsExactly<SearchRuleException>(() =>
             store.TryGet(key, DateTimeOffset.UtcNow, out _));
 
+        Assert.AreEqual(ProviderEvidenceCacheErrorCodes.StoreIndexCorrupt, exception.Category);
+    }
+
+    [TestMethod]
+    public void Cache_entry_manifest_timestamps_are_written_in_canonical_utc_format()
+    {
+        using var workspace = new TemporaryDirectory();
+        var store = new ProviderEvidenceCacheStore(workspace.Root);
+        var key = BuildKey("openalex", "openalex.works", OpenAlexParserId, OpenAlexParserVersion);
+        var body = Encoding.UTF8.GetBytes("{\"result\":\"canonical\"}");
+        var response = CaptureResponse(key, body, 200, "application/json");
+
+        var entry = store.Record(key, response, body);
+        var manifestPath = Path.Combine(workspace.Root, "entries", entry.Digest.Value, "entry.json");
+        using var manifest = JsonDocument.Parse(File.ReadAllText(manifestPath));
+
+        Assert.IsTrue(CanonicalTimestamp.IsCanonicalUtc(manifest.RootElement.GetProperty("RequestedAt").GetString(), rejectDefault: true));
+        Assert.IsTrue(CanonicalTimestamp.IsCanonicalUtc(manifest.RootElement.GetProperty("ReceivedAt").GetString(), rejectDefault: true));
+        Assert.IsTrue(CanonicalTimestamp.IsCanonicalUtc(manifest.RootElement.GetProperty("StoredAt").GetString(), rejectDefault: true));
+        Assert.IsTrue(CanonicalTimestamp.IsCanonicalUtc(manifest.RootElement.GetProperty("ExpiresAt").GetString(), rejectDefault: true));
+    }
+
+    [TestMethod]
+    public void Cache_entry_manifest_rejects_non_canonical_timestamp_tamper()
+    {
+        using var workspace = new TemporaryDirectory();
+        var store = new ProviderEvidenceCacheStore(workspace.Root);
+        var key = BuildKey("openalex", "openalex.works", OpenAlexParserId, OpenAlexParserVersion);
+        var body = Encoding.UTF8.GetBytes("{\"result\":\"canonical\"}");
+        var response = CaptureResponse(key, body, 200, "application/json");
+
+        var entry = store.Record(key, response, body);
+        var manifestPath = Path.Combine(workspace.Root, "entries", entry.Digest.Value, "entry.json");
+        var manifest = JsonNode.Parse(File.ReadAllText(manifestPath))!.AsObject();
+        manifest["StoredAt"] = "2026-01-01T00:00:00Z";
+        File.WriteAllText(manifestPath, manifest.ToJsonString());
+
+        var exception = Assert.ThrowsExactly<SearchRuleException>(() =>
+            store.TryGet(key, entry.StoredAt, out _));
         Assert.AreEqual(ProviderEvidenceCacheErrorCodes.StoreIndexCorrupt, exception.Category);
     }
 

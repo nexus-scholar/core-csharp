@@ -89,10 +89,10 @@ public sealed class ProviderLiveRequest
     public string EndpointPathAndQuery { get; }
     public bool HasBody => body is not null;
 
-    public static ProviderLiveRequest Get(string operationId, string providerAlias, string endpointPathAndQuery) =>
+    internal static ProviderLiveRequest Get(string operationId, string providerAlias, string endpointPathAndQuery) =>
         new(operationId, providerAlias, "GET", endpointPathAndQuery, null);
 
-    public static ProviderLiveRequest Post(
+    internal static ProviderLiveRequest Post(
         string operationId,
         string providerAlias,
         string endpointPathAndQuery,

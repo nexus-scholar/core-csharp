@@ -6,4 +6,9 @@
     <ProjectReference Include="../NexusScholar.Kernel/NexusScholar.Kernel.csproj" />
     <ProjectReference Include="../NexusScholar.Search/NexusScholar.Search.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="NexusScholar.Search.Providers.Live.Tests" />
+    <InternalsVisibleTo Include="NexusScholar.Search.Providers.OpenAlex" />
+    <InternalsVisibleTo Include="NexusScholar.Search.Providers.SemanticScholar" />
+  </ItemGroup>
 </Project>

@@ -197,6 +197,16 @@ public sealed class OpenAlexRecordedResponseAdapterTests
             OpenAlexRecordedResponseAdapter.ValidateSanitizedDescriptor("/works?search=ok&api-key=abc"));
         Assert.ThrowsExactly<SearchRuleException>(() =>
             OpenAlexRecordedResponseAdapter.ValidateSanitizedDescriptor("/works?search=api_key%3Dsecret"));
+        Assert.ThrowsExactly<SearchRuleException>(() =>
+            OpenAlexRecordedResponseAdapter.ValidateSanitizedDescriptor("/works?search=%74oken%3Dsecret"));
+        Assert.ThrowsExactly<SearchRuleException>(() =>
+            OpenAlexRecordedResponseAdapter.ValidateSanitizedDescriptor("/works?search=token%253Dsecret"));
+        Assert.ThrowsExactly<SearchRuleException>(() =>
+            OpenAlexRecordedResponseAdapter.ValidateSanitizedDescriptor("/works?search=%ZZ"));
+        Assert.ThrowsExactly<SearchRuleException>(() =>
+            OpenAlexRecordedResponseAdapter.ValidateSanitizedDescriptor("/works?query=Bearer+abc"));
+        Assert.ThrowsExactly<SearchRuleException>(() =>
+            OpenAlexRecordedResponseAdapter.ValidateSanitizedDescriptor("/works?authorization=Bearer+abc"));
 
         var authorization = ProviderAcquisitionRequest.Create(
             "request-authorization",
@@ -212,6 +222,41 @@ public sealed class OpenAlexRecordedResponseAdapterTests
             OpenAlexRecordedResponseAdapter.Describe(
                 authorization,
                 ProviderPageRequest.Create(authorization, 0, 2, 0)));
+    }
+
+    [TestMethod]
+    public void OpenAlex_request_description_requires_wildcard_cursor_for_first_page_and_omits_continuation_cursor_for_subsequent_pages()
+    {
+        var request = ProviderAcquisitionRequest.Create(
+            "request-1",
+            "openalex",
+            "artificial intelligence",
+            null,
+            null,
+            2,
+            0,
+            false,
+            RequestedAt);
+
+        Assert.ThrowsExactly<SearchRuleException>(() =>
+            OpenAlexRecordedResponseAdapter.Describe(request, ProviderPageRequest.Create(request, 0, 2, 0, "cursor")));
+        var malformedPercentQuery = ProviderAcquisitionRequest.Create(
+            "request-malformed-percent",
+            "openalex",
+            "artificial%2intelligence",
+            null,
+            null,
+            2,
+            0,
+            false,
+            RequestedAt);
+        Assert.ThrowsExactly<SearchRuleException>(() =>
+            OpenAlexRecordedResponseAdapter.Describe(malformedPercentQuery, ProviderPageRequest.Create(malformedPercentQuery, 0, 2, 0)));
+
+        Assert.ThrowsExactly<SearchRuleException>(() =>
+            OpenAlexRecordedResponseAdapter.Describe(
+                request,
+                ProviderPageRequest.Create(request, 1, 2, 2)));
     }
 
     [TestMethod]

@@ -47,11 +47,15 @@ jobs:
       - name: Test
         run: dotnet test NexusScholar.Core.slnx -c Release --no-build --filter "TestCategory!=LiveProvider" --logger trx --results-directory artifacts/test-results
 
+      - name: Mutation phase 5
+        shell: pwsh
+        run: ./scripts/mutation-phase5.ps1
+
       - name: Build validation artifacts and evidence
         shell: pwsh
         run: |
           ./scripts/verify-packages.ps1
-          ./scripts/build-release-evidence.ps1
+          ./scripts/build-release-evidence.ps1 -RequireCleanSourceTree
 
       - name: Upload test results
         if: always()

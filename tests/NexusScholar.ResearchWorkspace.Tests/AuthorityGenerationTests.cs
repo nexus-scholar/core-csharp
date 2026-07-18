@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NexusScholar.Deduplication;
 using NexusScholar.Kernel;
@@ -175,6 +176,135 @@ public sealed class AuthorityGenerationTests
             ? Directory.GetDirectories(generationsRoot).OrderBy(item => item, StringComparer.Ordinal).ToArray()
             : Array.Empty<string>();
         CollectionAssert.AreEqual(beforeGenerations, afterGenerations);
+    }
+
+    [TestMethod]
+    public void AnalyzeAndCommit_leases_snapshotted_inputs_through_promotion_and_revalidates_before_publish()
+    {
+        using var workspace = Workspace.CreateAnalyzed();
+        var expected = workspace.AnalyzedProject;
+        var inputPath = ResearchWorkspacePaths.InProject(workspace.Root, expected.Inputs[0].RelativePath!);
+        var mutationWasBlocked = false;
+        ResearchWorkspaceAnalysisCommit? commit = null;
+        ResearchWorkspaceDigestMismatchException? rejection = null;
+
+        try
+        {
+            commit = ResearchWorkspaceTransaction.AnalyzeAndCommit(
+                workspace.Location,
+                expected,
+                point =>
+                {
+                    if (point != ResearchWorkspaceAnalysisFaultPoint.AfterPromotionBeforeFinalInputValidation)
+                    {
+                        return;
+                    }
+
+                    try
+                    {
+                        File.WriteAllText(inputPath, "mutated after promotion");
+                    }
+                    catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+                    {
+                        mutationWasBlocked = true;
+                    }
+                });
+        }
+        catch (ResearchWorkspaceDigestMismatchException exception)
+        {
+            rejection = exception;
+        }
+
+        Assert.IsTrue(
+            mutationWasBlocked || rejection is not null,
+            "A mutation after generation promotion must be blocked by the input lease or rejected by final revalidation.");
+        if (mutationWasBlocked)
+        {
+            Assert.IsNotNull(commit);
+            Assert.AreEqual(expected.Revision + 1, commit.Project.Revision);
+            Assert.AreEqual(
+                expected.Inputs[0].Sha256,
+                ContentDigest.Sha256(File.ReadAllBytes(inputPath)).ToString());
+        }
+        else
+        {
+            Assert.IsNull(commit);
+            var current = ResearchWorkspaceStore.ReadProject(workspace.Location.ProjectFilePath);
+            Assert.AreEqual(expected.Revision, current.Revision);
+            Assert.AreEqual(expected.CurrentGenerationId, current.CurrentGenerationId);
+        }
+    }
+
+    [TestMethod]
+    public void AnalyzeAndCommit_rejects_reparse_swap_between_path_validation_and_open()
+    {
+        using var workspace = Workspace.CreateAnalyzed();
+        var expected = workspace.AnalyzedProject;
+        var inputPath = ResearchWorkspacePaths.InProject(workspace.Root, expected.Inputs[0].RelativePath!);
+        var inputDirectory = Path.GetDirectoryName(inputPath)!;
+        var backupDirectory = inputDirectory + ".race-backup";
+        var externalRoot = Path.Combine(Path.GetTempPath(), $"nexus-rw-input-race-{Guid.NewGuid():N}");
+        var externalInputDirectory = Path.Combine(externalRoot, "search-001");
+        var externalInputPath = Path.Combine(externalInputDirectory, Path.GetFileName(inputPath));
+        Directory.CreateDirectory(externalInputDirectory);
+        File.Copy(inputPath, externalInputPath);
+        var swapped = false;
+
+        try
+        {
+            Assert.ThrowsExactly<ResearchWorkspaceConcurrencyException>(() =>
+                ResearchWorkspaceTransaction.AnalyzeAndCommit(
+                    workspace.Location,
+                    expected,
+                    point =>
+                    {
+                        if (point != ResearchWorkspaceAnalysisFaultPoint.AfterInputPathValidatedBeforeOpen || swapped)
+                        {
+                            return;
+                        }
+
+                        Directory.Move(inputDirectory, backupDirectory);
+                        if (OperatingSystem.IsWindows())
+                        {
+                            using var process = Process.Start(new ProcessStartInfo(
+                                "cmd.exe",
+                                $"/c mklink /J \"{inputDirectory}\" \"{externalInputDirectory}\"")
+                            {
+                                CreateNoWindow = true,
+                                UseShellExecute = false
+                            });
+                            process!.WaitForExit();
+                            Assert.AreEqual(0, process.ExitCode);
+                        }
+                        else
+                        {
+                            Directory.CreateSymbolicLink(inputDirectory, externalInputDirectory);
+                        }
+
+                        swapped = true;
+                    }));
+
+            var current = ResearchWorkspaceStore.ReadProject(workspace.Location.ProjectFilePath);
+            Assert.AreEqual(expected.Revision, current.Revision);
+            Assert.AreEqual(expected.CurrentGenerationId, current.CurrentGenerationId);
+        }
+        finally
+        {
+            if (swapped && Directory.Exists(inputDirectory))
+            {
+                Directory.Delete(inputDirectory);
+            }
+
+            if (Directory.Exists(backupDirectory))
+            {
+                Directory.Move(backupDirectory, inputDirectory);
+            }
+
+            if (Directory.Exists(externalRoot))
+            {
+                Directory.Delete(externalRoot, recursive: true);
+            }
+        }
     }
 
     [TestMethod]

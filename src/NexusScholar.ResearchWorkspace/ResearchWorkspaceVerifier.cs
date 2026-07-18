@@ -1,3 +1,6 @@
+using System.Runtime.InteropServices;
+using System.Text;
+using Microsoft.Win32.SafeHandles;
 using NexusScholar.Kernel;
 using NexusScholar.Search;
 
@@ -131,6 +134,11 @@ public static class ResearchWorkspaceVerifier
             return false;
         }
 
+        if (IsExistingReparsePointOrUninspectable(rootFullPath))
+        {
+            return false;
+        }
+
         var rootWithSeparator = rootFullPath.EndsWith(Path.DirectorySeparatorChar)
             ? rootFullPath
             : rootFullPath + Path.DirectorySeparatorChar;
@@ -161,8 +169,7 @@ public static class ResearchWorkspaceVerifier
         foreach (var segment in segments)
         {
             current = Path.Combine(current, segment);
-            if ((File.Exists(current) || Directory.Exists(current)) &&
-                (File.GetAttributes(current) & FileAttributes.ReparsePoint) != 0)
+            if (IsExistingReparsePointOrUninspectable(current))
             {
                 return false;
             }
@@ -170,6 +177,94 @@ public static class ResearchWorkspaceVerifier
 
         fullPath = candidate;
         return true;
+    }
+
+    internal static bool IsOpenFileAtExpectedPath(FileStream stream, string expectedPath)
+    {
+        ArgumentNullException.ThrowIfNull(stream);
+        if (string.IsNullOrWhiteSpace(expectedPath) || stream.SafeFileHandle.IsInvalid)
+        {
+            return false;
+        }
+
+        try
+        {
+            var openPath = OperatingSystem.IsWindows()
+                ? GetWindowsOpenPath(stream.SafeFileHandle)
+                : OperatingSystem.IsLinux()
+                    ? GetLinuxOpenPath(stream.SafeFileHandle)
+                    : OperatingSystem.IsMacOS()
+                        ? GetMacOsOpenPath(stream.SafeFileHandle)
+                        : null;
+            if (string.IsNullOrWhiteSpace(openPath))
+            {
+                return false;
+            }
+
+            var comparison = OperatingSystem.IsWindows()
+                ? StringComparison.OrdinalIgnoreCase
+                : StringComparison.Ordinal;
+            return string.Equals(
+                Path.GetFullPath(openPath),
+                Path.GetFullPath(expectedPath),
+                comparison);
+        }
+        catch (Exception exception) when (
+            exception is IOException or UnauthorizedAccessException or NotSupportedException or ArgumentException)
+        {
+            return false;
+        }
+    }
+
+    private static string? GetWindowsOpenPath(SafeFileHandle handle)
+    {
+        var capacity = 512;
+        while (capacity <= 32768)
+        {
+            var buffer = new StringBuilder(capacity);
+            var length = GetFinalPathNameByHandle(handle, buffer, (uint)buffer.Capacity, 0);
+            if (length == 0)
+            {
+                return null;
+            }
+
+            if (length < buffer.Capacity)
+            {
+                var path = buffer.ToString();
+                if (path.StartsWith(@"\\?\UNC\", StringComparison.OrdinalIgnoreCase))
+                {
+                    return @"\\" + path[8..];
+                }
+
+                return path.StartsWith(@"\\?\", StringComparison.OrdinalIgnoreCase)
+                    ? path[4..]
+                    : path;
+            }
+
+            capacity = checked((int)length + 1);
+        }
+
+        return null;
+    }
+
+    private static string? GetLinuxOpenPath(SafeFileHandle handle)
+    {
+        var descriptor = handle.DangerousGetHandle().ToInt64();
+        var target = new FileInfo($"/proc/self/fd/{descriptor}").ResolveLinkTarget(returnFinalTarget: true);
+        return target?.FullName;
+    }
+
+    private static string? GetMacOsOpenPath(SafeFileHandle handle)
+    {
+        const int fGetPath = 50;
+        var buffer = new byte[4096];
+        if (FcntlGetPath(handle.DangerousGetHandle().ToInt32(), fGetPath, buffer) != 0)
+        {
+            return null;
+        }
+
+        var terminator = Array.IndexOf(buffer, (byte)0);
+        return Encoding.UTF8.GetString(buffer, 0, terminator < 0 ? buffer.Length : terminator);
     }
 
     private static bool HasCaseSafeRelativePath(string rootFullPath, string normalizedRelativePath)
@@ -221,6 +316,34 @@ public static class ResearchWorkspaceVerifier
 
         return true;
     }
+
+    private static bool IsExistingReparsePointOrUninspectable(string path)
+    {
+        if (!File.Exists(path) && !Directory.Exists(path))
+        {
+            return false;
+        }
+
+        try
+        {
+            return (File.GetAttributes(path) & FileAttributes.ReparsePoint) != 0;
+        }
+        catch (Exception exception) when (
+            exception is IOException or UnauthorizedAccessException or NotSupportedException)
+        {
+            return true;
+        }
+    }
+
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    private static extern uint GetFinalPathNameByHandle(
+        SafeFileHandle file,
+        StringBuilder path,
+        uint pathLength,
+        uint flags);
+
+    [DllImport("libc", EntryPoint = "fcntl", SetLastError = true)]
+    private static extern int FcntlGetPath(int fileDescriptor, int command, byte[] path);
 
     private static string DisplayInput(string inputId)
     {

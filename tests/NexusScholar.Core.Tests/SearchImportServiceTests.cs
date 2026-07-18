@@ -307,6 +307,35 @@ public sealed class SearchImportServiceTests
     }
 
     [TestMethod]
+    public void Search_import_scopus_csv_duplicate_exact_normalized_headers_do_not_throw_and_yield_precise_skipped_evidence()
+    {
+        var sourceText = string.Join('\n', new[]
+        {
+            "eid,  title  ,doi,  DOI ",
+            "2-s2.0-1,Example,10.1000/one,10.1000/two"
+        });
+
+        var trace = new SearchImportService().Parse(
+            "trace-import-scopus-dupe-headers-exact",
+            NewRequest("scopus-csv"),
+            Encoding.UTF8.GetBytes(sourceText));
+
+        Assert.AreEqual(1, trace.ImportedRecords.Count);
+        Assert.AreEqual("row-1", trace.ImportedRecords[0].SourceRecordId);
+        Assert.IsTrue(trace.ImportedRecords[0].Notices.Any(note =>
+            note.Category == SearchImportErrorCodes.MalformedRecord &&
+            note.Message == "Scopus header contains duplicate normalized field 'doi'." &&
+            note.SourceRecordId == "row-1"));
+        Assert.IsTrue(trace.ParserWarnings.Any(notice =>
+            notice.Category == SearchImportErrorCodes.MalformedRecord &&
+            notice.Message == "Scopus header contains duplicate normalized field 'doi'." &&
+            notice.SourceRecordId == "row-1"));
+        Assert.IsTrue(trace.ImportedRecords[0].IsSkipped);
+        Assert.AreEqual(SearchImportErrorCodes.MalformedRecord, trace.ImportedRecords[0].SkipReason);
+        Assert.AreEqual(0, trace.Sightings.Count);
+    }
+
+    [TestMethod]
     public void Search_import_scopus_csv_duplicate_blank_headers_fail_closed()
     {
         const string sourceText = """

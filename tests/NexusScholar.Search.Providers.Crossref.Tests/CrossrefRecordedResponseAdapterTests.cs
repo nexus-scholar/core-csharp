@@ -183,6 +183,15 @@ public sealed class CrossrefRecordedResponseAdapterTests
         var url = Assert.ThrowsExactly<SearchRuleException>(() =>
             CrossrefRecordedResponseAdapter.ValidateSanitizedDescriptor("/works?query=https%3A%2F%2Fexample.test"));
         Assert.AreEqual(ProviderAcquisitionErrorCodes.SecretBearingDescriptor, url.Category);
+        var doubleEncoded = Assert.ThrowsExactly<SearchRuleException>(() =>
+            CrossrefRecordedResponseAdapter.ValidateSanitizedDescriptor("/works?query=token%253Dsecret"));
+        Assert.AreEqual(ProviderAcquisitionErrorCodes.SecretBearingDescriptor, doubleEncoded.Category);
+        var malformedPercent = Assert.ThrowsExactly<SearchRuleException>(() =>
+            CrossrefRecordedResponseAdapter.ValidateSanitizedDescriptor("/works?query=%GG"));
+        Assert.AreEqual(ProviderAcquisitionErrorCodes.SecretBearingDescriptor, malformedPercent.Category);
+        var plusBearer = Assert.ThrowsExactly<SearchRuleException>(() =>
+            CrossrefRecordedResponseAdapter.ValidateSanitizedDescriptor("/works?query=Bearer+abc"));
+        Assert.AreEqual(ProviderAcquisitionErrorCodes.SecretBearingDescriptor, plusBearer.Category);
         var bareContact = Assert.ThrowsExactly<SearchRuleException>(() =>
             CrossrefRecordedResponseAdapter.ValidateSanitizedDescriptor("/works?query=operator%40example.test"));
         Assert.AreEqual(ProviderAcquisitionErrorCodes.SecretBearingDescriptor, bareContact.Category);
@@ -226,6 +235,36 @@ public sealed class CrossrefRecordedResponseAdapterTests
         StringAssert.Contains(
             new CrossrefRecordedResponseAdapter().DescribeRequest(safe, safePage).EndpointPathAndQuery,
             "tokenization%20methods");
+
+        var malformedQuery = ProviderAcquisitionRequest.Create(
+            "malformed-percent",
+            "crossref",
+            "artificial%2intelligence",
+            null,
+            null,
+            2,
+            0,
+            false,
+            RequestedAt);
+        var malformedPercentQueryPage = ProviderPageRequest.Create(malformedQuery, 0, 2, 0);
+        var malformedPercentQuery = Assert.ThrowsExactly<SearchRuleException>(() =>
+            new CrossrefRecordedResponseAdapter().DescribeRequest(malformedQuery, malformedPercentQueryPage));
+        Assert.AreEqual(ProviderAcquisitionErrorCodes.SecretBearingDescriptor, malformedPercentQuery.Category);
+
+        var arbitraryToken = ProviderAcquisitionRequest.Create(
+            "arbitrary-token",
+            "crossref",
+            "token=arbitrary",
+            null,
+            null,
+            2,
+            0,
+            false,
+            RequestedAt);
+        var arbitraryTokenPage = ProviderPageRequest.Create(arbitraryToken, 0, 2, 0);
+        var arbitraryTokenException = Assert.ThrowsExactly<SearchRuleException>(() =>
+            new CrossrefRecordedResponseAdapter().DescribeRequest(arbitraryToken, arbitraryTokenPage));
+        Assert.AreEqual(ProviderAcquisitionErrorCodes.SecretBearingDescriptor, arbitraryTokenException.Category);
 
         var bareContactQuery = ProviderAcquisitionRequest.Create(
             "bare-contact", "crossref", "operator@example.test", null, null, 2, 0, false, RequestedAt);

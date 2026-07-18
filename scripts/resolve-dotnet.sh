@@ -13,7 +13,18 @@ resolve_pinned_dotnet() {
   if [[ -n "${DOTNET_ROOT:-}" ]]; then
     candidates+=("$DOTNET_ROOT/dotnet")
   fi
-  candidates+=("$HOME/.dotnet/dotnet")
+
+  local home_directory="${HOME:-${USERPROFILE:-}}"
+  if [[ -z "${home_directory}" && -d /root ]]; then
+    home_directory="/root"
+  fi
+  if [[ -n "${home_directory}" ]]; then
+    candidates+=("$home_directory/.dotnet/dotnet")
+  fi
+
+  candidates+=("/usr/share/dotnet/dotnet")
+  candidates+=("/opt/dotnet/dotnet")
+
   if command -v dotnet >/dev/null 2>&1; then
     candidates+=("$(command -v dotnet)")
   fi

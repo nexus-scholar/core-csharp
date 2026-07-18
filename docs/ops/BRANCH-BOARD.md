@@ -21,8 +21,9 @@ Status date: 2026-07-18
 - Protected-main full solution: 1,011 passed, 0 failed, 2 opt-in live smokes
   skipped.
 - Remediation candidate: ADR 0044 and ADR 0045 implementation and local
-  verification complete; 1,048 passed, 0 failed, 2 Windows-host Linux-only
-  skips, and 2 opt-in live smokes skipped.
+  verification complete; 1,084 passed, 0 failed, 2 Windows-host Linux-only
+  skips, 2 opt-in live smokes skipped, and 150 exact mutation cases verified
+  across 9 project suites.
 - Remote closeout blocker: one repository collaborator cannot supply the
   required independent approval; main also lacks required CODEOWNER review,
   latest-push reapproval, linear history, and signed-commit enforcement.

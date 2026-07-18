@@ -4,10 +4,11 @@ namespace NexusScholar.Search;
 
 public static class ProviderSecretPolicy
 {
+    private const int MaxDecodePasses = 2;
     private static readonly Regex EmailAddressPattern = new(
         @"[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+",
-        RegexOptions.Compiled | RegexOptions.CultureInvariant,
-        TimeSpan.FromMilliseconds(100));
+        RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.NonBacktracking,
+        Regex.InfiniteMatchTimeout);
 
     private static readonly string[] ForbiddenNameFragments =
     [
@@ -18,6 +19,8 @@ public static class ProviderSecretPolicy
         "api-key",
         "apikey",
         "x-api-key",
+        "access_key",
+        "access-key",
         "password",
         "secret",
         "token",
@@ -143,10 +146,13 @@ public static class ProviderSecretPolicy
 
         var tokenIsAllowed = allowPaginationToken &&
             string.Equals(rawName, "token", StringComparison.OrdinalIgnoreCase);
+        var normalizedName = NormalizeDescriptorName(rawName);
         if (!tokenIsAllowed &&
             (ContainsAny(rawName, ForbiddenNameFragments) ||
+             ContainsAny(normalizedName, ForbiddenNameFragments) ||
              ContainsAny(name, ForbiddenNameFragments) ||
-             ForbiddenExactNames.Contains(rawName)))
+             ForbiddenExactNames.Contains(rawName) ||
+             ForbiddenExactNames.Contains(normalizedName)))
         {
             return true;
         }
@@ -166,13 +172,71 @@ public static class ProviderSecretPolicy
     {
         try
         {
-            decoded = Uri.UnescapeDataString(value);
-            return true;
+            var normalized = NormalizeForSecretPolicy(value);
+            for (var pass = 0; ; pass++)
+            {
+                if (!HasValidPercentEncoding(normalized))
+                {
+                    decoded = string.Empty;
+                    return false;
+                }
+
+                var unescaped = Uri.UnescapeDataString(normalized);
+                if (string.Equals(unescaped, normalized, StringComparison.Ordinal))
+                {
+                    decoded = unescaped;
+                    return true;
+                }
+
+                if (pass + 1 >= MaxDecodePasses)
+                {
+                    decoded = unescaped;
+                    return false;
+                }
+
+                normalized = NormalizeForSecretPolicy(unescaped);
+                if (!HasValidPercentEncoding(normalized))
+                {
+                    decoded = unescaped;
+                    return true;
+                }
+            }
         }
         catch (UriFormatException)
         {
             decoded = string.Empty;
             return false;
         }
+    }
+
+    private static string NormalizeForSecretPolicy(string value) =>
+        value.Replace('+', ' ');
+
+    private static string NormalizeDescriptorName(string value) =>
+        new(value.Select(character =>
+            char.IsWhiteSpace(character) || character is '+' or '-'
+                ? '_'
+                : character).ToArray());
+
+    private static bool HasValidPercentEncoding(string value)
+    {
+        for (var index = 0; index < value.Length; index++)
+        {
+            if (value[index] != '%')
+            {
+                continue;
+            }
+
+            if (index + 2 >= value.Length ||
+                !Uri.IsHexDigit(value[index + 1]) ||
+                !Uri.IsHexDigit(value[index + 2]))
+            {
+                return false;
+            }
+
+            index += 2;
+        }
+
+        return true;
     }
 }

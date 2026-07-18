@@ -18,7 +18,13 @@ public static class ResearchWorkspaceAnalyzer
 
     public static ResearchWorkspaceAnalysisResult Analyze(
         ResearchWorkspaceLocation location,
-        ResearchWorkspaceProject project)
+        ResearchWorkspaceProject project) =>
+        Analyze(location, project, inputSnapshots: null);
+
+    internal static ResearchWorkspaceAnalysisResult Analyze(
+        ResearchWorkspaceLocation location,
+        ResearchWorkspaceProject project,
+        IReadOnlyDictionary<string, byte[]>? inputSnapshots)
     {
         ArgumentNullException.ThrowIfNull(location);
         ArgumentNullException.ThrowIfNull(project);
@@ -31,7 +37,7 @@ public static class ResearchWorkspaceAnalyzer
             throw new ResearchWorkspaceMissingInputException("Analyze requires at least one imported search export.");
         }
 
-        var traces = inputs.Select(input => RegenerateTrace(location, project, input)).ToArray();
+        var traces = inputs.Select(input => RegenerateTrace(location, project, input, inputSnapshots)).ToArray();
         var deduplicationResult = new DeduplicationService().Execute(
             $"dedup-{project.WorkspaceId}",
             Array.Empty<SearchTrace>(),
@@ -51,19 +57,32 @@ public static class ResearchWorkspaceAnalyzer
     private static SearchImportTrace RegenerateTrace(
         ResearchWorkspaceLocation location,
         ResearchWorkspaceProject project,
-        ResearchWorkspaceInput input)
+        ResearchWorkspaceInput input,
+        IReadOnlyDictionary<string, byte[]>? inputSnapshots)
     {
-        if (!ResearchWorkspaceVerifier.TryResolveWorkspaceRelativePath(location.RootDirectory, input.EffectiveRelativePath, out var sourcePath))
+        byte[] sourceBytes;
+        if (inputSnapshots is not null)
         {
-            throw new ResearchWorkspaceMissingInputException($"Input path is not a valid workspace-relative path: {input.EffectiveInputId}");
+            if (!inputSnapshots.TryGetValue(input.EffectiveInputId, out sourceBytes!))
+            {
+                throw new ResearchWorkspaceMissingInputException($"Input snapshot is missing: {input.EffectiveInputId}");
+            }
+        }
+        else
+        {
+            if (!ResearchWorkspaceVerifier.TryResolveWorkspaceRelativePath(location.RootDirectory, input.EffectiveRelativePath, out var sourcePath))
+            {
+                throw new ResearchWorkspaceMissingInputException($"Input path is not a valid workspace-relative path: {input.EffectiveInputId}");
+            }
+
+            if (!File.Exists(sourcePath))
+            {
+                throw new ResearchWorkspaceMissingInputException($"Input file is missing: {input.EffectiveRelativePath}");
+            }
+
+            sourceBytes = File.ReadAllBytes(sourcePath);
         }
 
-        if (!File.Exists(sourcePath))
-        {
-            throw new ResearchWorkspaceMissingInputException($"Input file is missing: {input.EffectiveRelativePath}");
-        }
-
-        var sourceBytes = File.ReadAllBytes(sourcePath);
         var digest = ContentDigest.Sha256(sourceBytes).ToString();
         if (!string.Equals(digest, input.Sha256, StringComparison.Ordinal))
         {

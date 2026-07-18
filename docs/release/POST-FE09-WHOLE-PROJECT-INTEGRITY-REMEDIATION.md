@@ -13,24 +13,32 @@ Authority:
 ## Repaired Findings
 
 - Research Workspace paths use one cross-platform containment boundary,
-  transaction commits revalidate exact source bytes under the commit lock,
-  and successor corpus authority clears predecessor-bound current pointers
-  while preserving immutable history.
+  reject linked roots and segments, bind admitted inputs to their OS-resolved
+  open handles, retain byte snapshots through publication, and revalidate
+  guarded inputs before the project pointer changes. Successor corpus authority
+  clears predecessor-bound current pointers while preserving immutable history.
 - Provider-cache reads, rebuilds, and idempotent records verify retained body
-  length and digest. One decoded secret/contact policy now governs recorded and
-  live provider descriptors with operation-scoped Semantic Scholar tokens.
+  length and digest and persist strict canonical UTC timestamps. One recursively
+  decoded secret/contact policy now rejects malformed percent encoding,
+  plus-separated credential names, and nested signed values across recorded and
+  live descriptors, with operation-scoped Semantic Scholar tokens.
+- Recorded Full Text source, rights, and redirect references reject relative,
+  recursively encoded, malformed, user-info, and nested signed credential
+  material before canonical evidence is created.
 - Nested RIS blocks and duplicate normalized Scopus headers fail closed with
   stable skipped-record evidence. Colon-bearing WorkIds round-trip without
   admitting ambiguous namespace-prefixed values.
 - Canonical scientific construction and rehydration reject default timestamps.
   Superseded Protocol authority round-trips as historical evidence while
   active Screening admission still requires Approved status.
-- AI proposals snapshot mutable values. Extension manifests and capability
-  selections reject undefined values and restrict grants to the manifest's
-  requested capability set.
+- AI proposals snapshot mutable values, including public fields, reject
+  unrepresented private state, preserve runtime type, and return defensive
+  rehydrations. Extension manifests and capability selections reject undefined
+  values and restrict grants to the manifest's requested capability set.
 - The pinned SDK resolver, exact mutation manifest, package metadata, SBOM
-  namespace, current repository links, CODEOWNERS, governance verifier, and
-  project-state documents now describe the same repository and branch state.
+  namespace, clean-source enforcement, POSIX entry point, CI workflows, current
+  repository links, CODEOWNERS, governance verifier, and project-state documents
+  now describe the same repository and branch state.
 
 ## Verification
 
@@ -38,10 +46,10 @@ Pre-commit validation under pinned SDK `10.0.301`:
 
 - `scripts/verify.ps1`: passed;
 - Release build: zero warnings and zero errors;
-- full solution: 1,048 passed, zero failed, four skipped;
+- full solution: 1,084 passed, zero failed, four skipped;
 - Architecture: 44 passed;
 - Conformance: 142 passed;
-- scientific-invariant manifest: 136 exact cases across eight project suites;
+- scientific-invariant manifest: 150 exact cases across nine project suites;
 - package policy and clean local-source smoke: 24 validation-only packages at
   `0.1.0-alpha.2`;
 - release evidence: 28 artifacts and 59 lock files, with dirty pre-commit
@@ -68,7 +76,12 @@ and extension-security reviews were run. Their reproduced findings added:
 - manifest-bounded capability selection;
 - exact parser evidence assertions;
 - isolated Linux case-sensitivity and cache length-mismatch tests;
-- an executable exact-name mutation manifest rather than substring selection.
+- an executable exact-name mutation manifest rather than substring selection;
+- runtime-type-safe AI snapshots and rejection of unrepresented fields;
+- recursively decoded provider and Full Text query names and values;
+- non-public direct live-request factories;
+- root-link rejection and handle-bound workspace input leases;
+- deterministic non-backtracking email detection under parallel load.
 
 No blocker remains in the local implementation after those repairs.
 
@@ -84,8 +97,8 @@ protection inspection on 2026-07-18 found:
 - signed commits disabled.
 
 The local verifier correctly rejects that state. Independent approval cannot
-be satisfied until another eligible reviewer is added. No remote setting,
-branch, package, release, or deployment was modified by this remediation.
+be satisfied until another eligible reviewer is added. No governance setting,
+package, release, or deployment is changed by branch and pull-request delivery.
 
 ## Invariants And Compatibility
 

@@ -64,6 +64,53 @@ public sealed class GovernanceTests
     }
 
     [TestMethod]
+    public void Ai_proposals_snapshot_supports_public_fields_and_rejects_private_state()
+    {
+        var policy = Policy();
+
+        var source = new FieldBackedProposal { Suggestion = "original", Score = 4 };
+        var proposal = new AiProposal<FieldBackedProposal>(
+            policy,
+            source,
+            [ContentDigest.Sha256Utf8("source-evidence")],
+            new FixedClock().UtcNow);
+
+        source.Suggestion = "mutated";
+        source.Score = 99;
+        source.Candidates.Clear();
+
+        var mutableRead = proposal.Value;
+        mutableRead.Score = 0;
+        mutableRead.Candidates.Add("attacker");
+
+        var recovered = proposal.Value;
+        Assert.AreEqual("original", recovered.Suggestion);
+        CollectionAssert.AreEqual(new[] { "initial" }, recovered.Candidates);
+        Assert.AreEqual(4, recovered.Score);
+
+        var privateState = new PrivateStateProposal();
+        privateState.SetStatus("reviewed");
+
+        Assert.ThrowsExactly<DomainRuleException>(() => new AiProposal<PrivateStateProposal>(
+            policy,
+            privateState,
+            [ContentDigest.Sha256Utf8("source-evidence")],
+            new FixedClock().UtcNow));
+
+        Assert.ThrowsExactly<DomainRuleException>(() => new AiProposal<object>(
+            policy,
+            new FieldBackedProposal(),
+            [ContentDigest.Sha256Utf8("source-evidence")],
+            new FixedClock().UtcNow));
+
+        Assert.ThrowsExactly<DomainRuleException>(() => new AiProposal<PrivateAutoStateProposal>(
+            policy,
+            new PrivateAutoStateProposal(),
+            [ContentDigest.Sha256Utf8("source-evidence")],
+            new FixedClock().UtcNow));
+    }
+
+    [TestMethod]
     public void Ai_proposals_reject_null_or_unsnapshotable_values()
     {
         var policy = Policy();
@@ -213,6 +260,26 @@ public sealed class GovernanceTests
     private sealed class FixedClock : IClock
     {
         public DateTimeOffset UtcNow { get; } = new(2026, 6, 25, 12, 0, 0, TimeSpan.Zero);
+    }
+
+    private sealed class FieldBackedProposal
+    {
+        public string? Suggestion = "original";
+        public int Score = 4;
+        public List<string> Candidates = ["initial"];
+    }
+
+    private sealed class PrivateStateProposal
+    {
+        private string status = "new";
+        public string Status => status;
+        public void SetStatus(string value) => status = value;
+    }
+
+    private sealed class PrivateAutoStateProposal
+    {
+        public string Suggestion { get; set; } = "visible";
+        private string Status { get; set; } = "hidden";
     }
 
     private static AiTaskPolicy Policy() => AiTaskPolicy.Create(

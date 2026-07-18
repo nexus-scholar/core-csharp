@@ -45,6 +45,10 @@ jobs:
       - name: Test
         run: dotnet test NexusScholar.Core.slnx -c Release --no-build --filter "TestCategory!=LiveProvider" --logger trx --results-directory artifacts/test-results
 
+      - name: Mutation phase 5
+        shell: pwsh
+        run: ./scripts/mutation-phase5.ps1
+
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v7

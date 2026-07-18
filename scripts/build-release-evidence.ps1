@@ -1,3 +1,7 @@
+param(
+    [switch] $RequireCleanSourceTree
+)
+
 $ErrorActionPreference = 'Stop'
 
 $root = Split-Path -Parent $PSScriptRoot
@@ -5,6 +9,80 @@ $root = Split-Path -Parent $PSScriptRoot
 $dotnet = Use-PinnedDotNet $root
 Push-Location $root
 try {
+    function Test-Net8Runtime([string]$dotnetHost) {
+        try {
+            return [bool]((& $dotnetHost --list-runtimes 2>$null |
+                Select-String '^Microsoft\.NETCore\.App 8\.'))
+        }
+        catch {
+            return $false
+        }
+    }
+
+    function Get-NuGetGlobalPackagesPath([string]$dotnetHost) {
+        if ($env:NUGET_PACKAGES -and (Test-Path -LiteralPath $env:NUGET_PACKAGES)) {
+            return (Resolve-Path -LiteralPath $env:NUGET_PACKAGES).Path
+        }
+
+        $nugetLocals = & $dotnetHost nuget locals global-packages --list 2>$null
+        foreach ($line in $nugetLocals) {
+            if ($line -match 'global-packages:\s*(.+)') {
+                $path = $Matches[1].Trim()
+                if (Test-Path -LiteralPath $path) {
+                    return (Resolve-Path -LiteralPath $path).Path
+                }
+            }
+        }
+
+        return $null
+    }
+
+    function Resolve-Net8RuntimeHost([string]$dotnetHost) {
+        $isWindowsHost = [System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform(
+            [System.Runtime.InteropServices.OSPlatform]::Windows)
+        $dotnetExecutable = if ($isWindowsHost) { 'dotnet.exe' } else { 'dotnet' }
+        $candidates = [System.Collections.Generic.List[string]]::new()
+
+        if ($env:DOTNET_ROOT) {
+            $candidates.Add((Join-Path $env:DOTNET_ROOT $dotnetExecutable))
+        }
+
+        $homeDirectory = if ($env:HOME) {
+            $env:HOME
+        } else {
+            $env:USERPROFILE
+        }
+        if ($homeDirectory) {
+            $candidates.Add((Join-Path (Join-Path $homeDirectory '.dotnet') $dotnetExecutable))
+        }
+
+        $candidates.Add('/usr/share/dotnet/dotnet')
+        $candidates.Add('/opt/dotnet/dotnet')
+
+        $command = Get-Command dotnet -ErrorAction SilentlyContinue
+        if ($command) {
+            $candidates.Add($command.Source)
+        }
+
+        foreach ($candidate in $candidates | Select-Object -Unique) {
+            if ((Test-Path -LiteralPath $candidate -PathType Leaf) -and
+                (Test-Net8Runtime $candidate)) {
+                return (Resolve-Path -LiteralPath $candidate).Path
+            }
+        }
+
+        return $null
+    }
+
+    $sourceStatus = git status --porcelain --untracked-files=all
+    if ($LASTEXITCODE -ne 0) {
+        throw "Unable to inspect the source tree before generating release evidence."
+    }
+    $dirty = -not [string]::IsNullOrWhiteSpace(($sourceStatus | Out-String))
+    if ($RequireCleanSourceTree -and $dirty) {
+        throw 'Release evidence requires a clean source tree when -RequireCleanSourceTree is set. Commit or stash local changes before generating release artifacts.'
+    }
+
     $topology = Get-Content -Raw eng/package-topology.json | ConvertFrom-Json
     $version = $topology.version
     $packageDirectory = Join-Path $root 'artifacts/packages'
@@ -24,18 +102,33 @@ try {
     $toolVersion = (Get-Content -Raw dotnet-tools.json | ConvertFrom-Json).tools.'microsoft.sbom.dotnettool'.version
     $sbomHost = $dotnet
     $sbomPrefix = @('tool', 'run', 'sbom-tool', '--')
-    if (-not (& $dotnet --list-runtimes | Select-String '^Microsoft.NETCore.App 8\.')) {
-        $userDotnet = Join-Path $HOME '.dotnet/dotnet.exe'
-        if (-not (Test-Path $userDotnet) -or
-            -not (& $userDotnet --list-runtimes | Select-String '^Microsoft.NETCore.App 8\.')) {
-            throw 'Microsoft.Sbom.DotNetTool requires the .NET 8 runtime. Install the pinned 8.0 runtime before generating evidence.'
+    if (-not (Test-Net8Runtime $dotnet)) {
+        $dotnet8 = Resolve-Net8RuntimeHost $dotnet
+        if (-not $dotnet8) {
+            throw 'Microsoft.Sbom.DotNetTool requires a .NET 8 runtime. Install the pinned 8.0 runtime before generating evidence.'
         }
-        $sbomHost = $userDotnet
-        $sbomPrefix = @((Join-Path $HOME ".nuget/packages/microsoft.sbom.dotnettool/$toolVersion/tools/net8.0/any/Microsoft.Sbom.DotNetTool.dll"))
+
+        $globalPackagesPath = Get-NuGetGlobalPackagesPath $dotnet
+        if (-not $globalPackagesPath) {
+            throw 'Unable to resolve the NuGet global-packages path for Microsoft.Sbom.DotNetTool.'
+        }
+
+        $sbomToolPath = Join-Path $globalPackagesPath "microsoft.sbom.dotnettool/$toolVersion/tools/net8.0/any/Microsoft.Sbom.DotNetTool.dll"
+        if (-not (Test-Path -LiteralPath $sbomToolPath)) {
+            throw "Unable to locate Microsoft.Sbom.DotNetTool assembly at '$sbomToolPath'. Run: dotnet tool restore."
+        }
+
+        $sbomHost = $dotnet8
+        $sbomPrefix = @((Resolve-Path -LiteralPath $sbomToolPath).Path)
     }
 
     $commit = (git rev-parse HEAD).Trim()
-    $commitTimestamp = [DateTimeOffset]::Parse((git show -s --format=%cI HEAD).Trim()).UtcDateTime.ToString('yyyy-MM-ddTHH:mm:ssZ')
+    $commitTimestamp = [DateTimeOffset]::Parse(
+        (git show -s --format=%cI HEAD).Trim(),
+        [Globalization.CultureInfo]::InvariantCulture,
+        [Globalization.DateTimeStyles]::AssumeUniversal).UtcDateTime.ToString(
+            'yyyy-MM-ddTHH:mm:ssZ',
+            [Globalization.CultureInfo]::InvariantCulture)
     $namespacePart = "$commit/$version"
     & $sbomHost @sbomPrefix Generate `
             -b $releaseDirectory `
@@ -113,7 +206,6 @@ try {
     $artifacts = @($artifactFiles | ForEach-Object { Get-HashRecord $_ })
     $sdkVersion = (& $dotnet --version).Trim()
     $topologyDigest = (Get-FileHash eng/package-topology.json -Algorithm SHA256).Hash.ToLowerInvariant()
-    $dirty = -not [string]::IsNullOrWhiteSpace((git status --porcelain --untracked-files=no | Out-String))
 
     $provenanceLines = @(
         "commit=$commit"

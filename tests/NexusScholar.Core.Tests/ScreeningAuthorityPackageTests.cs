@@ -351,6 +351,7 @@ public sealed class ScreeningAuthorityPackageTests
 
     [TestMethod]
     [DataRow("draft")]
+    [DataRow("ready_for_review")]
     [DataRow("withdrawn")]
     public void Protocol_authority_codec_rejects_nonapproved_status(string status)
     {

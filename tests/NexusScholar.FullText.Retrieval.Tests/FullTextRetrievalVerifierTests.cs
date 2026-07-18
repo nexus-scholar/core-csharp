@@ -150,6 +150,118 @@ public sealed class FullTextRetrievalVerifierTests
     }
 
     [TestMethod]
+    [DataRow("articles/8?token=secret")]
+    [DataRow("articles/8?%2573ig=secret")]
+    [DataRow("articles/8?api+key=secret")]
+    [DataRow("articles/8?x-goog%2Bsignature=secret")]
+    [DataRow("articles/8?%zz=secret")]
+    [DataRow("articles/8?redirect=https%3A%2F%2Fstorage.test%2Fpaper.pdf%3FX-Amz-Signature%3Dsecret")]
+    [DataRow("articles/8?redirect=https%253A%252F%252Fstorage.test%252Fpaper.pdf%253Ftoken%253Dsecret")]
+    [DataRow("articles/8?redirect=%zz")]
+    public void Recorded_retrieval_rejects_source_reference_query_names_with_credential_shape(string sourceReference)
+    {
+        var input = BuildInput("candidate-signed-source-url");
+        var bytes = Encoding.UTF8.GetBytes("not retained");
+
+        var exception = Assert.ThrowsExactly<FullTextRuleException>(() =>
+            FullTextRecordedRetrievalEvidence.Record(
+                "evidence-signed-source-url",
+                input,
+                "secret-provider",
+                sourceReference,
+                FullTextRetrievalAccessRoutes.ProviderApi,
+                FullTextRetrievalRights.OpenAccess,
+                "https://rights.nexus.test/open-access",
+                FullTextArtifactKinds.Text,
+                "text/plain",
+                200,
+                bytes,
+                FixedTime,
+                FixedTime));
+
+        Assert.AreEqual(FullTextRetrievalErrorCodes.InvalidUriPolicy, exception.Category);
+    }
+
+    [TestMethod]
+    [DataRow("open-access?token=secret")]
+    [DataRow("open-access?%2573ig=secret")]
+    [DataRow("open-access?api+key=secret")]
+    [DataRow("open-access?url=https%3A%2F%2Fstorage.test%2Flicense%3Fcredential%3Dsecret")]
+    public void Recorded_retrieval_rejects_rights_reference_query_names_with_credential_shape(string rightsReference)
+    {
+        var input = BuildInput("candidate-signed-rights-url");
+        var bytes = Encoding.UTF8.GetBytes("not retained");
+
+        var exception = Assert.ThrowsExactly<FullTextRuleException>(() =>
+            FullTextRecordedRetrievalEvidence.Record(
+                "evidence-signed-rights-url",
+                input,
+                "secret-provider",
+                "https://api.nexus.test/articles/8",
+                FullTextRetrievalAccessRoutes.ProviderApi,
+                FullTextRetrievalRights.OpenAccess,
+                rightsReference,
+                FullTextArtifactKinds.Text,
+                "text/plain",
+                200,
+                bytes,
+                FixedTime,
+                FixedTime));
+
+        Assert.AreEqual(FullTextRetrievalErrorCodes.InvalidUriPolicy, exception.Category);
+    }
+
+    [TestMethod]
+    [DataRow("https://api.nexus.test/articles/8?token=secret")]
+    [DataRow("https://api.nexus.test/articles/8?%2573ig=secret")]
+    [DataRow("https://api.nexus.test/articles/8?api+key=secret")]
+    [DataRow("https://api.nexus.test/articles/8?x-goog%2Bsignature=secret")]
+    [DataRow("https://api.nexus.test/articles/8?%zz=secret")]
+    [DataRow("https://api.nexus.test/articles/8?next=https%3A%2F%2Fstorage.test%2Fpaper.pdf%3Ftoken%3Dsecret")]
+    [DataRow("articles/8?token=secret")]
+    public void Recorded_retrieval_redirect_chain_rejects_credential_query_names(string redirectUrl)
+    {
+        var exception = Assert.ThrowsExactly<FullTextRuleException>(() =>
+            new FullTextRecordedRedirect(redirectUrl, 302));
+
+        Assert.AreEqual(FullTextRetrievalErrorCodes.InvalidUriPolicy, exception.Category);
+    }
+
+    [TestMethod]
+    public void Recorded_retrieval_accepts_non_uri_rights_reference_without_credential_shape()
+    {
+        var policy = new FullTextRecordedRetrievalPolicy(["api.nexus.test"], 4096);
+        var input = BuildInput("candidate-non-uri-rights-reference");
+        var bytes = Encoding.UTF8.GetBytes("non uri rights");
+        var evidence = FullTextRecordedRetrievalEvidence.Record(
+            "evidence-non-uri-rights",
+            input,
+            "open-access-provider",
+            "https://api.nexus.test/articles/non-uri-rights",
+            FullTextRetrievalAccessRoutes.ProviderApi,
+            FullTextRetrievalRights.OpenAccess,
+            "local-rights/open-access",
+            FullTextArtifactKinds.Text,
+            "text/plain",
+            200,
+            bytes,
+            FixedTime,
+            FixedTime);
+
+        var outcome = FullTextRetrievalVerifier.Verify(
+            evidence,
+            bytes,
+            policy,
+            "acquisition-non-uri-rights",
+            "attempt-non-uri-rights",
+            "artifact-non-uri-rights");
+
+        Assert.IsTrue(outcome.IsSuccess);
+        Assert.IsNotNull(outcome.Chain);
+        Assert.AreEqual("local-rights/open-access", outcome.SourceAttempt.SourceReference);
+    }
+
+    [TestMethod]
     [DataRow("https://api.nexus.test/articles/3?sig=secret")]
     [DataRow("https://api.nexus.test/articles/3?token=secret")]
     [DataRow("https://api.nexus.test/articles/3?key=secret")]

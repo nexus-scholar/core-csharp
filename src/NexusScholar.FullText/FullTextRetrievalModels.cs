@@ -305,14 +305,45 @@ public sealed class FullTextRecordedRetrievalEvidence
 
 internal static class FullTextRetrievalUriPolicy
 {
+    private static readonly string[] ForbiddenValueAssignments =
+    [
+        "authorization=",
+        "api_key=",
+        "api-key=",
+        "apikey=",
+        "x-api-key=",
+        "password=",
+        "secret=",
+        "token=",
+        "credential=",
+        "signature=",
+        "sig=",
+        "key=",
+        "x-amz-signature=",
+        "x-amz-credential=",
+        "x-amz-security-token=",
+        "x-goog-signature=",
+        "x-goog-credential=",
+        "awsaccesskeyid=",
+        "access_key=",
+        "access-key="
+    ];
+
     internal static void RejectCredentialBearingReference(string value, string parameterName)
     {
-        if (!Uri.TryCreate(value, UriKind.Absolute, out var uri))
+        if (Uri.TryCreate(value, UriKind.Absolute, out var uri))
         {
+            if (uri.UserInfo.Length > 0 || ContainsSensitiveQueryParameter(uri.Query))
+            {
+                throw new FullTextRuleException(
+                    FullTextRetrievalErrorCodes.InvalidUriPolicy,
+                    $"Recorded URI '{parameterName}' contains credential-shaped material.");
+            }
+
             return;
         }
 
-        if (uri.UserInfo.Length > 0 || ContainsSensitiveQueryParameter(uri.Query))
+        if (ContainsSensitiveQueryParameter(ExtractQuery(value)))
         {
             throw new FullTextRuleException(
                 FullTextRetrievalErrorCodes.InvalidUriPolicy,
@@ -326,20 +357,169 @@ internal static class FullTextRetrievalUriPolicy
         {
             var separator = pair.IndexOf('=');
             var rawName = separator < 0 ? pair : pair[..separator];
-            var name = Uri.UnescapeDataString(rawName).Trim().Replace('-', '_').ToLowerInvariant();
-            if (name is "key" or "sig" or "signature" or "authorization" or "credential" or "secret" ||
-                name.Contains("api_key", StringComparison.Ordinal) ||
-                name.Contains("apikey", StringComparison.Ordinal) ||
-                name.Contains("token", StringComparison.Ordinal) ||
-                name.Contains("credential", StringComparison.Ordinal) ||
-                name.Contains("signature", StringComparison.Ordinal) ||
-                name.EndsWith("_key", StringComparison.Ordinal))
+            var rawValue = separator < 0 ? string.Empty : pair[(separator + 1)..];
+            if (IsCredentialBearingQueryName(rawName) || IsCredentialBearingQueryValue(rawValue))
             {
                 return true;
             }
         }
 
         return false;
+    }
+
+    private static bool IsCredentialBearingQueryName(string rawName)
+    {
+        var current = rawName;
+        for (var decodePass = 0; decodePass < 8; decodePass++)
+        {
+            if (LooksCredentialName(current))
+            {
+                return true;
+            }
+
+            if (!TryDecodePercent(current, out var decoded))
+            {
+                return true;
+            }
+
+            if (string.Equals(current, decoded, StringComparison.Ordinal))
+            {
+                return false;
+            }
+
+            current = decoded;
+        }
+
+        return true;
+    }
+
+    private static bool IsCredentialBearingQueryValue(string rawValue)
+    {
+        var current = rawValue;
+        for (var decodePass = 0; decodePass < 8; decodePass++)
+        {
+            if (LooksCredentialValue(current))
+            {
+                return true;
+            }
+
+            if (!TryDecodePercent(current, out var decoded))
+            {
+                return true;
+            }
+
+            if (string.Equals(current, decoded, StringComparison.Ordinal))
+            {
+                return false;
+            }
+
+            current = decoded;
+        }
+
+        return true;
+    }
+
+    private static bool LooksCredentialName(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            return false;
+        }
+
+        var normalized = name.Trim()
+            .Replace('-', '_')
+            .Replace('+', '_')
+            .Replace(" ", "_")
+            .ToLowerInvariant();
+
+        if (normalized is "key" or "sig" or "signature" or "authorization" or "credential" or "secret")
+        {
+            return true;
+        }
+
+        if (normalized.Contains("api_key", StringComparison.Ordinal) ||
+            normalized.Contains("apikey", StringComparison.Ordinal) ||
+            normalized.Contains("token", StringComparison.Ordinal) ||
+            normalized.Contains("credential", StringComparison.Ordinal) ||
+            normalized.Contains("signature", StringComparison.Ordinal) ||
+            normalized.EndsWith("_key", StringComparison.Ordinal))
+        {
+            return true;
+        }
+
+        return false;
+    }
+
+    private static bool LooksCredentialValue(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return false;
+        }
+
+        var normalized = value.Replace('+', ' ').ToLowerInvariant();
+        if (ForbiddenValueAssignments.Any(fragment => normalized.Contains(fragment, StringComparison.Ordinal)) ||
+            normalized.Contains("bearer ", StringComparison.Ordinal))
+        {
+            return true;
+        }
+
+        if (Uri.TryCreate(value, UriKind.Absolute, out var nestedUri) &&
+            (nestedUri.UserInfo.Length > 0 || ContainsSensitiveQueryParameter(nestedUri.Query)))
+        {
+            return true;
+        }
+
+        return ContainsSensitiveQueryParameter(ExtractQuery(value));
+    }
+
+    private static string ExtractQuery(string value)
+    {
+        var queryStart = value.IndexOf('?');
+        if (queryStart < 0)
+        {
+            return string.Empty;
+        }
+
+        var fragmentStart = value.IndexOf('#', queryStart + 1);
+        if (fragmentStart >= 0)
+        {
+            return value[(queryStart + 1)..fragmentStart];
+        }
+
+        return value[(queryStart + 1)..];
+    }
+
+    private static bool TryDecodePercent(string value, out string decoded)
+    {
+        for (var index = 0; index < value.Length; index++)
+        {
+            if (value[index] != '%')
+            {
+                continue;
+            }
+
+            if (index + 2 >= value.Length ||
+                !Uri.IsHexDigit(value[index + 1]) ||
+                !Uri.IsHexDigit(value[index + 2]))
+            {
+                decoded = string.Empty;
+                return false;
+            }
+
+            index += 2;
+        }
+
+        try
+        {
+            decoded = Uri.UnescapeDataString(value);
+            return true;
+        }
+        catch (UriFormatException)
+        {
+            decoded = string.Empty;
+            return false;
+        }
     }
 }
 

@@ -428,6 +428,54 @@ public sealed class ResearchWorkspaceServiceTests
     }
 
     [TestMethod]
+    public void Path_resolver_rejects_reparse_point_workspace_root()
+    {
+        var probeRoot = Path.Combine(Path.GetTempPath(), $"nexus-rw-root-link-{Guid.NewGuid():N}");
+        var external = Path.Combine(probeRoot, "external");
+        var link = Path.Combine(probeRoot, "workspace");
+        Directory.CreateDirectory(external);
+        try
+        {
+            if (OperatingSystem.IsWindows())
+            {
+                using var process = Process.Start(new ProcessStartInfo("cmd.exe", $"/c mklink /J \"{link}\" \"{external}\"")
+                {
+                    CreateNoWindow = true,
+                    UseShellExecute = false
+                });
+                process!.WaitForExit();
+                Assert.AreEqual(0, process.ExitCode);
+            }
+            else
+            {
+                Directory.CreateSymbolicLink(link, external);
+            }
+
+            Assert.IsFalse(ResearchWorkspaceVerifier.TryResolveWorkspaceRelativePath(
+                link,
+                "nexus-input/future.csv",
+                out _));
+        }
+        finally
+        {
+            if (Directory.Exists(link))
+            {
+                Directory.Delete(link);
+            }
+
+            if (Directory.Exists(external))
+            {
+                Directory.Delete(external, recursive: true);
+            }
+
+            if (Directory.Exists(probeRoot))
+            {
+                Directory.Delete(probeRoot, recursive: true);
+            }
+        }
+    }
+
+    [TestMethod]
     public void Path_resolver_rejects_case_only_sibling_escape_on_linux()
     {
         if (!OperatingSystem.IsLinux())

@@ -1,4 +1,8 @@
 $ErrorActionPreference = "Stop"
+$minimumSupportedMajorVersion = 7
+if ($PSVersionTable.PSVersion.Major -lt $minimumSupportedMajorVersion) {
+    throw "scripts/mutation-phase5.ps1 requires PowerShell 7+ (pwsh). Use `pwsh` instead of Windows PowerShell."
+}
 
 $root = Split-Path -Parent $PSScriptRoot
 . "$PSScriptRoot/resolve-dotnet.ps1"
@@ -8,6 +12,7 @@ $projects = [ordered]@{
     "core" = "tests/NexusScholar.Core.Tests/NexusScholar.Core.Tests.csproj"
     "conformance" = "tests/NexusScholar.Conformance.Tests/NexusScholar.Conformance.Tests.csproj"
     "workspace" = "tests/NexusScholar.ResearchWorkspace.Tests/NexusScholar.ResearchWorkspace.Tests.csproj"
+    "fulltext" = "tests/NexusScholar.FullText.Retrieval.Tests/NexusScholar.FullText.Retrieval.Tests.csproj"
     "cache" = "tests/NexusScholar.Search.Providers.Cache.Tests/NexusScholar.Search.Providers.Cache.Tests.csproj"
     "crossref" = "tests/NexusScholar.Search.Providers.Crossref.Tests/NexusScholar.Search.Providers.Crossref.Tests.csproj"
     "openalex" = "tests/NexusScholar.Search.Providers.OpenAlex.Tests/NexusScholar.Search.Providers.OpenAlex.Tests.csproj"
