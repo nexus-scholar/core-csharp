@@ -389,7 +389,7 @@ public static class ProtocolRehydrator
 
     private static DateTimeOffset RequireUtc(DateTimeOffset value, string name)
     {
-        if (value.Offset != TimeSpan.Zero)
+        if (!CanonicalTimestamp.IsCanonicalUtc(value, rejectDefault: true))
         {
             throw new ProtocolRuleException(ProtocolErrorCodes.StaleContentDigest, $"{name} must be a canonical UTC timestamp.");
         }

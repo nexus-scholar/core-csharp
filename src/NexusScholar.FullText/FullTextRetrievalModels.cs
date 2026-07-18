@@ -170,7 +170,8 @@ public sealed class FullTextRecordedRetrievalEvidence
         RetentionDisposition = Guard.NotBlank(retentionDisposition ?? FullTextRetrievalRetention.RetainedLocalFixture, nameof(retentionDisposition));
         RequestedAt = requestedAt;
         ReceivedAt = receivedAt;
-        if (RequestedAt.Offset != TimeSpan.Zero || ReceivedAt.Offset != TimeSpan.Zero || receivedAt < requestedAt)
+        if (!CanonicalTimestamp.IsCanonicalUtc(requestedAt, rejectDefault: true) ||
+            !CanonicalTimestamp.IsCanonicalUtc(receivedAt, rejectDefault: true) || receivedAt < requestedAt)
         {
             throw new FullTextRuleException(FullTextRetrievalErrorCodes.InvalidClock, "Recorded retrieval timestamps must be UTC and request before or equal receipt.");
         }

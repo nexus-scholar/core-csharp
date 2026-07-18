@@ -1634,7 +1634,7 @@ public static class CorpusSnapshotService
 
     private static DateTimeOffset RequireCanonicalUtc(DateTimeOffset value, string name)
     {
-        if (value.Offset != TimeSpan.Zero)
+        if (!CanonicalTimestamp.IsCanonicalUtc(value, rejectDefault: true))
         {
             throw Invalid(CorpusSnapshotErrorCodes.InvalidSnapshot, $"{name} must be canonical UTC.");
         }

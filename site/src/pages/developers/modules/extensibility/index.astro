@@ -26,7 +26,7 @@
           <h2>Implemented surface</h2>
           <p><a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/src/NexusScholar.Extensibility/ExtensionManifest.cs"><code>ExtensionManifest</code></a> records an id, version, entry point, and requested capability set. Its factory validates non-blank identity fields and de-duplicates requests.</p>
           <p><a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/src/NexusScholar.Extensibility/PluginContracts.cs"><code>ExtensionCapability</code></a> currently contains four coarse labels: <code>ReadProtocol</code>, <code>ReadArtifacts</code>, <code>WriteStagedArtifacts</code>, and <code>RenderExport</code>. <a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/src/NexusScholar.Extensibility/CapabilitySelection.cs"><code>CapabilitySelection</code></a> represents a selected subset for one extension id.</p>
-          <p class="section-note">Requested capability is not granted capability. The types do not currently validate that a selection is a subset, bind a project/invocation, scope resource handles, or enforce an operation.</p>
+          <p class="section-note">Requested capability is not granted capability. The factory validates that a selection is a subset of one manifest request, but the types do not bind a project/invocation, scope resource handles, authorize a grant, or enforce an operation.</p>
         </section>
 
         <section class="content-section">

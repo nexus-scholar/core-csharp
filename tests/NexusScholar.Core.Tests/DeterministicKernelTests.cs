@@ -160,6 +160,17 @@ public sealed class DeterministicKernelTests
     }
 
     [TestMethod]
+    public void Canonical_timestamp_rejects_default_and_noncanonical_utc_rehydration()
+    {
+        Assert.IsFalse(CanonicalTimestamp.IsCanonicalUtc(default(DateTimeOffset), rejectDefault: true));
+        Assert.IsTrue(CanonicalTimestamp.IsCanonicalUtc(default(DateTimeOffset), rejectDefault: false));
+        Assert.IsFalse(CanonicalTimestamp.IsCanonicalUtc("0001-01-01T00:00:00.0000000Z", rejectDefault: true));
+        Assert.IsTrue(CanonicalTimestamp.IsCanonicalUtc("0001-01-01T00:00:00.0000000Z", rejectDefault: false));
+        Assert.ThrowsExactly<FormatException>(() =>
+            CanonicalTimestamp.ValidateCanonicalUtc("0001-01-01T00:00:00.0000000Z"));
+    }
+
+    [TestMethod]
     public void Canonical_json_normalizes_unicode_to_nfc()
     {
         var decomposed = new CanonicalJsonObject().Add("title", "Re\u0301sume\u0301");

@@ -1,5 +1,5 @@
 param(
-    [string]$Repository = 'nexus-scholar/core-csharp'
+    [string]$Repository = 'nexus-scholar-org/core-csharp'
 )
 
 $ErrorActionPreference = 'Stop'
@@ -31,6 +31,21 @@ if (-not $protection.enforce_admins.enabled -or
     $protection.allow_force_pushes.enabled -or
     $protection.allow_deletions.enabled) {
     throw 'main protection does not enforce the approved administration and history controls.'
+}
+
+$pullRequestReviews = $protection.required_pull_request_reviews
+if ($pullRequestReviews.required_approving_review_count -lt 1 -or
+    -not $pullRequestReviews.require_code_owner_reviews -or
+    -not $pullRequestReviews.require_last_push_approval) {
+    throw 'main must require an independent approval, CODEOWNER review, and approval after the latest push.'
+}
+if (-not $protection.required_linear_history.enabled) {
+    throw 'main must require linear history.'
+}
+
+$signatures = Get-GitHubJson 'branches/main/protection/required_signatures'
+if (-not $signatures.enabled) {
+    throw 'main must require signed commits.'
 }
 
 $privateReporting = Get-GitHubJson 'private-vulnerability-reporting'

@@ -107,6 +107,13 @@ public readonly record struct WorkId
     {
         var parsedNamespace = WorkIdNamespace.From(idNamespace);
         var normalizedValue = NormalizeValue(parsedNamespace, value);
+        if (HasDisallowedLeadingNamespace(normalizedValue))
+        {
+            throw new SharedIdentityRuleException(
+                SharedIdentityErrorCodes.InvalidWorkId,
+                $"Work ids cannot begin with a namespace prefix '{normalizedValue}' after normalization.");
+        }
+
         return new WorkId(parsedNamespace, normalizedValue);
     }
 
@@ -114,14 +121,23 @@ public readonly record struct WorkId
     {
         value = Guard.NotBlank(value, nameof(value));
         var separatorIndex = value.IndexOf(':');
-        if (separatorIndex <= 0 || separatorIndex != value.LastIndexOf(':') || separatorIndex == value.Length - 1)
+        if (separatorIndex <= 0 || separatorIndex == value.Length - 1)
         {
             throw new SharedIdentityRuleException(
                 SharedIdentityErrorCodes.InvalidWorkId,
                 "Work ids must use the strict '<namespace>:<value>' form.");
         }
 
-        return From(value[..separatorIndex], value[(separatorIndex + 1)..]);
+        var namespaceValue = value[..separatorIndex];
+        var identifierValue = value[(separatorIndex + 1)..];
+        if (HasDisallowedLeadingNamespace(identifierValue))
+        {
+            throw new SharedIdentityRuleException(
+                SharedIdentityErrorCodes.InvalidWorkId,
+                $"Work ids cannot begin with a namespace prefix '{identifierValue}' after normalization.");
+        }
+
+        return From(namespaceValue, identifierValue);
     }
 
     public override string ToString() => $"{Namespace}:{Value}";
@@ -156,6 +172,20 @@ public readonly record struct WorkId
         return value.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)
             ? value[prefix.Length..]
             : value;
+    }
+
+    private static bool HasDisallowedLeadingNamespace(string value)
+    {
+        var normalizedValue = value.Trim();
+        foreach (var candidate in WorkIdNamespace.ApprovedNamespaces)
+        {
+            if (normalizedValue.StartsWith($"{candidate}:", StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
 

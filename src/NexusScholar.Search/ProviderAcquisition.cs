@@ -106,7 +106,7 @@ public sealed class ProviderAcquisitionRequest
 
     internal static void RequireUtc(DateTimeOffset value, string name)
     {
-        if (value.Offset != TimeSpan.Zero)
+        if (!CanonicalTimestamp.IsCanonicalUtc(value, rejectDefault: true))
         {
             throw Rule(ProviderAcquisitionErrorCodes.InvalidProviderEvidence, $"{name} must be UTC.");
         }

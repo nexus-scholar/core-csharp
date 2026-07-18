@@ -28,9 +28,9 @@ The current repository does not provide:
 
 For non-sensitive local failures, use the bug report template:
 
-https://github.com/nexus-scholar/core-csharp/issues/new?template=bug-report.yml
+https://github.com/nexus-scholar-org/core-csharp/issues/new?template=bug-report.yml
 
-For potentially sensitive security issues, use [GitHub private vulnerability reporting](https://github.com/nexus-scholar/core-csharp/security/advisories/new). This is the single private reporting channel for the repository. Do not include exploit details or private data in a public issue. File a public tracking issue only after details can be safely disclosed.
+For potentially sensitive security issues, use [GitHub private vulnerability reporting](https://github.com/nexus-scholar-org/core-csharp/security/advisories/new). This is the single private reporting channel for the repository. Do not include exploit details or private data in a public issue. File a public tracking issue only after details can be safely disclosed.
 
 ## Expectations
 

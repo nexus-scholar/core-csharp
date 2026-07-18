@@ -274,6 +274,25 @@ public sealed class ProvenanceTests
     }
 
     [TestMethod]
+    public void Default_timestamp_is_rejected_during_event_construction_and_replay()
+    {
+        var constructionError = Assert.ThrowsExactly<ProvenanceRuleException>(() =>
+            CreateEventRecord(
+                new FixedIdGenerator(Guid.Parse("00000000-0000-0000-0000-000000000019")),
+                new DefaultClock(),
+                new ProvenanceActivity("protocol-approved", "Protocol approved", false, false, false)));
+        Assert.AreEqual(ProvenanceErrorCodes.InvalidTimestamp, constructionError.Category);
+
+        var valid = CreateEventRecord(
+            Guid.Parse("00000000-0000-0000-0000-000000000020"),
+            "protocol-approved");
+        var persistedWithDefaultTimestamp = CloneEvent(valid, occurredAt: default(DateTimeOffset));
+        var replayError = Assert.ThrowsExactly<ProvenanceRuleException>(() =>
+            new InMemoryProvenanceStore().Append(persistedWithDefaultTimestamp));
+        Assert.AreEqual(ProvenanceErrorCodes.InvalidTimestamp, replayError.Category);
+    }
+
+    [TestMethod]
     [DataRow("digest", ProvenanceErrorCodes.StaleEventDigest)]
     [DataRow("agent-id", ProvenanceErrorCodes.InvalidAgent)]
     [DataRow("agent-kind", ProvenanceErrorCodes.InvalidAgent)]
@@ -416,5 +435,10 @@ public sealed class ProvenanceTests
     private sealed class FixedClock : IClock
     {
         public DateTimeOffset UtcNow { get; } = new(2026, 6, 26, 12, 0, 0, TimeSpan.Zero);
+    }
+
+    private sealed class DefaultClock : IClock
+    {
+        public DateTimeOffset UtcNow => default;
     }
 }

@@ -12,7 +12,7 @@
     <IsPackable>false</IsPackable>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <RepositoryType>git</RepositoryType>
-    <RepositoryUrl>https://github.com/nexus-scholar/core-csharp</RepositoryUrl>
+    <RepositoryUrl>https://github.com/nexus-scholar-org/core-csharp</RepositoryUrl>
     <Authors>Nexus Scholar contributors</Authors>
     <Product>Nexus Scholar Core</Product>
     <VersionPrefix>0.1.0</VersionPrefix>

@@ -297,6 +297,102 @@ public sealed class ProviderEvidenceCacheStoreTests
         Assert.IsFalse(manifest.Contains("https://", StringComparison.OrdinalIgnoreCase));
     }
 
+    [TestMethod]
+    public void TryGet_rejects_missing_retained_body_with_typed_digest_mismatch()
+    {
+        using var workspace = new TemporaryDirectory();
+        var store = new ProviderEvidenceCacheStore(workspace.Root);
+
+        var key = BuildKey("openalex", "openalex.works", OpenAlexParserId, OpenAlexParserVersion);
+        var responseBody = Encoding.UTF8.GetBytes("{\"result\":\"retained\"}");
+        var response = CaptureResponse(key, responseBody, 200, "application/json");
+        var entry = store.Record(key, response, responseBody);
+
+        var bodyPath = Path.Combine(workspace.Root, "entries", entry.Digest.Value, "body.bin");
+        File.Delete(bodyPath);
+
+        var exception = Assert.ThrowsExactly<SearchRuleException>(() =>
+            store.TryGet(key, entry.StoredAt.AddHours(1), out _));
+        Assert.AreEqual(ProviderEvidenceCacheErrorCodes.DigestMismatch, exception.Category);
+    }
+
+    [TestMethod]
+    public void TryGet_rejects_tampered_retained_body_with_typed_digest_mismatch()
+    {
+        using var workspace = new TemporaryDirectory();
+        var store = new ProviderEvidenceCacheStore(workspace.Root);
+
+        var key = BuildKey("openalex", "openalex.works", OpenAlexParserId, OpenAlexParserVersion);
+        var responseBody = Encoding.UTF8.GetBytes("{\"result\":\"retained\"}");
+        var response = CaptureResponse(key, responseBody, 200, "application/json");
+        var entry = store.Record(key, response, responseBody);
+
+        var bodyPath = Path.Combine(workspace.Root, "entries", entry.Digest.Value, "body.bin");
+        var bytes = File.ReadAllBytes(bodyPath);
+        bytes[0] ^= 0x01;
+        File.WriteAllBytes(bodyPath, bytes);
+
+        var exception = Assert.ThrowsExactly<SearchRuleException>(() =>
+            store.TryGet(key, entry.StoredAt.AddHours(1), out _));
+        Assert.AreEqual(ProviderEvidenceCacheErrorCodes.DigestMismatch, exception.Category);
+    }
+
+    [TestMethod]
+    public void RebuildIndex_rejects_missing_retained_body_with_typed_digest_mismatch()
+    {
+        using var workspace = new TemporaryDirectory();
+        var store = new ProviderEvidenceCacheStore(workspace.Root);
+
+        var key = BuildKey("openalex", "openalex.works", OpenAlexParserId, OpenAlexParserVersion);
+        var responseBody = Encoding.UTF8.GetBytes("{\"result\":\"retained\"}");
+        var response = CaptureResponse(key, responseBody, 200, "application/json");
+        var entry = store.Record(key, response, responseBody);
+
+        var bodyPath = Path.Combine(workspace.Root, "entries", entry.Digest.Value, "body.bin");
+        File.Delete(bodyPath);
+
+        var exception = Assert.ThrowsExactly<SearchRuleException>(() => store.RebuildIndex());
+        Assert.AreEqual(ProviderEvidenceCacheErrorCodes.DigestMismatch, exception.Category);
+    }
+
+    [TestMethod]
+    public void RebuildIndex_rejects_tampered_retained_body_with_typed_digest_mismatch()
+    {
+        using var workspace = new TemporaryDirectory();
+        var store = new ProviderEvidenceCacheStore(workspace.Root);
+
+        var key = BuildKey("openalex", "openalex.works", OpenAlexParserId, OpenAlexParserVersion);
+        var responseBody = Encoding.UTF8.GetBytes("{\"result\":\"retained\"}");
+        var response = CaptureResponse(key, responseBody, 200, "application/json");
+        var entry = store.Record(key, response, responseBody);
+
+        var bodyPath = Path.Combine(workspace.Root, "entries", entry.Digest.Value, "body.bin");
+        var bytes = File.ReadAllBytes(bodyPath);
+        File.WriteAllBytes(bodyPath, bytes.Concat([(byte)'x']).ToArray());
+
+        var exception = Assert.ThrowsExactly<SearchRuleException>(() => store.RebuildIndex());
+        Assert.AreEqual(ProviderEvidenceCacheErrorCodes.DigestMismatch, exception.Category);
+    }
+
+    [TestMethod]
+    public void Record_rejects_tampered_existing_retained_body_on_idempotent_write()
+    {
+        using var workspace = new TemporaryDirectory();
+        var store = new ProviderEvidenceCacheStore(workspace.Root);
+
+        var key = BuildKey("openalex", "openalex.works", OpenAlexParserId, OpenAlexParserVersion);
+        var responseBody = Encoding.UTF8.GetBytes("{\"result\":\"retained\"}");
+        var response = CaptureResponse(key, responseBody, 200, "application/json");
+        var entry = store.Record(key, response, responseBody);
+
+        var bodyPath = Path.Combine(workspace.Root, "entries", entry.Digest.Value, "body.bin");
+        File.WriteAllBytes(bodyPath, responseBody[..^1]);
+
+        var exception = Assert.ThrowsExactly<SearchRuleException>(() =>
+            store.Record(key, response, responseBody, entry.StoredAt));
+        Assert.AreEqual(ProviderEvidenceCacheErrorCodes.DigestMismatch, exception.Category);
+    }
+
     private static ProviderEvidenceCacheKey BuildKey(
         string providerAlias,
         string operation,

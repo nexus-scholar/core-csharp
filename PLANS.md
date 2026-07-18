@@ -5,7 +5,7 @@ This file is the concise gate map. The detailed active roadmap is
 
 ## Current Position
 
-Protected `main` is documented at `ea665eb`.
+Protected `main` is documented at `bdd0d828547773a622316988d8d3dc825c4e7812`.
 
 | Work | Status |
 | --- | --- |
@@ -22,8 +22,13 @@ Protected `main` is documented at `ea665eb`.
 | FE-10 plugin runtime | Immediate design and capability-security gate |
 | FE-11 through FE-12 | Sequenced future work; not authorized |
 
-The verification baseline at FE-09 closeout is 1,011 passing tests, two opt-in
-live-provider smokes skipped by default, and 24 validation-only packages.
+The historical FE-09 closeout baseline at `ea665eb` is 1,011 passing tests, two
+opt-in live-provider smokes skipped by default, and 24 validation-only packages.
+The active `cdx/fe-09-deep-review-remediation` branch completes the successor
+integrity work under ADR 0044 and ADR 0045. Its full local gate passed with
+1,048 tests, zero failures, two Windows-host Linux-only skips, and two opt-in
+live-provider smokes skipped. Remote governance still blocks protected-main
+closeout.
 
 ## Immediate Next Gate
 

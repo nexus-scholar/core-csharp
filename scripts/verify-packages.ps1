@@ -1,26 +1,7 @@
 $ErrorActionPreference = 'Stop'
 
 $root = Split-Path -Parent $PSScriptRoot
-
-function Resolve-DotNet([string]$repositoryRoot) {
-    $requiredSdk = (Get-Content -Raw (Join-Path $repositoryRoot 'global.json') | ConvertFrom-Json).sdk.version
-    $executable = if ($env:OS -eq 'Windows_NT') { 'dotnet.exe' } else { 'dotnet' }
-    $candidates = New-Object System.Collections.Generic.List[string]
-    if ($env:DOTNET_ROOT) { $candidates.Add((Join-Path $env:DOTNET_ROOT $executable)) }
-    $homeDirectory = if ($env:USERPROFILE) { $env:USERPROFILE } else { $env:HOME }
-    if ($homeDirectory) { $candidates.Add((Join-Path (Join-Path $homeDirectory '.dotnet') $executable)) }
-    $command = Get-Command dotnet -ErrorAction SilentlyContinue
-    if ($command) { $candidates.Add($command.Source) }
-
-    foreach ($candidate in $candidates | Select-Object -Unique) {
-        if (-not (Test-Path -LiteralPath $candidate)) { continue }
-        $installed = & $candidate --list-sdks 2>$null
-        if ($LASTEXITCODE -eq 0 -and $installed -match ('^' + [Regex]::Escape($requiredSdk) + ' \[')) {
-            return $candidate
-        }
-    }
-    throw "Unable to locate a dotnet host containing the pinned SDK $requiredSdk."
-}
+. "$PSScriptRoot/resolve-dotnet.ps1"
 
 function Get-Sha256Hex([byte[]]$bytes) {
     $sha = [System.Security.Cryptography.SHA256]::Create()
@@ -30,7 +11,7 @@ function Get-Sha256Hex([byte[]]$bytes) {
     finally { $sha.Dispose() }
 }
 
-$dotnet = Resolve-DotNet $root
+$dotnet = Use-PinnedDotNet $root
 Push-Location $root
 try {
     & (Join-Path $PSScriptRoot 'verify-release-policy.ps1')

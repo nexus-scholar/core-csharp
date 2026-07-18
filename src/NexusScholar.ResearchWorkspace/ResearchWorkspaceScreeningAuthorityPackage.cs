@@ -270,6 +270,12 @@ public static class ResearchWorkspaceScreeningAuthorityPackage
         var protocol = ProtocolAuthorityPackageCanonicalCodec.Rehydrate(
             artifacts["protocol-authority"].Bytes,
             artifacts["protocol-authority"].RawDigest);
+        if (protocol.Version.Status != ProtocolStatus.Approved)
+        {
+            throw new ScreeningRuleException(
+                ResearchWorkspaceScreeningAuthorityPackage.InvalidCategory,
+                "Screening authority requires an approved protocol; superseded versions are not admissible.");
+        }
         var criteria = ScreeningCriteriaCanonicalCodec.Rehydrate(
             artifacts["criteria"].Bytes,
             ContentDigest.Parse(manifest.CriteriaDigest),

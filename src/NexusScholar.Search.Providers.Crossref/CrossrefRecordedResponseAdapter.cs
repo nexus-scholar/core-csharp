@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.Text.Json;
+using NexusScholar.Kernel;
 using NexusScholar.Search;
 using NexusScholar.Shared;
 
@@ -16,19 +17,6 @@ public sealed class CrossrefRecordedResponseAdapter
     public const string ProviderAlias = "crossref";
     public const string ParserId = "nexus.crossref.works-json";
     public const string ParserVersion = "1.0.0";
-
-    private static readonly string[] ForbiddenDescriptorFragments =
-    [
-        "://",
-        "mailto",
-        "contact",
-        "email",
-        "authorization",
-        "api-key",
-        "apikey",
-        "token",
-        "secret"
-    ];
 
     public CrossrefRequestDescriptor DescribeRequest(
         ProviderAcquisitionRequest acquisition,
@@ -117,7 +105,8 @@ public sealed class CrossrefRecordedResponseAdapter
         }
 
         fixture.Verify(exactResponseBytes);
-        if (receivedAt.Offset != TimeSpan.Zero || statusCode is < 100 or > 599 ||
+        if (!CanonicalTimestamp.IsCanonicalUtc(receivedAt, rejectDefault: true) ||
+            statusCode is < 100 or > 599 ||
             !string.Equals(mediaType, "application/json", StringComparison.OrdinalIgnoreCase))
         {
             throw Rule(ProviderAcquisitionErrorCodes.InvalidProviderEvidence, "Crossref response metadata is invalid.");
@@ -295,8 +284,9 @@ public sealed class CrossrefRecordedResponseAdapter
         foreach (var pair in descriptor[(queryIndex + 1)..].Split('&', StringSplitOptions.RemoveEmptyEntries))
         {
             var separator = pair.IndexOf('=');
-            var name = Uri.UnescapeDataString(separator < 0 ? pair : pair[..separator]);
-            if (ForbiddenDescriptorFragments.Skip(1).Any(fragment => name.Contains(fragment, StringComparison.OrdinalIgnoreCase)))
+            var name = separator < 0 ? pair : pair[..separator];
+            var value = separator < 0 ? string.Empty : pair[(separator + 1)..];
+            if (ProviderSecretPolicy.ContainsForbiddenDescriptorValue(name, value))
             {
                 throw Rule(ProviderAcquisitionErrorCodes.SecretBearingDescriptor, "Provider request descriptor contains a contact, credential, or secret-bearing parameter.");
             }
@@ -411,8 +401,7 @@ public sealed class CrossrefRecordedResponseAdapter
 
     private static void ValidateQueryValue(string query)
     {
-        var forbiddenValues = new[] { "://", "mailto:", "authorization:", "api-key", "apikey", "token=", "secret=", "sk-" };
-        if (forbiddenValues.Any(value => query.Contains(value, StringComparison.OrdinalIgnoreCase)))
+        if (ProviderSecretPolicy.ContainsForbiddenQueryValue(query))
         {
             throw Rule(ProviderAcquisitionErrorCodes.SecretBearingDescriptor, "Provider query contains URL, contact, credential, or secret-shaped material.");
         }

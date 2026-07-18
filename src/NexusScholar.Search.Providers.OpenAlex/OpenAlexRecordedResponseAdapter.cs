@@ -22,29 +22,6 @@ public sealed class OpenAlexRecordedResponseAdapter
     private const int MaxPerPage = 100;
     private const string FixedSelect = "id,doi,display_name,publication_year,cited_by_count,authorships,primary_location";
 
-    private static readonly string[] ForbiddenDescriptorFragments =
-    [
-        "://",
-        "mailto",
-        "contact",
-        "email",
-        "authorization",
-        "api-key",
-        "apikey",
-        "token",
-        "secret"
-    ];
-
-    private static readonly string[] ForbiddenQueryKeys =
-    [
-        "api_key",
-        "apikey",
-        "authorization",
-        "x-api-key",
-        "secret",
-        "token"
-    ];
-
     public static OpenAlexRequestDescriptor Describe(ProviderAcquisitionRequest acquisition, ProviderPageRequest page)
     {
         ArgumentNullException.ThrowIfNull(acquisition);
@@ -227,7 +204,7 @@ public sealed class OpenAlexRecordedResponseAdapter
 
         response.Verify(exactResponseBytes);
 
-        if (response.ReceivedAt.Offset != TimeSpan.Zero)
+        if (!CanonicalTimestamp.IsCanonicalUtc(response.ReceivedAt, rejectDefault: true))
         {
             return FailureResult(
                 acquisition,
@@ -531,11 +508,9 @@ public sealed class OpenAlexRecordedResponseAdapter
         foreach (var pair in descriptor[(queryIndex + 1)..].Split('&', StringSplitOptions.RemoveEmptyEntries))
         {
             var separator = pair.IndexOf('=');
-            var name = Uri.UnescapeDataString(separator < 0 ? pair : pair[..separator]);
-            var value = Uri.UnescapeDataString(separator < 0 ? string.Empty : pair[(separator + 1)..]);
-            if (ForbiddenDescriptorFragments.Skip(1).Any(fragment => name.Contains(fragment, StringComparison.OrdinalIgnoreCase)) ||
-                ForbiddenQueryKeys.Any(keyword => string.Equals(name, keyword, StringComparison.OrdinalIgnoreCase)) ||
-                ProviderLiveRequest.ContainsForbiddenValue(value))
+            var name = separator < 0 ? pair : pair[..separator];
+            var value = separator < 0 ? string.Empty : pair[(separator + 1)..];
+            if (ProviderSecretPolicy.ContainsForbiddenDescriptorValue(name, value))
             {
                 throw Rule(ProviderAcquisitionErrorCodes.SecretBearingDescriptor, "OpenAlex request descriptor contains a contact, credential, or secret-shaped parameter.");
             }
@@ -566,7 +541,7 @@ public sealed class OpenAlexRecordedResponseAdapter
 
     private static void ValidateQueryValue(string query)
     {
-        if (ProviderLiveRequest.ContainsForbiddenValue(query))
+        if (ProviderSecretPolicy.ContainsForbiddenQueryValue(query))
         {
             throw Rule(ProviderAcquisitionErrorCodes.SecretBearingDescriptor, "Provider query contains URL, contact, credential, or secret-shaped material.");
         }

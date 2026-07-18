@@ -146,6 +146,138 @@ public sealed class AuthorityGenerationTests
     }
 
     [TestMethod]
+    public void AnalyzeAndCommit_rejects_mutated_search_export_after_lock_and_does_not_publish()
+    {
+        using var workspace = Workspace.CreateAnalyzed();
+        var expected = workspace.AnalyzedProject;
+        var inputPath = ResearchWorkspacePaths.InProject(workspace.Root, expected.Inputs[0].RelativePath!);
+        var generationsRoot = ResearchWorkspacePaths.InProject(workspace.Root, ResearchWorkspacePaths.Generations);
+        var beforeGenerations = Directory.Exists(generationsRoot)
+            ? Directory.GetDirectories(generationsRoot).OrderBy(item => item, StringComparer.Ordinal).ToArray()
+            : Array.Empty<string>();
+
+        Assert.ThrowsExactly<ResearchWorkspaceDigestMismatchException>(() =>
+            ResearchWorkspaceTransaction.AnalyzeAndCommit(
+                workspace.Location,
+                expected,
+                point =>
+                {
+                    if (point == ResearchWorkspaceAnalysisFaultPoint.AfterLockAcquired)
+                    {
+                        File.WriteAllText(inputPath, "mutated input");
+                    }
+                }));
+
+        var current = ResearchWorkspaceStore.ReadProject(workspace.Location.ProjectFilePath);
+        Assert.AreEqual(expected.CurrentGenerationId, current.CurrentGenerationId);
+        Assert.AreEqual(expected.Revision, current.Revision);
+        var afterGenerations = Directory.Exists(generationsRoot)
+            ? Directory.GetDirectories(generationsRoot).OrderBy(item => item, StringComparer.Ordinal).ToArray()
+            : Array.Empty<string>();
+        CollectionAssert.AreEqual(beforeGenerations, afterGenerations);
+    }
+
+    [TestMethod]
+    public void CommitDeduplicationDecision_clears_successor_bound_downstream_state_and_preserves_history_directories()
+    {
+        using var workspace = Workspace.CreateAnalyzed();
+        var baseline = Initialize(workspace);
+        var source = DeduplicationAuthorityDigests.CreateResultDigestMaterial(workspace.Analysis.DeduplicationResult);
+        var current = baseline.Project;
+
+        var workflowGenerationId = "execution-old";
+        var workflowRelativePath = $"{ResearchWorkspacePaths.WorkflowExecutionJournalRoot("existing-execution", workflowGenerationId)}/manifest.json";
+        var workflowManifestPath = ResearchWorkspacePaths.InProject(workspace.Root, workflowRelativePath);
+        Directory.CreateDirectory(Path.GetDirectoryName(workflowManifestPath)!);
+        File.WriteAllText(workflowManifestPath, "workflow-historic-manifest");
+
+        var screeningConductGenerationId = "conduct-old";
+        var screeningConductRelativePath = $"{ResearchWorkspacePaths.ScreeningConductRoot("existing-conduct", screeningConductGenerationId)}/manifest.json";
+        var screeningConductManifestPath = ResearchWorkspacePaths.InProject(workspace.Root, screeningConductRelativePath);
+        Directory.CreateDirectory(Path.GetDirectoryName(screeningConductManifestPath)!);
+        File.WriteAllText(screeningConductManifestPath, "screening-conduct-historic-manifest");
+
+        var screeningAuthorityPackageGenerationId = "authority-package-old";
+        var screeningAuthorityPackageRelativePath = $"{ResearchWorkspacePaths.ScreeningAuthorityPackageRoot(screeningAuthorityPackageGenerationId)}/manifest.json";
+        var screeningAuthorityPackageManifestPath = ResearchWorkspacePaths.InProject(workspace.Root, screeningAuthorityPackageRelativePath);
+        Directory.CreateDirectory(Path.GetDirectoryName(screeningAuthorityPackageManifestPath)!);
+        File.WriteAllText(screeningAuthorityPackageManifestPath, "screening-authority-package-historic-manifest");
+
+        var fullTextCandidateId = "candidate-old";
+        var fullTextGenerationId = "fulltext-old";
+        var fullTextRelativePath = $"{ResearchWorkspacePaths.FullTextGenerationRoot(fullTextCandidateId, fullTextGenerationId)}/manifest.json";
+        var fullTextManifestPath = ResearchWorkspacePaths.InProject(workspace.Root, fullTextRelativePath);
+        Directory.CreateDirectory(Path.GetDirectoryName(fullTextManifestPath)!);
+        File.WriteAllText(fullTextManifestPath, "full-text-historic-manifest");
+
+        var reportingGenerationId = "reporting-old";
+        var reportingRelativePath = $"{ResearchWorkspacePaths.ReportingWorkflowGenerationRoot(reportingGenerationId)}/manifest.json";
+        var reportingManifestPath = ResearchWorkspacePaths.InProject(workspace.Root, reportingRelativePath);
+        Directory.CreateDirectory(Path.GetDirectoryName(reportingManifestPath)!);
+        File.WriteAllText(reportingManifestPath, "reporting-historic-manifest");
+
+        current = current with
+        {
+            CurrentWorkflowExecutionJournalGenerationId = workflowGenerationId,
+            WorkflowExecutionJournalManifestPath = workflowRelativePath,
+            WorkflowExecutionJournalManifestSha256 = ContentDigest.Sha256(File.ReadAllBytes(workflowManifestPath)).ToString(),
+            CurrentScreeningConductGenerationId = screeningConductGenerationId,
+            ScreeningConductManifestPath = screeningConductRelativePath,
+            ScreeningConductManifestSha256 = ContentDigest.Sha256(File.ReadAllBytes(screeningConductManifestPath)).ToString(),
+            CurrentScreeningAuthorityPackageGenerationId = screeningAuthorityPackageGenerationId,
+            ScreeningAuthorityPackageManifestPath = screeningAuthorityPackageRelativePath,
+            ScreeningAuthorityPackageManifestSha256 = ContentDigest.Sha256(File.ReadAllBytes(screeningAuthorityPackageManifestPath)).ToString(),
+            CurrentFullTextGenerationId = fullTextGenerationId,
+            FullTextManifestPath = fullTextRelativePath,
+            FullTextManifestSha256 = ContentDigest.Sha256(File.ReadAllBytes(fullTextManifestPath)).ToString(),
+            FullTextCases = new Dictionary<string, ResearchWorkspaceFullTextPointer>(StringComparer.Ordinal)
+            {
+                [fullTextCandidateId] = new ResearchWorkspaceFullTextPointer(
+                    fullTextGenerationId,
+                    fullTextRelativePath,
+                    ContentDigest.Sha256(File.ReadAllBytes(fullTextManifestPath)).ToString())
+            },
+            CurrentReportingWorkflowGenerationId = reportingGenerationId,
+            ReportingWorkflowManifestPath = reportingRelativePath,
+            ReportingWorkflowManifestSha256 = ContentDigest.Sha256(File.ReadAllBytes(reportingManifestPath)).ToString()
+        };
+        ResearchWorkspaceStore.WriteProject(workspace.Location, current);
+
+        var (command, target) = BuildCommand(workspace, current, source);
+        _ = ResearchWorkspaceTransaction.CommitDeduplicationDecision(
+            workspace.Location, current, source, command, target, Clock, new SequenceIdGenerator(720));
+        var committed = ResearchWorkspaceStore.ReadProject(workspace.Location.ProjectFilePath);
+
+        Assert.IsNull(committed.CurrentWorkflowExecutionJournalGenerationId);
+        Assert.IsNull(committed.WorkflowExecutionJournalManifestPath);
+        Assert.IsNull(committed.WorkflowExecutionJournalManifestSha256);
+        Assert.IsNull(committed.CurrentScreeningConductGenerationId);
+        Assert.IsNull(committed.ScreeningConductManifestPath);
+        Assert.IsNull(committed.ScreeningConductManifestSha256);
+        Assert.IsNull(committed.CurrentScreeningAuthorityPackageGenerationId);
+        Assert.IsNull(committed.ScreeningAuthorityPackageManifestPath);
+        Assert.IsNull(committed.ScreeningAuthorityPackageManifestSha256);
+        Assert.IsNull(committed.CurrentFullTextGenerationId);
+        Assert.IsNull(committed.FullTextManifestPath);
+        Assert.IsNull(committed.FullTextManifestSha256);
+        Assert.IsNull(committed.FullTextCases);
+        Assert.IsNull(committed.CurrentReportingWorkflowGenerationId);
+        Assert.IsNull(committed.ReportingWorkflowManifestPath);
+        Assert.IsNull(committed.ReportingWorkflowManifestSha256);
+
+        Assert.IsTrue(Directory.Exists(Path.GetDirectoryName(workflowManifestPath)));
+        Assert.IsTrue(Directory.Exists(Path.GetDirectoryName(screeningConductManifestPath)));
+        Assert.IsTrue(Directory.Exists(Path.GetDirectoryName(screeningAuthorityPackageManifestPath)));
+        Assert.IsTrue(Directory.Exists(Path.GetDirectoryName(fullTextManifestPath)));
+        Assert.IsTrue(Directory.Exists(Path.GetDirectoryName(reportingManifestPath)));
+        Assert.IsTrue(File.Exists(workflowManifestPath));
+        Assert.IsTrue(File.Exists(screeningConductManifestPath));
+        Assert.IsTrue(File.Exists(screeningAuthorityPackageManifestPath));
+        Assert.IsTrue(File.Exists(fullTextManifestPath));
+        Assert.IsTrue(File.Exists(reportingManifestPath));
+    }
+
+    [TestMethod]
     public void Authority_chain_remains_current_after_unrelated_project_revision_when_pointer_is_unchanged()
     {
         using var workspace = Workspace.CreateAnalyzed();

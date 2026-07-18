@@ -126,7 +126,7 @@ public static partial class ProtocolSupplementalAuthorityRehydrator
     private static ProtocolDeviationRecord Normalize(ProtocolDeviationRecord source, IProtocolDeviationAuthorityResolver resolver)
     {
         ArgumentNullException.ThrowIfNull(source);
-        if (!ProtocolDeviationConstants.IsClassification(source.Classification) || source.RecordedAt.Offset != TimeSpan.Zero ||
+        if (!ProtocolDeviationConstants.IsClassification(source.Classification) || !CanonicalTimestamp.IsCanonicalUtc(source.RecordedAt, true) ||
             !resolver.IsHumanActor(source.RecordedBy) || !source.ProtocolContentDigest.IsValid)
             throw Rule("Deviation classification, recorder, time, or Protocol digest is invalid.");
         var profileParts = new object?[] { source.ProfileId, source.ProfileDigest, source.ShortcutId };

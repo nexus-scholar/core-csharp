@@ -73,7 +73,7 @@ public sealed class ProviderEvidenceCacheStore
 
         var entry = ReadEntry(entryDigest, key);
         var bodyBytes = entry.IsBodyRetained
-            ? File.ReadAllBytes(GetBodyPath(GetEntryPath(entryDigest)))
+            ? ReadRetainedBody(entryDigest, entry)
             : null;
         var currentPolicy = _resolvePolicy(key.ProviderAlias, key.Operation);
         var isCurrentPolicy = currentPolicy.IsAllowed &&
@@ -119,6 +119,11 @@ public sealed class ProviderEvidenceCacheStore
             var existing = ReadEntry(existingEntryDigest, key);
             if (IsEquivalent(existing, entry, response, bodyBytes))
             {
+                if (existing.IsBodyRetained)
+                {
+                    ReadRetainedBody(existingEntryDigest, existing);
+                }
+
                 return existing;
             }
         }
@@ -149,6 +154,11 @@ public sealed class ProviderEvidenceCacheStore
                     throw new SearchRuleException(
                         ProviderEvidenceCacheErrorCodes.IncompatiblePolicy,
                         "Immutable cache entry directory contains different evidence.");
+                }
+
+                if (existing.IsBodyRetained)
+                {
+                    ReadRetainedBody(entryDigest, existing);
                 }
             }
             else
@@ -184,6 +194,11 @@ public sealed class ProviderEvidenceCacheStore
             }
 
             var entry = ReadEntry(entryDigest);
+            if (entry.IsBodyRetained)
+            {
+                ReadRetainedBody(entryDigest, entry);
+            }
+
             var keyDigest = entry.Key.Identity.Value;
             if (!latest.TryGetValue(keyDigest, out var current) ||
                 entry.StoredAt > current.StoredAt ||
@@ -335,6 +350,45 @@ public sealed class ProviderEvidenceCacheStore
         }
 
         return entry;
+    }
+
+    private byte[] ReadRetainedBody(string entryDigest, ProviderEvidenceCacheEntry entry)
+    {
+        var bodyPath = GetBodyPath(GetEntryPath(entryDigest));
+        if (!File.Exists(bodyPath))
+        {
+            throw new SearchRuleException(
+                ProviderEvidenceCacheErrorCodes.DigestMismatch,
+                "Cached response body is missing.");
+        }
+
+        byte[] bodyBytes;
+        try
+        {
+            bodyBytes = File.ReadAllBytes(bodyPath);
+        }
+        catch (IOException)
+        {
+            throw new SearchRuleException(
+                ProviderEvidenceCacheErrorCodes.DigestMismatch,
+                "Cached response body cannot be read.");
+        }
+        catch (UnauthorizedAccessException)
+        {
+            throw new SearchRuleException(
+                ProviderEvidenceCacheErrorCodes.DigestMismatch,
+                "Cached response body cannot be read.");
+        }
+        catch (NotSupportedException)
+        {
+            throw new SearchRuleException(
+                ProviderEvidenceCacheErrorCodes.DigestMismatch,
+                "Cached response body cannot be read.");
+        }
+
+        entry.VerifyBody(bodyBytes);
+
+        return bodyBytes;
     }
 
     private static DateTimeOffset ParseTimestamp(string value)

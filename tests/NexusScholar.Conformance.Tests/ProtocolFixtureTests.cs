@@ -221,6 +221,17 @@ public sealed class ProtocolFixtureTests
     }
 
     [TestMethod]
+    public void Rehydration_protocol_superseded_status_is_replayed()
+    {
+        using var document = JsonDocument.Parse("{\"policyMode\":\"single_researcher\",\"mutation\":\"superseded_status\"}");
+        var verified = ReplayRehydrationFixture(document.RootElement);
+
+        Assert.IsNotNull(verified);
+        Assert.AreEqual(ProtocolStatus.Superseded, verified.Version.Status);
+        Assert.AreEqual("protocol-version-superseding", verified.Version.SupersededByVersionId);
+    }
+
+    [TestMethod]
     public void Supplemental_authority_recipes_are_complete_and_digest_replayable()
     {
         var names = ProtocolFixturePaths().Select(Path.GetFileName).ToHashSet(StringComparer.Ordinal);
@@ -393,6 +404,14 @@ public sealed class ProtocolFixtureTests
                 : new ReplayResolver(policy, new[] { ReplayResearcher.Id, ReplayReviewer.Id });
             _ = ProtocolRehydrator.RehydrateApproval(approvalInput, state.Candidate, policy, resolver);
             Assert.Fail($"Negative approval fixture mutation '{mutation}' unexpectedly rehydrated.");
+        }
+        else if (string.Equals(mutation, "superseded_status", StringComparison.Ordinal))
+        {
+            input = input with
+            {
+                Status = ProtocolStatus.Superseded,
+                SupersededByVersionId = "protocol-version-superseding"
+            };
         }
 
         return ProtocolRehydrator.RehydrateVersion(input, state.Resolver);

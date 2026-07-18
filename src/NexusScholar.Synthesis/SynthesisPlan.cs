@@ -225,6 +225,7 @@ public static class SynthesisPlanAuthority
             .OrderBy(item => item.LibraryId, StringComparer.Ordinal).ThenBy(item => item.LibraryVersion, StringComparer.Ordinal).ToArray();
         if (normalizedCalculations.Length == 0)
             throw Rule(SynthesisErrorCodes.InvalidAuthority, "Synthesis plans require a calculation library, version, and configuration declaration.");
+        authoredAt = RequireUtc(authoredAt, nameof(authoredAt));
         var content = new CanonicalJsonObject().Add("plan_id", Required(planId)).Add("protocol_version_id", protocol.Version.Id)
             .Add("protocol_content_digest", protocol.Version.ContentDigest.ToString())
             .Add("eligible_records", CanonicalJsonValue.Array(sources.Select(item => item.ToCanonicalJson()).ToArray()))
@@ -246,6 +247,10 @@ public static class SynthesisPlanAuthority
         return result.Length > 0 ? result : throw Rule(SynthesisErrorCodes.InvalidAuthority, $"Synthesis {label} are required.");
     }
     private static string Required(string value) => !string.IsNullOrWhiteSpace(value) ? value.Trim() : throw Rule(SynthesisErrorCodes.InvalidAuthority, "Synthesis fields are required.");
+    private static DateTimeOffset RequireUtc(DateTimeOffset value, string name) =>
+        CanonicalTimestamp.IsCanonicalUtc(value, rejectDefault: true)
+            ? value
+            : throw Rule(SynthesisErrorCodes.InvalidAuthority, $"{name} must be UTC.");
     private static SynthesisRuleException Rule(string category, string message) => new(category, message);
 }
 
@@ -280,6 +285,7 @@ public sealed class SynthesisInvalidation
             throw new SynthesisRuleException(SynthesisErrorCodes.InvalidAuthority, "Invalidation amendment does not match every synthesis plan Protocol authority.");
         var targets = plans.Select(item => item.Digest).Distinct().OrderBy(item => item.ToString(), StringComparer.Ordinal).ToArray();
         if (targets.Length == 0 || targets.Any(item => !item.IsValid)) throw new SynthesisRuleException(SynthesisErrorCodes.InvalidAuthority, "Invalidation requires valid target digests.");
+        invalidatedAt = RequireUtc(invalidatedAt, nameof(invalidatedAt));
         var content = new CanonicalJsonObject().Add("invalidation_id", Required(invalidationId))
             .Add("amendment_id", amendment.Amendment.AmendmentId).Add("amendment_digest", amendment.AmendmentDigest.ToString())
             .Add("target_digests", CanonicalJsonValue.Array(targets.Select(item => CanonicalJsonValue.From(item.ToString())).ToArray()))
@@ -287,4 +293,8 @@ public sealed class SynthesisInvalidation
         return new SynthesisInvalidation(new DigestEnvelope(DigestScope.CanonicalJsonRecord, SynthesisSchemas.Invalidation, SynthesisSchemas.Version, content), amendment.Amendment.AmendmentId, amendment.AmendmentDigest, targets);
     }
     private static string Required(string value) => !string.IsNullOrWhiteSpace(value) ? value.Trim() : throw new SynthesisRuleException(SynthesisErrorCodes.InvalidAuthority, "Invalidation fields are required.");
+    private static DateTimeOffset RequireUtc(DateTimeOffset value, string name) =>
+        CanonicalTimestamp.IsCanonicalUtc(value, rejectDefault: true)
+            ? value
+            : throw new SynthesisRuleException(SynthesisErrorCodes.InvalidAuthority, $"{name} must be UTC.");
 }

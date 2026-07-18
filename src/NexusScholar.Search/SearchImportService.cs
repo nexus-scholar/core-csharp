@@ -111,6 +111,7 @@ public sealed class SearchImportService
         var lines = text.Split('\n');
         var recordLines = new List<string>();
         var currentBlockOpen = false;
+        var discardCurrentBlock = false;
         var seenRecordIds = new HashSet<string>(StringComparer.Ordinal);
         var records = new List<SearchImportRecord>();
         var recordIndex = 0;
@@ -145,15 +146,24 @@ public sealed class SearchImportService
             {
                 if (currentBlockOpen)
                 {
-                    records.Add(CreateSkippedRecord(
-                        sourceDatabaseOrTool,
-                        $"row-{recordIndex + 1}",
-                        SearchImportErrorCodes.MalformedRecord,
-                        "Nested TY header found before ER block.",
-                        parserWarnings));
+                    if (!discardCurrentBlock)
+                    {
+                        recordIndex++;
+                        records.Add(CreateSkippedRecord(
+                            sourceDatabaseOrTool,
+                            $"row-{recordIndex}",
+                            SearchImportErrorCodes.MalformedRecord,
+                            "Nested TY header found before ER block.",
+                            parserWarnings));
+                    }
+
+                    recordLines.Clear();
+                    discardCurrentBlock = true;
+                    continue;
                 }
 
                 currentBlockOpen = true;
+                discardCurrentBlock = false;
                 recordLines.Add(normalized);
                 continue;
             }
@@ -163,20 +173,30 @@ public sealed class SearchImportService
                 continue;
             }
 
-            recordLines.Add(normalized);
+            if (!discardCurrentBlock)
+            {
+                recordLines.Add(normalized);
+            }
 
             if (normalized.StartsWith("ER  -", StringComparison.Ordinal))
             {
-                finalizeRecord();
+                if (!discardCurrentBlock)
+                {
+                    finalizeRecord();
+                }
+
+                recordLines.Clear();
                 currentBlockOpen = false;
+                discardCurrentBlock = false;
             }
         }
 
-        if (currentBlockOpen)
+        if (currentBlockOpen && !discardCurrentBlock)
         {
+            recordIndex++;
             records.Add(CreateSkippedRecord(
                 sourceDatabaseOrTool,
-                $"row-{recordIndex + 1}",
+                $"row-{recordIndex}",
                 SearchImportErrorCodes.MalformedRecord,
                 "RIS record missing ER end marker.",
                 parserWarnings));
@@ -469,8 +489,24 @@ public sealed class SearchImportService
         }
 
         var headers = csvRecords[0].Fields;
-        var seenSourceIds = new HashSet<string>(StringComparer.Ordinal);
         var records = new List<SearchImportRecord>();
+        var normalizedHeaders = headers.Select(header => header.Trim().ToLowerInvariant()).ToArray();
+        var duplicateHeader = normalizedHeaders
+            .GroupBy(header => header, StringComparer.Ordinal)
+            .FirstOrDefault(group => group.Count() > 1)?.Key;
+        if (duplicateHeader is not null)
+        {
+            var headerLabel = string.IsNullOrWhiteSpace(duplicateHeader) ? "<blank>" : duplicateHeader;
+            records.Add(CreateSkippedRecord(
+                sourceDatabaseOrTool,
+                "row-1",
+                SearchImportErrorCodes.MalformedRecord,
+                $"Scopus header contains duplicate normalized field '{headerLabel}'.",
+                parserWarnings));
+            return records;
+        }
+
+        var seenSourceIds = new HashSet<string>(StringComparer.Ordinal);
         var row = 0;
 
         foreach (var csvRecord in csvRecords.Skip(1))
@@ -493,7 +529,7 @@ public sealed class SearchImportService
             }
 
             var fields = csvRecord.Fields;
-            var values = headers.Zip(fields, (header, value) => new { Header = header.ToLowerInvariant(), Value = value })
+            var values = normalizedHeaders.Zip(fields, (header, value) => new { Header = header, Value = value })
                 .ToDictionary(item => item.Header, item => item.Value, StringComparer.OrdinalIgnoreCase);
 
             var sourceRecordId = values.TryGetValue("eid", out var eidValue) && !string.IsNullOrWhiteSpace(eidValue)

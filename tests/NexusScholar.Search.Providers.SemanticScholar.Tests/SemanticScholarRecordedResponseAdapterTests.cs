@@ -56,6 +56,9 @@ public sealed class SemanticScholarRecordedResponseAdapterTests
         Assert.ThrowsExactly<SearchRuleException>(() =>
             SemanticScholarRecordedResponseAdapter.ValidateSanitizedDescriptor(
                 "/graph/v1/paper/search/bulk?query=api_key%3Dsecret"));
+        Assert.ThrowsExactly<SearchRuleException>(() =>
+            SemanticScholarRecordedResponseAdapter.ValidateSanitizedDescriptor(
+                "/graph/v1/paper/search/bulk?token=not-a-validated-continuation"));
 
         var authorization = ProviderAcquisitionRequest.Create(
             "request-authorization",
@@ -130,6 +133,9 @@ public sealed class SemanticScholarRecordedResponseAdapterTests
         var firstResult = new SemanticScholarRecordedResponseAdapter().ParseRecordedResponse(request, firstPage, firstBytes, firstEvidence);
 
         var secondPage = ProviderPageRequest.Create(request, 1, 1000, 2, firstResult.NextCursor, firstResult.Digest);
+        StringAssert.Contains(
+            SemanticScholarRecordedResponseAdapter.Describe(request, secondPage).EndpointPathAndQuery,
+            "token=s2-token-next");
         var secondBytes = Fixture("search-s2-bulk-final.response.json");
         var secondEvidence = Capture(request, secondPage, secondBytes, 200, "application/json");
         var secondResult = new SemanticScholarRecordedResponseAdapter().ParseRecordedResponse(

@@ -46,11 +46,15 @@ public sealed class ProviderLiveRequest
         foreach (var pair in parsed.Query.TrimStart('?').Split('&', StringSplitOptions.RemoveEmptyEntries))
         {
             var separator = pair.IndexOf('=');
-            var name = Uri.UnescapeDataString(separator < 0 ? pair : pair[..separator]);
-            var value = Uri.UnescapeDataString(separator < 0 ? string.Empty : pair[(separator + 1)..]);
-            if (new[] { "api_key", "apikey", "authorization", "password", "secret", "x-api-key" }
-                    .Any(fragment => name.Contains(fragment, StringComparison.OrdinalIgnoreCase)) ||
-                ContainsForbiddenValue(value))
+            var name = separator < 0 ? pair : pair[..separator];
+            var value = separator < 0 ? string.Empty : pair[(separator + 1)..];
+            if (ProviderSecretPolicy.ContainsForbiddenDescriptorValue(
+                    name,
+                    value,
+                    allowPaginationToken: string.Equals(
+                        operationId,
+                        "semantic-scholar.bulk-search",
+                        StringComparison.Ordinal)))
             {
                 throw Rule("Live provider endpoint descriptor contains credential-shaped material.");
             }
@@ -112,23 +116,7 @@ public sealed class ProviderLiveRequest
     public ContentDigest Digest => Envelope().ComputeDigest();
 
     public static bool ContainsForbiddenValue(string value) =>
-        new[]
-        {
-            "://",
-            "mailto:",
-            "authorization",
-            "api_key",
-            "api-key",
-            "apikey",
-            "x-api-key",
-            "password",
-            "secret",
-            "token=",
-            "contact",
-            "email",
-            "bearer ",
-            "sk-"
-        }.Any(fragment => value.Contains(fragment, StringComparison.OrdinalIgnoreCase));
+        ProviderSecretPolicy.ContainsForbiddenValue(value);
 
     private static SearchRuleException Rule(string message) =>
         new(ProviderAcquisitionErrorCodes.TransportPolicyViolation, message);

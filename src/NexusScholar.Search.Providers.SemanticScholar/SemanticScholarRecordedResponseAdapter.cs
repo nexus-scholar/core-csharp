@@ -3,6 +3,7 @@ using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using NexusScholar.Kernel;
 using NexusScholar.Search;
 using NexusScholar.Search.Providers.Live;
 using NexusScholar.Shared;
@@ -23,27 +24,6 @@ public sealed class SemanticScholarRecordedResponseAdapter
 
     private const int MaxPageSize = 1000;
     private const string FixedSearchFields = "paperId,externalIds,title,abstract,year,venue,authors,citationCount";
-
-    private static readonly string[] ForbiddenDescriptorFragments =
-    [
-        "://",
-        "mailto",
-        "contact",
-        "email",
-        "authorization",
-        "api-key",
-        "apikey",
-        "secret"
-    ];
-
-    private static readonly string[] ForbiddenQueryKeys =
-    [
-        "api_key",
-        "apikey",
-        "authorization",
-        "x-api-key",
-        "secret"
-    ];
 
     public static SemanticScholarRequestDescriptor Describe(ProviderAcquisitionRequest acquisition, ProviderPageRequest page)
     {
@@ -116,7 +96,9 @@ public sealed class SemanticScholarRecordedResponseAdapter
             $"/graph/v1/paper/search/bulk?{string.Join("&", query)}",
             ProviderAlias,
             page.Digest.ToString());
-        ValidateSanitizedDescriptor(descriptor.EndpointPathAndQuery);
+        ValidateSanitizedDescriptor(
+            descriptor.EndpointPathAndQuery,
+            allowPaginationToken: page.PageIndex > 0 && !string.IsNullOrWhiteSpace(page.Cursor));
         return descriptor;
     }
 
@@ -279,7 +261,7 @@ public sealed class SemanticScholarRecordedResponseAdapter
 
         response.Verify(exactResponseBytes);
         if (!string.Equals(response.MediaType, "application/json", StringComparison.OrdinalIgnoreCase) ||
-            response.ReceivedAt.Offset != TimeSpan.Zero)
+            !CanonicalTimestamp.IsCanonicalUtc(response.ReceivedAt, rejectDefault: true))
         {
             return FailureResult(
                 acquisition,
@@ -480,7 +462,7 @@ public sealed class SemanticScholarRecordedResponseAdapter
 
         response.Verify(exactResponseBytes);
         if (!string.Equals(response.MediaType, "application/json", StringComparison.OrdinalIgnoreCase) ||
-            response.ReceivedAt.Offset != TimeSpan.Zero ||
+            !CanonicalTimestamp.IsCanonicalUtc(response.ReceivedAt, rejectDefault: true) ||
             response.StatusCode is < 100 or > 599)
         {
             return FailureResult(
@@ -684,7 +666,12 @@ public sealed class SemanticScholarRecordedResponseAdapter
         }
     }
 
-    public static void ValidateSanitizedDescriptor(string descriptor)
+    public static void ValidateSanitizedDescriptor(string descriptor) =>
+        ValidateSanitizedDescriptor(descriptor, allowPaginationToken: false);
+
+    private static void ValidateSanitizedDescriptor(
+        string descriptor,
+        bool allowPaginationToken)
     {
         if (string.IsNullOrWhiteSpace(descriptor) || descriptor.Contains("://", StringComparison.OrdinalIgnoreCase))
         {
@@ -692,6 +679,7 @@ public sealed class SemanticScholarRecordedResponseAdapter
         }
 
         var queryIndex = descriptor.IndexOf('?');
+        var descriptorPath = queryIndex < 0 ? descriptor : descriptor[..queryIndex];
         if (queryIndex < 0)
         {
             return;
@@ -700,11 +688,16 @@ public sealed class SemanticScholarRecordedResponseAdapter
         foreach (var pair in descriptor[(queryIndex + 1)..].Split('&', StringSplitOptions.RemoveEmptyEntries))
         {
             var separator = pair.IndexOf('=');
-            var name = Uri.UnescapeDataString(separator < 0 ? pair : pair[..separator]);
-            var value = Uri.UnescapeDataString(separator < 0 ? string.Empty : pair[(separator + 1)..]);
-            if (ForbiddenDescriptorFragments.Skip(1).Any(fragment => name.Contains(fragment, StringComparison.OrdinalIgnoreCase)) ||
-                ForbiddenQueryKeys.Any(keyword => string.Equals(name, keyword, StringComparison.OrdinalIgnoreCase)) ||
-                ProviderLiveRequest.ContainsForbiddenValue(value))
+            var name = separator < 0 ? pair : pair[..separator];
+            var value = separator < 0 ? string.Empty : pair[(separator + 1)..];
+            if (ProviderSecretPolicy.ContainsForbiddenDescriptorValue(
+                    name,
+                    value,
+                    allowPaginationToken: allowPaginationToken &&
+                        string.Equals(
+                            descriptorPath,
+                            "/graph/v1/paper/search/bulk",
+                            StringComparison.Ordinal)))
             {
                 throw Rule(ProviderAcquisitionErrorCodes.SecretBearingDescriptor, "Semantic Scholar request descriptor contains a contact, credential, or secret-shaped parameter.");
             }
@@ -976,7 +969,7 @@ public sealed class SemanticScholarRecordedResponseAdapter
 
     private static void ValidateQueryValue(string query)
     {
-        if (ProviderLiveRequest.ContainsForbiddenValue(query))
+        if (ProviderSecretPolicy.ContainsForbiddenQueryValue(query))
         {
             throw Rule(ProviderAcquisitionErrorCodes.SecretBearingDescriptor, "Provider query contains URL, contact, credential, or secret-shaped material.");
         }

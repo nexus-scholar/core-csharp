@@ -297,7 +297,7 @@ internal static class ProvenanceEventValidator
         {
             throw new ProvenanceRuleException(ProvenanceErrorCodes.InvalidEventId, "Provenance event id is required.");
         }
-        if (researchEvent.OccurredAt.Offset != TimeSpan.Zero)
+        if (!CanonicalTimestamp.IsCanonicalUtc(researchEvent.OccurredAt, rejectDefault: true))
         {
             throw new ProvenanceRuleException(ProvenanceErrorCodes.InvalidTimestamp, "Provenance event timestamp must be UTC.");
         }

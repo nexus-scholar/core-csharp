@@ -216,6 +216,125 @@ public sealed class SearchImportServiceTests
     }
 
     [TestMethod]
+    public void Search_import_skips_nested_ris_block_and_allows_next_valid_record()
+    {
+        var sourceText = string.Join('\n', new[]
+        {
+            "TY  - JOUR",
+            "TI  - Nested block source",
+            "ER  -",
+            "TY  - JOUR",
+            "TI  - First valid title",
+            "ER  -",
+            "TY  - JOUR",
+            "TY  - JOUR",
+            "TI  - Contaminated block title",
+            "ER  -",
+            "TY  - JOUR",
+            "TI  - Valid after contamination",
+            "ER  -"
+        });
+
+        var trace = new SearchImportService().Parse("trace-import-ris-nested", NewRequest("ris"), Encoding.UTF8.GetBytes(sourceText));
+
+        Assert.AreEqual(4, trace.ImportedRecords.Count);
+        Assert.AreEqual(3, trace.Sightings.Count);
+        Assert.IsFalse(trace.ImportedRecords[0].IsSkipped);
+        Assert.AreEqual("Nested block source", trace.ImportedRecords[0].Work.Title);
+        Assert.IsFalse(trace.ImportedRecords[1].IsSkipped);
+        Assert.AreEqual("First valid title", trace.ImportedRecords[1].Work.Title);
+        Assert.IsTrue(trace.ImportedRecords[2].IsSkipped);
+        Assert.AreEqual(SearchImportErrorCodes.MalformedRecord, trace.ImportedRecords[2].SkipReason);
+        Assert.IsFalse(trace.ImportedRecords[3].IsSkipped);
+        Assert.AreEqual("Valid after contamination", trace.ImportedRecords[3].Work.Title);
+        Assert.AreEqual(
+            trace.ImportedRecords.Count,
+            trace.ImportedRecords.Select(record => record.SourceRecordId).Distinct(StringComparer.Ordinal).Count());
+        Assert.IsFalse(trace.Sightings.Any(sighting => sighting.Work.Title == "Contaminated block title"));
+    }
+
+    [TestMethod]
+    public void Search_import_nested_ris_block_produces_only_skipped_evidence()
+    {
+        const string sourceText = """
+            TY  - JOUR
+            TI  - First title
+            TY  - JOUR
+            TI  - Second title
+            ER  -
+            """;
+
+        var trace = new SearchImportService().Parse(
+            "trace-import-ris-nested-only",
+            NewRequest("ris"),
+            Encoding.UTF8.GetBytes(sourceText));
+
+        Assert.AreEqual(1, trace.ImportedRecords.Count);
+        Assert.IsTrue(trace.ImportedRecords[0].IsSkipped);
+        Assert.AreEqual("row-1", trace.ImportedRecords[0].SourceRecordId);
+        Assert.AreEqual(SearchImportErrorCodes.MalformedRecord, trace.ImportedRecords[0].SkipReason);
+        Assert.IsTrue(trace.ImportedRecords[0].Notices.Any(notice =>
+            notice.Category == SearchImportErrorCodes.MalformedRecord &&
+            notice.Message == "Nested TY header found before ER block." &&
+            notice.SourceRecordId == "row-1"));
+        Assert.IsTrue(trace.ParserWarnings.Any(notice =>
+            notice.Category == SearchImportErrorCodes.MalformedRecord &&
+            notice.Message == "Nested TY header found before ER block." &&
+            notice.SourceRecordId == "row-1"));
+        Assert.AreEqual(0, trace.Sightings.Count);
+    }
+
+    [TestMethod]
+    public void Search_import_scopus_csv_duplicate_normalized_headers_do_not_throw_and_yield_skipped_evidence()
+    {
+        var sourceText = string.Join('\n', new[]
+        {
+            "eid,title,doi,DOI",
+            "2-s2.0-1,Example,10.1000/one,10.1000/two"
+        });
+
+        var trace = new SearchImportService().Parse(
+            "trace-import-scopus-dupe-headers",
+            NewRequest("scopus-csv"),
+            Encoding.UTF8.GetBytes(sourceText));
+
+        Assert.AreEqual(1, trace.ImportedRecords.Count);
+        Assert.IsTrue(trace.ImportedRecords[0].Notices.Any(note => note.Category == SearchImportErrorCodes.MalformedRecord));
+        Assert.IsTrue(trace.ParserWarnings.Any(notice => notice.Category == SearchImportErrorCodes.MalformedRecord));
+        Assert.IsTrue(trace.ImportedRecords[0].IsSkipped);
+        Assert.AreEqual(SearchImportErrorCodes.MalformedRecord, trace.ImportedRecords[0].SkipReason);
+        Assert.AreEqual(0, trace.Sightings.Count);
+    }
+
+    [TestMethod]
+    public void Search_import_scopus_csv_duplicate_blank_headers_fail_closed()
+    {
+        const string sourceText = """
+            eid,title,,
+            2-s2.0-1,Example,first,second
+            """;
+
+        var trace = new SearchImportService().Parse(
+            "trace-import-scopus-blank-headers",
+            NewRequest("scopus-csv"),
+            Encoding.UTF8.GetBytes(sourceText));
+
+        Assert.AreEqual(1, trace.ImportedRecords.Count);
+        Assert.IsTrue(trace.ImportedRecords[0].IsSkipped);
+        Assert.AreEqual("row-1", trace.ImportedRecords[0].SourceRecordId);
+        Assert.AreEqual(SearchImportErrorCodes.MalformedRecord, trace.ImportedRecords[0].SkipReason);
+        Assert.IsTrue(trace.ImportedRecords[0].Notices.Any(notice =>
+            notice.Category == SearchImportErrorCodes.MalformedRecord &&
+            notice.Message == "Scopus header contains duplicate normalized field '<blank>'." &&
+            notice.SourceRecordId == "row-1"));
+        Assert.IsTrue(trace.ParserWarnings.Any(notice =>
+            notice.Category == SearchImportErrorCodes.MalformedRecord &&
+            notice.Message == "Scopus header contains duplicate normalized field '<blank>'." &&
+            notice.SourceRecordId == "row-1"));
+        Assert.AreEqual(0, trace.Sightings.Count);
+    }
+
+    [TestMethod]
     public void Ris_author_commas_do_not_split_one_person_into_multiple_authors()
     {
         var sourceText = "TY  - JOUR\nTI  - Author fidelity\nAU  - Smith, John\nAU  - Doe, Jane\nER  -\n";

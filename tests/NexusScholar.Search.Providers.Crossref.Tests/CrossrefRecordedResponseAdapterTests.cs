@@ -165,6 +165,30 @@ public sealed class CrossrefRecordedResponseAdapterTests
         var secret = Assert.ThrowsExactly<SearchRuleException>(() =>
             CrossrefRecordedResponseAdapter.ValidateSanitizedDescriptor("/works?mailto=user@example.test"));
         Assert.AreEqual(ProviderAcquisitionErrorCodes.SecretBearingDescriptor, secret.Category);
+        var authorization = Assert.ThrowsExactly<SearchRuleException>(() =>
+            CrossrefRecordedResponseAdapter.ValidateSanitizedDescriptor("/works?authorization=Bearer%20abc"));
+        Assert.AreEqual(ProviderAcquisitionErrorCodes.SecretBearingDescriptor, authorization.Category);
+        var apiKey = Assert.ThrowsExactly<SearchRuleException>(() =>
+            CrossrefRecordedResponseAdapter.ValidateSanitizedDescriptor("/works?api_key=abc"));
+        Assert.AreEqual(ProviderAcquisitionErrorCodes.SecretBearingDescriptor, apiKey.Category);
+        var contact = Assert.ThrowsExactly<SearchRuleException>(() =>
+            CrossrefRecordedResponseAdapter.ValidateSanitizedDescriptor("/works?contact=operator%40example.test"));
+        Assert.AreEqual(ProviderAcquisitionErrorCodes.SecretBearingDescriptor, contact.Category);
+        var email = Assert.ThrowsExactly<SearchRuleException>(() =>
+            CrossrefRecordedResponseAdapter.ValidateSanitizedDescriptor("/works?email=operator%40example.test"));
+        Assert.AreEqual(ProviderAcquisitionErrorCodes.SecretBearingDescriptor, email.Category);
+        var token = Assert.ThrowsExactly<SearchRuleException>(() =>
+            CrossrefRecordedResponseAdapter.ValidateSanitizedDescriptor("/works?token=opaque-value"));
+        Assert.AreEqual(ProviderAcquisitionErrorCodes.SecretBearingDescriptor, token.Category);
+        var url = Assert.ThrowsExactly<SearchRuleException>(() =>
+            CrossrefRecordedResponseAdapter.ValidateSanitizedDescriptor("/works?query=https%3A%2F%2Fexample.test"));
+        Assert.AreEqual(ProviderAcquisitionErrorCodes.SecretBearingDescriptor, url.Category);
+        var bareContact = Assert.ThrowsExactly<SearchRuleException>(() =>
+            CrossrefRecordedResponseAdapter.ValidateSanitizedDescriptor("/works?query=operator%40example.test"));
+        Assert.AreEqual(ProviderAcquisitionErrorCodes.SecretBearingDescriptor, bareContact.Category);
+        var signedCredential = Assert.ThrowsExactly<SearchRuleException>(() =>
+            CrossrefRecordedResponseAdapter.ValidateSanitizedDescriptor("/works?x-amz-signature=abc"));
+        Assert.AreEqual(ProviderAcquisitionErrorCodes.SecretBearingDescriptor, signedCredential.Category);
 
         var (request, _) = Request();
         var other = ProviderAcquisitionRequest.Create(
@@ -180,6 +204,34 @@ public sealed class CrossrefRecordedResponseAdapterTests
         var queryException = Assert.ThrowsExactly<SearchRuleException>(() =>
             new CrossrefRecordedResponseAdapter().DescribeRequest(secretQuery, secretPage));
         Assert.AreEqual(ProviderAcquisitionErrorCodes.SecretBearingDescriptor, queryException.Category);
+
+        foreach (var query in new[]
+        {
+            "authorization=Bearer abc",
+            "api_key=top-secret-value",
+            "contact=user@example.test"
+        })
+        {
+            var rejected = ProviderAcquisitionRequest.Create(
+                "secret-value", "crossref", query, null, null, 2, 0, false, RequestedAt);
+            var rejectedPage = ProviderPageRequest.Create(rejected, 0, 2, 0);
+            var exception = Assert.ThrowsExactly<SearchRuleException>(() =>
+                new CrossrefRecordedResponseAdapter().DescribeRequest(rejected, rejectedPage));
+            Assert.AreEqual(ProviderAcquisitionErrorCodes.SecretBearingDescriptor, exception.Category);
+        }
+
+        var safe = ProviderAcquisitionRequest.Create(
+            "safe-query", "crossref", "tokenization methods", null, null, 2, 0, false, RequestedAt);
+        var safePage = ProviderPageRequest.Create(safe, 0, 2, 0);
+        StringAssert.Contains(
+            new CrossrefRecordedResponseAdapter().DescribeRequest(safe, safePage).EndpointPathAndQuery,
+            "tokenization%20methods");
+
+        var bareContactQuery = ProviderAcquisitionRequest.Create(
+            "bare-contact", "crossref", "operator@example.test", null, null, 2, 0, false, RequestedAt);
+        var bareContactPage = ProviderPageRequest.Create(bareContactQuery, 0, 2, 0);
+        Assert.ThrowsExactly<SearchRuleException>(() =>
+            new CrossrefRecordedResponseAdapter().DescribeRequest(bareContactQuery, bareContactPage));
     }
 
     [TestMethod]
@@ -340,6 +392,36 @@ public sealed class CrossrefRecordedResponseAdapterTests
             "application/json",
             ReceivedAt,
             "digest-only-provider-terms"));
+    }
+
+    [TestMethod]
+    public void Provider_evidence_rejects_default_timestamps()
+    {
+        var requestError = Assert.ThrowsExactly<SearchRuleException>(() =>
+            ProviderAcquisitionRequest.Create(
+                "default-time",
+                "crossref",
+                "query",
+                null,
+                null,
+                1,
+                0,
+                false,
+                default));
+        Assert.AreEqual(ProviderAcquisitionErrorCodes.InvalidProviderEvidence, requestError.Category);
+
+        var bytes = Fixture("search-crossref-recorded-page.response.json");
+        var (request, page) = Request();
+        var responseError = Assert.ThrowsExactly<SearchRuleException>(() =>
+            new CrossrefRecordedResponseAdapter().ParseRecordedResponse(
+                request,
+                page,
+                Accept("default-time", bytes, "search-crossref-recorded-page.response.json"),
+                bytes,
+                200,
+                "application/json",
+                default));
+        Assert.AreEqual(ProviderAcquisitionErrorCodes.InvalidProviderEvidence, responseError.Category);
     }
 
     [TestMethod]

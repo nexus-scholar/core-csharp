@@ -1,12 +1,13 @@
 # Chat Roster
 
-Status date: 2026-07-17
+Status date: 2026-07-18
 
 ## Active Lanes
 
-- Main integration lane: protected `main` at `bdd0d82`.
+- Main integration lane: protected `main` at `bdd0d828547773a622316988d8d3dc825c4e7812`.
 - Active implementation lane: `cdx/fe-09-deep-review-remediation`, governed by
-  ADR 0044 and not yet merged.
+  ADR 0044 and ADR 0045, locally complete, and not yet merged because remote
+  governance requirements remain unsatisfied.
 - Product planning lane: FE-10 plugin-runtime design and capability security;
   no runtime implementation yet.
 - Public documentation lane: current project docs and `site/` on `main`.

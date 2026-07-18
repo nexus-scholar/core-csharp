@@ -428,6 +428,63 @@ public sealed class ResearchWorkspaceServiceTests
     }
 
     [TestMethod]
+    public void Path_resolver_rejects_case_only_sibling_escape_on_linux()
+    {
+        if (!OperatingSystem.IsLinux())
+        {
+            Assert.Inconclusive("Case-only sibling traversal checks are Linux-specific.");
+        }
+
+        var parent = Path.Combine(Path.GetTempPath(), $"nexus-rw-case-tests-{Guid.NewGuid():N}");
+        var workspaceRoot = Path.Combine(parent, "Workspace");
+        var siblingRoot = Path.Combine(parent, "workspace");
+        Directory.CreateDirectory(workspaceRoot);
+        Directory.CreateDirectory(siblingRoot);
+        try
+        {
+            File.WriteAllText(Path.Combine(siblingRoot, "outside.txt"), "outside");
+
+            Assert.IsFalse(ResearchWorkspaceVerifier.TryResolveWorkspaceRelativePath(
+                workspaceRoot,
+                "../workspace/outside.txt",
+                out _));
+        }
+        finally
+        {
+            Directory.Delete(parent, recursive: true);
+        }
+    }
+
+    [TestMethod]
+    public void Path_resolver_rejects_case_mismatch_for_existing_segment_on_linux()
+    {
+        if (!OperatingSystem.IsLinux())
+        {
+            Assert.Inconclusive("Case-sensitive path-segment checks are Linux-specific.");
+        }
+
+        using var workspace = TemporaryWorkspace.Create();
+        var existingPath = $"{ResearchWorkspacePaths.SearchInputs}/casepath/child.txt";
+        File.WriteAllText(ResearchWorkspacePaths.InProject(workspace.Root, existingPath), "baseline");
+
+        Assert.IsFalse(ResearchWorkspaceVerifier.TryResolveWorkspaceRelativePath(
+            workspace.Root,
+            $"{ResearchWorkspacePaths.SearchInputs}/CasePath/child.txt",
+            out _));
+    }
+
+    [TestMethod]
+    public void Path_resolver_rejects_parent_segments_before_normalization()
+    {
+        using var workspace = TemporaryWorkspace.Create();
+
+        Assert.IsFalse(ResearchWorkspaceVerifier.TryResolveWorkspaceRelativePath(
+            workspace.Root,
+            $"{ResearchWorkspacePaths.SearchInputs}/../outside.txt",
+            out _));
+    }
+
+    [TestMethod]
     public void Read_models_report_initialized_workspace_without_absolute_paths()
     {
         using var workspace = TemporaryWorkspace.Create();

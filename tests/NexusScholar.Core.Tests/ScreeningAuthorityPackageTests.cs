@@ -139,6 +139,52 @@ public sealed class ScreeningAuthorityPackageTests
     }
 
     [TestMethod]
+    public void Package_rejects_superseded_protocol_after_protocol_rehydrate()
+    {
+        using var workspace = TestWorkspace.Create();
+        var protocol = BuildProtocol();
+        var commit = ResearchWorkspaceScreeningAuthorityPackage.Commit(workspace.Root, protocol, BuildCriteria(protocol));
+
+        var manifestPath = ResearchWorkspacePaths.InProject(
+            workspace.Root, commit.Project.ScreeningAuthorityPackageManifestPath!);
+        var protocolArtifact = commit.Package.Manifest.Artifacts.Single(item => item.Name == "protocol-authority");
+        var protocolArtifactPath = ResearchWorkspacePaths.InProject(workspace.Root, protocolArtifact.RelativePath);
+
+        var supersededProtocol = Mutate(
+            File.ReadAllBytes(protocolArtifactPath),
+            root =>
+            {
+                root["protocol"]!["status"] = "superseded";
+                root["protocol"]!["superseded_by_version_id"] = "protocol-screening-superseded-by";
+            });
+        File.WriteAllBytes(protocolArtifactPath, supersededProtocol);
+
+        var manifest = JsonNode.Parse(File.ReadAllText(manifestPath))!.AsObject();
+        var protocolDigest = ContentDigest.Sha256(supersededProtocol).ToString();
+        foreach (var artifact in manifest["artifacts"]!.AsArray())
+        {
+            if (artifact!["name"]?.GetValue<string>() == "protocol-authority")
+            {
+                artifact["sha256"] = protocolDigest;
+            }
+        }
+
+        File.WriteAllText(manifestPath, manifest.ToJsonString());
+        var project = ResearchWorkspaceStore.ReadProject(workspace.Location.ProjectFilePath) with
+        {
+            ScreeningAuthorityPackageManifestSha256 = ContentDigest.Sha256(File.ReadAllBytes(manifestPath)).ToString()
+        };
+        ResearchWorkspaceStore.WriteProject(workspace.Location, project);
+
+        var error = Assert.ThrowsExactly<ScreeningRuleException>(
+            () => ResearchWorkspaceScreeningAuthorityPackage.VerifyCurrent(workspace.Root));
+        Assert.AreEqual(ResearchWorkspaceScreeningAuthorityPackage.InvalidCategory, error.Category);
+        Assert.AreEqual(
+            "Screening authority requires an approved protocol; superseded versions are not admissible.",
+            error.Message);
+    }
+
+    [TestMethod]
     public void Package_pointer_is_not_published_when_promotion_is_interrupted()
     {
         using var workspace = TestWorkspace.Create();
@@ -235,7 +281,7 @@ public sealed class ScreeningAuthorityPackageTests
 
         Assert.IsTrue(commit.Completed);
         Assert.AreEqual(
-            ResearchWorkspaceOperationStatus.Stale,
+            ResearchWorkspaceOperationStatus.Failed,
             ResearchWorkspaceScreeningAuthorityPackage.Inspect(workspace.Root).Status);
         Assert.IsTrue(ResearchWorkspaceDeduplicationReview.Inspect(workspace.Root).Completed);
     }
@@ -286,6 +332,21 @@ public sealed class ScreeningAuthorityPackageTests
             root["approvals"]![0]!["target_id"] = "protocol-version-foreign");
         Assert.ThrowsExactly<ProtocolRuleException>(() =>
             ProtocolAuthorityPackageCanonicalCodec.Rehydrate(wrongTarget, ContentDigest.Sha256(wrongTarget)));
+    }
+
+    [TestMethod]
+    public void Protocol_authority_codec_round_trips_superseded_status()
+    {
+        var bytes = ProtocolAuthorityPackageCanonicalCodec.Serialize(BuildProtocol());
+
+        var superseded = Mutate(bytes, root =>
+        {
+            root["protocol"]!["status"] = "superseded";
+            root["protocol"]!["superseded_by_version_id"] = "protocol-screening-successor";
+        });
+
+        var reopened = ProtocolAuthorityPackageCanonicalCodec.Rehydrate(superseded, ContentDigest.Sha256(superseded));
+        Assert.AreEqual(ProtocolStatus.Superseded, reopened.Version.Status);
     }
 
     [TestMethod]

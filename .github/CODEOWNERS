@@ -1,0 +1,17 @@
+* @nexus-scholar
+
+# Explicitly scoped ownership
+/specs/** @nexus-scholar
+/docs/adr/** @nexus-scholar
+/docs/gates/** @nexus-scholar
+/docs/port/** @nexus-scholar
+/docs/release/PACKAGES.md @nexus-scholar
+/docs/release/**/*.md @nexus-scholar
+/eng/package-topology.json @nexus-scholar
+/Directory.Build.props @nexus-scholar
+/global.json @nexus-scholar
+/scripts/verify*.ps1 @nexus-scholar
+/scripts/verify*.sh @nexus-scholar
+/src/** @nexus-scholar
+/tests/** @nexus-scholar
+/.github/workflows/** @nexus-scholar

@@ -113,7 +113,9 @@ public static class ResearchWorkspaceTransaction
             }).ToArray();
 
             var manifestPath = $"{generationRelative}/authority-generation.manifest.json";
-            var committedProject = expectedProject.CommitAuthorityGeneration(authorityGenerationId, manifestPath, "sha256:" + new string('0', 64));
+            var committedProject = expectedProject
+                .ClearSuccessorBoundDownstreamCurrentState()
+                .CommitAuthorityGeneration(authorityGenerationId, manifestPath, "sha256:" + new string('0', 64));
             var manifest = new ResearchWorkspaceSuccessorAuthorityGenerationManifest(
                 ResearchWorkspaceSuccessorAuthorityGenerationManifest.CurrentSchema,
                 authorityGenerationId,
@@ -413,7 +415,8 @@ public static class ResearchWorkspaceTransaction
 
     public static ResearchWorkspaceAnalysisCommit AnalyzeAndCommit(
         ResearchWorkspaceLocation location,
-        ResearchWorkspaceProject expectedProject)
+        ResearchWorkspaceProject expectedProject,
+        Action<ResearchWorkspaceAnalysisFaultPoint>? faultInjector = null)
     {
         ArgumentNullException.ThrowIfNull(location);
         ArgumentNullException.ThrowIfNull(expectedProject);
@@ -455,10 +458,14 @@ public static class ResearchWorkspaceTransaction
             var currentProject = ResearchWorkspaceStore.ReadProject(location.ProjectFilePath);
             RejectActiveAuthority(currentProject);
             if (currentProject.Revision != expectedProject.Revision ||
-                !string.Equals(currentProject.WorkspaceId, expectedProject.WorkspaceId, StringComparison.Ordinal))
+                !string.Equals(currentProject.WorkspaceId, expectedProject.WorkspaceId, StringComparison.Ordinal) ||
+                !currentProject.Inputs.SequenceEqual(expectedProject.Inputs))
             {
                 throw new ResearchWorkspaceConcurrencyException(expectedProject.Revision, currentProject.Revision);
             }
+
+            faultInjector?.Invoke(ResearchWorkspaceAnalysisFaultPoint.AfterLockAcquired);
+            ValidateDeclaredInputsNotMutated(location, expectedProject);
 
             Directory.Move(stagingRoot, generationRoot);
             try
@@ -527,6 +534,25 @@ public static class ResearchWorkspaceTransaction
 
     private static ResearchWorkspaceGenerationArtifact Artifact(string name, string relativePath, string path) =>
         new(name, relativePath, ContentDigest.Sha256(File.ReadAllBytes(path)).ToString());
+
+    private static void ValidateDeclaredInputsNotMutated(
+        ResearchWorkspaceLocation location,
+        ResearchWorkspaceProject project)
+    {
+        foreach (var input in project.Inputs)
+        {
+            if (!ResearchWorkspaceVerifier.TryResolveWorkspaceRelativePath(location.RootDirectory, input.EffectiveRelativePath, out var sourcePath) ||
+                !File.Exists(sourcePath))
+            {
+                throw new ResearchWorkspaceMissingInputException("A declared input is missing.");
+            }
+
+            if (ContentDigest.Sha256(File.ReadAllBytes(sourcePath)).ToString() != input.Sha256)
+            {
+                throw new ResearchWorkspaceDigestMismatchException("A declared input digest changed before analysis publication.");
+            }
+        }
+    }
 
     private static string ResolveRequiredPath(ResearchWorkspaceLocation location, string relativePath)
     {
@@ -795,6 +821,11 @@ public enum ResearchWorkspaceAuthorityFaultPoint
 {
     AfterStaging,
     AfterPromotion
+}
+
+public enum ResearchWorkspaceAnalysisFaultPoint
+{
+    AfterLockAcquired
 }
 
 public sealed record ResearchWorkspaceAuthorityCommit(

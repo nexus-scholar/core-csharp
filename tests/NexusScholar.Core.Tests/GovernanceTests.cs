@@ -2,6 +2,7 @@ using System.Reflection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NexusScholar.AI;
 using NexusScholar.Bundles;
+using NexusScholar.Extensibility;
 using NexusScholar.Kernel;
 using NexusScholar.Provenance;
 
@@ -45,6 +46,42 @@ public sealed class GovernanceTests
     }
 
     [TestMethod]
+    public void Ai_proposals_snapshot_mutable_values_and_return_defensive_copies()
+    {
+        var policy = Policy();
+        var source = new List<string> { "include suggestion" };
+        var proposal = new AiProposal<List<string>>(
+            policy,
+            source,
+            [ContentDigest.Sha256Utf8("source-evidence")],
+            new FixedClock().UtcNow);
+
+        source.Add("caller mutation");
+        var firstRead = proposal.Value;
+        firstRead.Add("consumer mutation");
+
+        CollectionAssert.AreEqual(new[] { "include suggestion" }, proposal.Value);
+    }
+
+    [TestMethod]
+    public void Ai_proposals_reject_null_or_unsnapshotable_values()
+    {
+        var policy = Policy();
+        var evidence = new[] { ContentDigest.Sha256Utf8("source-evidence") };
+
+        Assert.ThrowsExactly<DomainRuleException>(() => new AiProposal<string>(
+            policy,
+            null!,
+            evidence,
+            new FixedClock().UtcNow));
+        Assert.ThrowsExactly<DomainRuleException>(() => new AiProposal<Func<int>>(
+            policy,
+            () => 1,
+            evidence,
+            new FixedClock().UtcNow));
+    }
+
+    [TestMethod]
     public void Ai_proposals_reject_invalid_evidence_digests()
     {
         var policy = AiTaskPolicy.Create(
@@ -81,6 +118,58 @@ public sealed class GovernanceTests
             [ContentDigest.Sha256Utf8("source-evidence")],
             default));
         Assert.AreEqual(0, typeof(AiTaskPolicy).GetConstructors(BindingFlags.Public | BindingFlags.Instance).Length);
+    }
+
+    [TestMethod]
+    public void Extension_contracts_validate_construction_and_snapshot_capabilities()
+    {
+        var requested = new HashSet<ExtensionCapability> { ExtensionCapability.ReadProtocol };
+        var manifest = ExtensionManifest.Create("extension-1", "1.0.0", "entry.dll", requested);
+        var selection = CapabilitySelection.Create(manifest, requested);
+
+        requested.Add(ExtensionCapability.RenderExport);
+
+        CollectionAssert.AreEquivalent(
+            new[] { ExtensionCapability.ReadProtocol },
+            manifest.RequestedCapabilities.ToArray());
+        CollectionAssert.AreEquivalent(
+            new[] { ExtensionCapability.ReadProtocol },
+            selection.Capabilities.ToArray());
+        Assert.IsTrue(((ICollection<ExtensionCapability>)manifest.RequestedCapabilities).IsReadOnly);
+        Assert.IsTrue(((ICollection<ExtensionCapability>)selection.Capabilities).IsReadOnly);
+        Assert.ThrowsExactly<NotSupportedException>(() =>
+            ((ISet<ExtensionCapability>)manifest.RequestedCapabilities).Add(ExtensionCapability.RenderExport));
+        Assert.ThrowsExactly<NotSupportedException>(() =>
+            ((ISet<ExtensionCapability>)selection.Capabilities).Add(ExtensionCapability.RenderExport));
+        Assert.AreEqual(0, typeof(ExtensionManifest).GetConstructors(BindingFlags.Public | BindingFlags.Instance).Length);
+        Assert.AreEqual(0, typeof(CapabilitySelection).GetConstructors(BindingFlags.Public | BindingFlags.Instance).Length);
+    }
+
+    [TestMethod]
+    public void Extension_contracts_reject_invalid_identity_and_capabilities()
+    {
+        Assert.ThrowsExactly<ArgumentException>(() =>
+            ExtensionManifest.Create(" ", "1.0.0", "entry.dll", []));
+        Assert.ThrowsExactly<ArgumentNullException>(() =>
+            ExtensionManifest.Create("extension-1", "1.0.0", "entry.dll", null!));
+        Assert.ThrowsExactly<DomainRuleException>(() =>
+            ExtensionManifest.Create("extension-1", "1.0.0", "entry.dll", [(ExtensionCapability)999]));
+        Assert.ThrowsExactly<DomainRuleException>(() =>
+            CapabilitySelection.Create(
+                ExtensionManifest.Create(
+                    "extension-1",
+                    "1.0.0",
+                    "entry.dll",
+                    [ExtensionCapability.ReadProtocol]),
+                [(ExtensionCapability)999]));
+        Assert.ThrowsExactly<DomainRuleException>(() =>
+            CapabilitySelection.Create(
+                ExtensionManifest.Create(
+                    "extension-1",
+                    "1.0.0",
+                    "entry.dll",
+                    [ExtensionCapability.ReadProtocol]),
+                [ExtensionCapability.RenderExport]));
     }
 
     [TestMethod]
@@ -125,4 +214,11 @@ public sealed class GovernanceTests
     {
         public DateTimeOffset UtcNow { get; } = new(2026, 6, 25, 12, 0, 0, TimeSpan.Zero);
     }
+
+    private static AiTaskPolicy Policy() => AiTaskPolicy.Create(
+        "screen-title-abstract",
+        AiAuthority.ScientificDecisionProposal,
+        humanApprovalRequired: true,
+        evidenceRequired: true,
+        externalDataTransferAllowed: false);
 }

@@ -1,6 +1,8 @@
 $ErrorActionPreference = 'Stop'
 
 $root = Split-Path -Parent $PSScriptRoot
+. "$PSScriptRoot/resolve-dotnet.ps1"
+$dotnet = Use-PinnedDotNet $root
 Push-Location $root
 try {
     $topology = Get-Content -Raw eng/package-topology.json | ConvertFrom-Json
@@ -16,13 +18,13 @@ try {
     New-Item $releaseDirectory -ItemType Directory -Force | Out-Null
     Copy-Item (Join-Path $packageDirectory '*') $releaseDirectory -Recurse
 
-    dotnet tool restore
+    & $dotnet tool restore
     if ($LASTEXITCODE -ne 0) { throw "Tool restore failed with exit code $LASTEXITCODE." }
 
     $toolVersion = (Get-Content -Raw dotnet-tools.json | ConvertFrom-Json).tools.'microsoft.sbom.dotnettool'.version
-    $sbomHost = 'dotnet'
+    $sbomHost = $dotnet
     $sbomPrefix = @('tool', 'run', 'sbom-tool', '--')
-    if (-not (dotnet --list-runtimes | Select-String '^Microsoft.NETCore.App 8\.')) {
+    if (-not (& $dotnet --list-runtimes | Select-String '^Microsoft.NETCore.App 8\.')) {
         $userDotnet = Join-Path $HOME '.dotnet/dotnet.exe'
         if (-not (Test-Path $userDotnet) -or
             -not (& $userDotnet --list-runtimes | Select-String '^Microsoft.NETCore.App 8\.')) {
@@ -41,7 +43,7 @@ try {
             -pn NexusScholar.Core `
             -pv $version `
             -ps 'Organization: Nexus Scholar' `
-            -nsb 'https://github.com/nexus-scholar/core-csharp' `
+            -nsb 'https://github.com/nexus-scholar-org/core-csharp' `
             -nsu $namespacePart `
             -gt $commitTimestamp `
             -D true `
@@ -109,7 +111,7 @@ try {
         Where-Object { $_.Name -ne 'release-evidence.json' } |
         Sort-Object FullName)
     $artifacts = @($artifactFiles | ForEach-Object { Get-HashRecord $_ })
-    $sdkVersion = (dotnet --version).Trim()
+    $sdkVersion = (& $dotnet --version).Trim()
     $topologyDigest = (Get-FileHash eng/package-topology.json -Algorithm SHA256).Hash.ToLowerInvariant()
     $dirty = -not [string]::IsNullOrWhiteSpace((git status --porcelain --untracked-files=no | Out-String))
 
@@ -146,7 +148,13 @@ try {
         $evidenceJson,
         [Text.UTF8Encoding]::new($false))
 
-    Write-Host "Release evidence passed: $($artifacts.Count) artifacts and $($lockFiles.Count) lock files bound to $commit."
+    $sourceBinding = if ($dirty) {
+        "$commit with sourceTreeDirty=true (validation-only)"
+    }
+    else {
+        "clean commit $commit"
+    }
+    Write-Host "Release evidence passed: $($artifacts.Count) artifacts and $($lockFiles.Count) lock files generated against $sourceBinding."
 }
 finally {
     Pop-Location

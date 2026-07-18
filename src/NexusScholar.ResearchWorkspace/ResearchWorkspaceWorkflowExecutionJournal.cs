@@ -88,9 +88,12 @@ public static class ResearchWorkspaceWorkflowExecutionJournalVerifier
 
     internal static string Resolve(ResearchWorkspaceLocation location, string relativePath)
     {
-        var root = Path.GetFullPath(location.RootDirectory) + Path.DirectorySeparatorChar;
-        var path = Path.GetFullPath(ResearchWorkspacePaths.InProject(location.RootDirectory, relativePath));
-        if (!path.StartsWith(root, StringComparison.OrdinalIgnoreCase)) throw new InvalidOperationException("Workflow execution path escapes the workspace.");
+        if (!ResearchWorkspaceVerifier.TryResolveWorkspaceRelativePath(
+                location.RootDirectory, relativePath, out var path))
+        {
+            throw new InvalidOperationException("Workflow execution path escapes the workspace.");
+        }
+
         return path;
     }
 

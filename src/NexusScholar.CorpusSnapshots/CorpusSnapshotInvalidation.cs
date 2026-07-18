@@ -595,7 +595,7 @@ public static class CorpusSnapshotInvalidation
 
     private static DateTimeOffset RequireUtc(DateTimeOffset value, string name)
     {
-        if (value.Offset != TimeSpan.Zero)
+        if (!CanonicalTimestamp.IsCanonicalUtc(value, rejectDefault: true))
         {
             throw Invalid(
                 CorpusSnapshotInvalidationErrorCodes.InvalidInvalidationRecord,

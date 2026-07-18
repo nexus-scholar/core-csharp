@@ -196,6 +196,26 @@ public sealed record ResearchWorkspaceProject(
             FullTextManifestSha256 = manifestSha256
         };
 
+    internal ResearchWorkspaceProject ClearSuccessorBoundDownstreamCurrentState() => this with
+    {
+        CurrentWorkflowExecutionJournalGenerationId = null,
+        WorkflowExecutionJournalManifestPath = null,
+        WorkflowExecutionJournalManifestSha256 = null,
+        CurrentScreeningConductGenerationId = null,
+        ScreeningConductManifestPath = null,
+        ScreeningConductManifestSha256 = null,
+        CurrentScreeningAuthorityPackageGenerationId = null,
+        ScreeningAuthorityPackageManifestPath = null,
+        ScreeningAuthorityPackageManifestSha256 = null,
+        CurrentFullTextGenerationId = null,
+        FullTextManifestPath = null,
+        FullTextManifestSha256 = null,
+        FullTextCases = null,
+        CurrentReportingWorkflowGenerationId = null,
+        ReportingWorkflowManifestPath = null,
+        ReportingWorkflowManifestSha256 = null
+    };
+
     private static string CreateWorkspaceId(string title)
     {
         var lowercase = title.ToLowerInvariant();

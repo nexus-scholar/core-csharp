@@ -101,25 +101,64 @@ public static class ResearchWorkspaceVerifier
     public static bool TryResolveWorkspaceRelativePath(string rootDirectory, string? relativePath, out string fullPath)
     {
         fullPath = string.Empty;
-        if (string.IsNullOrWhiteSpace(relativePath) || Path.IsPathFullyQualified(relativePath))
+        if (string.IsNullOrWhiteSpace(relativePath) ||
+            Path.IsPathRooted(relativePath) ||
+            Path.IsPathFullyQualified(relativePath))
         {
             return false;
         }
 
-        var rootFullPath = Path.GetFullPath(rootDirectory);
-        var candidate = Path.GetFullPath(Path.Combine(rootFullPath, relativePath.Replace('/', Path.DirectorySeparatorChar)));
+        var normalizedRelativePath = relativePath.Replace('/', Path.DirectorySeparatorChar);
+        var declaredSegments = normalizedRelativePath.Split(
+            [Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar],
+            StringSplitOptions.RemoveEmptyEntries);
+        if (declaredSegments.Length == 0 ||
+            declaredSegments.Any(segment => segment is "." or ".."))
+        {
+            return false;
+        }
+
+        string rootFullPath;
+        string candidate;
+        try
+        {
+            rootFullPath = Path.GetFullPath(rootDirectory);
+            candidate = Path.GetFullPath(Path.Combine(rootFullPath, normalizedRelativePath));
+        }
+        catch (Exception exception) when (
+            exception is ArgumentException or NotSupportedException or PathTooLongException)
+        {
+            return false;
+        }
+
         var rootWithSeparator = rootFullPath.EndsWith(Path.DirectorySeparatorChar)
             ? rootFullPath
             : rootFullPath + Path.DirectorySeparatorChar;
+        var pathComparison = OperatingSystem.IsWindows()
+            ? StringComparison.OrdinalIgnoreCase
+            : StringComparison.Ordinal;
 
-        if (!candidate.StartsWith(rootWithSeparator, StringComparison.OrdinalIgnoreCase))
+        if (!candidate.StartsWith(rootWithSeparator, pathComparison))
         {
             return false;
         }
 
+        var relativeFromRoot = Path.GetRelativePath(rootFullPath, candidate);
+        var segments = relativeFromRoot.Split(
+            [Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar],
+            StringSplitOptions.RemoveEmptyEntries);
+        if (segments.Length == 0 || segments.Contains("..", StringComparer.Ordinal))
+        {
+            return false;
+        }
+
+        if (!OperatingSystem.IsWindows() && !HasCaseSafeRelativePath(rootFullPath, normalizedRelativePath))
+        {
+            return false;
+        }
 
         var current = rootFullPath;
-        foreach (var segment in Path.GetRelativePath(rootFullPath, candidate).Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar))
+        foreach (var segment in segments)
         {
             current = Path.Combine(current, segment);
             if ((File.Exists(current) || Directory.Exists(current)) &&
@@ -130,6 +169,56 @@ public static class ResearchWorkspaceVerifier
         }
 
         fullPath = candidate;
+        return true;
+    }
+
+    private static bool HasCaseSafeRelativePath(string rootFullPath, string normalizedRelativePath)
+    {
+        var current = rootFullPath;
+        foreach (var segment in normalizedRelativePath.Split(
+                     [Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar],
+                     StringSplitOptions.RemoveEmptyEntries))
+        {
+            if (segment == "." || segment == "..")
+            {
+                return false;
+            }
+
+            if (File.Exists(current))
+            {
+                return false;
+            }
+
+            if (!Directory.Exists(current))
+            {
+                return true;
+            }
+
+            var existsByCase = false;
+            var existsByFoldedCase = false;
+            foreach (var entry in Directory.EnumerateFileSystemEntries(current))
+            {
+                var name = Path.GetFileName(entry);
+                if (string.Equals(name, segment, StringComparison.Ordinal))
+                {
+                    existsByCase = true;
+                    break;
+                }
+
+                if (string.Equals(name, segment, StringComparison.OrdinalIgnoreCase))
+                {
+                    existsByFoldedCase = true;
+                }
+            }
+
+            if (existsByFoldedCase && !existsByCase)
+            {
+                return false;
+            }
+
+            current = Path.Combine(current, segment);
+        }
+
         return true;
     }
 

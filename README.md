@@ -16,8 +16,10 @@ claim broad PHP compatibility.
 
 ## Current Status
 
-Protected `main` is at `bdd0d82`; the evidence-linked FE-09 implementation
-baseline is `ea665eb`. FE-09 and the remaining FE-08 desktop slices landed through
+Protected `main` is at `bdd0d828547773a622316988d8d3dc825c4e7812`.
+The FE-09 implementation closeout evidence is historically anchored at
+`ea665eb` and should be treated as baseline history.
+FE-09 and the remaining FE-08 desktop slices landed through
 [`PR #69`](https://github.com/nexus-scholar-org/core-csharp/pull/69), with
 protected-main closeout recorded in
 [`docs/release/FE-09-COMPLETION-EVIDENCE.md`](docs/release/FE-09-COMPLETION-EVIDENCE.md).
@@ -27,8 +29,12 @@ Post-FE-09 integrity remediation is governed by
 [`ADR 0044`](docs/adr/0044-fe09-deep-review-integrity-remediation.md) with
 branch evidence in
 [`docs/release/FE-09-DEEP-REVIEW-REMEDIATION.md`](docs/release/FE-09-DEEP-REVIEW-REMEDIATION.md).
+The successor whole-project review repairs are governed by
+[`ADR 0045`](docs/adr/0045-post-fe09-whole-project-integrity-remediation.md),
+with branch completion evidence in
+[`docs/release/POST-FE09-WHOLE-PROJECT-INTEGRITY-REMEDIATION.md`](docs/release/POST-FE09-WHOLE-PROJECT-INTEGRITY-REMEDIATION.md).
 
-The current verified baseline is:
+The historical FE-09 closeout baseline is:
 
 - FE-01 through FE-09 complete within their accepted scopes;
 - FE-08 desktop slices 1 through 9 complete;
@@ -37,6 +43,12 @@ The current verified baseline is:
 - 24 validation-only packages reproducibly packed and clean-source smoke tested;
 - Release build and formatting checks passing on Windows and Linux;
 - no NuGet package published.
+
+The active remediation branch passed its full local gate with 1,048 tests,
+zero failures, two Windows-host Linux-only skips, and two opt-in live-provider
+smokes skipped. It is not protected-main evidence until the remote governance
+requirements recorded in the completion evidence are satisfied and the branch
+is merged.
 
 FE-10 plugin-runtime design and capability security is the next gate. Existing
 Extensibility contracts do not authorize third-party execution or constitute an

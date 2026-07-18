@@ -4,18 +4,18 @@ Nexus Scholar Core welcomes early architecture, documentation, onboarding, and w
 
 ## Good First Feedback
 
-- Run the first-tester walkthrough: https://nexus-scholar.github.io/core-csharp/tutorials/getting-started/
+- Run the first-tester walkthrough: https://nexus-scholar-org.github.io/core-csharp/tutorials/getting-started/
 - Run the local CLI path: `doctor`, `sample`, and `demo`.
 - Review Core authority boundaries, especially where Search Import, Deduplication, Screening, Full Text, UI contracts, and sample-host behavior meet.
 - Describe real research workflow pain points without assuming live providers, cloud sync, PDF/OCR, or production UI behavior exist today.
 
 ## Issue Routing
 
-- First tester run: https://github.com/nexus-scholar/core-csharp/issues/new?template=first-tester-run.yml
-- Architecture boundary review: https://github.com/nexus-scholar/core-csharp/issues/new?template=architecture-boundary-review.yml
-- Research workflow use case: https://github.com/nexus-scholar/core-csharp/issues/new?template=research-workflow-use-case.yml
-- Documentation confusion: https://github.com/nexus-scholar/core-csharp/issues/new?template=documentation-confusion.yml
-- Bug report: https://github.com/nexus-scholar/core-csharp/issues/new?template=bug-report.yml
+- First tester run: https://github.com/nexus-scholar-org/core-csharp/issues/new?template=first-tester-run.yml
+- Architecture boundary review: https://github.com/nexus-scholar-org/core-csharp/issues/new?template=architecture-boundary-review.yml
+- Research workflow use case: https://github.com/nexus-scholar-org/core-csharp/issues/new?template=research-workflow-use-case.yml
+- Documentation confusion: https://github.com/nexus-scholar-org/core-csharp/issues/new?template=documentation-confusion.yml
+- Bug report: https://github.com/nexus-scholar-org/core-csharp/issues/new?template=bug-report.yml
 
 The issue templates use only repository labels that currently exist on GitHub. More specific labels can be added later by a maintainer.
 

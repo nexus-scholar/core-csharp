@@ -140,7 +140,7 @@ public sealed class ExtractionForm
             .AddTimestamp("approved_at", ApprovedAt));
 
     private static DateTimeOffset RequireUtc(DateTimeOffset value, string name) =>
-        value.Offset == TimeSpan.Zero
+        CanonicalTimestamp.IsCanonicalUtc(value, rejectDefault: true)
             ? value
             : throw new ExtractionRuleException(ExtractionErrorCodes.InvalidProtocolStatus, $"{name} must be UTC.");
 }

@@ -320,7 +320,7 @@ public sealed class ExtractionRecord : IExtractionJournalEntry
         ToCanonicalJson());
 
     private static DateTimeOffset RequireUtc(DateTimeOffset value, string name) =>
-        value.Offset == TimeSpan.Zero
+        CanonicalTimestamp.IsCanonicalUtc(value, rejectDefault: true)
             ? value
             : throw new ExtractionRuleException(ExtractionErrorCodes.InvalidProtocolStatus, $"{name} must be UTC.");
 }
@@ -460,7 +460,7 @@ public sealed class ExtractionAmendmentInvalidation : IExtractionJournalEntry
         ToCanonicalJson());
 
     private static DateTimeOffset RequireUtc(DateTimeOffset value, string name) =>
-        value.Offset == TimeSpan.Zero
+        CanonicalTimestamp.IsCanonicalUtc(value, rejectDefault: true)
             ? value
             : throw new ExtractionRuleException(ExtractionErrorCodes.InvalidProtocolStatus, $"{name} must be UTC.");
 }

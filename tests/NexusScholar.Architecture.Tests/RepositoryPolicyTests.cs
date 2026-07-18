@@ -117,6 +117,43 @@ public sealed class RepositoryPolicyTests
             NormalizeRelativePath("tests/NexusScholar.Architecture.Tests/DependencyRulesTests.cs"));
     }
 
+    [TestMethod]
+    public void Repository_identity_is_consistent_across_active_delivery_surfaces()
+    {
+        const string repository = "https://github.com/nexus-scholar-org/core-csharp";
+        const string staleRepository = "https://github.com/nexus-scholar/core-csharp";
+        const string stalePages = "https://nexus-scholar.github.io/core-csharp";
+        var root = FindRepositoryRoot();
+        var buildProperties = XDocument.Load(Path.Combine(root, "Directory.Build.props"));
+        var repositoryUrl = buildProperties.Descendants("RepositoryUrl").Single().Value;
+        var activeFiles = new[]
+        {
+            "CONTRIBUTING.md",
+            "SECURITY.md",
+            "scripts/build-release-evidence.ps1",
+            "scripts/verify-github-governance.ps1"
+        };
+
+        Assert.AreEqual(repository, repositoryUrl);
+        foreach (var relativePath in activeFiles)
+        {
+            var content = File.ReadAllText(Path.Combine(root, relativePath));
+            Assert.IsFalse(
+                content.Contains(staleRepository, StringComparison.Ordinal),
+                $"{relativePath} contains the stale repository owner.");
+            Assert.IsFalse(
+                content.Contains(stalePages, StringComparison.Ordinal),
+                $"{relativePath} contains the stale Pages owner.");
+        }
+
+        StringAssert.Contains(
+            File.ReadAllText(Path.Combine(root, "scripts", "build-release-evidence.ps1")),
+            repository);
+        StringAssert.Contains(
+            File.ReadAllText(Path.Combine(root, "scripts", "verify-github-governance.ps1")),
+            "nexus-scholar-org/core-csharp");
+    }
+
     private static string FindRepositoryRoot()
     {
         var current = new DirectoryInfo(AppContext.BaseDirectory);

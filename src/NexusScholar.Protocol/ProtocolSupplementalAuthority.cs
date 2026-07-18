@@ -137,7 +137,7 @@ public sealed class ProtocolSupplementalApproval
         ? actor
         : throw new ProtocolRuleException(ProtocolErrorCodes.MissingApprovalActor, "Approval actor is required.");
 
-    internal static DateTimeOffset RequireUtc(DateTimeOffset value, string name) => value.Offset == TimeSpan.Zero
+    internal static DateTimeOffset RequireUtc(DateTimeOffset value, string name) => CanonicalTimestamp.IsCanonicalUtc(value, rejectDefault: true)
         ? value
         : throw new ProtocolRuleException(ProtocolErrorCodes.StaleContentDigest, $"{name} must be UTC.");
 

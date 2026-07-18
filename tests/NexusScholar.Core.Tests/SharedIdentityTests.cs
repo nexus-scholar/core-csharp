@@ -53,6 +53,17 @@ public sealed class SharedIdentityTests
     }
 
     [TestMethod]
+    public void Workid_parse_round_trips_colon_bearing_doi_values()
+    {
+        var expected = WorkId.From("doi", "10.1000/example:with:colon");
+        Assert.AreEqual(expected, WorkId.Parse(expected.ToString()));
+        Assert.AreEqual("doi:10.1000/example:with:colon", expected.ToString());
+        AssertInvalidWorkId("doi:doi:10.1000/example");
+        Assert.ThrowsExactly<SharedIdentityRuleException>(() =>
+            WorkId.From("s2", "doi:10.1000/example"));
+    }
+
+    [TestMethod]
     public void Blank_workid_constructor_value_is_rejected()
     {
         var error = Assert.ThrowsExactly<SharedIdentityRuleException>(() => WorkId.From("doi", " doi: "));

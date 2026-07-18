@@ -71,9 +71,9 @@ public static class ProtocolAuthorityPackageCanonicalCodec
             Require(root, "schema_version", SchemaVersion);
             var policy = ParsePolicy(root.GetProperty("approval_policy"));
             var protocolInput = ParseProtocol(root.GetProperty("protocol"), policy);
-            if (protocolInput.Status != ProtocolStatus.Approved)
+            if (protocolInput.Status is not ProtocolStatus.Approved and not ProtocolStatus.Superseded)
             {
-                throw Invalid("Screening authority requires an approved Protocol version.");
+                throw Invalid("Protocol authority package requires approved or superseded Protocol version.");
             }
 
             var candidate = Candidate(protocolInput, policy);
@@ -310,8 +310,16 @@ public static class ProtocolAuthorityPackageCanonicalCodec
     private static ContentDigest Digest(JsonElement value, string name) => ContentDigest.Parse(Text(value, name));
     private static ContentDigest? OptionalDigest(JsonElement value, string name) =>
         value.TryGetProperty(name, out _) ? Digest(value, name) : null;
-    private static DateTimeOffset Timestamp(JsonElement value, string name) =>
-        DateTimeOffset.Parse(Text(value, name), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind);
+    private static DateTimeOffset Timestamp(JsonElement value, string name)
+    {
+        var text = Text(value, name);
+        CanonicalTimestamp.ValidateCanonicalUtc(text);
+        return DateTimeOffset.ParseExact(
+            text,
+            CanonicalTimestamp.DefaultUtcFormat,
+            CultureInfo.InvariantCulture,
+            DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal);
+    }
     private static DateTimeOffset? OptionalTimestamp(JsonElement value, string name) =>
         value.TryGetProperty(name, out _) ? Timestamp(value, name) : null;
 

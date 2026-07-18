@@ -1,10 +1,10 @@
 # Branch Board
 
-Status date: 2026-07-17
+Status date: 2026-07-18
 
 ## Protected Main
 
-- `origin/main`: `bdd0d82` (PR #70 Astro Pages and FE-09 public baseline).
+- `origin/main`: `bdd0d828547773a622316988d8d3dc825c4e7812` (PR #70 Astro Pages and FE-09 public baseline).
 - `gh-pages`: retained as historical static-site source; deployments use
   `site/` on `main`.
 - Active remediation branch: `cdx/fe-09-deep-review-remediation`.
@@ -18,10 +18,14 @@ Status date: 2026-07-17
 - FE-09A through FE-09F: complete within accepted scope and merged through
   PR #69.
 - Public Astro Pages baseline: merged through PR #70.
-- Full solution: 1,011 passed, 0 failed, 2 opt-in live smokes skipped.
-- Remediation candidate: 1,024 passed, 0 failed, 2 opt-in live smokes skipped;
-  OpenAlex live smoke passed separately and Semantic Scholar remained
-  credential-skipped.
+- Protected-main full solution: 1,011 passed, 0 failed, 2 opt-in live smokes
+  skipped.
+- Remediation candidate: ADR 0044 and ADR 0045 implementation and local
+  verification complete; 1,048 passed, 0 failed, 2 Windows-host Linux-only
+  skips, and 2 opt-in live smokes skipped.
+- Remote closeout blocker: one repository collaborator cannot supply the
+  required independent approval; main also lacks required CODEOWNER review,
+  latest-push reapproval, linear history, and signed-commit enforcement.
 - Package graph: 24 validation-only packages with reproducible pack and clean
   local-source restore/load.
 - Release build and formatting: green.

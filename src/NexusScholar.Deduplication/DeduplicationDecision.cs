@@ -610,7 +610,7 @@ public static class DeduplicationDecision
 
     private static DateTimeOffset RequireUtc(DateTimeOffset value, string name)
     {
-        if (value.Offset != TimeSpan.Zero)
+        if (!CanonicalTimestamp.IsCanonicalUtc(value, rejectDefault: true))
         {
             throw new DeduplicationAuthorityException(
                 DeduplicationDecisionErrorCodes.InvalidDecision,

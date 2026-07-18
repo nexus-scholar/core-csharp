@@ -492,7 +492,9 @@ public sealed class AppraisalRecord
     }
 
     private static DateTimeOffset RequireUtc(DateTimeOffset value, string name) =>
-        value.Offset == TimeSpan.Zero ? value : throw new AppraisalRuleException(AppraisalErrorCodes.InvalidInvalidation, $"{name} must be UTC.");
+        CanonicalTimestamp.IsCanonicalUtc(value, rejectDefault: true)
+            ? value
+            : throw new AppraisalRuleException(AppraisalErrorCodes.InvalidInvalidation, $"{name} must be UTC.");
 }
 
 public sealed class AppraisalAmendmentInvalidation
@@ -595,5 +597,7 @@ public sealed class AppraisalAmendmentInvalidation
         ToCanonicalJson());
 
     private static DateTimeOffset RequireUtc(DateTimeOffset value, string name) =>
-        value.Offset == TimeSpan.Zero ? value : throw new AppraisalRuleException(AppraisalErrorCodes.InvalidInvalidation, $"{name} must be UTC.");
+        CanonicalTimestamp.IsCanonicalUtc(value, rejectDefault: true)
+            ? value
+            : throw new AppraisalRuleException(AppraisalErrorCodes.InvalidInvalidation, $"{name} must be UTC.");
 }

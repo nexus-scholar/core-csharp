@@ -131,7 +131,7 @@ public static class ResearchWorkspaceAuthorityChainVerifier
             throw new InvalidOperationException("Successor authority manifest source binding is stale.");
         }
 
-        var predecessorPath = ResearchWorkspacePaths.InProject(location.RootDirectory,
+        var predecessorPath = Resolve(location,
             $"{ResearchWorkspacePaths.AuthorityGenerationRoot(manifest.PredecessorAuthorityGenerationId)}/authority-generation.manifest.json");
         var predecessor = Load(location, predecessorPath, ContentDigest.Parse(manifest.PredecessorAuthorityGenerationManifestSha256),
             workspaceId, sourceAnalysisGenerationId, sourceAnalysisManifestDigest, sourceResult, visited);
@@ -140,7 +140,7 @@ public static class ResearchWorkspaceAuthorityChainVerifier
             throw new InvalidOperationException("Successor authority predecessor identity or revision is invalid.");
         var generationRoot = ResearchWorkspacePaths.InProject(location.RootDirectory,
             ResearchWorkspacePaths.AuthorityGenerationRoot(manifest.AuthorityGenerationId));
-        var artifactBytes = ReadArtifacts(generationRoot, manifest.Artifacts);
+        var artifactBytes = ReadArtifacts(location, generationRoot, manifest.Artifacts);
         var policy = ResearchWorkspaceAuthorityArtifacts.VerifyPolicyCanonicalRecord(artifactBytes["authority-policy"]);
         if (policy.PolicyDigest != predecessor.Policy.PolicyDigest ||
             !string.Equals(manifest.AuthorityPolicyId, policy.PolicyId, StringComparison.Ordinal) ||
@@ -210,18 +210,53 @@ public static class ResearchWorkspaceAuthorityChainVerifier
         return result;
     }
 
-    private static Dictionary<string, byte[]> ReadArtifacts(string generationRoot, IReadOnlyList<ResearchWorkspaceGenerationArtifact> entries)
+    private static Dictionary<string, byte[]> ReadArtifacts(
+        ResearchWorkspaceLocation location,
+        string generationRoot,
+        IReadOnlyList<ResearchWorkspaceGenerationArtifact> entries)
     {
         var result = new Dictionary<string, byte[]>(StringComparer.Ordinal);
+        var generationAbsolute = Path.GetFullPath(generationRoot);
+        var generationWithSeparator = generationAbsolute.EndsWith(Path.DirectorySeparatorChar)
+            ? generationAbsolute
+            : generationAbsolute + Path.DirectorySeparatorChar;
+        var comparison = OperatingSystem.IsWindows()
+            ? StringComparison.OrdinalIgnoreCase
+            : StringComparison.Ordinal;
+        var expectedPrefix =
+            ResearchWorkspacePaths.AuthorityGenerationRoot(Path.GetFileName(generationRoot)) + "/";
         foreach (var item in entries)
         {
-            var expectedPrefix = ResearchWorkspacePaths.AuthorityGenerationRoot(Path.GetFileName(generationRoot)) + "/";
-            if (!item.RelativePath.StartsWith(expectedPrefix, StringComparison.Ordinal) ||
-                item.RelativePath[expectedPrefix.Length..].Contains('/'))
+            if (!item.RelativePath.StartsWith(expectedPrefix, StringComparison.Ordinal))
+            {
                 throw new InvalidOperationException("Authority artifact path is not bound to its generation.");
-            var full = Path.GetFullPath(Path.Combine(generationRoot, item.RelativePath[expectedPrefix.Length..]));
-            if (!full.StartsWith(Path.GetFullPath(generationRoot) + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase)) throw new InvalidOperationException("Authority artifact path escaped generation.");
-            var bytes = File.ReadAllBytes(full);
+            }
+
+            var localRelativePath = item.RelativePath[expectedPrefix.Length..];
+            if (localRelativePath.Length == 0 ||
+                localRelativePath.Contains('/') ||
+                localRelativePath.Contains('\\'))
+            {
+                throw new InvalidOperationException("Authority artifact path is not bound to its generation.");
+            }
+
+            if (!ResearchWorkspaceVerifier.TryResolveWorkspaceRelativePath(location.RootDirectory, item.RelativePath, out var fullPath))
+            {
+                throw new InvalidOperationException("Authority artifact path is not bound to its generation.");
+            }
+
+            if (!fullPath.StartsWith(generationWithSeparator, comparison))
+            {
+                throw new InvalidOperationException("Authority artifact path is not bound to its generation.");
+            }
+
+            var relativeFromGeneration = Path.GetRelativePath(generationAbsolute, fullPath).Replace('\\', '/');
+            if (!string.Equals(relativeFromGeneration, localRelativePath, StringComparison.Ordinal))
+            {
+                throw new InvalidOperationException("Authority artifact path is not bound to its generation.");
+            }
+
+            var bytes = File.ReadAllBytes(fullPath);
             if (ContentDigest.Sha256(bytes).ToString() != item.Sha256) throw new InvalidOperationException("Authority artifact digest mismatch.");
             result.Add(item.Name, bytes);
         }
