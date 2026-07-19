@@ -5,7 +5,8 @@ This file is the concise gate map. The detailed active roadmap is
 
 ## Current Position
 
-Protected `main` is documented at `bdd0d828547773a622316988d8d3dc825c4e7812`.
+The last pre-release protected-main baseline is `425e9bc`. The alpha.2 release
+commit is resolved by `v0.1.0-alpha.2` and its distribution manifest.
 
 | Work | Status |
 | --- | --- |
@@ -19,16 +20,14 @@ Protected `main` is documented at `bdd0d828547773a622316988d8d3dc825c4e7812`.
 | FE-07 Extraction, Appraisal, and Synthesis | Complete |
 | FE-08 Slices 1-9 local desktop workflow | Complete |
 | FE-09 providers, cache, recorded Full Text retrieval, and citation network | Complete within accepted scope |
+| Release Readiness Alpha 2 (RR-01 through RR-06) | Implemented release gate; completion requires matching protected-main tag and verified assets |
 | FE-10 plugin runtime | Immediate design and capability-security gate |
 | FE-11 through FE-12 | Sequenced future work; not authorized |
 
 The historical FE-09 closeout baseline at `ea665eb` is 1,011 passing tests, two
 opt-in live-provider smokes skipped by default, and 24 validation-only packages.
-The active `cdx/fe-09-deep-review-remediation` branch completes the successor
-integrity work under ADR 0044 and ADR 0045. Its full local gate passed with
-1,084 tests, zero failures, two Windows-host Linux-only skips, two opt-in
-live-provider smokes skipped, and 150 exact mutation cases across nine project
-suites. Remote governance still blocks protected-main closeout.
+The successor integrity work under ADR 0044 and ADR 0045 is historical and
+preserved as evidence context.
 
 ## Immediate Next Gate
 
@@ -44,6 +43,22 @@ FE-10 may design a plugin runtime only after an accepted ADR and gate freeze:
   scientific authority.
 
 Process isolation alone must not be described as a security sandbox.
+
+## Alpha 2 Release Gate
+
+ADR 0046 and `docs/gates/RELEASE-READINESS-ALPHA2.md` define one indivisible
+release boundary:
+
+- RR-01: accepted release contract and nonclaims;
+- RR-02: current documentation, changelog, and version-specific notes;
+- RR-03: reproducible self-contained Windows x64 portable ZIP;
+- RR-04: local crash diagnostics and verified new-directory backup/restore;
+- RR-05: native Avalonia acceptance, automation, focus, and scaling coverage;
+- RR-06: split Ubuntu/Windows validation, attestation, exact-tag publication,
+  and downloaded-asset verification.
+
+This gate publishes only the desktop technical preview. NuGet publication,
+installer/updater behavior, signing, and production claims remain prohibited.
 
 ## Completed Product Flow
 

@@ -3,6 +3,7 @@
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
   </PropertyGroup>
   <ItemGroup>
+    <PackageVersion Include="Avalonia.Headless" Version="12.0.4" />
     <PackageVersion Include="Avalonia" Version="12.0.4" />
     <PackageVersion Include="Avalonia.Desktop" Version="12.0.4" />
     <PackageVersion Include="Avalonia.Themes.Fluent" Version="12.0.4" />

@@ -69,7 +69,7 @@ Pull-request and branch workflows may build and verify the portable artifact
 without publication credentials.
 
 Only a matching protected-main tag may enter the `release` environment and
-create or update the GitHub prerelease. The release workflow receives
+create or verify the immutable GitHub prerelease. The release workflow receives
 `contents: write`, `id-token: write`, and `attestations: write` only in the
 tag-only publication job. Pull-request workflows remain read-only.
 
@@ -108,7 +108,8 @@ A backup:
 - reopens and verifies the completed archive before reporting success.
 
 The backup archive is operational recovery evidence, not scientific authority.
-Its manifest digest identifies the exact captured byte set.
+Its manifest records the exact captured byte set. The manifest digest binds
+that inventory to workspace identity, revision, and archive capture time.
 
 ### Verified workspace restore
 
@@ -123,9 +124,12 @@ A restore:
 - never overwrites or merges an existing workspace; and
 - removes staging material after failure.
 
-Restore preserves workspace file bytes exactly. It does not rewrite project
-identity, revisions, timestamps inside records, decisions, provenance,
-generations, invalidations, or export ledgers.
+Restore preserves every archived workspace file byte exactly and recreates the
+standard required workspace directory layout. Empty directories outside that
+standard layout are not authority, are not represented by the file manifest,
+and need not be preserved. Restore does not rewrite project identity,
+revisions, timestamps inside records, decisions, provenance, generations,
+invalidations, or export ledgers.
 
 ### Desktop recovery surface
 
@@ -163,8 +167,8 @@ publication.
 ## Migration Effect
 
 No existing workspace schema or scientific record changes. Backup adds an
-external archive schema. Restore recreates the exact archived workspace in a
-new directory.
+external archive schema. Restore recreates the exact archived file set plus the
+standard required directory layout in a new directory.
 
 No existing package identity changes. The desktop remains non-packable.
 

@@ -33,6 +33,7 @@ public sealed class DesktopWorkspaceViewModel
     public DesktopFullTextReviewPreview? PendingFullTextReviewPreview { get; private set; }
     public DesktopReportingWorkflowPreview? PendingReportingWorkflowPreview { get; private set; }
     public DesktopReviewExportPreview? PendingReviewExportPreview { get; private set; }
+    public DesktopWorkspaceRecoveryPreview? PendingRecoveryPreview { get; private set; }
 
     public string Status { get; private set; }
 
@@ -47,9 +48,11 @@ public sealed class DesktopWorkspaceViewModel
         PendingFullTextIntakePreview is not null ||
         PendingFullTextReviewPreview is not null ||
         PendingReportingWorkflowPreview is not null ||
-        PendingReviewExportPreview is not null;
+        PendingReviewExportPreview is not null ||
+        PendingRecoveryPreview is not null;
 
     public IReadOnlyList<string> PendingEffects =>
+        PendingRecoveryPreview?.ExpectedEffects ??
         PendingReviewExportPreview?.ExpectedEffects ??
         PendingReportingWorkflowPreview?.ExpectedEffects ??
         PendingFullTextReviewPreview?.ExpectedEffects ??
@@ -61,6 +64,7 @@ public sealed class DesktopWorkspaceViewModel
         PendingPreview?.ExpectedEffects ?? Array.Empty<string>();
 
     public string? PendingConfirmationToken =>
+        PendingRecoveryPreview?.ConfirmationToken ??
         PendingReviewExportPreview?.ConfirmationToken ??
         PendingReportingWorkflowPreview?.ConfirmationToken ??
         PendingFullTextReviewPreview?.ConfirmationToken ??
@@ -71,7 +75,11 @@ public sealed class DesktopWorkspaceViewModel
         PendingReviewPreview?.ConfirmationToken ??
         PendingPreview?.ConfirmationToken;
 
-    public string PendingCommandLabel => PendingReviewExportPreview is not null
+    public string PendingCommandLabel => PendingRecoveryPreview?.OperationKind switch
+    {
+        DesktopWorkspaceRecoveryKinds.Backup => "Create verified workspace backup",
+        DesktopWorkspaceRecoveryKinds.Restore => "Restore verified workspace backup",
+        _ => PendingReviewExportPreview is not null
         ? "Publish verified report and Bundle v2 export"
         : PendingReportingWorkflowPreview is not null
         ? "Publish reporting Workflow authority"
@@ -93,7 +101,8 @@ public sealed class DesktopWorkspaceViewModel
             DesktopWorkspaceCommandKinds.ImportSearch => "Import local Search export",
             DesktopWorkspaceCommandKinds.Analyze => "Analyze imported evidence",
             _ => "No command pending"
-        };
+        }
+    };
 
     public void Open(string path)
     {
@@ -163,6 +172,13 @@ public sealed class DesktopWorkspaceViewModel
         Apply(_facade.VerifyWorkspace(WorkspacePath));
     }
 
+    internal void ApplyStartupDiagnosticNotice(string reportPath)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(reportPath);
+        Status = $"The previous desktop session ended unexpectedly. A sanitized local report is available at {reportPath}.";
+        StatusKind = DesktopWorkspaceCommandStatus.Attention;
+    }
+
     public void PreviewDeduplicationReview(
         string targetId,
         string action,
@@ -180,6 +196,7 @@ public sealed class DesktopWorkspaceViewModel
         }
 
         PendingPreview = null;
+        PendingRecoveryPreview = null;
         var result = _facade.PreviewDeduplicationReview(new DesktopDeduplicationReviewRequest(
             WorkspacePath,
             targetId,
@@ -212,6 +229,7 @@ public sealed class DesktopWorkspaceViewModel
 
         PendingPreview = null;
         PendingReviewPreview = null;
+        PendingRecoveryPreview = null;
         var result = _facade.PreviewScreeningReview(new DesktopScreeningReviewRequest(
             WorkspacePath, candidateId, "review", verdict, actorId, "human", actorRole,
             rationale, exclusionReasonCode, occurredAt));
@@ -320,10 +338,72 @@ public sealed class DesktopWorkspaceViewModel
         StatusKind = result.Status;
     }
 
+    public void PreviewBackup(string destinationArchivePath, DateTimeOffset occurredAt)
+    {
+        CancelPending();
+        if (string.IsNullOrWhiteSpace(WorkspacePath))
+        {
+            ApplyFailure("Open a workspace before creating a backup.");
+            return;
+        }
+
+        var result = _facade.PreviewBackup(new DesktopWorkspaceBackupRequest(
+            WorkspacePath,
+            destinationArchivePath,
+            occurredAt));
+        PendingRecoveryPreview = result.Preview;
+        Status = result.Message;
+        StatusKind = result.Status;
+    }
+
+    public void PreviewRestore(
+        string backupArchivePath,
+        string targetWorkspaceDirectory,
+        DateTimeOffset occurredAt)
+    {
+        CancelPending();
+        var result = _facade.PreviewRestore(new DesktopWorkspaceRestoreRequest(
+            backupArchivePath,
+            targetWorkspaceDirectory,
+            occurredAt));
+        PendingRecoveryPreview = result.Preview;
+        Status = result.Message;
+        StatusKind = result.Status;
+    }
+
     public void ConfirmPending()
     {
+        var recoveryPreview = PendingRecoveryPreview;
+        PendingRecoveryPreview = null;
+        if (recoveryPreview is not null)
+        {
+            var result = recoveryPreview.OperationKind switch
+            {
+                DesktopWorkspaceRecoveryKinds.Backup => _facade.ExecuteBackup(recoveryPreview),
+                DesktopWorkspaceRecoveryKinds.Restore => _facade.ExecuteRestore(recoveryPreview),
+                _ => new DesktopWorkspaceRecoveryResult(
+                    DesktopWorkspaceCommandStatus.Failed,
+                    "The pending recovery operation is not admitted.")
+            };
+            Status = result.Message;
+            StatusKind = result.Status;
+            if (result.Overview is not null)
+            {
+                Overview = result.Overview;
+            }
+            if (result.Completed && recoveryPreview.OperationKind == DesktopWorkspaceRecoveryKinds.Restore &&
+                result.WorkspaceDirectory is not null)
+            {
+                WorkspacePath = result.WorkspaceDirectory;
+                RefreshReviewQueue(applyStatus: false);
+                RefreshScreeningQueue(applyStatus: false);
+            }
+            return;
+        }
+
         var exportPreview = PendingReviewExportPreview;
         PendingReviewExportPreview = null;
+        PendingRecoveryPreview = null;
         if (exportPreview is not null)
         {
             var result = _facade.ExecuteReviewExport(exportPreview);
@@ -368,6 +448,7 @@ public sealed class DesktopWorkspaceViewModel
         PendingFullTextReviewPreview = null;
         PendingReportingWorkflowPreview = null;
         PendingReviewExportPreview = null;
+        PendingRecoveryPreview = null;
         if (handoffPreview is not null)
         {
             var handoffResult = _facade.ExecuteScreeningHandoff(handoffPreview);
@@ -467,6 +548,7 @@ public sealed class DesktopWorkspaceViewModel
         PendingFullTextReviewPreview = null;
         PendingReportingWorkflowPreview = null;
         PendingReviewExportPreview = null;
+        PendingRecoveryPreview = null;
     }
 
     private void ApplyPreview(DesktopWorkspacePreviewResult result)
@@ -479,6 +561,7 @@ public sealed class DesktopWorkspaceViewModel
         PendingFullTextReviewPreview = null;
         PendingReportingWorkflowPreview = null;
         PendingReviewExportPreview = null;
+        PendingRecoveryPreview = null;
         PendingPreview = result.Preview;
         Status = result.Message;
         StatusKind = result.Status;
@@ -501,6 +584,11 @@ public sealed class DesktopWorkspaceViewModel
         PendingScreeningPreview = null;
         PendingScreeningResolutionPreview = null;
         PendingScreeningHandoffPreview = null;
+        PendingFullTextIntakePreview = null;
+        PendingFullTextReviewPreview = null;
+        PendingReportingWorkflowPreview = null;
+        PendingReviewExportPreview = null;
+        PendingRecoveryPreview = null;
         Status = message;
         StatusKind = DesktopWorkspaceCommandStatus.Failed;
     }

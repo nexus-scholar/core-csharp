@@ -3,6 +3,11 @@
     <OutputType>WinExe</OutputType>
     <IsPackable>false</IsPackable>
     <AvaloniaUseCompiledBindingsByDefault>false</AvaloniaUseCompiledBindingsByDefault>
+    <AssemblyTitle>Nexus Scholar Desktop</AssemblyTitle>
+    <ApplicationIcon>Assets/NexusScholar.ico</ApplicationIcon>
+    <PublishSingleFile>false</PublishSingleFile>
+    <PublishTrimmed>false</PublishTrimmed>
+    <PublishReadyToRun>false</PublishReadyToRun>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Avalonia" />

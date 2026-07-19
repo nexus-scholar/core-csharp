@@ -26,6 +26,9 @@ public sealed class MainWindow : Window
     private readonly TextBox _workspacePath = Input("Workspace folder");
     private readonly TextBox _title = Input("Research project title");
     private readonly TextBox _workspaceId = Input("Optional stable workspace id");
+    private readonly TextBox _backupPath = Input("New backup archive path");
+    private readonly TextBox _restoreArchivePath = Input("Backup archive to restore");
+    private readonly TextBox _restoreTargetPath = Input("New restore workspace folder");
     private readonly TextBox _sourcePath = Input("Local CSV, RIS, or BibTeX file");
     private readonly ComboBox _source = Choice(new[]
     {
@@ -68,7 +71,11 @@ public sealed class MainWindow : Window
     private readonly TextBox _exportActorRole = Input("Human export actor role");
     private readonly Button _reportingAuthority = SecondaryButton("Review reporting authority");
     private readonly Button _reviewExport = PrimaryButton("Review report and export");
-    private readonly StackPanel _workspaceContent = new() { Spacing = 18 };
+    private readonly StackPanel _workspaceContent = new()
+    {
+        Spacing = 18,
+        Margin = new Thickness(28, 24)
+    };
     private readonly StackPanel _confirmationContent = new() { Spacing = 10 };
     private readonly TextBlock _status = new() { TextWrapping = TextWrapping.Wrap };
     private Border? _confirmationBand;
@@ -260,7 +267,6 @@ public sealed class MainWindow : Window
         var scroll = new ScrollViewer
         {
             Content = _workspaceContent,
-            Padding = new Thickness(28, 24),
             VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
             HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled
         };
@@ -301,7 +307,7 @@ public sealed class MainWindow : Window
         });
         foreach (var label in new[] { "Workspace", "Imports", "Evidence", "Review queue", "Reports" })
         {
-            panel.Children.Add(new Button
+            var navigationButton = new Button
             {
                 Content = label,
                 HorizontalContentAlignment = HorizontalAlignment.Left,
@@ -314,7 +320,9 @@ public sealed class MainWindow : Window
                 IsEnabled = label is "Workspace" or "Imports" or "Evidence" ||
                     label == "Review queue" &&
                     (_viewModel.ReviewQueue is not null || _viewModel.ScreeningQueue is not null)
-            });
+            };
+            SetAutomationName(navigationButton, label);
+            panel.Children.Add(navigationButton);
         }
         panel.Children.Add(new TextBlock
         {
@@ -371,6 +379,7 @@ public sealed class MainWindow : Window
         DetachReusableWorkspaceControls();
         _workspaceContent.Children.Clear();
         _workspaceContent.Children.Add(BuildWorkspacePicker());
+        _workspaceContent.Children.Add(BuildRecoveryWorkflow());
         if (_viewModel.HasWorkspace)
         {
             _workspaceContent.Children.Add(BuildOverview());
@@ -405,7 +414,8 @@ public sealed class MainWindow : Window
     {
         Control[] controls =
         [
-            _workspacePath, _title, _workspaceId, _sourcePath, _source, _format,
+            _workspacePath, _title, _workspaceId, _backupPath, _restoreArchivePath,
+            _restoreTargetPath, _sourcePath, _source, _format,
             _inputId, _query, _reviewTarget, _reviewAction, _reviewReason,
             _supersedesDecision, _actorId, _actorRole, _rationale, _reviewDecision
             , _screeningTarget, _screeningVerdict, _screeningReason,
@@ -482,6 +492,68 @@ public sealed class MainWindow : Window
         };
         fields.Children.Add(preview);
         return Section("Initialize", "Creates a local project index and required folders after confirmation.", fields);
+    }
+
+    private Control BuildRecoveryWorkflow()
+    {
+        var panel = new StackPanel { Spacing = 12 };
+        var backupPath = new Grid { ColumnSpacing = 10 };
+        backupPath.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
+        backupPath.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Auto));
+        var chooseBackup = SecondaryButton("Choose backup destination");
+        chooseBackup.Click += async (_, _) => await BrowseBackupDestinationAsync();
+        Grid.SetColumn(_backupPath, 0);
+        Grid.SetColumn(chooseBackup, 1);
+        backupPath.Children.Add(_backupPath);
+        backupPath.Children.Add(chooseBackup);
+        panel.Children.Add(Labeled("Verified backup", backupPath));
+
+        var reviewBackup = PrimaryButton("Review backup effects");
+        reviewBackup.IsEnabled = _viewModel.HasWorkspace;
+        reviewBackup.Click += (_, _) =>
+        {
+            _viewModel.PreviewBackup(_backupPath.Text ?? string.Empty, DateTimeOffset.UtcNow);
+            Render();
+        };
+        panel.Children.Add(reviewBackup);
+        panel.Children.Add(new Separator { Margin = new Thickness(0, 6) });
+
+        var restoreArchive = new Grid { ColumnSpacing = 10 };
+        restoreArchive.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
+        restoreArchive.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Auto));
+        var chooseArchive = SecondaryButton("Choose backup archive");
+        chooseArchive.Click += async (_, _) => await BrowseRestoreArchiveAsync();
+        Grid.SetColumn(_restoreArchivePath, 0);
+        Grid.SetColumn(chooseArchive, 1);
+        restoreArchive.Children.Add(_restoreArchivePath);
+        restoreArchive.Children.Add(chooseArchive);
+        panel.Children.Add(Labeled("Backup archive", restoreArchive));
+
+        var restoreTarget = new Grid { ColumnSpacing = 10 };
+        restoreTarget.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
+        restoreTarget.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Auto));
+        var chooseTarget = SecondaryButton("Choose restore parent");
+        chooseTarget.Click += async (_, _) => await BrowseRestoreTargetAsync();
+        Grid.SetColumn(_restoreTargetPath, 0);
+        Grid.SetColumn(chooseTarget, 1);
+        restoreTarget.Children.Add(_restoreTargetPath);
+        restoreTarget.Children.Add(chooseTarget);
+        panel.Children.Add(Labeled("New workspace folder", restoreTarget));
+
+        var reviewRestore = PrimaryButton("Review restore effects");
+        reviewRestore.Click += (_, _) =>
+        {
+            _viewModel.PreviewRestore(
+                _restoreArchivePath.Text ?? string.Empty,
+                _restoreTargetPath.Text ?? string.Empty,
+                DateTimeOffset.UtcNow);
+            Render();
+        };
+        panel.Children.Add(reviewRestore);
+        return Section(
+            "Backup and recovery",
+            "Backups are manifest-verified local archives. Restore always creates and verifies a new workspace folder.",
+            panel);
     }
 
     private Control BuildOverview()
@@ -940,6 +1012,54 @@ public sealed class MainWindow : Window
         if (files.Count > 0 && files[0].TryGetLocalPath() is { } path)
         {
             _sourcePath.Text = path;
+        }
+    }
+
+    private async Task BrowseBackupDestinationAsync()
+    {
+        var file = await StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+        {
+            Title = "Create a verified Nexus workspace backup",
+            SuggestedFileName = "nexus-workspace-backup.zip",
+            DefaultExtension = "zip",
+            FileTypeChoices =
+            [
+                new FilePickerFileType("Nexus workspace backup") { Patterns = ["*.zip"] }
+            ]
+        });
+        if (file?.TryGetLocalPath() is { } path)
+        {
+            _backupPath.Text = path;
+        }
+    }
+
+    private async Task BrowseRestoreArchiveAsync()
+    {
+        var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+        {
+            Title = "Select a verified Nexus workspace backup",
+            AllowMultiple = false,
+            FileTypeFilter =
+            [
+                new FilePickerFileType("Nexus workspace backup") { Patterns = ["*.zip"] }
+            ]
+        });
+        if (files.Count > 0 && files[0].TryGetLocalPath() is { } path)
+        {
+            _restoreArchivePath.Text = path;
+        }
+    }
+
+    private async Task BrowseRestoreTargetAsync()
+    {
+        var folders = await StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
+        {
+            Title = "Select the parent folder for the restored workspace",
+            AllowMultiple = false
+        });
+        if (folders.Count > 0 && folders[0].TryGetLocalPath() is { } path)
+        {
+            _restoreTargetPath.Text = Path.Combine(path, "nexus-restored-workspace");
         }
     }
 

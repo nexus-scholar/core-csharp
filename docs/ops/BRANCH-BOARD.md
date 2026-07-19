@@ -1,36 +1,38 @@
 # Branch Board
 
-Status date: 2026-07-18
+Status date: 2026-07-19
 
 ## Protected Main
 
-- `origin/main`: `bdd0d828547773a622316988d8d3dc825c4e7812` (PR #70 Astro Pages and FE-09 public baseline).
+- Last pre-release `origin/main`: `425e9bc` (PR #71 integrity closeout).
+- Alpha.2 release authority: `v0.1.0-alpha.2` plus the exact commit in the
+  distribution manifest.
 - `gh-pages`: retained as historical static-site source; deployments use
   `site/` on `main`.
-- Active remediation branch: `cdx/fe-09-deep-review-remediation`.
+- Release candidate branch: `cdx/release-readiness-alpha2` (RR-01 through RR-06).
 - FE-10 design has not started.
 - Active roadmap: `docs/plans/2026-07-14-feature-expansion-priority.md`.
 
 ## Verified Baseline
 
 - Hardening Phases 1-7 and Hardening 30: complete.
-- FE-01 through FE-08: complete within accepted local scopes.
+- FE-01 through FE-08: complete within accepted local scopes; FE-08 slices 1 through 9 complete.
 - FE-09A through FE-09F: complete within accepted scope and merged through
   PR #69.
 - Public Astro Pages baseline: merged through PR #70.
 - Protected-main full solution: 1,011 passed, 0 failed, 2 opt-in live smokes
   skipped.
-- Remediation candidate: ADR 0044 and ADR 0045 implementation and local
-  verification complete; 1,084 passed, 0 failed, 2 Windows-host Linux-only
-  skips, 2 opt-in live smokes skipped, and 150 exact mutation cases verified
-  across 9 project suites.
-- Remote closeout blocker: one repository collaborator cannot supply the
-  required independent approval; main also lacks required CODEOWNER review,
-  latest-push reapproval, linear history, and signed-commit enforcement.
+- ADR 0044 and ADR 0045 were historical integrity work and remain historical evidence.
+- Remote governance limitation: one repository collaborator cannot supply an
+  independent GitHub approval; main also lacks required CODEOWNER review,
+  latest-push reapproval, linear history, and signed-commit enforcement. This
+  limits governance claims but does not bypass the configured protected-main
+  checks or the alpha.2 release gate.
 - Package graph: 24 validation-only packages with reproducible pack and clean
   local-source restore/load.
 - Release build and formatting: green.
-- Package identity: `0.1.0-alpha.2`; publication disabled.
+- Package identity: `0.1.0-alpha.2`; NuGet publication disabled.
+- Desktop identity: unsigned self-contained Windows x64 GitHub prerelease.
 
 ## Product Boundary
 
@@ -45,10 +47,21 @@ scraping, paywall bypass, citation exports, PHP parity, plugin execution,
 database/API/cloud, authentication, tenancy, and multi-user operation remain
 outside the accepted scope.
 
+## Release Readiness Alpha 2
+
+- Contract: ADR 0046 and accepted release gate.
+- Artifact: deterministic-inventory portable ZIP, manifest, checksums, SPDX
+  SBOM, and GitHub attestation.
+- Runtime resilience: bounded sanitized local diagnostics.
+- Recovery: lock-aware manifest backup and byte-exact new-directory restore.
+- Acceptance: real Avalonia headless workflow, automation, focus, and scaling.
+- Publication: exact matching protected-main tag only; branch and manual runs
+  validate without publication credentials.
+
 ## Next
 
-Begin FE-10 plugin-runtime design and capability-security review under a new
-accepted gate.
+After alpha.2 is verified, FE-10 remains blocked behind its own ADR and gate
+acceptance.
 
 ## Pages
 

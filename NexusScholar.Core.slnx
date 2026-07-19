@@ -53,6 +53,7 @@
     <Project Path="tests/NexusScholar.Avalonia.Blocks.Tests/NexusScholar.Avalonia.Blocks.Tests.csproj" />
     <Project Path="tests/NexusScholar.Avalonia.Blocks.SampleHost.Tests/NexusScholar.Avalonia.Blocks.SampleHost.Tests.csproj" />
     <Project Path="tests/NexusScholar.Desktop.Preview.Tests/NexusScholar.Desktop.Preview.Tests.csproj" />
+    <Project Path="tests/NexusScholar.Desktop.Acceptance.Tests/NexusScholar.Desktop.Acceptance.Tests.csproj" />
     <Project Path="tests/NexusScholar.Desktop.Tests/NexusScholar.Desktop.Tests.csproj" />
     <Project Path="tests/NexusScholar.Desktop.AppServices.Tests/NexusScholar.Desktop.AppServices.Tests.csproj" />
     <Project Path="tests/NexusScholar.Search.Providers.Crossref.Tests/NexusScholar.Search.Providers.Crossref.Tests.csproj" />

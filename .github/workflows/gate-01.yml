@@ -77,3 +77,21 @@ jobs:
 
       - name: Format
         run: dotnet format NexusScholar.Core.slnx --verify-no-changes --no-restore
+
+      - name: Build Windows desktop portable artifact
+        if: matrix.os == 'windows-latest'
+        shell: pwsh
+        run: ./scripts/publish-desktop-portable.ps1 -RequireCleanSourceTree
+
+      - name: Verify extracted Windows desktop artifact
+        if: matrix.os == 'windows-latest'
+        shell: pwsh
+        run: ./scripts/verify-desktop-portable.ps1 -RequireCleanSourceTree
+
+      - name: Upload verified Windows desktop artifact
+        if: matrix.os == 'windows-latest'
+        uses: actions/upload-artifact@v7
+        with:
+          name: desktop-portable-${{ github.sha }}
+          path: artifacts/desktop-release/
+          if-no-files-found: error

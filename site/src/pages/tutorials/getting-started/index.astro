@@ -41,7 +41,9 @@
           </ul>
           <div class="callout info">
             <strong>Baseline used by this tutorial</strong>
-            Protected <code>main</code> at <code>bdd0d82</code>, where FE-01 through FE-09 remain within their accepted scopes. FE-09 closeout historical reference remains <code>ea665eb</code>.
+            The last pre-release protected-main baseline is <code>425e9bc</code>.
+            The alpha.2 release commit is resolved by <code>v0.1.0-alpha.2</code>
+            and <code>desktop-distribution-manifest.json</code>.
           </div>
         </section>
 
@@ -131,12 +133,26 @@ Pop-Location</code></pre>
             <li>display a verified deduplication authority queue and commit an authorized human decision after exact-effect confirmation;</li>
             <li>report whether the durable title/abstract Screening authority package is ready after restart.</li>
             <li>preview and confirm admitted Screening resolution, candidate-local Full Text, reporting, and export workflows when their exact authority packages are present.</li>
+            <li>create a verified workspace backup and restore it only into a new folder.</li>
           </ul>
           <p>Most simple demo workspaces will show scientific decision paths as unavailable because they do not contain the verified authority chain. That is expected fail-closed behavior.</p>
         </section>
 
+        <section class="content-section" id="portable">
+          <h2>8. Run the portable Windows preview</h2>
+          <p>From the <a href="https://github.com/nexus-scholar-org/core-csharp/releases/tag/v0.1.0-alpha.2">alpha.2 GitHub prerelease</a>, download the ZIP, checksums, distribution manifest, and SPDX SBOM into one directory.</p>
+          <pre><code>Get-FileHash .\NexusScholar-Desktop-0.1.0-alpha.2-win-x64.zip -Algorithm SHA256
+gh attestation verify .\NexusScholar-Desktop-0.1.0-alpha.2-win-x64.zip --repo nexus-scholar-org/core-csharp
+Expand-Archive .\NexusScholar-Desktop-0.1.0-alpha.2-win-x64.zip .\NexusScholar
+.\NexusScholar\NexusScholar-Desktop-0.1.0-alpha.2-win-x64\NexusScholar.Desktop.exe</code></pre>
+          <div class="callout warning">
+            <strong>Unsigned technical preview</strong>
+            Windows may display a reputation warning. Checksums and GitHub attestation bind workflow output but do not establish an Authenticode publisher. The preview has no installer, updater, telemetry, authentication, or production support claim.
+          </div>
+        </section>
+
         <section class="content-section" id="inspect">
-          <h2>8. What to inspect</h2>
+          <h2>9. What to inspect</h2>
           <ul class="check-list">
             <li>Can you distinguish evidence, a proposal, a preview, and an authoritative decision?</li>
             <li>Does every failure explain what authority or evidence is missing?</li>
@@ -147,7 +163,7 @@ Pop-Location</code></pre>
         </section>
 
         <section class="content-section" id="feedback">
-          <h2>9. Report useful feedback</h2>
+          <h2>10. Report useful feedback</h2>
           <ul class="link-list">
             <li><a href="https://github.com/nexus-scholar-org/core-csharp/issues/new?template=first-tester-run.yml">First-tester run</a></li>
             <li><a href="https://github.com/nexus-scholar-org/core-csharp/issues/new?template=architecture-boundary-review.yml">Architecture boundary review</a></li>

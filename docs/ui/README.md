@@ -3,17 +3,17 @@
 This folder records the UI architecture and product evolution without moving
 scientific authority into the desktop.
 
-The UI lane is no longer preview-only. FE-08 slices 1 through 4 are complete:
+The UI lane is no longer preview-only. FE-08 slices 1 through 9 are complete:
 
 - slices 1-2: local product host and admitted open, initialize, local Search
   import, verify, and analyze operations;
 - Slice 3: first desktop scientific action, an authority-checked FE-02
   Deduplication decision;
 - Slice 4: durable, fail-closed Screening authority resolution and read-only
-  readiness projection.
-
-FE-08 Slice 5 is the next gate candidate. The first desktop Screening mutation
-is not yet authorized.
+  readiness projection;
+- slices 5-9: title/abstract Screening conduct and resolution, local Full Text
+  review, reporting, Bundle v2/export-ledger verification, and desktop
+  recovery/accessibility closeout.
 
 ## Authority Model
 
@@ -45,13 +45,13 @@ This is the precise boundary:
 - `src/NexusScholar.Avalonia.Blocks`: reusable Avalonia controls and view models
   that render `UiContracts`.
 - `src/NexusScholar.ResearchWorkspace`: shared non-UI project discovery,
-  durable generations, authority verification, recovery, projections, and local
-  orchestration.
+  durable generations, authority verification, manifest-verified backup and
+  restore, projections, and local orchestration.
 - `src/NexusScholar.AppServices`: framework-neutral use-case composition and
   admitted domain commands.
 - `src/NexusScholar.Desktop.AppServices`: desktop-safe facade for open,
   initialize, import, verify, analyze, FE-02 Deduplication review, and
-  Screening-readiness resolution.
+  Screening/Full Text/reporting workflows plus operational backup/restore.
 - `src/NexusScholar.Desktop`: Windows-first Avalonia product host and composition
   root.
 
@@ -72,6 +72,7 @@ Tests:
 - `tests/NexusScholar.Desktop.Preview.Tests`
 - `tests/NexusScholar.Desktop.AppServices.Tests`
 - `tests/NexusScholar.Desktop.Tests`
+- `tests/NexusScholar.Desktop.Acceptance.Tests`
 - `tests/NexusScholar.Architecture.Tests`
 
 ## FE-08 Slice Boundaries
@@ -113,18 +114,21 @@ The workspace can persist and rehydrate:
 Desktop.AppServices receives readiness projections only. It cannot create a
 Screening decision.
 
-### Slice 5: next candidate
+### Slices 5-9: desktop conduct and closeout
 
-Before the first desktop Screening mutation is implemented, the gate must define:
+Slices 5 through 9 are complete:
 
-- exact approved Protocol, criteria, candidate, corpus snapshot, and
-  workflow-task bindings;
-- explicit human actor and admitted role;
-- preview/confirmation payload and digest;
-- stale view, stale authority, and concurrent writer behavior;
-- conflict, correction, adjudication, supersession, and invalidation;
-- atomic durable generation, crash recovery, provenance, and refresh;
-- component, architecture, visual, keyboard, and accessibility validation.
+- title/abstract Screening conduct, correction, adjudication, and handoff;
+- local Full Text review and evidence handling;
+- reporting, Bundle v2, export verification, and export-ledger publication;
+- recovery and attention-state closure with accessibility updates.
+
+### Alpha.2 release readiness
+
+ADR 0046 adds an unsigned self-contained Windows x64 portable artifact,
+sanitized local crash diagnostics, manifest-verified backup and new-directory
+restore, and real Avalonia headless acceptance. These are product-operation
+capabilities, not new scientific authority.
 
 ## Documents
 
@@ -186,3 +190,5 @@ dotnet run --project src/NexusScholar.Desktop/NexusScholar.Desktop.csproj -c Rel
 
 The current product uses durable local files. It does not provide database,
 server API, cloud sync, authentication, tenancy, or multi-user collaboration.
+Crash reports stay local and sanitized. Workspace restore never overwrites or
+merges an existing workspace.

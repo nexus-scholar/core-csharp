@@ -1,19 +1,19 @@
 # Chat Roster
 
-Status date: 2026-07-18
+Status date: 2026-07-19
 
 ## Active Lanes
 
-- Main integration lane: protected `main` at `bdd0d828547773a622316988d8d3dc825c4e7812`.
-- Active implementation lane: `cdx/fe-09-deep-review-remediation`, governed by
-  ADR 0044 and ADR 0045, locally complete, and not yet merged because remote
-  governance requirements remain unsatisfied.
+- Main integration lane: last pre-release protected `main` at `425e9bc`.
+- Active implementation lane: `cdx/release-readiness-alpha2`; Windows portable
+  distribution, runtime recovery, native acceptance, and release execution.
 - Product planning lane: FE-10 plugin-runtime design and capability security;
   no runtime implementation yet.
 - Public documentation lane: current project docs and `site/` on `main`.
 - Compatibility lane: case-scoped fixture evidence only; no broad PHP claim.
-- Release/security lane: validation-only packages, governance, dependency
-  review, CodeQL, and release evidence.
+- Release/security lane: validation-only NuGet packages, one unsigned desktop
+  prerelease, governance, dependency review, CodeQL, SBOM, checksums,
+  attestation, and release evidence.
 
 ## Ownership
 
@@ -48,10 +48,20 @@ Status date: 2026-07-18
   API, cloud, synchronization, authentication, and multi-user behavior remain
   absent.
 
+## Release Readiness Work (RR-01..RR-06)
+
+- RR-01: release contract and claims boundary.
+- RR-02: current public and operator documentation.
+- RR-03: locked, reproducible Windows x64 portable distribution.
+- RR-04: sanitized local diagnostics and verified backup/restore.
+- RR-05: native Avalonia acceptance and accessibility metadata.
+- RR-06: protected-main validation, tag-only publication, attestation, and
+  downloaded-asset verification.
+
 ## Current Non-Claims
 
 - early alpha, not production-ready;
-- no published or signed NuGet packages;
+- no published or signed NuGet packages; the desktop prerelease is unsigned;
 - no broad PHP compatibility;
 - no live Crossref or Full Text retrieval, scraping, or built-in PDF/OCR;
 - no unrestricted provider caching, provider parity, or live citation graph;

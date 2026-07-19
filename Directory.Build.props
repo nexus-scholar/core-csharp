@@ -21,5 +21,6 @@
     <PackageTags>research;systematic-review;local-first;provenance</PackageTags>
     <Description>Audit-oriented early-alpha contracts for local-first research workflows. Not a production researcher application.</Description>
     <NoWarn>CS1591</NoWarn>
+    <NuGetLockFilePath Condition="'$(DesktopReleaseRestore)' == 'true'">$(MSBuildThisFileDirectory)eng/desktop-locks/$(MSBuildProjectName).packages.lock.json</NuGetLockFilePath>
   </PropertyGroup>
 </Project>

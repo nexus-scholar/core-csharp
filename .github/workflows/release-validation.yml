@@ -10,13 +10,10 @@ permissions:
   contents: read
 
 jobs:
-  validate:
+  validate-core:
     runs-on: ubuntu-latest
-    environment: release
-    permissions:
-      contents: read
-      id-token: write
-      attestations: write
+    outputs:
+      version: ${{ steps.release-identity.outputs.version }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -33,8 +30,15 @@ jobs:
         with:
           global-json-file: global.json
 
+      - name: Resolve release identity
+        id: release-identity
+        shell: pwsh
+        run: |
+          $policy = Get-Content eng/desktop-distribution.json -Raw | ConvertFrom-Json
+          "version=$($policy.version)" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+
       - name: Validate tag and package version
-        if: startsWith(github.ref, 'refs/tags/')
+        if: github.ref_type == 'tag'
         shell: pwsh
         run: ./scripts/verify-release-tag.ps1 -TagName "${{ github.ref_name }}"
 
@@ -61,18 +65,105 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: release-test-results
+          name: release-test-results-${{ github.sha }}
           path: artifacts/test-results/*.trx
           if-no-files-found: error
 
-      - name: Upload release evidence
+      - name: Upload core release evidence
         uses: actions/upload-artifact@v7
         with:
           name: release-evidence-${{ github.sha }}
           path: artifacts/release/
           if-no-files-found: error
 
-      - name: Attest validation artifacts
+  validate-desktop:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Setup SBOM runtime
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 8.0.422
+
+      - name: Setup pinned repository SDK
+        uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+
+      - name: Validate tag and package version
+        if: github.ref_type == 'tag'
+        shell: pwsh
+        run: ./scripts/verify-release-tag.ps1 -TagName "${{ github.ref_name }}"
+
+      - name: Build and inventory desktop artifact twice
+        shell: pwsh
+        run: ./scripts/publish-desktop-portable.ps1 -RequireCleanSourceTree
+
+      - name: Verify extracted desktop artifact
+        shell: pwsh
+        run: ./scripts/verify-desktop-portable.ps1 -RequireCleanSourceTree
+
+      - name: Upload Windows desktop release evidence
+        uses: actions/upload-artifact@v7
+        with:
+          name: desktop-release-${{ github.sha }}
+          path: artifacts/desktop-release/
+          if-no-files-found: error
+
+  publish-prerelease:
+    needs:
+      - validate-core
+      - validate-desktop
+    if: github.ref_type == 'tag' && github.ref_name == format('v{0}', needs.validate-core.outputs.version)
+    runs-on: windows-latest
+    environment: release
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+    steps:
+      - name: Checkout release tag
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Download core release evidence
+        uses: actions/download-artifact@v8
+        with:
+          name: release-evidence-${{ github.sha }}
+          path: artifacts/release
+
+      - name: Download desktop release evidence
+        uses: actions/download-artifact@v8
+        with:
+          name: desktop-release-${{ github.sha }}
+          path: artifacts/desktop-release
+
+      - name: Reverify extracted desktop artifact
+        shell: pwsh
+        run: ./scripts/verify-desktop-portable.ps1 -RequireCleanSourceTree
+
+      - name: Attest core validation evidence
         uses: actions/attest-build-provenance@v4
         with:
           subject-path: artifacts/release/**/*
+
+      - name: Attest downloadable desktop assets
+        uses: actions/attest-build-provenance@v4
+        with:
+          subject-path: |
+            artifacts/desktop-release/NexusScholar-Desktop-0.1.0-alpha.2-win-x64.zip
+            artifacts/desktop-release/desktop-distribution-manifest.json
+            artifacts/desktop-release/SHA256SUMS.txt
+            artifacts/desktop-release/NexusScholar-Desktop-0.1.0-alpha.2-win-x64.spdx.json
+            artifacts/desktop-release/sbom-validation.json
+
+      - name: Publish and verify GitHub prerelease
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: ./scripts/publish-github-prerelease.ps1

@@ -27,17 +27,18 @@
   </header>
   <main id="main" class="page wide">
     <div class="breadcrumbs"><a href="../">Home</a><span>/</span><span>Implementation status</span></div>
-    <p class="eyebrow">Protected-main snapshot · 17 July 2026</p>
+    <p class="eyebrow">Protected-main snapshot · 19 July 2026</p>
     <h1>What exists, what is verified, and what is still out of scope</h1>
-    <p class="lede">This page describes the current protected-<code>main</code> state at
-      <code>bdd0d82</code> and preserves the historical status of the FE-09 closeout at
-      commit <code>ea665eb</code>. It deliberately excludes unmerged feature branches
-      and converts completion claims into links to accepted ADRs, gates, and release evidence.</p>
+    <p class="lede">The last pre-release protected-<code>main</code> baseline is
+      <code>425e9bc</code>. Alpha.2 release identity is carried by the immutable
+      <code>v0.1.0-alpha.2</code> tag and its distribution manifest. Historical FE-09
+      closeout remains anchored at <code>ea665eb</code>.</p>
 
     <section class="content-section">
       <div class="metric-grid">
         <article class="metric"><strong>FE-01–09</strong><span>completed within accepted scopes</span></article>
         <article class="metric"><strong>FE-08 · 1–9</strong><span>completed local desktop slices</span></article>
+        <article class="metric"><strong>alpha.2</strong><span>Windows x64 technical preview</span></article>
         <article class="metric"><strong>1,011</strong><span>tests passed at historical FE-09 closeout</span></article>
         <article class="metric"><strong>24</strong><span>packages in reproducibility smoke</span></article>
       </div>
@@ -72,6 +73,7 @@
         <li>Conduct title/abstract Screening, correction, adjudication, and handoff through exact preview/confirm bindings.</li>
         <li>Run candidate-local Full Text intake and human review over immutable local evidence.</li>
         <li>Produce deterministic reports, Bundle v2 inventories, and append-only export-ledger records with round-trip verification.</li>
+        <li>Create a manifest-verified local backup and restore exact bytes into a new workspace folder.</li>
       </ul>
       <div class="callout boundary">
         <strong>Not yet admitted on this baseline</strong>
@@ -81,11 +83,12 @@
 
     <section class="content-section">
       <h2>Validation and delivery posture</h2>
-      <p>The repository uses protected-main validation on Windows and Linux. The standard gate restores, builds in Release, verifies package reproducibility and local-source smoke, runs the test matrix, exercises CLI smoke paths, collects informational coverage, and verifies formatting. CodeQL and dependency review run independently.</p>
+      <p>The repository uses protected-main validation on Windows and Linux. Core validation remains on Ubuntu; Windows builds the self-contained portable artifact twice, verifies its inventory, extracts it, and executes its local smoke without a repository or installed .NET runtime. Exact matching tags add checksums, SPDX SBOM, GitHub attestation, and prerelease publication. CodeQL and dependency review run independently.</p>
       <ul class="link-list">
         <li><a href="https://github.com/nexus-scholar-org/core-csharp/actions">GitHub Actions history</a></li>
         <li><a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/.github/workflows/gate-01.yml">Main verification workflow</a></li>
         <li><a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/docs/release/PACKAGES.md">Package topology and reproducibility</a></li>
+        <li><a href="https://github.com/nexus-scholar-org/core-csharp/releases/tag/v0.1.0-alpha.2">Windows technical preview</a></li>
         <li><a href="https://github.com/nexus-scholar-org/core-csharp/blob/main/SECURITY.md">Security policy</a></li>
       </ul>
     </section>
@@ -93,7 +96,7 @@
     <section class="content-section">
       <h2>Claims deliberately not made</h2>
       <div class="feature-grid">
-        <article class="feature"><h3>No production release</h3><p>Packages are validation-only and unpublished. There is no supported installer or production operating claim.</p></article>
+        <article class="feature"><h3>No production release</h3><p>The desktop is an unsigned technical preview. Packages are validation-only and unpublished; there is no supported installer or production operating claim.</p></article>
         <article class="feature"><h3>No connected platform</h3><p>No database, API, cloud synchronization, tenant isolation, or multi-user collaboration is claimed.</p></article>
         <article class="feature"><h3>No autonomous science</h3><p>Automation and model outputs cannot become final scientific decisions by themselves.</p></article>
         <article class="feature"><h3>Bounded network scope</h3><p>OpenAlex and Semantic Scholar Search are exact-host, opt-in outward adapters. There is no live Crossref or Full Text retrieval, scraping, paywall bypass, PDF parsing, OCR, or live citation provider.</p></article>
@@ -108,7 +111,7 @@
       <div><h3>Next</h3><ul><li><a href="../roadmap/">Roadmap</a></li><li><a href="../tutorials/">Tutorials</a></li></ul></div>
       <div><h3>Inspect</h3><ul><li><a href="../developers/modules/">Modules</a></li><li><a href="https://github.com/nexus-scholar-org/core-csharp">Repository</a></li></ul></div>
     </div>
-    <p class="footer-note">Baseline commit: <code>bdd0d82</code>. Status date: 17 July 2026. Historical FE-09 closeout: <code>ea665eb</code>.</p>
+    <p class="footer-note">Pre-release baseline: <code>425e9bc</code>. Release authority: <code>v0.1.0-alpha.2</code> plus distribution manifest. Status date: 19 July 2026.</p>
   </footer>
   <script is:inline src="../assets/js/site.js"></script>
 </body>

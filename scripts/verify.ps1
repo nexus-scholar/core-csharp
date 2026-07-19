@@ -32,6 +32,11 @@ try {
 
     & $dotnet format NexusScholar.Core.slnx --verify-no-changes --no-restore
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+    if ($IsWindows) {
+        & "$PSScriptRoot/publish-desktop-portable.ps1"
+        & "$PSScriptRoot/verify-desktop-portable.ps1"
+    }
 }
 finally {
     Pop-Location

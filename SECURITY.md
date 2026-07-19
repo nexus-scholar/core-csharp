@@ -1,6 +1,8 @@
 # Security Policy
 
-Nexus Scholar Core is currently a local-first research workflow kernel and sample/demo repository. It is not a hosted service, cloud product, live-provider client, or production desktop application.
+Nexus Scholar Core is a local-first research workflow kernel with an unsigned
+Windows x64 desktop technical preview. It is not a hosted service, cloud
+product, or production desktop application.
 
 ## Supported Scope
 
@@ -10,6 +12,9 @@ Security reports are in scope when they affect:
 - build, test, or CLI execution;
 - sample-host execution;
 - dependency or supply-chain risk;
+- desktop portable distribution, checksum, SBOM, or attestation integrity;
+- workspace backup/restore containment, digest, locking, or cleanup failures;
+- crash-diagnostic disclosure beyond the documented sanitized fields;
 - accidental live network/provider behavior;
 - accidental persistence/API/cloud behavior;
 - evidence, provenance, or authority-boundary integrity.
@@ -20,9 +25,9 @@ The current repository does not provide:
 - server-side API endpoints;
 - cloud sync;
 - provider credentials;
-- live scholarly provider calls;
+- unrestricted live scholarly provider calls;
 - PDF/OCR processing services;
-- production desktop-shell behavior.
+- production, authenticated, or multi-user desktop behavior.
 
 ## Reporting
 
@@ -37,6 +42,9 @@ For potentially sensitive security issues, use [GitHub private vulnerability rep
 - Include the commit, OS, .NET SDK version, exact command, expected result, and actual result.
 - Do not test against live providers, third-party services, paid databases, or private data unless a maintainer explicitly authorizes that scope.
 - Do not request or submit provider credentials, API keys, PDFs under restricted access, or private research data.
+- Do not attach workspace backups or local crash reports to public issues.
+- Verify technical-preview downloads against `SHA256SUMS.txt` and the GitHub
+  attestation before execution. The executable is not Authenticode signed.
 
 ## Boundary Reminder
 

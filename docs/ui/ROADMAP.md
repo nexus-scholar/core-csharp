@@ -1,6 +1,6 @@
 # UI Roadmap
 
-Status: FE-08 slices 1 through 4 complete. Slice 5 is the next gate candidate and
+Status: FE-08 slices 1 through 9 are complete. FE-10 is the next external-design gate candidate and
 is not implementation-authorized.
 
 This roadmap describes product delivery without changing the rule that
@@ -117,41 +117,42 @@ Delivered:
 
 No desktop Screening decision is admitted.
 
-### Slice 5: first desktop Screening mutation
+### Slices 5-9: desktop conduct and closeout
 
-Status: next gate candidate; not authorized.
+Status: complete.
 
-The proposed slice must define and verify:
+Delivered:
 
-1. explicit human actor and admitted Screening role;
-2. exact approved Protocol, criteria, candidate, corpus snapshot, and workflow
-   task;
-3. previewed verdict, rationale, exclusion reason, conflicts, and effects;
-4. a canonical confirmation token over complete request and authority material;
-5. stale view, stale package, changed criteria, changed snapshot, and concurrent
-   writer rejection;
-6. correction, conflict, adjudication, supersession, invalidation, and handoff
-   effects;
-7. atomic local generation, lock discipline, crash recovery, idempotency, and
-   provenance;
-8. component, architecture, full-solution, visual, keyboard, and accessibility
-   validation.
+1. title/abstract Screening conduct and correction handoff;
+2. local Full Text review within approved authority packages;
+3. reporting, audit-bundle closeout, and export-ledger verification;
+4. recovery and attention-state lifecycle handling.
 
-The slice must use a dedicated application command. A generic block action,
-callback, or view-model mutation is insufficient.
+These outcomes remain downstream of the accepted domain/application commands;
+the UI does not own their scientific authority.
+
+### Release Readiness Alpha 2
+
+Status: implemented under ADR 0046 and the accepted alpha.2 release gate.
+
+Delivered:
+
+1. unsigned self-contained Windows x64 portable distribution;
+2. exact release manifest, checksums, SPDX SBOM, and attestation;
+3. sanitized local crash diagnostics and next-launch notice;
+4. manifest-verified backup and byte-exact new-directory restore;
+5. native headless acceptance over the real product host.
 
 ## Later UI Work
 
-After Slice 5, additional desktop work should follow demonstrated user need and
+After Slice 9, additional desktop work should follow demonstrated user need and
 accepted gates:
 
 - workflow-task completion and navigation;
-- full-text intake and Screening conduct;
-- reporting, audit-bundle, and export workflows;
 - Extraction, Appraisal, and Synthesis workspaces;
-- workspace recovery and integrity repair UX;
-- end-to-end keyboard and accessibility hardening;
-- installer and update strategy.
+- cross-platform desktop qualification;
+- deeper accessibility and usability evaluation with real first testers;
+- installer, signing, and update strategy under a successor ADR.
 
 These are not automatically authorized by their appearance here.
 

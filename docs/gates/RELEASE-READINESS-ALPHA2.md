@@ -161,17 +161,18 @@ Hosted verification additionally requires:
 
 ## Exit checklist
 
-- [ ] Current-state documentation names the exact protected-main release commit.
-- [ ] Version-specific changelog and release notes exist.
-- [ ] Portable ZIP is self-contained and reproducible by file inventory.
+- [ ] The tag, distribution manifest, and release identity bind the exact
+  protected-main release commit.
+- [x] Version-specific changelog and release notes exist.
+- [x] Portable ZIP is self-contained and reproducible by file inventory.
 - [ ] Distribution manifest, checksums, SPDX SBOM, and attestation exist.
-- [ ] Extracted executable passes clean-directory smoke without a .NET runtime.
-- [ ] Backup archive reopens and verifies before success.
-- [ ] Restore is byte-exact and new-directory-only.
-- [ ] Crash reports are local, sanitized, bounded, and tested.
-- [ ] Native headless acceptance covers the main desktop and recovery flow.
-- [ ] Automation labels, keyboard focus, and three scaling levels pass.
-- [ ] Full local build, tests, mutation, packages, format, and release evidence pass.
+- [x] Extracted executable passes clean-directory smoke without a .NET runtime.
+- [x] Backup archive reopens and verifies before success.
+- [x] Restore is byte-exact and new-directory-only.
+- [x] Crash reports are local, sanitized, bounded, and tested.
+- [x] Native headless acceptance covers the main desktop and recovery flow.
+- [x] Automation labels, keyboard focus, and three scaling levels pass.
+- [x] Full local build, tests, mutation, packages, format, and release evidence pass.
 - [ ] Protected-main CI is green at the release commit.
 - [ ] `v0.1.0-alpha.2` resolves to that commit.
 - [ ] GitHub prerelease assets download and match published checksums.

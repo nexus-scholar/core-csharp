@@ -16,15 +16,20 @@ claim broad PHP compatibility.
 
 ## Current Status
 
-Protected `main` is at `bdd0d828547773a622316988d8d3dc825c4e7812`.
+The last pre-release protected-main baseline is `425e9bc` (PR #71). The
+`0.1.0-alpha.2` release commit is identified by the immutable
+`v0.1.0-alpha.2` tag and by `desktop-distribution-manifest.json`, which records
+the exact full commit.
 The FE-09 implementation closeout evidence is historically anchored at
-`ea665eb` and should be treated as baseline history.
+`ea665eb` and should be treated as historical baseline evidence.
 FE-09 and the remaining FE-08 desktop slices landed through
 [`PR #69`](https://github.com/nexus-scholar-org/core-csharp/pull/69), with
 protected-main closeout recorded in
 [`docs/release/FE-09-COMPLETION-EVIDENCE.md`](docs/release/FE-09-COMPLETION-EVIDENCE.md).
 The Astro Pages migration and public FE-09 baseline landed through
-[`PR #70`](https://github.com/nexus-scholar-org/core-csharp/pull/70).
+[`PR #70`](https://github.com/nexus-scholar-org/core-csharp/pull/70). The
+post-FE-09 integrity repairs landed through
+[`PR #71`](https://github.com/nexus-scholar-org/core-csharp/pull/71).
 Post-FE-09 integrity remediation is governed by
 [`ADR 0044`](docs/adr/0044-fe09-deep-review-integrity-remediation.md) with
 branch evidence in
@@ -44,11 +49,12 @@ The historical FE-09 closeout baseline is:
 - Release build and formatting checks passing on Windows and Linux;
 - no NuGet package published.
 
-The active remediation branch passed its full local gate with 1,048 tests,
-zero failures, two Windows-host Linux-only skips, and two opt-in live-provider
-smokes skipped. It is not protected-main evidence until the remote governance
-requirements recorded in the completion evidence are satisfied and the branch
-is merged.
+The release-readiness gate under
+[`ADR 0046`](docs/adr/0046-windows-technical-preview-distribution-and-recovery.md)
+adds a self-contained Windows x64 portable artifact, verified workspace
+backup/restore, sanitized local crash diagnostics, native desktop acceptance,
+and tag-only GitHub prerelease automation. The desktop remains an unsigned
+technical preview. The 24 NuGet packages remain validation-only and unpublished.
 
 FE-10 plugin-runtime design and capability security is the next gate. Existing
 Extensibility contracts do not authorize third-party execution or constitute an
@@ -57,6 +63,10 @@ dependency-ordered future work.
 
 The active roadmap is
 [`docs/plans/2026-07-14-feature-expansion-priority.md`](docs/plans/2026-07-14-feature-expansion-priority.md).
+
+RR-01 through RR-06 are one release gate. Completion is valid only when the
+local gate, protected-main checks, matching tag, attestation, downloadable
+assets, and post-download checksums all agree.
 
 ## What Is Implemented
 
@@ -112,6 +122,40 @@ from validated records, stable identifiers, content digests, and verified
 lineage. Paths remain references, not identities.
 
 ## Try It Locally
+
+### Windows technical preview
+
+The admitted end-user artifact is the unsigned, self-contained
+`NexusScholar-Desktop-0.1.0-alpha.2-win-x64.zip` on the
+[`v0.1.0-alpha.2` prerelease](https://github.com/nexus-scholar-org/core-csharp/releases/tag/v0.1.0-alpha.2).
+It does not require an installed .NET SDK or runtime.
+
+Download the ZIP, `SHA256SUMS.txt`, distribution manifest, and SPDX SBOM into
+one folder. Verify the ZIP digest against `SHA256SUMS.txt`; GitHub CLI users can
+also verify build provenance:
+
+```powershell
+Get-FileHash .\NexusScholar-Desktop-0.1.0-alpha.2-win-x64.zip -Algorithm SHA256
+gh attestation verify .\NexusScholar-Desktop-0.1.0-alpha.2-win-x64.zip `
+  --repo nexus-scholar-org/core-csharp
+Expand-Archive .\NexusScholar-Desktop-0.1.0-alpha.2-win-x64.zip .\NexusScholar
+.\NexusScholar\NexusScholar-Desktop-0.1.0-alpha.2-win-x64\NexusScholar.Desktop.exe
+```
+
+Windows may warn because the executable is not Authenticode signed. Checksums
+and GitHub attestation bind workflow output; they do not establish a signed
+Windows publisher identity.
+
+The desktop can create a manifest-verified backup of an open workspace and
+restore it into a new, non-existing folder. Restore never overwrites or merges
+an existing workspace. Sanitized crash reports stay local under
+`%LOCALAPPDATA%\NexusScholar\diagnostics`; there is no telemetry or crash upload.
+
+The technical preview is not a production, compliance, accessibility-certified,
+authenticated, multi-user, cloud-sync, installer, updater, PDF/OCR, plugin, or
+AI product.
+
+### Repository development
 
 Prerequisites are the SDK pinned by [`global.json`](global.json) and the .NET 8
 runtime used by the repository-pinned SBOM tool. Repository builds use the

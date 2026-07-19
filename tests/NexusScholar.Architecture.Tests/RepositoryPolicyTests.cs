@@ -76,6 +76,28 @@ public sealed class RepositoryPolicyTests
     }
 
     [TestMethod]
+    public void Avalonia_headless_is_scoped_to_desktop_acceptance_tests()
+    {
+        var root = FindRepositoryRoot();
+        var consumers = Directory.EnumerateFiles(root, "*.csproj", SearchOption.AllDirectories)
+            .Where(path => !IsBuildArtifact(path))
+            .Where(path => XDocument.Load(path)
+                .Descendants()
+                .Any(element =>
+                    element.Name.LocalName == "PackageReference" &&
+                    string.Equals(
+                        (string?)element.Attribute("Include"),
+                        "Avalonia.Headless",
+                        StringComparison.Ordinal)))
+            .Select(path => NormalizeRelativePath(MakeRelative(root, path)))
+            .ToArray();
+
+        CollectionAssert.AreEqual(
+            new[] { "tests/NexusScholar.Desktop.Acceptance.Tests/NexusScholar.Desktop.Acceptance.Tests.csproj" },
+            consumers);
+    }
+
+    [TestMethod]
     public void Repository_source_and_tests_do_not_use_live_call_primitives_or_provider_sdk_symbols()
     {
         var root = FindRepositoryRoot();
@@ -221,7 +243,12 @@ public sealed class RepositoryPolicyTests
             || string.Equals(
                 relative,
                 "src/NexusScholar.Desktop/NexusScholar.Desktop.csproj",
-                StringComparison.OrdinalIgnoreCase);
+                StringComparison.OrdinalIgnoreCase)
+            || (string.Equals(include, "Avalonia.Headless", StringComparison.Ordinal)
+                && string.Equals(
+                    relative,
+                    "tests/NexusScholar.Desktop.Acceptance.Tests/NexusScholar.Desktop.Acceptance.Tests.csproj",
+                    StringComparison.OrdinalIgnoreCase));
     }
 
     private static string MakeRelative(string root, string path)
